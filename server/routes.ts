@@ -419,6 +419,43 @@ By: ____________                       By: ____________
     }
   });
 
+  app.get("/api/document-versions/document/:documentId", async (req, res) => {
+    const documentId = parseInt(req.params.documentId);
+    if (isNaN(documentId)) {
+      return res.status(400).json({ message: "Invalid document ID" });
+    }
+    
+    try {
+      console.log(`Fetching document versions for document ID: ${documentId}`);
+      const versions = await storage.getDocumentVersions(documentId);
+      console.log(`Found ${versions.length} versions for document ID: ${documentId}`);
+      return res.json(versions);
+    } catch (error) {
+      console.error("Error fetching document versions:", error);
+      return res.status(500).json({ message: "Failed to fetch document versions" });
+    }
+  });
+
+  app.get("/api/document-versions/:id", async (req, res) => {
+    const versionId = parseInt(req.params.id);
+    if (isNaN(versionId)) {
+      return res.status(400).json({ message: "Invalid version ID" });
+    }
+    
+    try {
+      console.log(`Fetching document version ID: ${versionId}`);
+      const version = await storage.getDocumentVersion(versionId);
+      if (!version) {
+        return res.status(404).json({ message: "Document version not found" });
+      }
+      console.log(`Found version ID: ${versionId}, filename: ${version.fileName}`);
+      res.json(version);
+    } catch (error) {
+      console.error("Error fetching document version:", error);
+      res.status(500).json({ message: "Failed to fetch document version" });
+    }
+  });
+
   // Tasks API
   app.get("/api/deals/:id/tasks", async (req, res) => {
     const dealId = parseInt(req.params.id);

@@ -106,8 +106,8 @@ export default function AppHeader({ user, notifications = 0 }: AppHeaderProps) {
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] sm:w-[320px] border-l-neutral-200">
               <div className="py-4 space-y-6">
-                <Link href="/dashboard">
-                  <div className="font-bold text-gradient text-xl px-2">LegalDeal</div>
+                <Link href="/dashboard" className="font-bold text-gradient text-xl px-2">
+                  LegalDeal
                 </Link>
                 <nav className="flex flex-col space-y-1">
                   {navItems.map((item) => (
