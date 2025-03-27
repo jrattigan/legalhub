@@ -67,8 +67,8 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     dueDate: z.union([z.date(), z.string()]).optional().transform(val => 
       val === '' ? null : typeof val === 'string' ? new Date(val) : val
     ),
-    assigneeId: z.union([z.number(), z.string()]).optional().transform(val => 
-      val === '' || val === 'unassigned' ? undefined : typeof val === 'string' ? parseInt(val) : val
+    assigneeId: z.union([z.number(), z.string(), z.null()]).optional().transform(val => 
+      val === '' || val === 'unassigned' ? null : typeof val === 'string' ? parseInt(val) : val
     )
   });
 
@@ -185,15 +185,19 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     
     // Format the data for submission (ensure dates are properly formatted)
     const formattedData = {
-      ...data,
+      title: data.title,
+      description: data.description || "",
+      status: data.status || "active",
+      priority: data.priority || "medium",
       dealId,
       dueDate: data.dueDate ? new Date(data.dueDate) : null,
       assigneeId: data.assigneeId === "unassigned" || !data.assigneeId ? null : 
         typeof data.assigneeId === "string" ? parseInt(data.assigneeId) : data.assigneeId,
+      completed: false
     };
     
     console.log("Submitting task:", formattedData);
-    createTaskMutation.mutate(formattedData);
+    createTaskMutation.mutate(formattedData as any);
   };
 
   const getTaskPriorityBadge = (priority: string) => {
