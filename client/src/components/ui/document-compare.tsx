@@ -78,7 +78,7 @@ export function DocumentCompare({
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-hidden">
-      <Card className="w-full max-w-6xl h-[98vh] flex flex-col overflow-hidden">
+      <Card className="w-full max-w-6xl h-[calc(100vh-40px)] flex flex-col overflow-hidden">
         <CardHeader className="pb-2 flex flex-row justify-between items-center shrink-0">
           <CardTitle className="flex items-center">
             <FileText className="mr-2 h-5 w-5" />
@@ -145,7 +145,7 @@ export function DocumentCompare({
                     <span className="inline-block mb-0"><span className="bg-green-100 text-green-700 px-1 py-0.5 text-xs rounded">Green text</span>: Added</span>
                   </div>
                 </div>
-                <div className="border rounded-lg flex-1 overflow-auto h-full min-h-[75vh]">
+                <div className="border rounded-lg flex-1 overflow-auto h-[calc(100vh-240px)]">
                   <div className="p-4 min-w-full" dangerouslySetInnerHTML={{ __html: renderedDiff }} />
                 </div>
               </div>
@@ -166,7 +166,7 @@ export function DocumentCompare({
                     v{originalVersion.version} | Uploaded by {originalName} | {new Date(originalVersion.createdAt).toLocaleString()}
                   </div>
                 </div>
-                <div className="border rounded-lg flex-1 overflow-auto h-full min-h-[75vh]">
+                <div className="border rounded-lg flex-1 overflow-auto h-[calc(100vh-240px)]">
                   <pre className="whitespace-pre-wrap p-4">
                     {originalContent}
                   </pre>
@@ -189,7 +189,7 @@ export function DocumentCompare({
                     v{newVersion.version} | Uploaded by {newName} | {new Date(newVersion.createdAt).toLocaleString()}
                   </div>
                 </div>
-                <div className="border rounded-lg flex-1 overflow-auto h-full min-h-[75vh]">
+                <div className="border rounded-lg flex-1 overflow-auto h-[calc(100vh-240px)]">
                   <pre className="whitespace-pre-wrap p-4">
                     {newContent}
                   </pre>
