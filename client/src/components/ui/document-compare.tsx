@@ -35,8 +35,11 @@ export function DocumentCompare({
 
   // Ensure diff HTML is properly sanitized and formatted
   useEffect(() => {
+    // Log the diff content for debugging
+    console.log("Received diff content in DocumentCompare:", diff?.substring(0, 100) + "...");
+    
     // The diff is already properly formatted HTML from the server
-    setRenderedDiff(diff);
+    setRenderedDiff(diff || "<div>No differences found</div>");
     
     // Escape key to close modal
     const handleEscapeKey = (event: KeyboardEvent) => {

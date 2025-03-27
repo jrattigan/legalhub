@@ -278,8 +278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      // Get the diff HTML from storage
-      const diff = await storage.compareDocumentVersions(versionId1, versionId2);
+      console.log(`Starting document comparison between versions ${versionId1} and ${versionId2}`);
       
       // Get the document versions to access their content
       const version1 = await storage.getDocumentVersion(versionId1);
@@ -288,23 +287,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!version1 || !version2) {
         return res.status(404).json({ message: "One or both document versions not found" });
       }
+
+      // Get the diff HTML from storage
+      const diff = await storage.compareDocumentVersions(versionId1, versionId2);
+      console.log("Diff generated successfully");
       
-      // Import the OpenAI integration for document comparison
-      const { generateDocumentComparisonSummary } = await import('./openai');
-      
-      // Generate AI summary of changes
-      const aiSummary = await generateDocumentComparisonSummary(
-        version1.fileContent, 
-        version2.fileContent
-      );
-      
-      res.json({ 
-        diff,
-        aiSummary
-      });
+      try {
+        // Import the OpenAI integration for document comparison
+        const { generateDocumentComparisonSummary } = await import('./openai');
+        
+        // Generate AI summary of changes
+        const aiSummary = await generateDocumentComparisonSummary(
+          version1.fileContent, 
+          version2.fileContent
+        );
+        
+        console.log("AI summary generated successfully");
+        
+        res.json({ 
+          diff,
+          aiSummary
+        });
+      } catch (aiError) {
+        // If AI summary fails, still return the diff with an error note
+        console.error("Error generating AI summary:", aiError);
+        res.json({ 
+          diff,
+          aiSummary: {
+            significant_changes: [{ 
+              section: "Error", 
+              change_type: "error",
+              description: "Failed to generate AI summary",
+              significance: "medium"
+            }],
+            unchanged_sections: [],
+            summary: "Unable to generate AI summary. The document comparison is still available."
+          }
+        });
+      }
     } catch (error) {
       console.error("Error comparing document versions:", error);
-      res.status(500).json({ message: "Failed to compare document versions" });
+      res.status(500).json({ 
+        message: "Failed to compare document versions",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 

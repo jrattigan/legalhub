@@ -30,6 +30,7 @@ import { Document, DocumentVersion } from '@shared/schema';
 import { FileUpload } from '@/components/ui/file-upload';
 import { apiRequest } from '@/lib/queryClient';
 import { DocumentCompare } from '@/components/ui/document-compare';
+import { useToast } from '@/hooks/use-toast';
 
 interface DocumentCardProps {
   documents?: (Document & { versions: number })[];
@@ -41,6 +42,7 @@ interface DocumentCardProps {
 
 export default function DocumentCard({ document, documents = [], onRefreshData, preview = false, dealId }: DocumentCardProps) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [compareDialogOpen, setCompareDialogOpen] = useState(false);
@@ -148,22 +150,50 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
   // Compare versions mutation
   const compareMutation = useMutation({
     mutationFn: async ({ version1Id, version2Id }: { version1Id: number, version2Id: number }) => {
+      console.log("Calling comparison API with:", {version1Id, version2Id});
       const response = await fetch(`/api/document-versions/compare?version1=${version1Id}&version2=${version2Id}`);
+      
+      // Get response text first
+      const responseText = await response.text();
+      console.log("Raw API response:", responseText.substring(0, 100) + "...");
+      
       if (!response.ok) {
         throw new Error('Failed to compare versions');
       }
-      return response.json();
+      
+      try {
+        // Then try to parse it as JSON
+        const result = JSON.parse(responseText);
+        console.log("Parsed API response:", result);
+        return result;
+      } catch (e) {
+        console.error("Error parsing response as JSON:", e);
+        throw new Error('Invalid response format from server');
+      }
     },
     onSuccess: (data) => {
+      console.log("Comparison success, setting state with:", {data});
       if (versions && versions.length >= 2) {
+        // First open the dialog
+        setCompareDialogOpen(true);
+        
+        // Then set the data (this ensures dialog shows even if there's an issue with the data)
         setCompareVersions({
           version1: versions[1],
           version2: versions[0],
-          diff: data.diff,
+          diff: data.diff || "<div>No differences detected</div>",
           aiSummary: data.aiSummary
         });
-        setCompareDialogOpen(true);
       }
+    },
+    onError: (error) => {
+      console.error("Comparison mutation error:", error);
+      // Show error toast
+      toast({
+        title: "Error",
+        description: "Failed to compare document versions. Please try again.",
+        variant: "destructive"
+      });
     }
   });
 
