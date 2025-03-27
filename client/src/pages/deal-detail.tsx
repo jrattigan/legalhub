@@ -94,22 +94,22 @@ export default function DealDetailPage() {
                     tasksLoading || issuesLoading || counselLoading || timelineLoading;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col max-h-screen">
       <AppHeader user={user} notifications={2} />
       
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-auto">
         <Sidebar recentDeals={[]} />
         
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 overflow-auto">
           {isLoading ? (
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex-1 flex items-center justify-center h-full">
               <div className="text-center">
                 <div className="w-8 h-8 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin inline-block mb-2"></div>
                 <p>Loading deal data...</p>
               </div>
             </div>
           ) : dealError ? (
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex-1 flex items-center justify-center h-full">
               <div className="text-center">
                 <p className="text-destructive mb-2">Error loading deal data</p>
                 <Button variant="outline" onClick={handleBack}>

@@ -189,7 +189,7 @@ export default function DealDetail({
   };
   
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-neutral-50">
+    <div className="flex-1 flex flex-col bg-neutral-50">
       {/* Edit Deal Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -519,8 +519,8 @@ export default function DealDetail({
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-6">
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} value={activeTab} className="h-full flex flex-col">
+      <div className="p-6 overflow-auto">
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} value={activeTab} className="flex flex-col">
           <TabsList className="hidden">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
