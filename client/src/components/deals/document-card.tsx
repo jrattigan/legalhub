@@ -287,15 +287,68 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
       {isExpanded && (
         <div className="border-t border-neutral-100 p-3 bg-neutral-50">
           <div className="flex mb-3 gap-2 flex-wrap">
-            <Button variant="outline" size="sm" className="text-xs">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Get the latest version if available
+                if (versions && versions.length > 0) {
+                  const latestVersion = versions[0];
+                  // In a real app, this would download the actual file
+                  // For now, we'll just show a success toast
+                  toast({
+                    title: "Download Started",
+                    description: `Downloading ${document.title} (version ${latestVersion.version})`,
+                    duration: 3000,
+                  });
+                  // This approach would be used in a real implementation:
+                  // window.open(`/api/document-versions/${latestVersion.id}/download`, '_blank');
+                }
+              }}
+            >
               <Download className="h-3.5 w-3.5 mr-1" />
               Download
             </Button>
-            <Button variant="outline" size="sm" className="text-xs">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                // In a real app, this would open the document in an editor
+                toast({
+                  title: "Edit Document",
+                  description: `Opening ${document.title} for editing`,
+                  duration: 3000,
+                });
+              }}
+            >
               <Edit className="h-3.5 w-3.5 mr-1" />
               Edit
             </Button>
-            <Button variant="outline" size="sm" className="text-xs">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                // In a real app, this would show a more detailed history view
+                // For now, we just ensure the version history is visible
+                if (!isExpanded) {
+                  setIsExpanded(true);
+                }
+                // Scroll to the version history section
+                setTimeout(() => {
+                  // Using document from window object, not the document prop
+                  const historyElement = window.document.querySelector('.version-history-section');
+                  if (historyElement) {
+                    historyElement.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }, 100);
+              }}
+            >
               <History className="h-3.5 w-3.5 mr-1" />
               History
             </Button>
@@ -337,7 +390,7 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
             )}
           </div>
           
-          <div className="bg-white rounded border border-neutral-200 p-2">
+          <div className="bg-white rounded border border-neutral-200 p-2 version-history-section">
             <div className="text-xs font-medium mb-2">Version History</div>
             
             {versionsLoading ? (
@@ -355,10 +408,38 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
                     <div className="flex items-center">
                       <span className="text-neutral-500">{format(new Date(version.createdAt), 'MMM d, yyyy')}</span>
                       <div className="flex space-x-1 ml-2">
-                        <Button variant="ghost" size="icon" className="h-5 w-5">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-5 w-5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // In a real app, this would open a viewer for this specific version
+                            toast({
+                              title: "View Document",
+                              description: `Viewing version ${version.version} of ${document.title}`,
+                              duration: 3000,
+                            });
+                          }}
+                        >
                           <Eye className="h-3 w-3" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-5 w-5">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-5 w-5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // In a real app, this would download this specific version
+                            toast({
+                              title: "Download Started",
+                              description: `Downloading version ${version.version} of ${document.title}`,
+                              duration: 3000,
+                            });
+                            // Actual implementation would be:
+                            // window.open(`/api/document-versions/${version.id}/download`, '_blank');
+                          }}
+                        >
                           <Download className="h-3 w-3" />
                         </Button>
                       </div>
