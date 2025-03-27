@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { apiRequest } from '@/lib/queryClient';
-import { Issue, User, insertIssueSchema } from '@shared/schema';
+import { Issue, User } from '@shared/schema';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -135,9 +135,13 @@ export default function IssueCard({ issues, onRefreshData, preview = false, deal
   });
 
   // Form validation schema
-  const issueSchema = insertIssueSchema.extend({
+  const issueSchema = z.object({
+    title: z.string().min(1, "Title is required"),
+    description: z.string().optional(),
+    status: z.string().default("open"),
+    priority: z.string().default("medium"),
     assigneeId: z.union([z.number(), z.string()]).optional().transform(val => 
-      val === '' || val === 'unassigned' ? undefined : typeof val === 'string' ? parseInt(val) : val
+      val === '' || val === 'unassigned' ? null : typeof val === 'string' ? parseInt(val) : val
     )
   });
 

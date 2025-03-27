@@ -404,11 +404,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/issues", async (req, res) => {
     try {
-      const validatedData = insertIssueSchema.parse(req.body);
+      console.log("Received issue creation request with body:", req.body);
+      
+      // Create a schema for issue creation
+      const issueSchema = z.object({
+        title: z.string().min(1, "Title is required"),
+        description: z.string().optional().nullable(),
+        status: z.string().default("open"),
+        priority: z.string().default("medium"),
+        dealId: z.number(),
+        assigneeId: z.number().optional().nullable()
+      });
+      
+      const validatedData = issueSchema.parse(req.body);
+      console.log("Validated issue data:", validatedData);
+      
       const issue = await storage.createIssue(validatedData);
+      console.log("Issue created successfully:", issue);
       res.status(201).json(issue);
     } catch (error) {
+      console.error("Error creating issue:", error);
       if (error instanceof z.ZodError) {
+        console.error("Validation error details:", JSON.stringify(error.errors));
         return res.status(400).json({ message: "Invalid issue data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create issue" });
@@ -436,17 +453,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const partialIssueSchema = insertIssueSchema.partial();
-      const validatedData = partialIssueSchema.parse(req.body);
+      console.log("Received issue update request with body:", req.body);
+      
+      // Create a schema for issue updates
+      const partialSchema = z.object({
+        title: z.string().optional(),
+        description: z.string().optional().nullable(),
+        status: z.string().optional(),
+        priority: z.string().optional(),
+        assigneeId: z.union([z.number(), z.null()]).optional()
+      });
+      
+      const validatedData = partialSchema.parse(req.body);
+      console.log("Validated issue update data:", validatedData);
       
       const updatedIssue = await storage.updateIssue(id, validatedData);
       if (!updatedIssue) {
         return res.status(404).json({ message: "Issue not found" });
       }
       
+      console.log("Issue updated successfully:", updatedIssue);
       res.json(updatedIssue);
     } catch (error) {
+      console.error("Error updating issue:", error);
       if (error instanceof z.ZodError) {
+        console.error("Validation error details:", JSON.stringify(error.errors));
         return res.status(400).json({ message: "Invalid issue data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to update issue" });
