@@ -97,14 +97,13 @@ By: ____________                       By: ____________
         // List of common terms that should not be highlighted individually
         const commonTerms = ['September', 'million', '$', 'Rogue', 'Ventures', 'LP', 'Chief', 'Executive', 'Officer', 'Partner'];
         
-        // Build the HTML with smart highlighting
-        let html = '<div class="word-document" style="font-family: \'Calibri\', \'Arial\', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 25px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 100%; overflow-x: auto;">';
+        // Build the HTML with smart highlighting and Word-like styling
+        let html = '<div class="document-content">';
         
-        // Add document header formatting
+        // Add document header formatting with centered titles
         html += `
-<h1 style="font-size: 16pt; font-weight: bold; margin-bottom: 12pt; color: #222; font-family: 'Times New Roman', serif;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
-
-<h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 10pt; margin-top: 16pt; color: #444; font-family: 'Times New Roman', serif;">INDICATIVE TERM SHEET</h2>`;
+<h1 class="centered">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
+<h2 class="centered">INDICATIVE TERM SHEET</h2>`;
         
         // Identify only the meaningful changes
         const changes = diff.diffWords(actualOldContent, actualNewContent);
@@ -290,7 +289,7 @@ By: ____________                       By: ____________
       
       if (hasDifferences) {
         // Generate HTML with highlighted changes
-        let inlineDiffHtml = '<div style="white-space: pre-wrap; font-family: \'Calibri\', \'Arial\', sans-serif; font-size: 11pt; line-height: 1.5;">';
+        let inlineDiffHtml = '<div class="document-content">';
         
         // Define the type for the diff parts to avoid the "implicitly any" error
         interface DiffPart {
@@ -299,16 +298,23 @@ By: ____________                       By: ____________
           removed?: boolean;
         }
         
+        inlineDiffHtml += `<h1 class="centered">${newerVersion.fileName}</h1>`;
+        inlineDiffHtml += `<p class="centered">Version ${newerVersion.version}</p>`;
+        
+        // Process the content
+        let processedContent = '';
         for (const part of changes as DiffPart[]) {
           if (part.added) {
-            inlineDiffHtml += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">${part.value}</span>`;
+            processedContent += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">${part.value}</span>`;
           } else if (part.removed) {
-            inlineDiffHtml += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">${part.value}</span>`;
+            processedContent += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">${part.value}</span>`;
           } else {
-            inlineDiffHtml += part.value;
+            processedContent += part.value;
           }
         }
         
+        // Convert line breaks to paragraphs
+        inlineDiffHtml += processedContent.replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>');
         inlineDiffHtml += '</div>';
         
         diffHtml = `
@@ -318,15 +324,18 @@ By: ____________                       By: ____________
               <div style="margin-bottom: 4px;"><span style="background-color: #fee2e2; color: #b91c1c; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">Red</span>: Removed content</div>
               <div><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">Green</span>: Added content</div>
             </div>
-            <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 25px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 100%; overflow-x: auto;">
-              <h3 style="font-size: 14pt; font-weight: bold; margin-bottom: 10pt; color: #444; font-family: 'Times New Roman', serif;">${newerVersion.fileName}</h3>
-              ${inlineDiffHtml}
-            </div>
+            ${inlineDiffHtml}
           </div>
         </div>
         `;
       } else {
-        // No differences found
+        // No differences found, but still format using document-content class
+        const formattedContent = `<div class="document-content">
+          <h1 class="centered">${newerVersion.fileName}</h1>
+          <p class="centered">Version ${newerVersion.version}</p>
+          <p>${processedNewContent.replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>')}</p>
+        </div>`;
+        
         diffHtml = `
         <div class="document-compare">
           <div style="padding: 16px; background-color: #f0fff4; border: 1px solid #c6f6d5; border-radius: 4px; display: flex; align-items: center; margin-bottom: 16px;">
@@ -336,9 +345,7 @@ By: ____________                       By: ____________
             <span style="font-size: 14px; color: #2f855a; font-weight: 500;">No differences found between these versions.</span>
           </div>
           
-          <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 25px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 100%; overflow-x: auto; white-space: pre-wrap;">
-            ${processedNewContent}
-          </div>
+          ${formattedContent}
         </div>
         `;
       }
@@ -348,6 +355,19 @@ By: ____________                       By: ____________
     return diffHtml;
   } catch (error) {
     console.error("Error generating document diff:", error);
+    // Still use the document-content classes for error case
+    const originalFormattedContent = `<div class="document-content">
+      <h1 class="centered">${olderVersion.fileName}</h1>
+      <p class="centered">Version ${olderVersion.version}</p>
+      <p>${oldContent.replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>')}</p>
+    </div>`;
+    
+    const newFormattedContent = `<div class="document-content">
+      <h1 class="centered">${newerVersion.fileName}</h1>
+      <p class="centered">Version ${newerVersion.version}</p>
+      <p>${newContent.replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>')}</p>
+    </div>`;
+    
     diffHtml = `
       <div class="document-compare">
         <div style="padding: 18px; background-color: #fff8e1; border: 1px solid #ffecb3; border-radius: 4px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
@@ -362,16 +382,12 @@ By: ____________                       By: ____________
         
         <div style="margin-top: 24px;">
           <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 8px; color: #4a5568;">Original Content (Version ${olderVersion.version})</h4>
-          <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 25px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 8px; white-space: pre-wrap;">
-            ${oldContent}
-          </div>
+          ${originalFormattedContent}
         </div>
         
         <div style="margin-top: 24px;">
           <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 8px; color: #4a5568;">New Content (Version ${newerVersion.version})</h4>
-          <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 25px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); white-space: pre-wrap;">
-            ${newContent}
-          </div>
+          ${newFormattedContent}
         </div>
       </div>
     `;
