@@ -84,10 +84,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/deals", async (req, res) => {
     try {
-      const validatedData = insertDealSchema.parse(req.body);
+      // Ensure dueDate is properly converted to a Date object if it exists
+      const data = req.body;
+      if (data.dueDate && !(data.dueDate instanceof Date)) {
+        data.dueDate = new Date(data.dueDate);
+      }
+      
+      const validatedData = insertDealSchema.parse(data);
       const deal = await storage.createDeal(validatedData);
       res.status(201).json(deal);
     } catch (error) {
+      console.error("Error creating deal:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid deal data", errors: error.errors });
       }
@@ -102,8 +109,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      // Ensure dueDate is properly converted to a Date object if it exists
+      const data = req.body;
+      if (data.dueDate && !(data.dueDate instanceof Date)) {
+        data.dueDate = new Date(data.dueDate);
+      }
+      
       const partialDealSchema = insertDealSchema.partial();
-      const validatedData = partialDealSchema.parse(req.body);
+      const validatedData = partialDealSchema.parse(data);
       
       const updatedDeal = await storage.updateDeal(id, validatedData);
       if (!updatedDeal) {
@@ -112,6 +125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(updatedDeal);
     } catch (error) {
+      console.error("Error updating deal:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid deal data", errors: error.errors });
       }

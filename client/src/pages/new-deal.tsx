@@ -36,7 +36,9 @@ export default function NewDeal() {
 
   // Form validation schema
   const dealSchema = insertDealSchema.extend({
-    dueDate: z.union([z.date(), z.string(), z.null()]).optional(),
+    dueDate: z.union([z.date(), z.string(), z.null()]).optional().transform(val => 
+      typeof val === 'string' && val ? new Date(val) : val
+    ),
     description: z.string().nullable().optional(),
     amount: z.string().nullable().optional(),
   });
@@ -118,7 +120,7 @@ export default function NewDeal() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       <AppHeader />
       
       <div className="flex-1 flex overflow-hidden">
