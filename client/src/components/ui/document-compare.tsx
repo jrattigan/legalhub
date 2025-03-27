@@ -64,7 +64,7 @@ export function DocumentCompare({
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-hidden">
-      <Card className="w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden">
+      <Card className="w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden">
         <CardHeader className="pb-2 flex flex-row justify-between items-center shrink-0">
           <CardTitle className="flex items-center">
             <FileText className="mr-2 h-5 w-5" />

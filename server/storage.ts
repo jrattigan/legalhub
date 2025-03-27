@@ -681,60 +681,80 @@ export class MemStorage implements IStorage {
     const olderVersion = version1.version < version2.version ? version1 : version2;
     const newerVersion = version1.version > version2.version ? version1 : version2;
     
-    // For demo purposes, create a track changes style diff that shows inline changes
-    return `
-      <div class="document-compare">
-        <h3 class="text-lg font-medium mb-3">Document: ${newerVersion.fileName}</h3>
-        
-        <div class="section mb-6">
-          <h4 class="text-base font-medium mb-2">Section 1: Introduction</h4>
-          <p class="mb-2">
-            This document outlines the terms and conditions for the transaction.
-          </p>
+    // Use the actual content from the document versions
+    const oldContent = olderVersion.fileContent || "No content available";
+    const newContent = newerVersion.fileContent || "No content available";
+    
+    // Simple line-by-line comparison
+    let diffHtml = '';
+    
+    try {
+      // For demonstration purposes, create a small sample diff from the actual content
+      // In a real implementation, use a proper diff algorithm
+      
+      // Show the exact content in the diff display
+      diffHtml = `
+        <div class="document-compare">
+          <h3 class="text-lg font-medium mb-3">Document: ${newerVersion.fileName}</h3>
+          
+          <div class="section mb-6">
+            <h4 class="text-base font-medium mb-2">Original Content (Version ${olderVersion.version})</h4>
+            <pre class="bg-gray-50 p-3 border rounded mb-2 whitespace-pre-wrap">${oldContent}</pre>
+          </div>
+          
+          <div class="section mb-6">
+            <h4 class="text-base font-medium mb-2">New Content (Version ${newerVersion.version})</h4>
+            <pre class="bg-gray-50 p-3 border rounded mb-2 whitespace-pre-wrap">${newContent}</pre>
+          </div>
+          
+          <div class="section mb-6">
+            <h4 class="text-base font-medium mb-2">Changes</h4>
+            <p class="mb-2">
+              ${newContent === oldContent 
+                ? '<span class="text-gray-600">No changes detected between versions.</span>' 
+                : `<div class="mb-2">
+                    <span class="bg-red-100 text-red-800 px-1">Removed:</span> 
+                    <pre class="bg-red-50 p-2 border border-red-100 rounded mt-1 mb-3 whitespace-pre-wrap">${oldContent}</pre>
+                   </div>
+                   <div>
+                    <span class="bg-green-100 text-green-800 px-1">Added:</span> 
+                    <pre class="bg-green-50 p-2 border border-green-100 rounded mt-1 whitespace-pre-wrap">${newContent}</pre>
+                   </div>`
+              }
+            </p>
+          </div>
+          
+          <div class="legend text-xs text-gray-600 border-t pt-3 mt-4">
+            <div class="mb-1"><span class="bg-red-100 text-red-800 px-1">Red</span>: Removed content</div>
+            <div><span class="bg-green-100 text-green-800 px-1">Green</span>: Added content</div>
+          </div>
         </div>
-        
-        <div class="section mb-6">
-          <h4 class="text-base font-medium mb-2">Section 2: Financial Terms</h4>
-          <p class="mb-2">
-            The initial investment will be <span class="bg-red-100 text-red-800 line-through px-1">$5,000,000</span> <span class="bg-green-100 text-green-800 px-1">$7,500,000</span> with a valuation cap of <span class="bg-red-100 text-red-800 line-through px-1">$25,000,000</span> <span class="bg-green-100 text-green-800 px-1">$30,000,000</span>.
-          </p>
+      `;
+    } catch (error) {
+      console.error("Error generating document diff:", error);
+      diffHtml = `
+        <div class="document-compare">
+          <div class="bg-yellow-50 border border-yellow-100 p-4 rounded">
+            <h3 class="text-base font-medium text-yellow-800">Error Generating Comparison</h3>
+            <p class="text-sm text-yellow-700 mt-2">
+              There was an error generating the document comparison. Please try again later.
+            </p>
+          </div>
+          
+          <div class="section mt-6">
+            <h4 class="text-base font-medium mb-2">Original Content (Version ${olderVersion.version})</h4>
+            <pre class="bg-gray-50 p-3 border rounded mb-2 whitespace-pre-wrap">${oldContent}</pre>
+          </div>
+          
+          <div class="section mt-6">
+            <h4 class="text-base font-medium mb-2">New Content (Version ${newerVersion.version})</h4>
+            <pre class="bg-gray-50 p-3 border rounded mb-2 whitespace-pre-wrap">${newContent}</pre>
+          </div>
         </div>
-        
-        <div class="section mb-6">
-          <h4 class="text-base font-medium mb-2">Section 3: Board Representation</h4>
-          <p class="mb-2">
-            The investor will have the right to appoint one member to the board of directors.
-            <span class="bg-green-100 text-green-800 px-1">Additionally, the investor will have observer rights for all board meetings.</span>
-          </p>
-        </div>
-        
-        <div class="section mb-6">
-          <h4 class="text-base font-medium mb-2">Section 4: Intellectual Property</h4>
-          <p class="mb-2">
-            The company represents that it <span class="bg-red-100 text-red-800 line-through px-1">owns all</span> <span class="bg-green-100 text-green-800 px-1">owns or has properly licensed all</span> intellectual property related to its products<span class="bg-green-100 text-green-800 px-1">, and has conducted a thorough IP audit to confirm this representation</span>.
-          </p>
-        </div>
-        
-        <div class="section mb-6">
-          <h4 class="text-base font-medium mb-2">Section 5: Closing Conditions</h4>
-          <p class="mb-2">
-            The transaction is subject to standard closing conditions including regulatory approval.
-          </p>
-        </div>
-        
-        <div class="section mb-6">
-          <h4 class="text-base font-medium mb-2">Section 6: Confidentiality</h4>
-          <p class="mb-2">
-            <span class="bg-green-100 text-green-800 px-1">All parties agree to maintain strict confidentiality regarding the terms of this agreement for a period of 3 years following execution.</span>
-          </p>
-        </div>
-        
-        <div class="legend text-xs text-gray-600 border-t pt-3 mt-4">
-          <div class="mb-1"><span class="bg-red-100 text-red-800 line-through px-1">Red strikethrough text</span>: Deleted content</div>
-          <div><span class="bg-green-100 text-green-800 px-1">Green text</span>: Added content</div>
-        </div>
-      </div>
-    `;
+      `;
+    }
+    
+    return diffHtml;
   }
 
   // Task methods
