@@ -7,6 +7,26 @@
   font-family: 'Calibri', 'Arial', sans-serif;
   color: #222;
   line-height: 1.5;
+  font-size: 11pt;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Specific styles for change highlights */
+.document-content span[style*="background-color: #dcfce7"] {
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+  padding: 2px 4px !important;
+  border-radius: 2px !important;
+  text-decoration: none !important;
+}
+
+.document-content span[style*="background-color: #fee2e2"] {
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
+  padding: 2px 4px !important;
+  border-radius: 2px !important;
+  text-decoration: line-through !important;
 }
 
 /* Center alignment for titles - Word style */

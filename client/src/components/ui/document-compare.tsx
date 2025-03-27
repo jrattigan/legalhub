@@ -101,13 +101,18 @@ export function DocumentCompare({
     };
   }, [diff, contentV1, contentV2, originalVersion, newVersion, onClose]);
 
-  const originalName = originalVersion.uploadedBy?.fullName || 
-                     originalVersion.uploadedBy?.name || 
-                     'Unknown user';
-                     
-  const newName = newVersion.uploadedBy?.fullName || 
-                newVersion.uploadedBy?.name || 
-                'Unknown user';
+  // Get user display names
+  const getOriginalName = () => {
+    return originalVersion.uploadedBy?.fullName || 
+           originalVersion.uploadedBy?.name || 
+           'Unknown user';
+  };
+          
+  const getNewName = () => {
+    return newVersion.uploadedBy?.fullName || 
+           newVersion.uploadedBy?.name || 
+           'Unknown user';
+  };
 
   return (
     <div className="fixed inset-0 z-50">
@@ -133,13 +138,13 @@ export function DocumentCompare({
           <div>
             <div className="text-sm font-medium">Original Version</div>
             <div className="text-xs text-muted-foreground">
-              v{originalVersion.version} by {originalName}
+              v{originalVersion.version} by {getOriginalName()}
             </div>
           </div>
           <div className="text-right">
             <div className="text-sm font-medium">New Version</div>
             <div className="text-xs text-muted-foreground">
-              v{newVersion.version} by {newName}
+              v{newVersion.version} by {getNewName()}
             </div>
           </div>
         </div>
@@ -219,7 +224,7 @@ export function DocumentCompare({
                   <span className="text-sm font-medium">{originalVersion.fileName}</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  v{originalVersion.version} | Uploaded by {originalName} | {new Date(originalVersion.createdAt).toLocaleString()}
+                  v{originalVersion.version} | Uploaded by {getOriginalName()} | {new Date(originalVersion.createdAt).toLocaleString()}
                 </div>
               </div>
               
@@ -253,7 +258,7 @@ export function DocumentCompare({
                   <span className="text-sm font-medium">{newVersion.fileName}</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  v{newVersion.version} | Uploaded by {newName} | {new Date(newVersion.createdAt).toLocaleString()}
+                  v{newVersion.version} | Uploaded by {getNewName()} | {new Date(newVersion.createdAt).toLocaleString()}
                 </div>
               </div>
               
