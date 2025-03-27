@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Check, Plus, Calendar } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
@@ -36,6 +36,7 @@ import { Task, User, insertTaskSchema } from '@shared/schema';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useToast } from '@/hooks/use-toast';
 
 interface TaskCardProps {
   tasks: (Task & { assignee?: User })[];
@@ -74,23 +75,55 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: async (data: z.infer<typeof taskSchema>) => {
-      const response = await apiRequest('POST', '/api/tasks', {
+      if (!dealId) {
+        throw new Error("No deal ID provided");
+      }
+      
+      console.log("Creating task with data:", {
         ...data,
-        dealId: dealId,
+        dealId,
         completed: false
       });
+      
+      const response = await apiRequest('POST', '/api/tasks', {
+        ...data,
+        dealId,
+        completed: false
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Task creation failed:", errorData);
+        throw new Error(errorData.message || "Failed to create task");
+      }
+      
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Task created successfully:", data);
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/tasks`] });
       setIsDialogOpen(false);
       onRefreshData();
       form.reset();
+      
+      toast({
+        title: "Task created",
+        description: "Task has been successfully created",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Task creation error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to create task",
+      });
     }
   });
 
   // Form validation schema
   const taskSchema = insertTaskSchema.extend({
+    description: z.string().optional(),
     dueDate: z.union([z.date(), z.string()]).optional(),
     assigneeId: z.union([z.number(), z.string()]).optional().transform(val => 
       val === '' ? undefined : typeof val === 'string' ? parseInt(val) : val
@@ -109,7 +142,26 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     }
   });
 
+  const { toast } = useToast();
+  
+  // Make sure form gets reset when dialog closes
+  useEffect(() => {
+    if (!isDialogOpen) {
+      form.reset();
+    }
+  }, [isDialogOpen, form]);
+
   const onSubmit = (data: z.infer<typeof taskSchema>) => {
+    if (!dealId) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No deal ID available. Cannot create task.",
+      });
+      return;
+    }
+    
+    console.log("Submitting task:", { ...data, dealId });
     createTaskMutation.mutate(data);
   };
 
