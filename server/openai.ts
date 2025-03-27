@@ -119,7 +119,9 @@ export async function generateDocumentComparisonSummary(original: string, update
       temperature: 0.2,
     });
 
-    const result = JSON.parse(response.choices[0].message.content);
+    // Ensure we have content before trying to parse it
+    const content = response.choices[0].message.content;
+    const result = content ? JSON.parse(content) : { summary: "", changes: [], keyPoints: [] };
     
     // If documents were truncated, add a note to the summary
     let summary = result.summary || "";

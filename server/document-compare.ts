@@ -283,7 +283,7 @@ By: ____________                       By: ____________
     } else {
       // For generic files, use the diff library to create a proper diff
       const changes = diff.diffWords(processedOldContent, processedNewContent);
-      const hasDifferences = changes.some(part => part.added || part.removed);
+      const hasDifferences = changes.some((part: { added?: boolean; removed?: boolean; value: string }) => part.added || part.removed);
       
       if (hasDifferences) {
         // Generate HTML with highlighted changes

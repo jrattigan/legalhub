@@ -511,7 +511,7 @@ By: ____________                       By: ____________
       // Create a schema for issue creation
       const issueSchema = z.object({
         title: z.string().min(1, "Title is required"),
-        description: z.string().optional().nullable(),
+        description: z.string().min(1, "Description is required"),
         status: z.string().default("open"),
         priority: z.string().default("medium"),
         dealId: z.number(),
@@ -560,7 +560,7 @@ By: ____________                       By: ____________
       // Create a schema for issue updates
       const partialSchema = z.object({
         title: z.string().optional(),
-        description: z.string().optional().nullable(),
+        description: z.string().optional(), // Not allowing null in updates
         status: z.string().optional(),
         priority: z.string().optional(),
         assigneeId: z.union([z.number(), z.null()]).optional()

@@ -534,31 +534,52 @@ export class MemStorage implements IStorage {
       completed: false
     };
 
-    // Create tasks directly for sample data
+    // Create tasks directly for sample data with fully specified objects
     const taskId1 = this.currentTaskId++;
     const createdTask1: Task = { 
-      ...task1, 
-      id: taskId1, 
-      createdAt: new Date(),
-      completedAt: null
+      id: taskId1,
+      dealId: task1.dealId,
+      title: task1.title,
+      description: task1.description || null,
+      status: task1.status || 'pending',
+      priority: task1.priority || 'medium',
+      dueDate: task1.dueDate || null,
+      assigneeId: task1.assigneeId || null,
+      completed: task1.completed || false,
+      completedAt: null,
+      createdAt: new Date()
     };
     this.tasks.set(taskId1, createdTask1);
 
     const taskId2 = this.currentTaskId++;
     const createdTask2: Task = { 
-      ...task2, 
-      id: taskId2, 
-      createdAt: new Date(),
-      completedAt: new Date() // Task is completed
+      id: taskId2,
+      dealId: task2.dealId,
+      title: task2.title,
+      description: task2.description || null,
+      status: task2.status || 'pending',
+      priority: task2.priority || 'medium',
+      dueDate: task2.dueDate || null,
+      assigneeId: task2.assigneeId || null,
+      completed: task2.completed || false,
+      completedAt: new Date(), // Task is completed
+      createdAt: new Date()
     };
     this.tasks.set(taskId2, createdTask2);
 
     const taskId3 = this.currentTaskId++;
     const createdTask3: Task = { 
-      ...task3, 
-      id: taskId3, 
-      createdAt: new Date(),
-      completedAt: null
+      id: taskId3,
+      dealId: task3.dealId,
+      title: task3.title,
+      description: task3.description || null,
+      status: task3.status || 'pending',
+      priority: task3.priority || 'medium',
+      dueDate: task3.dueDate || null,
+      assigneeId: task3.assigneeId || null,
+      completed: task3.completed || false,
+      completedAt: null,
+      createdAt: new Date()
     };
     this.tasks.set(taskId3, createdTask3);
 
@@ -581,28 +602,38 @@ export class MemStorage implements IStorage {
       assigneeId: createdUser1.id
     };
 
-    // Create issues directly for sample data
+    // Create issues directly for sample data with all required fields
     const issueId1 = this.currentIssueId++;
-    const now1 = new Date();
+    const issueDate1 = new Date();
     const createdIssue1: Issue = { 
-      ...issue1, 
-      id: issueId1, 
-      createdAt: now1, 
-      updatedAt: now1
+      id: issueId1,
+      dealId: issue1.dealId,
+      title: issue1.title,
+      description: issue1.description,
+      status: issue1.status || 'open',
+      priority: issue1.priority || 'medium',
+      assigneeId: issue1.assigneeId || null,
+      createdAt: issueDate1, 
+      updatedAt: issueDate1
     };
     this.issues.set(issueId1, createdIssue1);
     
     const issueId2 = this.currentIssueId++;
-    const now2 = new Date();
+    const issueDate2 = new Date();
     const createdIssue2: Issue = { 
-      ...issue2, 
-      id: issueId2, 
-      createdAt: now2, 
-      updatedAt: now2
+      id: issueId2,
+      dealId: issue2.dealId,
+      title: issue2.title,
+      description: issue2.description,
+      status: issue2.status || 'open',
+      priority: issue2.priority || 'medium',
+      assigneeId: issue2.assigneeId || null,
+      createdAt: issueDate2, 
+      updatedAt: issueDate2
     };
     this.issues.set(issueId2, createdIssue2);
 
-    // Create timeline events directly 
+    // Create timeline events directly with all required fields 
     const event1: InsertTimelineEvent = {
       dealId: createdDeal1.id,
       title: "Term Sheet Updated",
@@ -612,10 +643,16 @@ export class MemStorage implements IStorage {
       referenceType: "document"
     };
     const eventId1 = this.currentTimelineEventId++;
+    const eventDate1 = new Date();
     const createdEvent1: TimelineEvent = {
-      ...event1,
       id: eventId1,
-      createdAt: new Date()
+      dealId: event1.dealId,
+      title: event1.title,
+      description: event1.description,
+      eventType: event1.eventType,
+      createdAt: eventDate1,
+      referenceId: event1.referenceId || null,
+      referenceType: event1.referenceType || null
     };
     this.timelineEvents.set(eventId1, createdEvent1);
     
@@ -628,10 +665,16 @@ export class MemStorage implements IStorage {
       referenceType: "issue"
     };
     const eventId2 = this.currentTimelineEventId++;
+    const eventDate2 = new Date();
     const createdEvent2: TimelineEvent = {
-      ...event2,
       id: eventId2,
-      createdAt: new Date()
+      dealId: event2.dealId,
+      title: event2.title,
+      description: event2.description,
+      eventType: event2.eventType,
+      createdAt: eventDate2,
+      referenceId: event2.referenceId || null,
+      referenceType: event2.referenceType || null
     };
     this.timelineEvents.set(eventId2, createdEvent2);
     
@@ -644,10 +687,16 @@ export class MemStorage implements IStorage {
       referenceType: "task"
     };
     const eventId3 = this.currentTimelineEventId++;
+    const eventDate3 = new Date();
     const createdEvent3: TimelineEvent = {
-      ...event3,
       id: eventId3,
-      createdAt: new Date()
+      dealId: event3.dealId,
+      title: event3.title,
+      description: event3.description,
+      eventType: event3.eventType,
+      createdAt: eventDate3,
+      referenceId: event3.referenceId || null,
+      referenceType: event3.referenceType || null
     };
     this.timelineEvents.set(eventId3, createdEvent3);
   }
@@ -941,12 +990,22 @@ export class MemStorage implements IStorage {
 
   async createTask(insertTask: InsertTask): Promise<Task> {
     const id = this.currentTaskId++;
-    const task: Task = { 
-      ...insertTask, 
-      id, 
-      completedAt: undefined,
-      createdAt: new Date() 
+    
+    // Create a complete Task object ensuring all required fields are present
+    const task: Task = {
+      id,
+      dealId: insertTask.dealId,
+      title: insertTask.title,
+      description: insertTask.description || null,
+      status: insertTask.status || 'pending',
+      priority: insertTask.priority || 'medium',
+      dueDate: insertTask.dueDate || null,
+      assigneeId: insertTask.assigneeId || null,
+      completed: insertTask.completed || false,
+      completedAt: null,
+      createdAt: new Date()
     };
+    
     this.tasks.set(id, task);
     
     // Create timeline event
@@ -1051,12 +1110,20 @@ export class MemStorage implements IStorage {
   async createIssue(insertIssue: InsertIssue): Promise<Issue> {
     const id = this.currentIssueId++;
     const now = new Date();
-    const issue: Issue = { 
-      ...insertIssue, 
-      id, 
-      createdAt: now, 
-      updatedAt: now 
+    
+    // Create a complete Issue object with all required fields
+    const issue: Issue = {
+      id,
+      dealId: insertIssue.dealId,
+      title: insertIssue.title,
+      description: insertIssue.description,
+      status: insertIssue.status || 'open',
+      priority: insertIssue.priority || 'medium',
+      assigneeId: insertIssue.assigneeId || null,
+      createdAt: now,
+      updatedAt: now
     };
+    
     this.issues.set(id, issue);
     
     // Create timeline event
@@ -1104,7 +1171,9 @@ export class MemStorage implements IStorage {
     const id = this.currentLawFirmId++;
     const firm: LawFirm = { 
       ...insertFirm, 
-      id, 
+      id,
+      email: insertFirm.email || null,
+      phone: insertFirm.phone || null,
       createdAt: new Date() 
     };
     this.lawFirms.set(id, firm);
@@ -1143,7 +1212,8 @@ export class MemStorage implements IStorage {
     const id = this.currentAttorneyId++;
     const attorney: Attorney = { 
       ...insertAttorney, 
-      id, 
+      id,
+      phone: insertAttorney.phone || null,
       createdAt: new Date() 
     };
     this.attorneys.set(id, attorney);
@@ -1196,7 +1266,8 @@ export class MemStorage implements IStorage {
     const id = this.currentDealCounselId++;
     const counsel: DealCounsel = { 
       ...insertCounsel, 
-      id, 
+      id,
+      attorneyId: insertCounsel.attorneyId || null,
       createdAt: new Date() 
     };
     this.dealCounsels.set(id, counsel);
@@ -1244,11 +1315,19 @@ export class MemStorage implements IStorage {
 
   async createTimelineEvent(insertEvent: InsertTimelineEvent): Promise<TimelineEvent> {
     const id = this.currentTimelineEventId++;
-    const event: TimelineEvent = { 
-      ...insertEvent, 
-      id, 
-      createdAt: new Date() 
+    
+    // Create a complete TimelineEvent object with all required fields
+    const event: TimelineEvent = {
+      id,
+      dealId: insertEvent.dealId,
+      title: insertEvent.title,
+      description: insertEvent.description,
+      eventType: insertEvent.eventType,
+      referenceId: insertEvent.referenceId || null,
+      referenceType: insertEvent.referenceType || null,
+      createdAt: new Date()
     };
+    
     this.timelineEvents.set(id, event);
     return event;
   }
