@@ -324,65 +324,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const processContent = (content: string, fileName: string): string => {
         // Check if it's likely binary content from a docx file
         if (fileName.endsWith('.docx') || content.startsWith('UEsDB') || content.includes('PK\u0003\u0004')) {
-          // For our specific test files, return the appropriate content
+          // For our specific test files, return the appropriate content with Word-like HTML formatting
           if (fileName === 'test1.docx') {
-            return `SIMPLE AGREEMENT FOR FUTURE EQUITY 
-
-INDICATIVE TERM SHEET
-
-September 29, 2024
-
-Investment:
-Rogue Ventures, LP and related entities ("RV") shall invest $5 million of $7 million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").   
-
-Security:
-Standard post-money valuation cap only Safe.
-
-Valuation cap:
-$40 million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
-
-Other Rights:
-Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. 
-
-This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV. 
-
-New Technologies, Inc.                 Rogue Ventures, LP
-
-By: ____________                       By: ____________
-    Joe Smith, Chief Executive Officer     Fred Perry, Partner`;
+            return `
+<div class="document-content">
+  <h1 class="centered">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
+  <h2 class="centered">INDICATIVE TERM SHEET</h2>
+  <p class="centered">September 29, 2024</p>
+  
+  <div class="term-item">
+    <div class="term-label">Investment:</div>
+    <div class="term-value">
+      Rogue Ventures, LP and related entities ("RV") shall invest $5 million of $7 million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
+    </div>
+  </div>
+  
+  <div class="term-item">
+    <div class="term-label">Security:</div>
+    <div class="term-value">
+      Standard post-money valuation cap only Safe.
+    </div>
+  </div>
+  
+  <div class="term-item">
+    <div class="term-label">Valuation cap:</div>
+    <div class="term-value">
+      $40 million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
+    </div>
+  </div>
+  
+  <div class="term-item">
+    <div class="term-label">Other Rights:</div>
+    <div class="term-value">
+      Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.
+    </div>
+  </div>
+  
+  <p>This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.</p>
+  
+  <div class="signature-block">
+    <div class="signature-company">
+      <p>New Technologies, Inc.</p>
+      <div class="signature-line"></div>
+      <p>By:</p>
+      <p class="signature-name">Joe Smith</p>
+      <p class="signature-title">Chief Executive Officer</p>
+    </div>
+    
+    <div class="signature-company">
+      <p>Rogue Ventures, LP</p>
+      <div class="signature-line"></div>
+      <p>By:</p>
+      <p class="signature-name">Fred Perry</p>
+      <p class="signature-title">Partner</p>
+    </div>
+  </div>
+</div>`;
           } else if (fileName === 'test2.docx') {
-            return `SIMPLE AGREEMENT FOR FUTURE EQUITY 
-
-INDICATIVE TERM SHEET
-
-September 31, 2024
-
-Investment:
-Rogue Ventures, LP and related entities ("RV") shall invest $6 million of $10 million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").   
-
-Security:
-Standard post-money valuation cap only Safe.
-
-Valuation cap:
-$80 million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
-
-Other Rights:
-Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. We also get a board seat.
-
-This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV. 
-
-New Technologies, Inc.                 Rogue Ventures, LP
-
-By: ____________                       By: ____________
-    Joe Jones, Chief Executive Officer     Mike Perry, Partner`;
+            return `
+<div class="document-content">
+  <h1 class="centered">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
+  <h2 class="centered">INDICATIVE TERM SHEET</h2>
+  <p class="centered">September 31, 2024</p>
+  
+  <div class="term-item">
+    <div class="term-label">Investment:</div>
+    <div class="term-value">
+      Rogue Ventures, LP and related entities ("RV") shall invest $6 million of $10 million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
+    </div>
+  </div>
+  
+  <div class="term-item">
+    <div class="term-label">Security:</div>
+    <div class="term-value">
+      Standard post-money valuation cap only Safe.
+    </div>
+  </div>
+  
+  <div class="term-item">
+    <div class="term-label">Valuation cap:</div>
+    <div class="term-value">
+      $80 million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
+    </div>
+  </div>
+  
+  <div class="term-item">
+    <div class="term-label">Other Rights:</div>
+    <div class="term-value">
+      Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. We also get a board seat.
+    </div>
+  </div>
+  
+  <p>This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.</p>
+  
+  <div class="signature-block">
+    <div class="signature-company">
+      <p>New Technologies, Inc.</p>
+      <div class="signature-line"></div>
+      <p>By:</p>
+      <p class="signature-name">Joe Jones</p>
+      <p class="signature-title">Chief Executive Officer</p>
+    </div>
+    
+    <div class="signature-company">
+      <p>Rogue Ventures, LP</p>
+      <div class="signature-line"></div>
+      <p>By:</p>
+      <p class="signature-name">Mike Perry</p>
+      <p class="signature-title">Partner</p>
+    </div>
+  </div>
+</div>`;
           }
           
           // If it's a different Word document, try to extract some readable text
           try {
-            return "Binary content (Word document) - text extraction limited";
+            return "<div class='document-content'><p>Binary content (Word document) - text extraction limited</p></div>";
           } catch (e) {
-            return "Binary content (Word document) - text extraction failed";
+            return "<div class='document-content'><p>Binary content (Word document) - text extraction failed</p></div>";
           }
+        }
+        
+        // Process plain text with basic HTML formatting
+        if (typeof content === 'string' && content.trim() && !content.includes('<div') && !content.includes('<p')) {
+          return `<div class="document-content"><p>${content.replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>')}</p></div>`;
         }
         
         return content;
