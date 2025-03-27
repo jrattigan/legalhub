@@ -97,13 +97,13 @@ By: ____________                       By: ____________
         // List of common terms that should not be highlighted individually
         const commonTerms = ['September', 'million', '$', 'Rogue', 'Ventures', 'LP', 'Chief', 'Executive', 'Officer', 'Partner'];
         
-        // Build the HTML with smart highlighting and Word-like styling
-        let html = '<div class="document-content">';
+        // Build the HTML with smart highlighting and Word-like styling for proper Word document appearance
+        let html = '<div class="document-content" style="font-family: \'Calibri\', \'Arial\', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">';
         
-        // Add document header formatting with centered titles
+        // Add document header formatting with centered titles and Word styling
         html += `
-<h1 class="centered">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
-<h2 class="centered">INDICATIVE TERM SHEET</h2>`;
+<h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 12pt; margin-top: 18pt;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
+<h2 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 14pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 10pt;">INDICATIVE TERM SHEET</h2>`;
         
         // Identify only the meaningful changes
         const changes = diff.diffWords(actualOldContent, actualNewContent);
@@ -143,9 +143,9 @@ By: ____________                       By: ____________
               const fullDate = value.match(/September \d{1,2}, 2024/) || [value];
               
               if (change.removed) {
-                processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${fullDate[0]}</span>`;
+                processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline; font-family: 'Calibri', 'Arial', sans-serif;">${fullDate[0]}</span>`;
               } else {
-                processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${fullDate[0]}</span>`;
+                processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline; font-family: 'Calibri', 'Arial', sans-serif;">${fullDate[0]}</span>`;
               }
               
               // Add any text after the date normally
@@ -176,9 +176,9 @@ By: ____________                       By: ____________
             
             if (amountMatch && (change.added || change.removed)) {
               if (change.removed) {
-                processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${amountMatch[0]}</span>`;
+                processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline; font-family: 'Calibri', 'Arial', sans-serif;">${amountMatch[0]}</span>`;
               } else {
-                processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${amountMatch[0]}</span>`;
+                processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline; font-family: 'Calibri', 'Arial', sans-serif;">${amountMatch[0]}</span>`;
               }
               
               // Add any text after the amount normally
@@ -214,12 +214,12 @@ By: ____________                       By: ____________
                           value.includes('Partner') ? 'Partner' : '';
               
               if (change.removed) {
-                processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${name}</span>`;
+                processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline; font-family: 'Calibri', 'Arial', sans-serif;">${name}</span>`;
                 if (title) {
                   processedHTML += ', ' + title;
                 }
               } else {
-                processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${name}</span>`;
+                processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline; font-family: 'Calibri', 'Arial', sans-serif;">${name}</span>`;
                 if (title) {
                   processedHTML += ', ' + title;
                 }
@@ -244,7 +244,7 @@ By: ____________                       By: ____________
           // Handle board seat addition (special case)
           if (value.includes('We also get a board seat')) {
             if (change.added) {
-              processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${value}</span>`;
+              processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline; font-family: 'Calibri', 'Arial', sans-serif;">${value}</span>`;
             } else if (!change.removed) {
               processedHTML += value;
             }
@@ -253,9 +253,9 @@ By: ____________                       By: ____________
           
           // Default handling for other changes
           if (change.added) {
-            processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${value}</span>`;
+            processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline; font-family: 'Calibri', 'Arial', sans-serif;">${value}</span>`;
           } else if (change.removed) {
-            processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${value}</span>`;
+            processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline; font-family: 'Calibri', 'Arial', sans-serif;">${value}</span>`;
           } else {
             processedHTML += value;
           }
@@ -275,8 +275,8 @@ By: ____________                       By: ____________
       <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
         <div class="full-document-with-changes">
           <div class="legend" style="margin-bottom: 12px; font-size: 11px; color: #666;">
-            <div style="margin-bottom: 4px;"><span style="background-color: #fee2e2; color: #b91c1c; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline-block;">Red</span>: Removed content</div>
-            <div><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block;">Green</span>: Added content</div>
+            <div style="margin-bottom: 4px;"><span style="background-color: #fee2e2; color: #b91c1c; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline;">Red</span>: Removed content</div>
+            <div><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline;">Green</span>: Added content</div>
           </div>
           ${inContextDiff}
         </div>
@@ -288,9 +288,6 @@ By: ____________                       By: ____________
       const hasDifferences = changes.some((part: { added?: boolean; removed?: boolean; value: string }) => part.added || part.removed);
       
       if (hasDifferences) {
-        // Generate HTML with highlighted changes
-        let inlineDiffHtml = '<div class="document-content">';
-        
         // Define the type for the diff parts to avoid the "implicitly any" error
         interface DiffPart {
           value: string;
@@ -298,17 +295,17 @@ By: ____________                       By: ____________
           removed?: boolean;
         }
         
-        inlineDiffHtml += `<h1 class="centered">${newerVersion.fileName}</h1>`;
-        inlineDiffHtml += `<p class="centered">Version ${newerVersion.version}</p>`;
-        
-        // Process the content with better Word-like formatting
+        // Create properly formatted Word-like document content
+        let documentContent = '';
+
+        // Process the content to create Word-like formatted document
         let processedContent = '';
         for (const part of changes as DiffPart[]) {
           if (part.added) {
-            // Added text - green with better formatting
+            // Added text - green with better inline formatting
             processedContent += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline; font-family: 'Calibri', 'Arial', sans-serif;">${part.value}</span>`;
           } else if (part.removed) {
-            // Removed text - red with better formatting
+            // Removed text - red with better inline formatting
             processedContent += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline; font-family: 'Calibri', 'Arial', sans-serif;">${part.value}</span>`;
           } else {
             // Unchanged text - preserve formatting but don't add any special styling
@@ -316,19 +313,24 @@ By: ____________                       By: ____________
           }
         }
         
-        // Convert line breaks to paragraphs
-        inlineDiffHtml += processedContent.replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>');
-        inlineDiffHtml += '</div>';
+        // Convert the content to paragraphs with proper formatting
+        const paragraphs = processedContent.split(/\n\n+/);
         
+        // Format the document like a proper Word document
+        documentContent += `<h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 12pt;">${newerVersion.fileName.toUpperCase()}</h1>`;
+        documentContent += `<h2 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 14pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 10pt;">INDICATIVE TERM SHEET</h2>`;
+        
+        // Add paragraphs with proper spacing
+        for (const para of paragraphs) {
+          if (para.trim()) {
+            documentContent += `<p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; margin-bottom: 10pt;">${para.replace(/\n/g, '<br>')}</p>`;
+          }
+        }
+        
+        // Create the complete diff HTML with Word document styling
         diffHtml = `
-        <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
-          <div class="full-document-with-changes">
-            <div class="legend" style="margin-bottom: 12px; font-size: 11px; color: #666;">
-              <div style="margin-bottom: 4px;"><span style="background-color: #fee2e2; color: #b91c1c; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline-block;">Red</span>: Removed content</div>
-              <div><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block;">Green</span>: Added content</div>
-            </div>
-            ${inlineDiffHtml}
-          </div>
+        <div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 0; margin: 0;">
+          ${documentContent}
         </div>
         `;
       } else {

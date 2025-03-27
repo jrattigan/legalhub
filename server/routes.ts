@@ -327,111 +327,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // For our specific test files, return the appropriate content with Word-like HTML formatting
           if (fileName === 'test1.docx') {
             return `
-<div class="document-content">
-  <h1 class="centered">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
-  <h2 class="centered">INDICATIVE TERM SHEET</h2>
-  <p class="centered">September 29, 2024</p>
+<div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">
+  <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 12pt; margin-top: 18pt;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
+  <h2 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 14pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 10pt;">INDICATIVE TERM SHEET</h2>
+  <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; text-align: center; margin-bottom: 16pt;">September 29, 2024</p>
   
-  <div class="term-item">
-    <div class="term-label">Investment:</div>
-    <div class="term-value">
+  <div style="margin-bottom: 15pt; padding: 0;">
+    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Investment:</div>
+    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
       Rogue Ventures, LP and related entities ("RV") shall invest $5 million of $7 million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
     </div>
   </div>
   
-  <div class="term-item">
-    <div class="term-label">Security:</div>
-    <div class="term-value">
+  <div style="margin-bottom: 15pt; padding: 0;">
+    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Security:</div>
+    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
       Standard post-money valuation cap only Safe.
     </div>
   </div>
   
-  <div class="term-item">
-    <div class="term-label">Valuation cap:</div>
-    <div class="term-value">
+  <div style="margin-bottom: 15pt; padding: 0;">
+    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Valuation cap:</div>
+    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
       $40 million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
     </div>
   </div>
   
-  <div class="term-item">
-    <div class="term-label">Other Rights:</div>
-    <div class="term-value">
+  <div style="margin-bottom: 15pt; padding: 0;">
+    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Other Rights:</div>
+    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
       Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.
     </div>
   </div>
   
-  <p>This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.</p>
+  <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 20pt; margin-bottom: 30pt;">This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.</p>
   
-  <div class="signature-block">
-    <div class="signature-company">
-      <p>New Technologies, Inc.</p>
-      <div class="signature-line"></div>
-      <p>By:</p>
-      <p class="signature-name">Joe Smith</p>
-      <p class="signature-title">Chief Executive Officer</p>
+  <div style="margin-top: 40pt; display: flex; justify-content: space-between;">
+    <div style="width: 45%;">
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 6pt;">New Technologies, Inc.</p>
+      <div style="border-top: 1px solid #000; margin: 10pt 0;"></div>
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">By:</p>
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-weight: bold; margin-bottom: 4pt;">Joe Smith</p>
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-style: italic;">Chief Executive Officer</p>
     </div>
     
-    <div class="signature-company">
-      <p>Rogue Ventures, LP</p>
-      <div class="signature-line"></div>
-      <p>By:</p>
-      <p class="signature-name">Fred Perry</p>
-      <p class="signature-title">Partner</p>
+    <div style="width: 45%;">
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 6pt;">Rogue Ventures, LP</p>
+      <div style="border-top: 1px solid #000; margin: 10pt 0;"></div>
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">By:</p>
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-weight: bold; margin-bottom: 4pt;">Fred Perry</p>
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-style: italic;">Partner</p>
     </div>
   </div>
 </div>`;
           } else if (fileName === 'test2.docx') {
             return `
-<div class="document-content">
-  <h1 class="centered">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
-  <h2 class="centered">INDICATIVE TERM SHEET</h2>
-  <p class="centered">September 31, 2024</p>
+<div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">
+  <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 12pt; margin-top: 18pt;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
+  <h2 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 14pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 10pt;">INDICATIVE TERM SHEET</h2>
+  <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; text-align: center; margin-bottom: 16pt;">September 31, 2024</p>
   
-  <div class="term-item">
-    <div class="term-label">Investment:</div>
-    <div class="term-value">
+  <div style="margin-bottom: 15pt; padding: 0;">
+    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Investment:</div>
+    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
       Rogue Ventures, LP and related entities ("RV") shall invest $6 million of $10 million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
     </div>
   </div>
   
-  <div class="term-item">
-    <div class="term-label">Security:</div>
-    <div class="term-value">
+  <div style="margin-bottom: 15pt; padding: 0;">
+    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Security:</div>
+    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
       Standard post-money valuation cap only Safe.
     </div>
   </div>
   
-  <div class="term-item">
-    <div class="term-label">Valuation cap:</div>
-    <div class="term-value">
+  <div style="margin-bottom: 15pt; padding: 0;">
+    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Valuation cap:</div>
+    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
       $80 million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
     </div>
   </div>
   
-  <div class="term-item">
-    <div class="term-label">Other Rights:</div>
-    <div class="term-value">
+  <div style="margin-bottom: 15pt; padding: 0;">
+    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Other Rights:</div>
+    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
       Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. We also get a board seat.
     </div>
   </div>
   
-  <p>This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.</p>
+  <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 20pt; margin-bottom: 30pt;">This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.</p>
   
-  <div class="signature-block">
-    <div class="signature-company">
-      <p>New Technologies, Inc.</p>
-      <div class="signature-line"></div>
-      <p>By:</p>
-      <p class="signature-name">Joe Jones</p>
-      <p class="signature-title">Chief Executive Officer</p>
+  <div style="margin-top: 40pt; display: flex; justify-content: space-between;">
+    <div style="width: 45%;">
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 6pt;">New Technologies, Inc.</p>
+      <div style="border-top: 1px solid #000; margin: 10pt 0;"></div>
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">By:</p>
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-weight: bold; margin-bottom: 4pt;">Joe Jones</p>
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-style: italic;">Chief Executive Officer</p>
     </div>
     
-    <div class="signature-company">
-      <p>Rogue Ventures, LP</p>
-      <div class="signature-line"></div>
-      <p>By:</p>
-      <p class="signature-name">Mike Perry</p>
-      <p class="signature-title">Partner</p>
+    <div style="width: 45%;">
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 6pt;">Rogue Ventures, LP</p>
+      <div style="border-top: 1px solid #000; margin: 10pt 0;"></div>
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">By:</p>
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-weight: bold; margin-bottom: 4pt;">Mike Perry</p>
+      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-style: italic;">Partner</p>
     </div>
   </div>
 </div>`;
@@ -439,15 +439,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // If it's a different Word document, try to extract some readable text
           try {
-            return "<div class='document-content'><p>Binary content (Word document) - text extraction limited</p></div>";
+            return `<div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;"><p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 10pt;">Binary content (Word document) - text extraction limited</p></div>`;
           } catch (e) {
-            return "<div class='document-content'><p>Binary content (Word document) - text extraction failed</p></div>";
+            return `<div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;"><p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 10pt;">Binary content (Word document) - text extraction failed</p></div>`;
           }
         }
         
-        // Process plain text with basic HTML formatting
+        // Process plain text with basic HTML formatting and apply Word-like styling
         if (typeof content === 'string' && content.trim() && !content.includes('<div') && !content.includes('<p')) {
-          return `<div class="document-content"><p>${content.replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>')}</p></div>`;
+          return `<div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;"><p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 10pt;">${content.replace(/\n\n+/g, '</p><p style="font-family: \'Calibri\', \'Arial\', sans-serif; font-size: 11pt; margin-bottom: 10pt;">').replace(/\n/g, '<br>')}</p></div>`;
         }
         
         return content;

@@ -191,8 +191,8 @@ export function DocumentCompare({
                     v{originalVersion.version} → v{newVersion.version}
                   </div>
                   <div className="flex flex-wrap">
-                    <span className="inline-block mr-3"><span className="bg-red-100 text-red-700 px-1 py-0.5 text-xs rounded line-through">Red text</span>: Deleted</span>
-                    <span className="inline-block"><span className="bg-green-100 text-green-700 px-1 py-0.5 text-xs rounded">Green text</span>: Added</span>
+                    <span className="inline-block mr-3"><span style={{ backgroundColor: '#fee2e2', color: '#991b1b', padding: '2px 4px', textDecoration: 'line-through', borderRadius: '2px', display: 'inline' }}>Red text</span>: Deleted</span>
+                    <span className="inline-block"><span style={{ backgroundColor: '#dcfce7', color: '#166534', padding: '2px 4px', borderRadius: '2px', display: 'inline' }}>Green text</span>: Added</span>
                   </div>
                 </div>
               </div>

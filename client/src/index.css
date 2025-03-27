@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Word-like document styling */
+/* Word-like document styling - Improved for better Microsoft Word appearance */
 .document-content {
   font-family: 'Calibri', 'Arial', sans-serif;
   color: #222;
@@ -10,35 +10,41 @@
   font-size: 11pt;
   max-width: 100%;
   margin: 0 auto;
+  padding: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-align: left;
 }
 
-/* Specific styles for change highlights - directly targeting server styles */
+/* Microsoft Word track changes style for additions and deletions */
 .document-compare span[style*="background-color: #dcfce7"],
 .document-content span[style*="background-color: #dcfce7"] {
-  background-color: #dcfce7 !important;
+  background-color: #dcfce7 !important; /* Word add color */
   color: #166534 !important;
-  padding: 2px 4px !important;
-  border-radius: 2px !important;
+  padding: 1px 0 !important; /* More subtle padding like in MS Word */
   text-decoration: none !important;
   display: inline !important; /* Changed to inline for better text flow */
   font-family: 'Calibri', 'Arial', sans-serif !important;
   font-size: 11pt !important;
-  line-height: 1.5 !important;
+  line-height: inherit !important; /* Use inherited line height to maintain flow */
   margin: 0 !important;
+  border-radius: 0 !important; /* MS Word doesn't use rounded corners */
+  vertical-align: baseline !important;
 }
 
 .document-compare span[style*="background-color: #fee2e2"],
 .document-content span[style*="background-color: #fee2e2"] {
-  background-color: #fee2e2 !important;
+  background-color: #fee2e2 !important; /* Word delete color */
   color: #991b1b !important;
-  padding: 2px 4px !important;
-  border-radius: 2px !important;
+  padding: 1px 0 !important; /* More subtle padding like in MS Word */
   text-decoration: line-through !important;
   display: inline !important; /* Changed to inline for better text flow */
   font-family: 'Calibri', 'Arial', sans-serif !important;
   font-size: 11pt !important;
-  line-height: 1.5 !important;
+  line-height: inherit !important; /* Use inherited line height to maintain flow */
   margin: 0 !important;
+  border-radius: 0 !important; /* MS Word doesn't use rounded corners */
+  vertical-align: baseline !important;
 }
 
 /* Fix for the full-document-with-changes parent container */
