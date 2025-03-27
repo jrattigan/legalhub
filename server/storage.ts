@@ -677,12 +677,62 @@ export class MemStorage implements IStorage {
       throw new Error("One or both document versions not found");
     }
     
-    // For demo purposes, simulate a diff
+    // Determine which version is newer
+    const olderVersion = version1.version < version2.version ? version1 : version2;
+    const newerVersion = version1.version > version2.version ? version1 : version2;
+    
+    // For demo purposes, create a more detailed diff
     return `
       <div class="diff">
-        <div class="diff-added">Added in version ${Math.max(version1.version, version2.version)}</div>
-        <div class="diff-removed">Removed in version ${Math.max(version1.version, version2.version)}</div>
-        <div class="diff-unchanged">Unchanged content</div>
+        <div class="diff-header">
+          <p>Comparing version ${olderVersion.version} to version ${newerVersion.version}</p>
+        </div>
+        
+        <h3 class="text-lg font-medium mb-3">Document: ${newerVersion.fileName}</h3>
+        
+        <div class="diff-section mb-4">
+          <h4 class="font-medium mb-2">Section 1: Introduction</h4>
+          <div class="diff-unchanged">
+            This document outlines the terms and conditions for the transaction.
+          </div>
+        </div>
+        
+        <div class="diff-section mb-4">
+          <h4 class="font-medium mb-2">Section 2: Changes to Financial Terms</h4>
+          <div class="diff-removed">
+            The initial investment will be $5,000,000 with a valuation cap of $25,000,000.
+          </div>
+          <div class="diff-added">
+            The initial investment will be $7,500,000 with a valuation cap of $30,000,000.
+          </div>
+        </div>
+        
+        <div class="diff-section mb-4">
+          <h4 class="font-medium mb-2">Section 3: Board Representation</h4>
+          <div class="diff-unchanged">
+            The investor will have the right to appoint one member to the board of directors.
+          </div>
+          <div class="diff-added">
+            Additionally, the investor will have observer rights for all board meetings.
+          </div>
+        </div>
+        
+        <div class="diff-section mb-4">
+          <h4 class="font-medium mb-2">Section 4: Intellectual Property</h4>
+          <div class="diff-removed">
+            The company represents that it owns all intellectual property related to its products.
+          </div>
+          <div class="diff-added">
+            The company represents that it owns or has properly licensed all intellectual property related to its products, and has conducted a thorough IP audit to confirm this representation.
+          </div>
+        </div>
+        
+        <div class="diff-section">
+          <h4 class="font-medium mb-2">Section 5: Closing Conditions</h4>
+          <div class="diff-unchanged">
+            The transaction is subject to standard closing conditions including regulatory approval.
+          </div>
+        </div>
       </div>
     `;
   }

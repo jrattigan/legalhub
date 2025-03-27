@@ -147,4 +147,29 @@
   .form-card {
     @apply p-6 rounded-lg border border-neutral-200 shadow-sm bg-white;
   }
+  
+  /* Document Comparison */
+  .diff {
+    @apply text-sm;
+  }
+  
+  .diff-header {
+    @apply bg-gray-100 p-3 rounded mb-4 text-center text-gray-700 font-medium;
+  }
+  
+  .diff-section {
+    @apply border-b border-gray-200 pb-4;
+  }
+  
+  .diff-added {
+    @apply bg-green-50 text-green-800 p-3 mb-2 rounded border-l-4 border-green-500 font-mono;
+  }
+  
+  .diff-removed {
+    @apply bg-red-50 text-red-800 p-3 mb-2 rounded border-l-4 border-red-500 font-mono;
+  }
+  
+  .diff-unchanged {
+    @apply bg-gray-50 text-gray-800 p-3 mb-2 rounded border-l-4 border-gray-300 font-mono;
+  }
 }

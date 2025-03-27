@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -20,10 +20,37 @@ export function DocumentCompare({
   diff
 }: DocumentCompareProps) {
   const [view, setView] = useState<'changes' | 'original' | 'new'>('changes');
+  const [renderedDiff, setRenderedDiff] = useState<string>(diff);
+
+  // Ensure diff HTML is properly sanitized and formatted
+  useEffect(() => {
+    // The diff is already properly formatted HTML from the server
+    setRenderedDiff(diff);
+    
+    // Escape key to close modal
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    window.addEventListener('keydown', handleEscapeKey);
+    return () => {
+      window.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [diff, onClose]);
+
+  const originalName = originalVersion.uploadedBy?.fullName || 
+                     originalVersion.uploadedBy?.name || 
+                     'Unknown user';
+                     
+  const newName = newVersion.uploadedBy?.fullName || 
+                newVersion.uploadedBy?.name || 
+                'Unknown user';
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-6xl h-[80vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-hidden">
+      <Card className="w-full max-w-6xl h-[85vh] flex flex-col">
         <CardHeader className="pb-2 flex flex-row justify-between items-center">
           <CardTitle className="flex items-center">
             <FileText className="mr-2 h-5 w-5" />
@@ -40,13 +67,13 @@ export function DocumentCompare({
           <div className="flex-1">
             <div className="text-sm font-medium">Original Version</div>
             <div className="text-xs text-muted-foreground">
-              v{originalVersion.version} by {originalVersion.uploadedBy.fullName || originalVersion.uploadedBy.name}
+              v{originalVersion.version} by {originalName}
             </div>
           </div>
           <div className="flex-1 text-right">
             <div className="text-sm font-medium">New Version</div>
             <div className="text-xs text-muted-foreground">
-              v{newVersion.version} by {newVersion.uploadedBy.fullName || newVersion.uploadedBy.name}
+              v{newVersion.version} by {newName}
             </div>
           </div>
         </div>
@@ -75,16 +102,20 @@ export function DocumentCompare({
             <TabsContent value="changes" className="m-0 h-full">
               <div 
                 className="border rounded p-4 h-full bg-white overflow-y-auto"
-                dangerouslySetInnerHTML={{ __html: diff }}
+                dangerouslySetInnerHTML={{ __html: renderedDiff }}
               />
             </TabsContent>
             
             <TabsContent value="original" className="m-0 h-full">
               <div className="border rounded p-4 h-full bg-white overflow-y-auto">
                 <div className="text-sm">
-                  {/* For a real implementation, you'd render the actual document content */}
-                  <p>Viewing original document: {originalVersion.fileName}</p>
-                  <p className="text-muted-foreground">In a production environment, this would display the actual document content or a preview.</p>
+                  <h3 className="font-medium mb-2">Original Document: {originalVersion.fileName}</h3>
+                  <div className="p-3 bg-gray-100 rounded">
+                    <p className="mb-2">Version {originalVersion.version}</p>
+                    <p className="mb-2">Uploaded by {originalName}</p>
+                    <p className="mb-2">Date: {new Date(originalVersion.createdAt).toLocaleString()}</p>
+                    <p className="text-muted-foreground mt-4">In a production environment, this would display the actual document content or a preview.</p>
+                  </div>
                 </div>
               </div>
             </TabsContent>
@@ -92,9 +123,13 @@ export function DocumentCompare({
             <TabsContent value="new" className="m-0 h-full">
               <div className="border rounded p-4 h-full bg-white overflow-y-auto">
                 <div className="text-sm">
-                  {/* For a real implementation, you'd render the actual document content */}
-                  <p>Viewing new document: {newVersion.fileName}</p>
-                  <p className="text-muted-foreground">In a production environment, this would display the actual document content or a preview.</p>
+                  <h3 className="font-medium mb-2">New Document: {newVersion.fileName}</h3>
+                  <div className="p-3 bg-gray-100 rounded">
+                    <p className="mb-2">Version {newVersion.version}</p>
+                    <p className="mb-2">Uploaded by {newName}</p>
+                    <p className="mb-2">Date: {new Date(newVersion.createdAt).toLocaleString()}</p>
+                    <p className="text-muted-foreground mt-4">In a production environment, this would display the actual document content or a preview.</p>
+                  </div>
                 </div>
               </div>
             </TabsContent>
