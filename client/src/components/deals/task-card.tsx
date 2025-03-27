@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { apiRequest } from '@/lib/queryClient';
-import { Task, User, insertTaskSchema } from '@shared/schema';
+import { Task, User } from '@shared/schema';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -62,14 +62,18 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   });
 
   // Form validation schema
-  const taskSchema = insertTaskSchema.extend({
+  const taskSchema = z.object({
+    title: z.string().min(1, "Title is required"),
     description: z.string().optional(),
+    status: z.string().default("active"),
+    priority: z.string().default("medium"),
     dueDate: z.union([z.date(), z.string()]).optional().transform(val => 
       val === '' ? null : typeof val === 'string' ? new Date(val) : val
     ),
     assigneeId: z.union([z.number(), z.string(), z.null()]).optional().transform(val => 
       val === '' || val === 'unassigned' ? null : typeof val === 'string' ? parseInt(val) : val
-    )
+    ),
+    completed: z.boolean().default(false)
   });
 
   const form = useForm<z.infer<typeof taskSchema>>({
@@ -80,7 +84,8 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       status: 'active',
       priority: 'medium',
       dueDate: '',
-      assigneeId: undefined
+      assigneeId: null, // Changed from undefined to null
+      completed: false
     }
   });
 

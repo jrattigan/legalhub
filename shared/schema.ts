@@ -133,6 +133,12 @@ export const insertTaskSchema = createInsertSchema(tasks).pick({
   dueDate: true,
   assigneeId: true,
   completed: true,
+}).transform((data) => {
+  // Ensure assigneeId is null and not undefined when empty
+  if (data.assigneeId === undefined) {
+    return { ...data, assigneeId: null };
+  }
+  return data;
 });
 
 // Issues schema
