@@ -71,10 +71,24 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
                 </DialogDescription>
               </DialogHeader>
               <FileUpload
-                onUpload={(fileData) => {
-                  // Here you would handle the document creation
-                  setIsNewDocDialogOpen(false);
-                  onRefreshData();
+                onUpload={async (fileData) => {
+                  // Create a new document with the uploaded file data
+                  try {
+                    await apiRequest('POST', '/api/documents', {
+                      title: fileData.fileName,
+                      dealId: dealId,
+                      description: "Uploaded document",
+                      category: "General",
+                      status: "Draft",
+                      fileType: fileData.fileType,
+                      assigneeId: null
+                    });
+                    
+                    setIsNewDocDialogOpen(false);
+                    onRefreshData();
+                  } catch (error) {
+                    console.error("Error creating document:", error);
+                  }
                 }}
                 isUploading={false}
               />
@@ -103,7 +117,7 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
   if (!document) return null;
 
   // Fetch document versions
-  const { data: versions, isLoading: versionsLoading } = useQuery({
+  const { data: versions = [], isLoading: versionsLoading } = useQuery<(DocumentVersion & { uploadedBy: any })[]>({
     queryKey: [`/api/documents/${document.id}/versions`],
     enabled: isExpanded
   });
@@ -269,7 +283,7 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
               <div className="text-center py-2 text-sm text-neutral-500">Loading versions...</div>
             ) : versions && versions.length > 0 ? (
               <div className="space-y-2">
-                {versions.map((version: DocumentVersion & { uploadedBy: any }) => (
+                {versions.map((version) => (
                   <div key={version.id} className="flex justify-between items-center py-1 border-b border-neutral-100 last:border-b-0 text-xs">
                     <div className="flex items-center">
                       <Avatar className="h-5 w-5 mr-2" style={{ backgroundColor: version.uploadedBy.avatarColor }}>
