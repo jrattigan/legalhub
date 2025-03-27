@@ -61,22 +61,24 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     enabled: isDialogOpen
   });
 
-  // Form validation schema
+  // Import the schema from shared/schema and extend it for client-side validation
+  // We're using our own validation here because insertTaskSchema in shared/schema.ts doesn't have the extend method directly
   const taskSchema = z.object({
     title: z.string().min(1, "Title is required"),
-    description: z.string().optional(),
+    description: z.string().optional().nullable(),
     status: z.string().default("active"),
     priority: z.string().default("medium"),
-    dueDate: z.union([z.date(), z.string(), z.null()]).optional()
+    dueDate: z.union([z.date(), z.string(), z.null()]).optional().nullable()
       .transform(val => {
         if (val === '' || val === null || val === undefined) return null;
         return typeof val === 'string' ? new Date(val) : val;
       }),
-    assigneeId: z.union([z.number(), z.string(), z.null()]).optional()
+    assigneeId: z.union([z.number(), z.string(), z.null()]).optional().nullable()
       .transform(val => {
         if (val === '' || val === 'unassigned' || val === null || val === undefined) return null;
         return typeof val === 'string' ? parseInt(val) : val;
       }),
+    dealId: z.number().optional(), // Will be filled before submission
     completed: z.boolean().default(false)
   });
 
@@ -84,12 +86,13 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     resolver: zodResolver(taskSchema),
     defaultValues: {
       title: '',
-      description: '',
+      description: '', 
       status: 'active',
       priority: 'medium',
-      dueDate: '',
-      assigneeId: null, // Changed from undefined to null
-      completed: false
+      dueDate: null,
+      assigneeId: null, 
+      completed: false,
+      dealId: dealId || undefined
     }
   });
 
@@ -192,21 +195,51 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       return;
     }
     
-    // Format the data for submission (ensure dates are properly formatted)
-    const formattedData = {
-      title: data.title,
-      description: data.description || "",
-      status: data.status || "active",
-      priority: data.priority || "medium",
-      dealId,
-      dueDate: data.dueDate ? new Date(data.dueDate) : null,
-      assigneeId: data.assigneeId === "unassigned" || !data.assigneeId ? null : 
-        typeof data.assigneeId === "string" ? parseInt(data.assigneeId) : data.assigneeId,
-      completed: false
-    };
+    try {
+      // Format the data for submission (ensure dates are properly formatted)
+      const formattedData = {
+        title: data.title,
+        description: data.description || "", // Ensure we have a string, not null or undefined
+        status: data.status || "active",
+        priority: data.priority || "medium",
+        dealId,
+        dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        assigneeId: handleAssigneeId(data.assigneeId),
+        completed: false
+      };
+      
+      console.log("Submitting task with data:", formattedData);
+      
+      // Validate the data before submission
+      if (!formattedData.title || formattedData.title.trim() === '') {
+        throw new Error("Task title is required");
+      }
+      
+      createTaskMutation.mutate(formattedData);
+    } catch (error: any) {
+      console.error("Error preparing task data:", error);
+      toast({
+        variant: "destructive",
+        title: "Form Error",
+        description: error.message || "Failed to prepare task data. Please check your inputs.",
+      });
+    }
+  };
+
+  // Helper function to handle assignee ID processing
+  const handleAssigneeId = (assigneeId: any): number | null => {
+    // Case 1: No assignee selected
+    if (assigneeId === "unassigned" || assigneeId === undefined || assigneeId === null || assigneeId === '') {
+      return null;
+    }
     
-    console.log("Submitting task:", formattedData);
-    createTaskMutation.mutate(formattedData as any);
+    // Case 2: Convert string ID to number
+    if (typeof assigneeId === 'string') {
+      return parseInt(assigneeId);
+    }
+    
+    // Case 3: Already a number
+    return assigneeId;
   };
 
   const getTaskPriorityBadge = (priority: string) => {
@@ -287,7 +320,11 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                         <FormControl>
                           <Input 
                             type="date" 
-                            {...field}
+                            onChange={(e) => {
+                              // Handle date input change - convert to Date object if not empty
+                              const value = e.target.value;
+                              field.onChange(value ? new Date(value) : null);
+                            }}
                             value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
                           />
                         </FormControl>

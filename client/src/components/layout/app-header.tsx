@@ -26,21 +26,23 @@ export default function AppHeader({ user, notifications = 0 }: AppHeaderProps) {
   return (
     <header className="bg-white border-b border-neutral-200 h-14 flex items-center px-4 justify-between z-10">
       <div className="flex items-center space-x-4">
-        <Link href="/dashboard">
-          <a className="font-bold text-primary text-xl">LegalDeal</a>
-        </Link>
+        <div className="font-bold text-primary text-xl cursor-pointer" onClick={() => window.location.href = '/dashboard'}>
+          LegalDeal
+        </div>
 
         <div className="hidden md:flex items-center space-x-1">
           {navItems.map((item) => (
-            <Link key={item.path} href={item.path}>
-              <a className={`px-3 py-1.5 rounded text-sm ${
+            <div
+              key={item.path}
+              className={`px-3 py-1.5 rounded text-sm cursor-pointer ${
                 location === item.path 
                   ? 'text-primary bg-primary-light' 
                   : 'text-neutral-500 hover:bg-neutral-100'
-              }`}>
-                {item.name}
-              </a>
-            </Link>
+              }`}
+              onClick={() => window.location.href = item.path}
+            >
+              {item.name}
+            </div>
           ))}
         </div>
       </div>
@@ -107,15 +109,17 @@ export default function AppHeader({ user, notifications = 0 }: AppHeaderProps) {
                 <div className="font-bold text-primary text-xl">LegalDeal</div>
                 <nav className="flex flex-col space-y-1">
                   {navItems.map((item) => (
-                    <Link key={item.path} href={item.path}>
-                      <a className={`px-3 py-2 rounded ${
+                    <div
+                      key={item.path}
+                      className={`px-3 py-2 rounded cursor-pointer ${
                         location === item.path 
                           ? 'text-primary bg-primary-light' 
                           : 'text-neutral-500 hover:bg-neutral-100'
-                      }`}>
-                        {item.name}
-                      </a>
-                    </Link>
+                      }`}
+                      onClick={() => window.location.href = item.path}
+                    >
+                      {item.name}
+                    </div>
                   ))}
                 </nav>
               </div>
