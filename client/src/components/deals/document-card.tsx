@@ -132,7 +132,7 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
 
   // Fetch document versions
   const { data: versions = [], isLoading: versionsLoading } = useQuery<(DocumentVersion & { uploadedBy: any })[]>({
-    queryKey: [`/api/documents/${document.id}/versions`],
+    queryKey: [`/api/document-versions/document/${document.id}`],
     enabled: isExpanded
   });
 
@@ -143,7 +143,7 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/documents/${document.id}/versions`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/document-versions/document/${document.id}`] });
       setIsUploadDialogOpen(false);
       onRefreshData();
     }
