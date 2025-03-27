@@ -126,12 +126,12 @@ export function DocumentCompare({
             </TabsList>
           </div>
           
-          <CardContent className="flex-1 overflow-hidden mt-4 flex flex-col">
+          <CardContent className="flex-1 overflow-hidden mt-2 flex flex-col">
             <TabsContent value="changes" className="m-0 h-full flex-1 overflow-hidden flex flex-col">
-              <div className="bg-white flex-1 flex flex-col overflow-hidden">
-                <div className="mb-3 text-xs text-slate-700 p-2 bg-slate-50 rounded-lg border border-slate-200 flex flex-wrap items-center justify-between mx-1">
+              <div className="bg-white flex-1 flex flex-col overflow-hidden h-full">
+                <div className="mb-2 text-xs text-slate-700 p-2 bg-slate-50 rounded-lg border border-slate-200 flex flex-wrap items-center justify-between mx-1 shrink-0">
                   <div>
-                    <h3 className="text-sm font-medium flex items-center mb-1">
+                    <h3 className="text-sm font-medium flex items-center mb-0">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
                         <path d="M12 3v5"></path>  
                         <path d="m9 10 3-2 3 2"></path>
@@ -141,21 +141,21 @@ export function DocumentCompare({
                     </h3>
                   </div>
                   <div className="flex flex-wrap">
-                    <span className="inline-block mr-3 mb-1"><span className="bg-red-100 text-red-700 px-1 py-0.5 text-xs rounded line-through">Red text</span>: Deleted</span>
-                    <span className="inline-block mb-1"><span className="bg-green-100 text-green-700 px-1 py-0.5 text-xs rounded">Green text</span>: Added</span>
+                    <span className="inline-block mr-3 mb-0"><span className="bg-red-100 text-red-700 px-1 py-0.5 text-xs rounded line-through">Red text</span>: Deleted</span>
+                    <span className="inline-block mb-0"><span className="bg-green-100 text-green-700 px-1 py-0.5 text-xs rounded">Green text</span>: Added</span>
                   </div>
                 </div>
-                <div className="border rounded-lg flex-grow overflow-y-auto overflow-x-auto">
+                <div className="border rounded-lg flex-1 overflow-auto h-full min-h-[75vh]">
                   <div className="p-4 min-w-full" dangerouslySetInnerHTML={{ __html: renderedDiff }} />
                 </div>
               </div>
             </TabsContent>
             
             <TabsContent value="original" className="m-0 h-full flex-1 overflow-hidden flex flex-col">
-              <div className="bg-white flex-1 flex flex-col overflow-hidden">
-                <div className="mb-3 text-xs text-slate-700 p-2 bg-slate-50 rounded-lg border border-slate-200 flex items-center mx-1">
+              <div className="bg-white flex-1 flex flex-col overflow-hidden h-full">
+                <div className="mb-2 text-xs text-slate-700 p-2 bg-slate-50 rounded-lg border border-slate-200 flex items-center mx-1 shrink-0">
                   <div className="mr-auto">
-                    <h3 className="text-sm font-medium flex items-center mb-1">
+                    <h3 className="text-sm font-medium flex items-center mb-0">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                       </svg>
@@ -166,7 +166,7 @@ export function DocumentCompare({
                     v{originalVersion.version} | Uploaded by {originalName} | {new Date(originalVersion.createdAt).toLocaleString()}
                   </div>
                 </div>
-                <div className="border rounded-lg flex-grow overflow-y-auto overflow-x-auto">
+                <div className="border rounded-lg flex-1 overflow-auto h-full min-h-[75vh]">
                   <pre className="whitespace-pre-wrap p-4">
                     {originalContent}
                   </pre>
@@ -175,10 +175,10 @@ export function DocumentCompare({
             </TabsContent>
             
             <TabsContent value="new" className="m-0 h-full flex-1 overflow-hidden flex flex-col">
-              <div className="bg-white flex-1 flex flex-col overflow-hidden">
-                <div className="mb-3 text-xs text-slate-700 p-2 bg-slate-50 rounded-lg border border-slate-200 flex items-center mx-1">
+              <div className="bg-white flex-1 flex flex-col overflow-hidden h-full">
+                <div className="mb-2 text-xs text-slate-700 p-2 bg-slate-50 rounded-lg border border-slate-200 flex items-center mx-1 shrink-0">
                   <div className="mr-auto">
-                    <h3 className="text-sm font-medium flex items-center mb-1">
+                    <h3 className="text-sm font-medium flex items-center mb-0">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                       </svg>
@@ -189,7 +189,7 @@ export function DocumentCompare({
                     v{newVersion.version} | Uploaded by {newName} | {new Date(newVersion.createdAt).toLocaleString()}
                   </div>
                 </div>
-                <div className="border rounded-lg flex-grow overflow-y-auto overflow-x-auto">
+                <div className="border rounded-lg flex-1 overflow-auto h-full min-h-[75vh]">
                   <pre className="whitespace-pre-wrap p-4">
                     {newContent}
                   </pre>
