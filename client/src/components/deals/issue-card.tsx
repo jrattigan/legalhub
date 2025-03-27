@@ -35,6 +35,7 @@ import { Issue, User, insertIssueSchema } from '@shared/schema';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useToast } from '@/hooks/use-toast';
 
 interface IssueCardProps {
   issues: (Issue & { assignee?: User })[];
@@ -46,6 +47,7 @@ interface IssueCardProps {
 export default function IssueCard({ issues, onRefreshData, preview = false, dealId }: IssueCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Get users for assignee dropdown
   const { data: users } = useQuery({
@@ -56,29 +58,79 @@ export default function IssueCard({ issues, onRefreshData, preview = false, deal
   // Create issue mutation
   const createIssueMutation = useMutation({
     mutationFn: async (data: z.infer<typeof issueSchema>) => {
+      console.log("Creating issue with data:", {
+        ...data,
+        dealId
+      });
+      
       const response = await apiRequest('POST', '/api/issues', {
         ...data,
         dealId: dealId
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Issue creation failed:", errorData);
+        throw new Error(errorData.message || "Failed to create issue");
+      }
+      
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Issue created successfully:", data);
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/issues`] });
       setIsDialogOpen(false);
       onRefreshData();
       form.reset();
+      
+      toast({
+        title: "Issue created",
+        description: "Issue has been successfully created",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Issue creation error:", error);
+      
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to create issue",
+      });
     }
   });
 
   // Update issue mutation (for priority changes, status changes, etc.)
   const updateIssueMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number, data: Partial<z.infer<typeof issueSchema>> }) => {
+      console.log("Updating issue:", id, "with data:", data);
       const response = await apiRequest('PATCH', `/api/issues/${id}`, data);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Issue update failed:", errorData);
+        throw new Error(errorData.message || "Failed to update issue");
+      }
+      
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Issue updated successfully:", data);
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/issues`] });
       onRefreshData();
+      
+      toast({
+        title: "Issue updated",
+        description: "Issue has been successfully updated",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Issue update error:", error);
+      
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update issue",
+      });
     }
   });
 
@@ -101,6 +153,16 @@ export default function IssueCard({ issues, onRefreshData, preview = false, deal
   });
 
   const onSubmit = (data: z.infer<typeof issueSchema>) => {
+    if (!dealId) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No deal ID available. Cannot create issue.",
+      });
+      return;
+    }
+    
+    console.log("Submitting issue with data:", { ...data, dealId });
     createIssueMutation.mutate(data);
   };
 

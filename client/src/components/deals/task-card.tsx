@@ -63,12 +63,35 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   // Complete task mutation
   const completeMutation = useMutation({
     mutationFn: async (taskId: number) => {
+      console.log("Completing task:", taskId);
       const response = await apiRequest('POST', `/api/tasks/${taskId}/complete`, {});
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Task completion failed:", errorData);
+        throw new Error(errorData.message || "Failed to complete task");
+      }
+      
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Task completed successfully:", data);
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/tasks`] });
       onRefreshData();
+      
+      toast({
+        title: "Task completed",
+        description: "Task has been marked as completed",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Task completion error:", error);
+      
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to complete task",
+      });
     }
   });
 
@@ -124,7 +147,9 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   // Form validation schema
   const taskSchema = insertTaskSchema.extend({
     description: z.string().optional(),
-    dueDate: z.union([z.date(), z.string()]).optional(),
+    dueDate: z.union([z.date(), z.string()]).optional().transform(val => 
+      val === '' ? null : typeof val === 'string' ? new Date(val) : val
+    ),
     assigneeId: z.union([z.number(), z.string()]).optional().transform(val => 
       val === '' || val === 'unassigned' ? undefined : typeof val === 'string' ? parseInt(val) : val
     )
