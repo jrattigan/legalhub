@@ -67,12 +67,16 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     description: z.string().optional(),
     status: z.string().default("active"),
     priority: z.string().default("medium"),
-    dueDate: z.union([z.date(), z.string()]).optional().transform(val => 
-      val === '' ? null : typeof val === 'string' ? new Date(val) : val
-    ),
-    assigneeId: z.union([z.number(), z.string(), z.null()]).optional().transform(val => 
-      val === '' || val === 'unassigned' ? null : typeof val === 'string' ? parseInt(val) : val
-    ),
+    dueDate: z.union([z.date(), z.string(), z.null()]).optional()
+      .transform(val => {
+        if (val === '' || val === null || val === undefined) return null;
+        return typeof val === 'string' ? new Date(val) : val;
+      }),
+    assigneeId: z.union([z.number(), z.string(), z.null()]).optional()
+      .transform(val => {
+        if (val === '' || val === 'unassigned' || val === null || val === undefined) return null;
+        return typeof val === 'string' ? parseInt(val) : val;
+      }),
     completed: z.boolean().default(false)
   });
 

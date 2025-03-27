@@ -134,11 +134,20 @@ export const insertTaskSchema = createInsertSchema(tasks).pick({
   assigneeId: true,
   completed: true,
 }).transform((data) => {
+  // Handle date conversion from string to Date
+  const transformedData = { ...data };
+  
   // Ensure assigneeId is null and not undefined when empty
-  if (data.assigneeId === undefined) {
-    return { ...data, assigneeId: null };
+  if (transformedData.assigneeId === undefined) {
+    transformedData.assigneeId = null;
   }
-  return data;
+  
+  // Parse date strings into Date objects
+  if (transformedData.dueDate && typeof transformedData.dueDate === 'string') {
+    transformedData.dueDate = new Date(transformedData.dueDate);
+  }
+  
+  return transformedData;
 });
 
 // Issues schema
