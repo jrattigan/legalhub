@@ -85,7 +85,7 @@ export default function IssueCard({ issues, onRefreshData, preview = false, deal
   // Form validation schema
   const issueSchema = insertIssueSchema.extend({
     assigneeId: z.union([z.number(), z.string()]).optional().transform(val => 
-      val === '' ? undefined : typeof val === 'string' ? parseInt(val) : val
+      val === '' || val === 'unassigned' ? undefined : typeof val === 'string' ? parseInt(val) : val
     )
   });
 
@@ -269,7 +269,7 @@ export default function IssueCard({ issues, onRefreshData, preview = false, deal
                       <FormLabel>Assignee</FormLabel>
                       <Select 
                         onValueChange={field.onChange} 
-                        defaultValue={field.value?.toString()}
+                        defaultValue={field.value?.toString() || "unassigned"}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -277,7 +277,7 @@ export default function IssueCard({ issues, onRefreshData, preview = false, deal
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">Unassigned</SelectItem>
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
                           {users?.map((user: User) => (
                             <SelectItem key={user.id} value={user.id.toString()}>
                               {user.fullName}

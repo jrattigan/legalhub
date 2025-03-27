@@ -82,7 +82,7 @@ export default function CounselCard({ counsel, onRefreshData, preview = false, d
   // Form validation schema
   const counselSchema = insertDealCounselSchema.extend({
     attorneyId: z.union([z.number(), z.string()]).optional().transform(val => 
-      val === '' ? undefined : typeof val === 'string' ? parseInt(val) : val
+      val === '' || val === 'none' ? undefined : typeof val === 'string' ? parseInt(val) : val
     )
   });
 
@@ -190,7 +190,7 @@ export default function CounselCard({ counsel, onRefreshData, preview = false, d
                       <FormLabel>Primary Attorney</FormLabel>
                       <Select 
                         onValueChange={field.onChange} 
-                        defaultValue={field.value?.toString()}
+                        defaultValue={field.value?.toString() || "none"}
                         disabled={!selectedFirmId}
                       >
                         <FormControl>
@@ -199,7 +199,7 @@ export default function CounselCard({ counsel, onRefreshData, preview = false, d
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No specific attorney</SelectItem>
+                          <SelectItem value="none">No specific attorney</SelectItem>
                           {attorneys?.map((attorney: Attorney) => (
                             <SelectItem key={attorney.id} value={attorney.id.toString()}>
                               {attorney.name}

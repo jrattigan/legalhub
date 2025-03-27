@@ -126,7 +126,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     description: z.string().optional(),
     dueDate: z.union([z.date(), z.string()]).optional(),
     assigneeId: z.union([z.number(), z.string()]).optional().transform(val => 
-      val === '' ? undefined : typeof val === 'string' ? parseInt(val) : val
+      val === '' || val === 'unassigned' ? undefined : typeof val === 'string' ? parseInt(val) : val
     )
   });
 
@@ -287,7 +287,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                       <FormLabel>Assignee</FormLabel>
                       <Select 
                         onValueChange={field.onChange} 
-                        defaultValue={field.value?.toString()}
+                        defaultValue={field.value?.toString() || "unassigned"}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -295,7 +295,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">Unassigned</SelectItem>
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
                           {users?.map((user: User) => (
                             <SelectItem key={user.id} value={user.id.toString()}>
                               {user.fullName}
