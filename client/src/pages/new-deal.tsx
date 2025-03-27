@@ -36,15 +36,21 @@ export default function NewDeal() {
 
   // Form validation schema
   const dealSchema = insertDealSchema.extend({
-    dueDate: z.union([z.date(), z.string()]).optional(),
+    dueDate: z.union([z.date(), z.string(), z.null()]).optional(),
+    description: z.string().nullable().optional(),
+    amount: z.string().nullable().optional(),
   });
 
   // Generate a unique dealId
   const generateDealId = () => {
-    const prefix = 'D';
-    const timestamp = Date.now().toString().substring(7);
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `${prefix}${timestamp}-${random}`;
+    const prefix = 'DEAL-';
+    const random = Math.floor(1000 + Math.random() * 9000);
+    return `${prefix}${random}`;
+  };
+
+  // Helper to safely convert null/undefined to empty string for form values
+  const nullToEmpty = (value: string | null | undefined): string => {
+    return value === null || value === undefined ? '' : value;
   };
 
   // Initialize form
@@ -52,11 +58,11 @@ export default function NewDeal() {
     resolver: zodResolver(dealSchema),
     defaultValues: {
       title: '',
-      description: '',
+      description: null,
       company: '',
-      amount: '',
+      amount: null,
       status: 'draft',
-      dueDate: '',
+      dueDate: null,
       dealId: generateDealId()
     }
   });
@@ -64,10 +70,20 @@ export default function NewDeal() {
   // Create deal mutation
   const createDealMutation = useMutation({
     mutationFn: async (data: z.infer<typeof dealSchema>) => {
-      const response = await apiRequest('POST', '/api/deals', data);
-      return response.json();
+      console.log('Submitting deal data:', data);
+      try {
+        const response = await apiRequest('POST', '/api/deals', data);
+        console.log('Response status:', response.status);
+        const responseData = await response.json();
+        console.log('Response data:', responseData);
+        return responseData;
+      } catch (err) {
+        console.error('API request error:', err);
+        throw err;
+      }
     },
     onSuccess: (data) => {
+      console.log('Deal created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/combined-data'] });
       toast({
         title: 'Deal Created',
@@ -75,19 +91,27 @@ export default function NewDeal() {
       });
       navigate(`/deals/${data.id}`);
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error('Error creating deal:', error);
       toast({
         title: 'Error',
-        description: 'Could not create deal. Please try again.',
+        description: error.message || 'Could not create deal. Please try again.',
         variant: 'destructive'
       });
-      console.error('Error creating deal:', error);
     }
   });
 
   // Handle form submission
   const onSubmit = (data: z.infer<typeof dealSchema>) => {
-    createDealMutation.mutate(data);
+    // Ensure null values are properly set
+    const preparedData = {
+      ...data,
+      description: data.description || null,
+      amount: data.amount || null,
+      dueDate: data.dueDate || null
+    };
+    console.log('Submitting prepared data:', preparedData);
+    createDealMutation.mutate(preparedData);
   };
 
   return (
@@ -97,7 +121,7 @@ export default function NewDeal() {
       <div className="flex-1 flex">
         <Sidebar />
         
-        <div className="flex-1 flex flex-col bg-neutral-50">
+        <div className="flex-1 flex flex-col bg-neutral-50 overflow-auto">
           <div className="p-6 flex items-center border-b border-neutral-200 bg-white sticky top-0 z-10">
             <Button 
               variant="ghost" 
@@ -110,7 +134,7 @@ export default function NewDeal() {
             <h1 className="text-2xl font-bold text-neutral-800">Create New Deal</h1>
           </div>
           
-          <div className="flex-1 p-6" style={{ overflowY: 'auto' }}>
+          <div className="p-6">
             <div className="max-w-2xl mx-auto mb-8">
               <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-6">
                 <Form {...form}>
@@ -160,6 +184,7 @@ export default function NewDeal() {
                               <Input 
                                 placeholder="$0.00" 
                                 {...field} 
+                                value={nullToEmpty(field.value)}
                               />
                             </FormControl>
                             <FormMessage />
@@ -225,6 +250,7 @@ export default function NewDeal() {
                               placeholder="Enter deal description" 
                               rows={5}
                               {...field} 
+                              value={nullToEmpty(field.value)}
                             />
                           </FormControl>
                           <FormMessage />
