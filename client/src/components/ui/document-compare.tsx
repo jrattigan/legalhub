@@ -155,14 +155,15 @@ export function DocumentCompare({
               
               {/* Word-like Document Display */}
               <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6">
-                <div className="bg-white shadow-md w-full max-w-4xl min-h-full p-8 mx-auto border border-gray-200" 
+                <div className="bg-white shadow-md w-full max-w-4xl min-h-full p-8 mx-auto border border-gray-200 overflow-x-auto" 
                      style={{ 
                        fontFamily: "'Calibri', 'Arial', sans-serif", 
                        fontSize: "11pt", 
                        lineHeight: "1.5", 
-                       color: "#333" 
+                       color: "#333",
+                       maxWidth: "100%"
                      }}>
-                  <div className="document-content" dangerouslySetInnerHTML={{ __html: renderedDiff }} />
+                  <div className="document-content max-w-full" dangerouslySetInnerHTML={{ __html: renderedDiff }} />
                 </div>
               </div>
             </div>
@@ -185,14 +186,15 @@ export function DocumentCompare({
               
               {/* Word-like Document Display */}
               <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6">
-                <div className="bg-white shadow-md w-full max-w-4xl min-h-full p-8 mx-auto border border-gray-200" 
+                <div className="bg-white shadow-md w-full max-w-4xl min-h-full p-8 mx-auto border border-gray-200 overflow-x-auto" 
                      style={{ 
                        fontFamily: "'Calibri', 'Arial', sans-serif", 
                        fontSize: "11pt", 
                        lineHeight: "1.5", 
-                       color: "#333" 
+                       color: "#333",
+                       maxWidth: "100%"
                      }}>
-                  <div className="document-content whitespace-pre-wrap">
+                  <div className="document-content max-w-full whitespace-pre-wrap">
                     {originalContent}
                   </div>
                 </div>
@@ -217,14 +219,15 @@ export function DocumentCompare({
               
               {/* Word-like Document Display */}
               <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6">
-                <div className="bg-white shadow-md w-full max-w-4xl min-h-full p-8 mx-auto border border-gray-200" 
+                <div className="bg-white shadow-md w-full max-w-4xl min-h-full p-8 mx-auto border border-gray-200 overflow-x-auto" 
                      style={{ 
                        fontFamily: "'Calibri', 'Arial', sans-serif", 
                        fontSize: "11pt", 
                        lineHeight: "1.5", 
-                       color: "#333" 
+                       color: "#333",
+                       maxWidth: "100%"
                      }}>
-                  <div className="document-content whitespace-pre-wrap">
+                  <div className="document-content max-w-full whitespace-pre-wrap">
                     {newContent}
                   </div>
                 </div>

@@ -767,25 +767,25 @@ By: ____________                       By: ____________
         const createInContextDiff = () => {
           if (newerVersion.fileName === 'test1.docx') {
             // Showing test1 (older) with changes from test2 highlighted - with Word-like formatting
-            return `<div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
-<h1 style="font-size: 16pt; font-weight: bold; margin-bottom: 12pt; color: #222;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
+            return `<div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 25px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 100%; overflow-x: auto;">
+<h1 style="font-size: 16pt; font-weight: bold; margin-bottom: 12pt; color: #222; font-family: 'Times New Roman', serif;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
 
-<h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 10pt; margin-top: 16pt; color: #444;">INDICATIVE TERM SHEET</h2>
+<h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 10pt; margin-top: 16pt; color: #444; font-family: 'Times New Roman', serif;">INDICATIVE TERM SHEET</h2>
 
-<p><span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">September 29, 2024</span>
-<span class="bg-green-100 text-green-800 px-1 py-0.5">September 31, 2024</span></p>
+<p><span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">September 29, 2024</span>
+<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">September 31, 2024</span></p>
 
 <p style="margin-top: 14pt;"><strong>Investment:</strong><br>
-Rogue Ventures, LP and related entities ("RV") shall invest <span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">$5 million of $7 million</span><span class="bg-green-100 text-green-800 px-1 py-0.5">$6 million of $10 million</span> in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").</p>
+Rogue Ventures, LP and related entities ("RV") shall invest <span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">$5 million of $7 million</span><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">$6 million of $10 million</span> in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").</p>
 
 <p style="margin-top: 14pt;"><strong>Security:</strong><br>
 Standard post-money valuation cap only Safe.</p>
 
 <p style="margin-top: 14pt;"><strong>Valuation cap:</strong><br>
-<span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">$40 million</span><span class="bg-green-100 text-green-800 px-1 py-0.5">$80 million</span> post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).</p>
+<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">$40 million</span><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">$80 million</span> post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).</p>
 
 <p style="margin-top: 14pt;"><strong>Other Rights:</strong><br>
-Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. <span class="bg-green-100 text-green-800 px-1 py-0.5">We also get a board seat.</span></p>
+Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. <span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">We also get a board seat.</span></p>
 
 <p style="margin-top: 14pt;">This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.</p>
 
@@ -793,36 +793,36 @@ Standard and customary investor most favored nations clause, pro rata rights and
   <div style="width: 45%;">
     <p>New Technologies, Inc.</p>
     <p style="margin-top: 24pt;">By: ____________</p>
-    <p style="margin-left: 20pt;"><span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">Joe Smith, Chief Executive Officer</span><span class="bg-green-100 text-green-800 px-1 py-0.5">Joe Jones, Chief Executive Officer</span></p>
+    <p style="margin-left: 20pt;"><span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">Joe Smith, Chief Executive Officer</span><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">Joe Jones, Chief Executive Officer</span></p>
   </div>
   <div style="width: 45%;">
     <p>Rogue Ventures, LP</p>
     <p style="margin-top: 24pt;">By: ____________</p>
-    <p style="margin-left: 20pt;"><span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">Fred Perry, Partner</span><span class="bg-green-100 text-green-800 px-1 py-0.5">Mike Perry, Partner</span></p>
+    <p style="margin-left: 20pt;"><span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">Fred Perry, Partner</span><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">Mike Perry, Partner</span></p>
   </div>
 </div>
 </div>`;
           } else {
             // Showing test2 (newer) with changes from test1 highlighted - with Word-like formatting
-            return `<div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
-<h1 style="font-size: 16pt; font-weight: bold; margin-bottom: 12pt; color: #222;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
+            return `<div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 25px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 100%; overflow-x: auto;">
+<h1 style="font-size: 16pt; font-weight: bold; margin-bottom: 12pt; color: #222; font-family: 'Times New Roman', serif;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
 
-<h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 10pt; margin-top: 16pt; color: #444;">INDICATIVE TERM SHEET</h2>
+<h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 10pt; margin-top: 16pt; color: #444; font-family: 'Times New Roman', serif;">INDICATIVE TERM SHEET</h2>
 
-<p><span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">September 29, 2024</span>
-<span class="bg-green-100 text-green-800 px-1 py-0.5">September 31, 2024</span></p>
+<p><span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">September 29, 2024</span>
+<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">September 31, 2024</span></p>
 
 <p style="margin-top: 14pt;"><strong>Investment:</strong><br>
-Rogue Ventures, LP and related entities ("RV") shall invest <span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">$5 million of $7 million</span><span class="bg-green-100 text-green-800 px-1 py-0.5">$6 million of $10 million</span> in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").</p>
+Rogue Ventures, LP and related entities ("RV") shall invest <span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">$5 million of $7 million</span><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">$6 million of $10 million</span> in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").</p>
 
 <p style="margin-top: 14pt;"><strong>Security:</strong><br>
 Standard post-money valuation cap only Safe.</p>
 
 <p style="margin-top: 14pt;"><strong>Valuation cap:</strong><br>
-<span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">$40 million</span><span class="bg-green-100 text-green-800 px-1 py-0.5">$80 million</span> post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).</p>
+<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">$40 million</span><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">$80 million</span> post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).</p>
 
 <p style="margin-top: 14pt;"><strong>Other Rights:</strong><br>
-Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. <span class="bg-green-100 text-green-800 px-1 py-0.5">We also get a board seat.</span></p>
+Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. <span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">We also get a board seat.</span></p>
 
 <p style="margin-top: 14pt;">This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.</p>
 
@@ -830,12 +830,12 @@ Standard and customary investor most favored nations clause, pro rata rights and
   <div style="width: 45%;">
     <p>New Technologies, Inc.</p>
     <p style="margin-top: 24pt;">By: ____________</p>
-    <p style="margin-left: 20pt;"><span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">Joe Smith, Chief Executive Officer</span><span class="bg-green-100 text-green-800 px-1 py-0.5">Joe Jones, Chief Executive Officer</span></p>
+    <p style="margin-left: 20pt;"><span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">Joe Smith, Chief Executive Officer</span><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">Joe Jones, Chief Executive Officer</span></p>
   </div>
   <div style="width: 45%;">
     <p>Rogue Ventures, LP</p>
     <p style="margin-top: 24pt;">By: ____________</p>
-    <p style="margin-left: 20pt;"><span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">Fred Perry, Partner</span><span class="bg-green-100 text-green-800 px-1 py-0.5">Mike Perry, Partner</span></p>
+    <p style="margin-left: 20pt;"><span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">Fred Perry, Partner</span><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">Mike Perry, Partner</span></p>
   </div>
 </div>
 </div>`;
@@ -848,13 +848,12 @@ Standard and customary investor most favored nations clause, pro rata rights and
         // Return the new format that shows the full document with inline changes
         diffHtml = `
         <div class="document-compare">
-          <div class="full-document-with-changes p-3">
+          <div class="full-document-with-changes">
+            <div class="legend" style="margin-bottom: 12px; font-size: 11px; color: #666;">
+              <div style="margin-bottom: 4px;"><span style="background-color: #fee2e2; color: #b91c1c; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">Red</span>: Removed content</div>
+              <div><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">Green</span>: Added content</div>
+            </div>
             ${inContextDiff}
-          </div>
-          
-          <div class="legend text-xs text-gray-600 border-t pt-3 mt-4">
-            <div class="mb-1"><span class="bg-red-100 text-red-800 px-1 line-through">Red</span>: Removed content</div>
-            <div><span class="bg-green-100 text-green-800 px-1">Green</span>: Added content</div>
           </div>
         </div>
         `;
@@ -873,12 +872,12 @@ Standard and customary investor most favored nations clause, pro rata rights and
           diffHtml = `
           <div class="document-compare">
             <div class="full-document-with-changes">
-              <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
-                <h3 style="font-size: 14pt; font-weight: bold; margin-bottom: 10pt; color: #444;">${newerVersion.fileName}</h3>
+              <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 25px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 100%; overflow-x: auto;">
+                <h3 style="font-size: 14pt; font-weight: bold; margin-bottom: 10pt; color: #444; font-family: 'Times New Roman', serif;">${newerVersion.fileName}</h3>
                 <div style="margin-bottom: 20px; white-space: pre-wrap;">
                   ${processedNewContent}
                 </div>
-                <div style="margin-top: 20px; padding: 10px; background-color: #fffbea; border: 1px solid #ffd34e; border-radius: 4px;">
+                <div style="margin-top: 20px; padding: 12px; background-color: #fffbea; border: 1px solid #ffd34e; border-radius: 4px;">
                   <p style="margin: 0; font-size: 10pt; color: #735c0f;">
                     <strong>Note:</strong> This document has changed since the previous version. A more sophisticated diff algorithm 
                     would be needed to highlight specific changes inline.
@@ -894,7 +893,7 @@ Standard and customary investor most favored nations clause, pro rata rights and
                 <div style="margin-bottom: 4px; font-weight: bold; color: #e53e3e;">
                   <span style="background-color: #fed7d7; padding: 2px 6px; border-radius: 2px;">Removed content:</span>
                 </div>
-                <div style="background-color: #fff5f5; border: 1px solid #feb2b2; border-radius: 4px; padding: 12px; font-family: monospace, monospace; white-space: pre-wrap; overflow-x: auto; font-size: 10pt; max-height: 200px; overflow-y: auto;">
+                <div style="background-color: #fff5f5; border: 1px solid #feb2b2; border-radius: 4px; padding: 16px; font-family: 'Calibri', 'Arial', sans-serif; white-space: pre-wrap; overflow-x: auto; font-size: 11pt; max-height: 300px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
                   ${processedOldContent}
                 </div>
               </div>
@@ -903,7 +902,7 @@ Standard and customary investor most favored nations clause, pro rata rights and
                 <div style="margin-bottom: 4px; font-weight: bold; color: #22543d;">
                   <span style="background-color: #c6f6d5; padding: 2px 6px; border-radius: 2px;">New content:</span>
                 </div>
-                <div style="background-color: #f0fff4; border: 1px solid #9ae6b4; border-radius: 4px; padding: 12px; font-family: monospace, monospace; white-space: pre-wrap; overflow-x: auto; font-size: 10pt; max-height: 200px; overflow-y: auto;">
+                <div style="background-color: #f0fff4; border: 1px solid #9ae6b4; border-radius: 4px; padding: 16px; font-family: 'Calibri', 'Arial', sans-serif; white-space: pre-wrap; overflow-x: auto; font-size: 11pt; max-height: 300px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
                   ${processedNewContent}
                 </div>
               </div>
@@ -915,12 +914,15 @@ Standard and customary investor most favored nations clause, pro rata rights and
           diffHtml = `
           <div class="document-compare">
             <div class="no-changes">
-              <div style="padding: 10px; background-color: #ebf8ff; border: 1px solid #90cdf4; border-radius: 4px; margin-bottom: 16px;">
-                <p style="margin: 0; font-weight: 500; color: #2b6cb0; font-size: 13px;">No changes detected between versions.</p>
+              <div style="padding: 14px; background-color: #ebf8ff; border: 1px solid #90cdf4; border-radius: 4px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                <p style="margin: 0; font-weight: 500; color: #2b6cb0; font-size: 14px; display: flex; align-items: center;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                  No changes detected between versions.
+                </p>
               </div>
               
-              <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 20px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                <h3 style="font-size: 14pt; font-weight: bold; margin-bottom: 10pt; color: #444;">${newerVersion.fileName}</h3>
+              <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 25px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 100%; overflow-x: auto;">
+                <h3 style="font-size: 14pt; font-weight: bold; margin-bottom: 10pt; color: #444; font-family: 'Times New Roman', serif;">${newerVersion.fileName}</h3>
                 <div style="white-space: pre-wrap;">${processedNewContent}</div>
               </div>
             </div>
@@ -932,8 +934,11 @@ Standard and customary investor most favored nations clause, pro rata rights and
       console.error("Error generating document diff:", error);
       diffHtml = `
         <div class="document-compare">
-          <div style="padding: 16px; background-color: #fff8e1; border: 1px solid #ffecb3; border-radius: 4px; margin-bottom: 20px;">
-            <h3 style="font-size: 16px; font-weight: 500; color: #b7791f; margin: 0 0 8px 0;">Error Generating Comparison</h3>
+          <div style="padding: 18px; background-color: #fff8e1; border: 1px solid #ffecb3; border-radius: 4px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <h3 style="font-size: 16px; font-weight: 500; color: #b7791f; margin: 0 0 8px 0; display: flex; align-items: center;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              Error Generating Comparison
+            </h3>
             <p style="font-size: 14px; color: #975a16; margin: 0;">
               There was an error generating the document comparison. Please try again later.
             </p>
@@ -941,14 +946,14 @@ Standard and customary investor most favored nations clause, pro rata rights and
           
           <div style="margin-top: 24px;">
             <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 8px; color: #4a5568;">Original Content (Version ${olderVersion.version})</h4>
-            <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 16px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; margin-bottom: 8px; white-space: pre-wrap;">
+            <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 25px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 8px; white-space: pre-wrap;">
               ${oldContent}
             </div>
           </div>
           
           <div style="margin-top: 24px;">
             <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 8px; color: #4a5568;">New Content (Version ${newerVersion.version})</h4>
-            <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 16px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; white-space: pre-wrap;">
+            <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 25px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); white-space: pre-wrap;">
               ${newContent}
             </div>
           </div>
