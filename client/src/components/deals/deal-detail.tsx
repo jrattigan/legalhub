@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Edit, MoreHorizontal, Eye } from 'lucide-react';
+import { Calendar, Edit, MoreHorizontal, Eye, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -154,7 +154,15 @@ export default function DealDetail({
       </div>
       
       <div className="flex-1 overflow-y-auto p-6">
-        <TabsContent value="overview" className="m-0" hidden={activeTab !== 'overview'}>
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} value={activeTab}>
+          <TabsList className="hidden">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="tasks">Tasks</TabsTrigger>
+            <TabsTrigger value="issues">Issues</TabsTrigger>
+            <TabsTrigger value="team">Team</TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview" className="m-0">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Deal Status Overview Card */}
             <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-1">
@@ -436,6 +444,7 @@ export default function DealDetail({
             <CounselCard counsel={counsel} onRefreshData={onRefreshData} preview={false} />
           </div>
         </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
