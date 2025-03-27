@@ -30,12 +30,68 @@ export async function generateDocumentComparison(
   const processedOldContent = customContent1 ? oldContent : extractReadableText(oldContent);
   const processedNewContent = customContent2 ? newContent : extractReadableText(newContent);
   
+  // Check if we're receiving pre-processed HTML content from the routes handler
+  const isHtmlContent = (
+    (customContent1 && customContent1.includes('<div class="document-content"')) || 
+    (customContent2 && customContent2.includes('<div class="document-content"'))
+  );
+  
   // Diff HTML to be returned
   let diffHtml = '';
   
   try {
+    // If we're using pre-processed HTML content from the routes handler, we should extract the text and apply our diff to it instead
+    if (isHtmlContent) {
+      // Extract the text from HTML
+      const stripHtml = (html: string): string => {
+        // Very simple HTML stripper, preserves most formatting via spaces and newlines
+        return html
+          .replace(/<div[^>]*>/gi, '\n')
+          .replace(/<\/div>/gi, '\n')
+          .replace(/<p[^>]*>/gi, '\n')
+          .replace(/<\/p>/gi, '\n')
+          .replace(/<br[^>]*>/gi, '\n')
+          .replace(/<[^>]*>/g, '')
+          .replace(/&nbsp;/g, ' ')
+          .replace(/\n\s*\n/g, '\n\n');
+      };
+      
+      // Extract text from the HTML for diffing
+      const oldText = stripHtml(processedOldContent);
+      const newText = stripHtml(processedNewContent);
+      
+      // Create diff between the text versions
+      const changes = diff.diffWords(oldText, newText);
+      
+      // Format the diff results with proper HTML styling
+      let diffContent = '';
+      
+      for (const part of changes) {
+        if (part.added) {
+          diffContent += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline;">${part.value}</span>`;
+        } else if (part.removed) {
+          diffContent += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline;">${part.value}</span>`;
+        } else {
+          diffContent += part.value;
+        }
+      }
+      
+      // Wrap in a document with legend
+      diffHtml = `
+      <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
+        <div class="full-document-with-changes">
+          <div class="legend" style="margin-bottom: 12px; font-size: 11px; color: #666;">
+            <div style="margin-bottom: 4px;"><span style="background-color: #fee2e2; color: #b91c1c; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline;">Red</span>: Removed content</div>
+            <div><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline;">Green</span>: Added content</div>
+          </div>
+          <div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">
+            ${diffContent}
+          </div>
+        </div>
+      </div>`;
+    }
     // For our sample test documents, we'll create a more visually appealing diff with Word-like styling
-    if ((olderVersion.fileName === 'test1.docx' && newerVersion.fileName === 'test2.docx') ||
+    else if ((olderVersion.fileName === 'test1.docx' && newerVersion.fileName === 'test2.docx') ||
         (olderVersion.fileName === 'test2.docx' && newerVersion.fileName === 'test1.docx')) {
       
       // Sample content for test documents (normally this would be extracted from the actual files)
