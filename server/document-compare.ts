@@ -143,9 +143,9 @@ By: ____________                       By: ____________
               const fullDate = value.match(/September \d{1,2}, 2024/) || [value];
               
               if (change.removed) {
-                processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">${fullDate[0]}</span>`;
+                processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${fullDate[0]}</span>`;
               } else {
-                processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">${fullDate[0]}</span>`;
+                processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${fullDate[0]}</span>`;
               }
               
               // Add any text after the date normally
@@ -176,9 +176,9 @@ By: ____________                       By: ____________
             
             if (amountMatch && (change.added || change.removed)) {
               if (change.removed) {
-                processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">${amountMatch[0]}</span>`;
+                processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${amountMatch[0]}</span>`;
               } else {
-                processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">${amountMatch[0]}</span>`;
+                processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${amountMatch[0]}</span>`;
               }
               
               // Add any text after the amount normally
@@ -214,12 +214,12 @@ By: ____________                       By: ____________
                           value.includes('Partner') ? 'Partner' : '';
               
               if (change.removed) {
-                processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">${name}</span>`;
+                processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${name}</span>`;
                 if (title) {
                   processedHTML += ', ' + title;
                 }
               } else {
-                processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">${name}</span>`;
+                processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${name}</span>`;
                 if (title) {
                   processedHTML += ', ' + title;
                 }
@@ -244,7 +244,7 @@ By: ____________                       By: ____________
           // Handle board seat addition (special case)
           if (value.includes('We also get a board seat')) {
             if (change.added) {
-              processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">${value}</span>`;
+              processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${value}</span>`;
             } else if (!change.removed) {
               processedHTML += value;
             }
@@ -253,9 +253,9 @@ By: ____________                       By: ____________
           
           // Default handling for other changes
           if (change.added) {
-            processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">${value}</span>`;
+            processedHTML += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${value}</span>`;
           } else if (change.removed) {
-            processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">${value}</span>`;
+            processedHTML += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${value}</span>`;
           } else {
             processedHTML += value;
           }
@@ -272,11 +272,11 @@ By: ____________                       By: ____________
       
       // Return the new format that shows the full document with inline changes
       diffHtml = `
-      <div class="document-compare">
+      <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
         <div class="full-document-with-changes">
           <div class="legend" style="margin-bottom: 12px; font-size: 11px; color: #666;">
-            <div style="margin-bottom: 4px;"><span style="background-color: #fee2e2; color: #b91c1c; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">Red</span>: Removed content</div>
-            <div><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">Green</span>: Added content</div>
+            <div style="margin-bottom: 4px;"><span style="background-color: #fee2e2; color: #b91c1c; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline-block;">Red</span>: Removed content</div>
+            <div><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block;">Green</span>: Added content</div>
           </div>
           ${inContextDiff}
         </div>
@@ -305,9 +305,9 @@ By: ____________                       By: ____________
         let processedContent = '';
         for (const part of changes as DiffPart[]) {
           if (part.added) {
-            processedContent += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">${part.value}</span>`;
+            processedContent += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${part.value}</span>`;
           } else if (part.removed) {
-            processedContent += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">${part.value}</span>`;
+            processedContent += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${part.value}</span>`;
           } else {
             processedContent += part.value;
           }
@@ -318,11 +318,11 @@ By: ____________                       By: ____________
         inlineDiffHtml += '</div>';
         
         diffHtml = `
-        <div class="document-compare">
+        <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
           <div class="full-document-with-changes">
             <div class="legend" style="margin-bottom: 12px; font-size: 11px; color: #666;">
-              <div style="margin-bottom: 4px;"><span style="background-color: #fee2e2; color: #b91c1c; padding: 2px 4px; text-decoration: line-through; border-radius: 2px;">Red</span>: Removed content</div>
-              <div><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px;">Green</span>: Added content</div>
+              <div style="margin-bottom: 4px;"><span style="background-color: #fee2e2; color: #b91c1c; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline-block;">Red</span>: Removed content</div>
+              <div><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block;">Green</span>: Added content</div>
             </div>
             ${inlineDiffHtml}
           </div>
@@ -337,7 +337,7 @@ By: ____________                       By: ____________
         </div>`;
         
         diffHtml = `
-        <div class="document-compare">
+        <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
           <div style="padding: 16px; background-color: #f0fff4; border: 1px solid #c6f6d5; border-radius: 4px; display: flex; align-items: center; margin-bottom: 16px;">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#2f855a" style="margin-right: 12px;">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>

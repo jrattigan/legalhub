@@ -12,21 +12,52 @@
   margin: 0 auto;
 }
 
-/* Specific styles for change highlights */
+/* Specific styles for change highlights - directly targeting server styles */
+.document-compare span[style*="background-color: #dcfce7"],
 .document-content span[style*="background-color: #dcfce7"] {
   background-color: #dcfce7 !important;
   color: #166534 !important;
   padding: 2px 4px !important;
   border-radius: 2px !important;
   text-decoration: none !important;
+  display: inline-block !important;
 }
 
+.document-compare span[style*="background-color: #fee2e2"],
 .document-content span[style*="background-color: #fee2e2"] {
   background-color: #fee2e2 !important;
   color: #991b1b !important;
   padding: 2px 4px !important;
   border-radius: 2px !important;
   text-decoration: line-through !important;
+  display: inline-block !important;
+}
+
+/* Word document styling - to be applied to all document displays */
+.document-content h1, .document-compare h1 {
+  font-family: 'Calibri', 'Arial', sans-serif !important;
+  font-size: 16pt !important;
+  font-weight: bold !important;
+  color: #000 !important;
+  text-align: center !important;
+  margin-bottom: 12pt !important;
+}
+
+.document-content h2, .document-compare h2 {
+  font-family: 'Calibri', 'Arial', sans-serif !important;
+  font-size: 14pt !important;
+  font-weight: bold !important;
+  color: #000 !important;
+  text-align: center !important;
+  margin-bottom: 10pt !important;
+}
+
+.document-content p, .document-compare p,
+.document-content div, .document-compare div {
+  font-family: 'Calibri', 'Arial', sans-serif !important;
+  font-size: 11pt !important;
+  line-height: 1.5 !important;
+  margin-bottom: 10pt !important;
 }
 
 /* Center alignment for titles - Word style */
