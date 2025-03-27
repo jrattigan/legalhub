@@ -103,12 +103,15 @@ export default function NewDeal() {
 
   // Handle form submission
   const onSubmit = (data: z.infer<typeof dealSchema>) => {
+    // Convert string date to actual Date object if it exists
+    const dueDateValue = data.dueDate ? new Date(data.dueDate) : null;
+    
     // Ensure null values are properly set
     const preparedData = {
       ...data,
       description: data.description || null,
       amount: data.amount || null,
-      dueDate: data.dueDate || null
+      dueDate: dueDateValue
     };
     console.log('Submitting prepared data:', preparedData);
     createDealMutation.mutate(preparedData);
@@ -118,10 +121,10 @@ export default function NewDeal() {
     <div className="min-h-screen flex flex-col">
       <AppHeader />
       
-      <div className="flex-1 flex">
+      <div className="flex-1 flex overflow-hidden">
         <Sidebar />
         
-        <div className="flex-1 flex flex-col bg-neutral-50 overflow-auto">
+        <div className="flex-1 flex flex-col bg-neutral-50 overflow-y-auto">
           <div className="p-6 flex items-center border-b border-neutral-200 bg-white sticky top-0 z-10">
             <Button 
               variant="ghost" 
