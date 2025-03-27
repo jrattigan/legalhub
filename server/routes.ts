@@ -17,6 +17,12 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint for Replit
+  app.get('/health', (req: Request, res: Response) => {
+    console.log('Health check request received');
+    res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+  });
+
   // Combined data endpoint for deals page
   app.get('/api/combined-data', async (req: Request, res: Response) => {
     try {

@@ -271,7 +271,7 @@ export default function Dashboard() {
                     <div className="space-y-2">
                       {deals?.slice(0, 5).map((deal) => (
                         <Link key={deal.id} href={`/deals/${deal.id}`}>
-                          <a className="block p-3 rounded-md border border-neutral-200 hover:bg-neutral-50">
+                          <div className="block p-3 rounded-md border border-neutral-200 hover:bg-neutral-50 cursor-pointer">
                             <div className="flex justify-between items-start">
                               <div>
                                 <div className="font-medium">{deal.title}</div>
@@ -292,7 +292,7 @@ export default function Dashboard() {
                                  deal.status.charAt(0).toUpperCase() + deal.status.slice(1)}
                               </div>
                             </div>
-                          </a>
+                          </div>
                         </Link>
                       ))}
                     </div>
