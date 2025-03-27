@@ -12,6 +12,7 @@ import {
   timelineEvents, TimelineEvent, InsertTimelineEvent
 } from "@shared/schema";
 import { format } from 'date-fns';
+import { generateDocumentComparison } from './document-compare';
 
 export interface IStorage {
   // Users
@@ -947,8 +948,7 @@ export class MemStorage implements IStorage {
   }
 
   async compareDocumentVersions(versionId1: number, versionId2: number, customContent1?: string, customContent2?: string): Promise<string> {
-    // Import our intelligent document comparison utility
-    const { generateDocumentComparison } = require('./document-compare');
+    // Use the already imported generateDocumentComparison function
     
     const version1 = this.documentVersions.get(versionId1);
     const version2 = this.documentVersions.get(versionId2);

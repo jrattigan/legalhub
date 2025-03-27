@@ -26,26 +26,22 @@ export default function AppHeader({ user, notifications = 0 }: AppHeaderProps) {
   return (
     <header className="bg-white border-b border-neutral-200 h-16 flex items-center px-4 justify-between z-10 shadow-sm">
       <div className="flex items-center space-x-4">
-        <div 
-          className="font-bold text-gradient text-xl cursor-pointer" 
-          onClick={() => window.location.href = '/dashboard'}
-        >
+        <Link href="/dashboard" className="font-bold text-gradient text-xl cursor-pointer">
           LegalDeal
-        </div>
+        </Link>
 
         <div className="hidden md:flex items-center space-x-1">
           {navItems.map((item) => (
             <Link 
               key={item.path} 
               href={item.path}
-            >
-              <a className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
                 location === item.path 
                   ? 'text-primary bg-primary/10' 
                   : 'text-neutral-600 hover:bg-neutral-100 hover:text-primary'
-              }`}>
-                {item.name}
-              </a>
+              }`}
+            >
+              {item.name}
             </Link>
           ))}
         </div>
@@ -110,20 +106,21 @@ export default function AppHeader({ user, notifications = 0 }: AppHeaderProps) {
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] sm:w-[320px] border-l-neutral-200">
               <div className="py-4 space-y-6">
-                <div className="font-bold text-gradient text-xl px-2">LegalDeal</div>
+                <Link href="/dashboard">
+                  <div className="font-bold text-gradient text-xl px-2">LegalDeal</div>
+                </Link>
                 <nav className="flex flex-col space-y-1">
                   {navItems.map((item) => (
                     <Link 
                       key={item.path} 
                       href={item.path}
-                    >
-                      <a className={`px-4 py-2.5 rounded-md cursor-pointer transition-colors ${
+                      className={`px-4 py-2.5 rounded-md cursor-pointer transition-colors ${
                         location === item.path 
                           ? 'text-primary bg-primary/10 font-medium' 
                           : 'text-neutral-600 hover:bg-neutral-100 hover:text-primary'
-                      }`}>
-                        {item.name}
-                      </a>
+                      }`}
+                    >
+                      {item.name}
                     </Link>
                   ))}
                 </nav>

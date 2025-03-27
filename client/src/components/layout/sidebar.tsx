@@ -60,15 +60,17 @@ export default function Sidebar({ recentDeals = [] }: SidebarProps) {
         
         <div className="mt-6 space-y-1">
           {navItems.map(item => (
-            <Link key={item.path} href={item.path}>
-              <a className={`w-full flex items-center justify-center md:justify-start px-3 py-2 rounded-md ${
+            <Link 
+              key={item.path} 
+              href={item.path}
+              className={`w-full flex items-center justify-center md:justify-start px-3 py-2 rounded-md ${
                 location === item.path 
                   ? 'bg-primary-light text-primary font-medium' 
                   : 'text-neutral-500 hover:bg-neutral-100'
-              }`}>
-                {item.icon}
-                <span className="hidden md:inline ml-2">{item.name}</span>
-              </a>
+              }`}
+            >
+              {item.icon}
+              <span className="hidden md:inline ml-2">{item.name}</span>
             </Link>
           ))}
         </div>
@@ -78,11 +80,13 @@ export default function Sidebar({ recentDeals = [] }: SidebarProps) {
             <div className="px-3 py-1 text-xs text-neutral-400 hidden md:block">RECENT DEALS</div>
             
             {recentDeals.slice(0, 5).map(deal => (
-              <Link key={deal.id} href={`/deals/${deal.id}`}>
-                <a className="w-full flex items-center justify-center md:justify-start px-3 py-2 rounded-md text-neutral-600 hover:bg-neutral-100">
-                  <File className="h-5 w-5 text-neutral-400 md:mr-2" />
-                  <span className="hidden md:inline truncate text-sm">{deal.title}</span>
-                </a>
+              <Link 
+                key={deal.id} 
+                href={`/deals/${deal.id}`}
+                className="w-full flex items-center justify-center md:justify-start px-3 py-2 rounded-md text-neutral-600 hover:bg-neutral-100"
+              >
+                <File className="h-5 w-5 text-neutral-400 md:mr-2" />
+                <span className="hidden md:inline truncate text-sm">{deal.title}</span>
               </Link>
             ))}
           </div>

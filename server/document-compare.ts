@@ -1,4 +1,5 @@
 import { DocumentVersion } from '@shared/schema';
+import * as diff from 'diff';
 
 /**
  * Smart document comparison utility to intelligently highlight changes
@@ -10,7 +11,6 @@ export async function generateDocumentComparison(
   customContent1?: string,
   customContent2?: string
 ): Promise<string> {
-  const diff = require('diff');
   
   // Get document content from versions
   const oldContent = customContent1 || olderVersion.fileContent || "No content available";
@@ -131,9 +131,9 @@ By: ____________                       By: ____________
           // Detect context based on content
           if (value.includes('September')) {
             processingDate = true;
-          } else if (value.match(/\$\d+ million of \$\d+ million/)) {
+          } else if (value.match(/\$\d+ million of \$\d+ million/) !== null) {
             processingAmount = true;
-          } else if (value.match(/(Joe|Fred|Mike) (Smith|Jones|Perry)/)) {
+          } else if (value.match(/(Joe|Fred|Mike) (Smith|Jones|Perry)/) !== null) {
             processingSignature = true;
           }
           
@@ -204,11 +204,13 @@ By: ____________                       By: ____________
           }
           
           // Special handling for signature lines
-          if (processingSignature || (value.match(/(Joe|Fred|Mike) (Smith|Jones|Perry)/) && (change.added || change.removed))) {
+          const namePatternMatch = value.match(/(Joe|Fred|Mike) (Smith|Jones|Perry)/);
+          if (processingSignature || (namePatternMatch && (change.added || change.removed))) {
             const signatureMatch = value.match(/(Joe|Fred|Mike) (Smith|Jones|Perry), (Chief Executive Officer|Partner)/);
             
             if (signatureMatch && (change.added || change.removed)) {
-              const name = value.match(/(Joe|Fred|Mike) (Smith|Jones|Perry)/) ? value.match(/(Joe|Fred|Mike) (Smith|Jones|Perry)/)[0] : value;
+              const nameMatch = value.match(/(Joe|Fred|Mike) (Smith|Jones|Perry)/);
+              const name = nameMatch ? nameMatch[0] : value;
               const title = value.includes('Chief Executive Officer') ? 'Chief Executive Officer' : 
                           value.includes('Partner') ? 'Partner' : '';
               
@@ -226,7 +228,8 @@ By: ____________                       By: ____________
               
               // Skip the next change if it's the corresponding add/remove signature
               if (nextChange && ((change.added && nextChange.removed) || (change.removed && nextChange.added))) {
-                if (nextChange.value.match(/(Joe|Fred|Mike) (Smith|Jones|Perry)/)) {
+                const nextMatch = nextChange.value.match(/(Joe|Fred|Mike) (Smith|Jones|Perry)/);
+                if (nextMatch) {
                   skipNext = true;
                 }
               }
