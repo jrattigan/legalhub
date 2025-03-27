@@ -5,42 +5,101 @@
 /* Word-like document styling */
 .document-content {
   font-family: 'Calibri', 'Arial', sans-serif;
-  color: #333;
+  color: #222;
+  line-height: 1.5;
+}
+
+/* Center alignment for titles - Word style */
+.document-content h1.centered,
+.document-content h2.centered,
+.document-content h3.centered,
+.document-content p.centered,
+.document-content div.centered {
+  text-align: center;
+  width: 100%;
 }
 
 .document-content h1 {
   font-size: 16pt;
   font-weight: bold;
   margin-bottom: 12pt;
-  color: #2b579a;
+  margin-top: 18pt;
+  color: #000;
 }
 
 .document-content h2 {
   font-size: 14pt;
   font-weight: bold;
   margin-bottom: 10pt;
-  color: #2b579a;
+  margin-top: 14pt;
+  color: #000;
 }
 
 .document-content h3 {
   font-size: 12pt;
   font-weight: bold;
   margin-bottom: 8pt;
+  margin-top: 10pt;
 }
 
 .document-content p {
-  margin-bottom: 8pt;
+  margin-bottom: 10pt;
+}
+
+/* Document term sheet styling */
+.document-content .term-item {
+  display: flex;
+  margin-bottom: 16pt;
+}
+
+.document-content .term-label {
+  font-weight: bold;
+  width: 150px;
+  padding-right: 15px;
+  flex-shrink: 0;
+}
+
+.document-content .term-value {
+  flex: 1;
+}
+
+/* Signature block styling */
+.document-content .signature-block {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40pt;
+  margin-bottom: 24pt;
+}
+
+.document-content .signature-company {
+  width: 45%;
+}
+
+.document-content .signature-line {
+  margin-top: 30pt;
+  border-top: 1px solid #999;
+  width: 75%;
+  margin-bottom: 5pt;
+}
+
+.document-content .signature-name {
+  font-weight: normal;
+}
+
+.document-content .signature-title {
+  font-style: italic;
+  margin-top: 2pt;
 }
 
 .document-content ul, .document-content ol {
   margin-left: 20pt;
-  margin-bottom: 8pt;
+  margin-bottom: 10pt;
 }
 
 .document-content table {
   border-collapse: collapse;
   width: 100%;
-  margin-bottom: 12pt;
+  margin-bottom: 14pt;
 }
 
 .document-content th, .document-content td {
