@@ -36,7 +36,7 @@ export default function Deals() {
       <div className="flex-1 flex overflow-hidden">
         <Sidebar recentDeals={deals} />
         
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex overflow-hidden h-[calc(100vh-4rem)]">
           {!isMobile && (
             <DealsList 
               deals={processedDeals || []} 

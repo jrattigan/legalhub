@@ -83,7 +83,7 @@ export default function Documents() {
       <div className="flex-1 flex overflow-hidden">
         <Sidebar recentDeals={deals} />
         
-        <div className="flex-1 overflow-y-auto bg-neutral-50 p-6">
+        <div className="flex-1 overflow-y-auto bg-neutral-50 p-6 h-[calc(100vh-4rem)]">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-neutral-800">Documents</h1>
             <Button onClick={() => {

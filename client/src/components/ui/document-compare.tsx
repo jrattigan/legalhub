@@ -134,7 +134,7 @@ export function DocumentCompare({
         </div>
         
         {/* Main Content Area - Flexbox to take up all remaining height */}
-        <div className="flex-1 min-h-0 overflow-hidden bg-white">
+        <div className="flex-1 min-h-0 overflow-hidden bg-white h-[calc(100vh-12rem)]">
           {/* Changes Tab */}
           {activeTab === 'changes' && (
             <div className="h-full flex flex-col">
@@ -154,8 +154,8 @@ export function DocumentCompare({
               </div>
               
               {/* Word-like Document Display */}
-              <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6">
-                <div className="bg-white shadow-md w-full max-w-4xl min-h-full p-8 mx-auto border border-gray-200 overflow-x-auto" 
+              <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6 h-[calc(100vh-18rem)]">
+                <div className="bg-white shadow-md w-full max-w-4xl p-8 mx-auto border border-gray-200 overflow-x-auto" 
                      style={{ 
                        fontFamily: "'Calibri', 'Arial', sans-serif", 
                        fontSize: "11pt", 
@@ -185,8 +185,8 @@ export function DocumentCompare({
               </div>
               
               {/* Word-like Document Display */}
-              <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6">
-                <div className="bg-white shadow-md w-full max-w-4xl min-h-full p-8 mx-auto border border-gray-200 overflow-x-auto" 
+              <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6 h-[calc(100vh-18rem)]">
+                <div className="bg-white shadow-md w-full max-w-4xl p-8 mx-auto border border-gray-200 overflow-x-auto" 
                      style={{ 
                        fontFamily: "'Calibri', 'Arial', sans-serif", 
                        fontSize: "11pt", 
@@ -218,8 +218,8 @@ export function DocumentCompare({
               </div>
               
               {/* Word-like Document Display */}
-              <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6">
-                <div className="bg-white shadow-md w-full max-w-4xl min-h-full p-8 mx-auto border border-gray-200 overflow-x-auto" 
+              <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6 h-[calc(100vh-18rem)]">
+                <div className="bg-white shadow-md w-full max-w-4xl p-8 mx-auto border border-gray-200 overflow-x-auto" 
                      style={{ 
                        fontFamily: "'Calibri', 'Arial', sans-serif", 
                        fontSize: "11pt", 
