@@ -182,12 +182,16 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     <div className={`bg-white rounded-lg border border-neutral-200 shadow-sm p-4 ${preview ? 'col-span-1' : 'col-span-full'}`}>
       <div className="flex justify-between items-center mb-3">
         <h2 className="font-medium text-neutral-800">Tasks</h2>
+        <Button 
+          variant="link" 
+          className="text-xs text-primary hover:text-primary-dark" 
+          disabled={!dealId}
+          onClick={() => setIsDialogOpen(true)}
+        >
+          + Add Task
+        </Button>
+        
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="link" className="text-xs text-primary hover:text-primary-dark" disabled={!dealId}>
-              + Add Task
-            </Button>
-          </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New Task</DialogTitle>
