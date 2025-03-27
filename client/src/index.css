@@ -20,7 +20,11 @@
   padding: 2px 4px !important;
   border-radius: 2px !important;
   text-decoration: none !important;
-  display: inline-block !important;
+  display: inline !important; /* Changed to inline for better text flow */
+  font-family: 'Calibri', 'Arial', sans-serif !important;
+  font-size: 11pt !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
 }
 
 .document-compare span[style*="background-color: #fee2e2"],
@@ -30,7 +34,21 @@
   padding: 2px 4px !important;
   border-radius: 2px !important;
   text-decoration: line-through !important;
-  display: inline-block !important;
+  display: inline !important; /* Changed to inline for better text flow */
+  font-family: 'Calibri', 'Arial', sans-serif !important;
+  font-size: 11pt !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+}
+
+/* Fix for the full-document-with-changes parent container */
+.document-compare .full-document-with-changes {
+  font-family: 'Calibri', 'Arial', sans-serif !important;
+  font-size: 11pt !important;
+  line-height: 1.5 !important;
+  color: #333 !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 /* Word document styling - to be applied to all document displays */

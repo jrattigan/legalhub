@@ -182,19 +182,22 @@ export function DocumentCompare({
               <div className="p-2 text-xs text-slate-700 bg-[#f3f2f1] flex flex-wrap items-center justify-between border-b">
                 <div className="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                    <path d="M12 3v5"></path>  
-                    <path d="m9 10 3-2 3 2"></path>
-                    <rect x="4" y="14" width="16" height="6" rx="2"></rect>
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                   </svg>
-                  <span className="text-sm font-medium">Track Changes: v{originalVersion.version} → v{newVersion.version}</span>
+                  <span className="text-sm font-medium">{newVersion.fileName} (with changes)</span>
                 </div>
-                <div className="flex flex-wrap">
-                  <span className="inline-block mr-3"><span className="bg-red-100 text-red-700 px-1 py-0.5 text-xs rounded line-through">Red text</span>: Deleted</span>
-                  <span className="inline-block"><span className="bg-green-100 text-green-700 px-1 py-0.5 text-xs rounded">Green text</span>: Added</span>
+                <div className="text-xs text-muted-foreground flex justify-between items-center">
+                  <div className="mr-4">
+                    v{originalVersion.version} → v{newVersion.version}
+                  </div>
+                  <div className="flex flex-wrap">
+                    <span className="inline-block mr-3"><span className="bg-red-100 text-red-700 px-1 py-0.5 text-xs rounded line-through">Red text</span>: Deleted</span>
+                    <span className="inline-block"><span className="bg-green-100 text-green-700 px-1 py-0.5 text-xs rounded">Green text</span>: Added</span>
+                  </div>
                 </div>
               </div>
               
-              {/* Word-like Document Display */}
+              {/* Word-like Document Display - Same styling as Original/New Version tabs */}
               <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6 h-[calc(100vh-18rem)]">
                 <div className="bg-white shadow-md w-full max-w-4xl mx-auto border border-gray-200 overflow-x-auto print:shadow-none" 
                      style={{ 
@@ -207,6 +210,7 @@ export function DocumentCompare({
                        padding: "1in",
                        boxShadow: "0 0 10px rgba(0,0,0,0.1)"
                      }}>
+                  {/* Use document-content class here instead of direct styling for consistency */}
                   <div className="document-content max-w-full" dangerouslySetInnerHTML={{ __html: renderedDiff }} />
                 </div>
               </div>

@@ -301,14 +301,17 @@ By: ____________                       By: ____________
         inlineDiffHtml += `<h1 class="centered">${newerVersion.fileName}</h1>`;
         inlineDiffHtml += `<p class="centered">Version ${newerVersion.version}</p>`;
         
-        // Process the content
+        // Process the content with better Word-like formatting
         let processedContent = '';
         for (const part of changes as DiffPart[]) {
           if (part.added) {
-            processedContent += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${part.value}</span>`;
+            // Added text - green with better formatting
+            processedContent += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline; font-family: 'Calibri', 'Arial', sans-serif;">${part.value}</span>`;
           } else if (part.removed) {
-            processedContent += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline-block; font-family: 'Calibri', 'Arial', sans-serif;">${part.value}</span>`;
+            // Removed text - red with better formatting
+            processedContent += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline; font-family: 'Calibri', 'Arial', sans-serif;">${part.value}</span>`;
           } else {
+            // Unchanged text - preserve formatting but don't add any special styling
             processedContent += part.value;
           }
         }
