@@ -540,12 +540,12 @@ export class MemStorage implements IStorage {
       id: taskId1,
       dealId: task1.dealId,
       title: task1.title,
-      description: task1.description || null,
-      status: task1.status || 'pending',
-      priority: task1.priority || 'medium',
-      dueDate: task1.dueDate || null,
-      assigneeId: task1.assigneeId || null,
-      completed: task1.completed || false,
+      description: task1.description || null, // Ensure null instead of undefined
+      status: "active", // Use explicit value
+      priority: "high", // Use explicit value
+      dueDate: task1.dueDate || null, // Ensure null instead of undefined
+      assigneeId: task1.assigneeId || null, // Ensure null instead of undefined
+      completed: false, // Use explicit value
       completedAt: null,
       createdAt: new Date()
     };
@@ -556,12 +556,12 @@ export class MemStorage implements IStorage {
       id: taskId2,
       dealId: task2.dealId,
       title: task2.title,
-      description: task2.description || null,
-      status: task2.status || 'pending',
-      priority: task2.priority || 'medium',
-      dueDate: task2.dueDate || null,
-      assigneeId: task2.assigneeId || null,
-      completed: task2.completed || false,
+      description: task2.description || null, // Ensure null instead of undefined
+      status: "completed", // Use explicit value
+      priority: "medium", // Use explicit value
+      dueDate: task2.dueDate || null, // Ensure null instead of undefined
+      assigneeId: task2.assigneeId || null, // Ensure null instead of undefined
+      completed: true, // Use explicit value
       completedAt: new Date(), // Task is completed
       createdAt: new Date()
     };
@@ -572,23 +572,23 @@ export class MemStorage implements IStorage {
       id: taskId3,
       dealId: task3.dealId,
       title: task3.title,
-      description: task3.description || null,
-      status: task3.status || 'pending',
-      priority: task3.priority || 'medium',
-      dueDate: task3.dueDate || null,
-      assigneeId: task3.assigneeId || null,
-      completed: task3.completed || false,
+      description: task3.description || null, // Ensure null instead of undefined
+      status: "active", // Use explicit value
+      priority: "medium", // Use explicit value
+      dueDate: task3.dueDate || null, // Ensure null instead of undefined
+      assigneeId: task3.assigneeId || null, // Ensure null instead of undefined
+      completed: false, // Use explicit value
       completedAt: null,
       createdAt: new Date()
     };
     this.tasks.set(taskId3, createdTask3);
 
-    // Create issues for Deal 1
+    // Create issues for Deal 1 with explicit values for all required fields
     const issue1: InsertIssue = {
       dealId: createdDeal1.id,
       title: "Valuation disagreement",
       description: "Investors pushing for 20% discount to last round valuation",
-      status: "open",
+      status: "open",  // Use the schema default from shared/schema.ts
       priority: "high",
       assigneeId: createdAttorney1.id
     };
@@ -597,7 +597,7 @@ export class MemStorage implements IStorage {
       dealId: createdDeal1.id,
       title: "Board seat negotiation",
       description: "Lead investor requesting additional board seat",
-      status: "open",
+      status: "open",  // Use the schema default from shared/schema.ts
       priority: "medium",
       assigneeId: createdUser1.id
     };
@@ -610,9 +610,9 @@ export class MemStorage implements IStorage {
       dealId: issue1.dealId,
       title: issue1.title,
       description: issue1.description,
-      status: issue1.status || 'open',
-      priority: issue1.priority || 'medium',
-      assigneeId: issue1.assigneeId || null,
+      status: "open", // Use explicit value instead of optional chaining
+      priority: "high", // Use explicit value instead of optional chaining
+      assigneeId: issue1.assigneeId || null, // Ensure assigneeId is number or null, not undefined
       createdAt: issueDate1, 
       updatedAt: issueDate1
     };
@@ -625,9 +625,9 @@ export class MemStorage implements IStorage {
       dealId: issue2.dealId,
       title: issue2.title,
       description: issue2.description,
-      status: issue2.status || 'open',
-      priority: issue2.priority || 'medium',
-      assigneeId: issue2.assigneeId || null,
+      status: "open", // Use explicit value instead of optional chaining
+      priority: "medium", // Use explicit value instead of optional chaining
+      assigneeId: issue2.assigneeId || null, // Ensure assigneeId is number or null, not undefined
       createdAt: issueDate2, 
       updatedAt: issueDate2
     };

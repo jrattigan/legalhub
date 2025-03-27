@@ -66,6 +66,7 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    log(`serving on port ${port} with express env: ${app.get("env")}`);
+    log(`Access the application at http://localhost:${port}/`);
   });
 })();

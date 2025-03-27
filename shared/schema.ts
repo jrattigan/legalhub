@@ -82,6 +82,19 @@ export const insertDocumentSchema = createInsertSchema(documents).pick({
   category: true,
   status: true,
   assigneeId: true,
+}).transform((data) => {
+  // Ensure assigneeId and description are null and not undefined when empty
+  const transformedData = { ...data };
+  
+  if (transformedData.assigneeId === undefined) {
+    transformedData.assigneeId = null;
+  }
+  
+  if (transformedData.description === undefined) {
+    transformedData.description = null;
+  }
+  
+  return transformedData;
 });
 
 // Document versions
@@ -107,6 +120,15 @@ export const insertDocumentVersionSchema = createInsertSchema(documentVersions).
   fileContent: true,
   uploadedById: true,
   comment: true,
+}).transform((data) => {
+  // Ensure comment is null not undefined when empty
+  const transformedData = { ...data };
+  
+  if (transformedData.comment === undefined) {
+    transformedData.comment = null;
+  }
+  
+  return transformedData;
 });
 
 // Tasks schema
@@ -170,6 +192,15 @@ export const insertIssueSchema = createInsertSchema(issues).pick({
   status: true,
   priority: true,
   assigneeId: true,
+}).transform((data) => {
+  // Ensure assigneeId is null and not undefined when empty
+  const transformedData = { ...data };
+  
+  if (transformedData.assigneeId === undefined) {
+    transformedData.assigneeId = null;
+  }
+  
+  return transformedData;
 });
 
 // Outside counsel (law firms)

@@ -11,8 +11,10 @@ import {
   insertLawFirmSchema,
   insertAttorneySchema,
   insertDealCounselSchema,
-  insertDocumentVersionSchema
+  insertDocumentVersionSchema,
+  documents, // Import the base schema tables for creating partial schemas
 } from "@shared/schema";
+import { createInsertSchema } from "drizzle-zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Combined data endpoint for deals page
@@ -203,7 +205,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const partialDocumentSchema = insertDocumentSchema.partial();
+      // For transformed schemas, we need to get the partial schema differently
+      const baseDocumentSchema = createInsertSchema(documents).pick({
+        dealId: true,
+        title: true,
+        description: true,
+        category: true,
+        status: true,
+        assigneeId: true,
+      }).partial();
+      
+      // Apply the same transformations as the original schema
+      const partialDocumentSchema = baseDocumentSchema.transform((data) => {
+        const transformedData = { ...data };
+        
+        if (transformedData.assigneeId === undefined) {
+          transformedData.assigneeId = null;
+        }
+        
+        if (transformedData.description === undefined) {
+          transformedData.description = null;
+        }
+        
+        return transformedData;
+      });
+      
       const validatedData = partialDocumentSchema.parse(req.body);
       
       const updatedDocument = await storage.updateDocument(id, validatedData);
