@@ -11,6 +11,8 @@ type DocumentCompareProps = {
   newVersion: DocumentVersion & { uploadedBy: any };
   onClose: () => void;
   diff: string;
+  contentV1?: string;
+  contentV2?: string;
   aiSummary?: {
     significant_changes: Array<{
       section: string;
@@ -28,10 +30,18 @@ export function DocumentCompare({
   newVersion, 
   onClose,
   diff,
+  contentV1,
+  contentV2,
   aiSummary
 }: DocumentCompareProps) {
   const [view, setView] = useState<'changes' | 'original' | 'new'>('changes');
   const [renderedDiff, setRenderedDiff] = useState<string>(diff);
+  const [originalContent, setOriginalContent] = useState<string>(
+    contentV1 || originalVersion.fileContent || "No content available"
+  );
+  const [newContent, setNewContent] = useState<string>(
+    contentV2 || newVersion.fileContent || "No content available"
+  );
 
   // Ensure diff HTML is properly sanitized and formatted
   useEffect(() => {
@@ -40,6 +50,10 @@ export function DocumentCompare({
     
     // The diff is already properly formatted HTML from the server
     setRenderedDiff(diff || "<div>No differences found</div>");
+    
+    // Set original and new content
+    setOriginalContent(contentV1 || originalVersion.fileContent || "No content available");
+    setNewContent(contentV2 || newVersion.fileContent || "No content available");
     
     // Escape key to close modal
     const handleEscapeKey = (event: KeyboardEvent) => {
@@ -52,7 +66,7 @@ export function DocumentCompare({
     return () => {
       window.removeEventListener('keydown', handleEscapeKey);
     };
-  }, [diff, onClose]);
+  }, [diff, contentV1, contentV2, originalVersion, newVersion, onClose]);
 
   const originalName = originalVersion.uploadedBy?.fullName || 
                      originalVersion.uploadedBy?.name || 
@@ -148,7 +162,7 @@ export function DocumentCompare({
                   <div className="border p-4 rounded-md">
                     <h4 className="font-medium mb-2">Document Content</h4>
                     <pre className="whitespace-pre-wrap overflow-x-auto bg-gray-50 p-4 rounded border max-h-[60vh] overflow-y-auto">
-                      {originalVersion.fileContent || "No content available"}
+                      {originalContent}
                     </pre>
                   </div>
                 </div>
@@ -167,7 +181,7 @@ export function DocumentCompare({
                   <div className="border p-4 rounded-md">
                     <h4 className="font-medium mb-2">Document Content</h4>
                     <pre className="whitespace-pre-wrap overflow-x-auto bg-gray-50 p-4 rounded border max-h-[60vh] overflow-y-auto">
-                      {newVersion.fileContent || "No content available"}
+                      {newContent}
                     </pre>
                   </div>
                 </div>

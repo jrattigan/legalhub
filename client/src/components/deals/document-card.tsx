@@ -51,6 +51,8 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
     version1?: DocumentVersion & { uploadedBy: any };
     version2?: DocumentVersion & { uploadedBy: any };
     diff?: string;
+    contentV1?: string;
+    contentV2?: string;
     aiSummary?: {
       significant_changes: Array<{
         section: string;
@@ -182,6 +184,8 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
           version1: versions[1],
           version2: versions[0],
           diff: data.diff || "<div>No differences detected</div>",
+          contentV1: data.contentV1 || versions[1].fileContent,
+          contentV2: data.contentV2 || versions[0].fileContent,
           aiSummary: data.aiSummary
         });
       }
@@ -375,6 +379,8 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
           originalVersion={compareVersions.version1}
           newVersion={compareVersions.version2}
           diff={compareVersions.diff || "<div>Diff data not available</div>"}
+          contentV1={compareVersions.contentV1}
+          contentV2={compareVersions.contentV2}
           aiSummary={compareVersions.aiSummary}
           onClose={() => setCompareDialogOpen(false)}
         />
