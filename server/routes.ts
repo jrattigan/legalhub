@@ -299,7 +299,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tasks", async (req, res) => {
     try {
       console.log("Received task creation request with body:", JSON.stringify(req.body));
-      const validatedData = insertTaskSchema.parse(req.body);
+      
+      // Pre-process the request body to handle the date
+      const processedBody = { ...req.body };
+      if (processedBody.dueDate && typeof processedBody.dueDate === 'string') {
+        processedBody.dueDate = new Date(processedBody.dueDate);
+      }
+      
+      const validatedData = insertTaskSchema.parse(processedBody);
       console.log("Validated data:", JSON.stringify(validatedData));
       const task = await storage.createTask(validatedData);
       console.log("Task created successfully:", JSON.stringify(task));
@@ -335,8 +342,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const partialTaskSchema = insertTaskSchema.partial();
-      const validatedData = partialTaskSchema.parse(req.body);
+      // Pre-process the request body to handle the date
+      const processedBody = { ...req.body };
+      if (processedBody.dueDate && typeof processedBody.dueDate === 'string') {
+        processedBody.dueDate = new Date(processedBody.dueDate);
+      }
+      
+      // Create a partial schema that allows updating only specific fields
+      const partialSchema = z.object({
+        title: z.string().optional(),
+        description: z.string().optional(),
+        status: z.string().optional(),
+        priority: z.string().optional(),
+        dueDate: z.union([z.date(), z.null()]).optional(),
+        assigneeId: z.union([z.number(), z.null()]).optional(),
+        completed: z.boolean().optional()
+      });
+      
+      const validatedData = partialSchema.parse(processedBody);
       
       const updatedTask = await storage.updateTask(id, validatedData);
       if (!updatedTask) {
@@ -345,7 +368,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(updatedTask);
     } catch (error) {
+      console.error("Error updating task:", error);
       if (error instanceof z.ZodError) {
+        console.error("Validation error details:", JSON.stringify(error.errors));
         return res.status(400).json({ message: "Invalid task data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to update task" });
