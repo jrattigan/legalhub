@@ -64,7 +64,7 @@ export function DocumentCompare({
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-hidden">
-      <Card className="w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden">
+      <Card className="w-full max-w-6xl h-[95vh] flex flex-col overflow-hidden">
         <CardHeader className="pb-2 flex flex-row justify-between items-center shrink-0">
           <CardTitle className="flex items-center">
             <FileText className="mr-2 h-5 w-5" />
@@ -125,12 +125,14 @@ export function DocumentCompare({
                 </h3>
                 <div className="mb-3 text-xs text-slate-700 p-2 bg-slate-50 rounded border-l-2 border-slate-300">
                   <p>Comparing version {originalVersion.version} (by {originalName}) with version {newVersion.version} (by {newName})</p>
-                  <p className="mt-1">
-                    <span className="inline-block mr-3"><span className="bg-red-100 text-red-700 px-1 py-0.5 line-through">Red text</span>: Deleted content</span>
-                    <span className="inline-block"><span className="bg-green-100 text-green-700 px-1 py-0.5">Green text</span>: Added content</span>
+                  <p className="mt-1 flex flex-wrap">
+                    <span className="inline-block mr-3 mb-1"><span className="bg-red-100 text-red-700 px-1 py-0.5 line-through">Red text</span>: Deleted content</span>
+                    <span className="inline-block mb-1"><span className="bg-green-100 text-green-700 px-1 py-0.5">Green text</span>: Added content</span>
                   </p>
                 </div>
-                <div className="border p-4 rounded-md overflow-x-auto max-w-full" dangerouslySetInnerHTML={{ __html: renderedDiff }} />
+                <div className="border p-4 rounded-md overflow-y-auto max-h-[60vh]">
+                  <div className="overflow-x-auto min-w-full" dangerouslySetInnerHTML={{ __html: renderedDiff }} />
+                </div>
               </div>
             </TabsContent>
             
@@ -138,11 +140,16 @@ export function DocumentCompare({
               <div className="border rounded p-4 bg-white flex-1 overflow-y-auto">
                 <div className="text-sm">
                   <h3 className="font-medium mb-3">Original Document: {originalVersion.fileName}</h3>
-                  <div className="p-3 bg-gray-100 rounded">
+                  <div className="p-3 bg-gray-100 rounded mb-4">
                     <p className="mb-2">Version {originalVersion.version}</p>
                     <p className="mb-2">Uploaded by {originalName}</p>
                     <p className="mb-2">Date: {new Date(originalVersion.createdAt).toLocaleString()}</p>
-                    <p className="text-muted-foreground mt-4">In a production environment, this would display the actual document content or a preview.</p>
+                  </div>
+                  <div className="border p-4 rounded-md">
+                    <h4 className="font-medium mb-2">Document Content</h4>
+                    <pre className="whitespace-pre-wrap overflow-x-auto bg-gray-50 p-4 rounded border max-h-[60vh] overflow-y-auto">
+                      {originalVersion.fileContent || "No content available"}
+                    </pre>
                   </div>
                 </div>
               </div>
@@ -152,11 +159,16 @@ export function DocumentCompare({
               <div className="border rounded p-4 bg-white flex-1 overflow-y-auto">
                 <div className="text-sm">
                   <h3 className="font-medium mb-3">New Document: {newVersion.fileName}</h3>
-                  <div className="p-3 bg-gray-100 rounded">
+                  <div className="p-3 bg-gray-100 rounded mb-4">
                     <p className="mb-2">Version {newVersion.version}</p>
                     <p className="mb-2">Uploaded by {newName}</p>
                     <p className="mb-2">Date: {new Date(newVersion.createdAt).toLocaleString()}</p>
-                    <p className="text-muted-foreground mt-4">In a production environment, this would display the actual document content or a preview.</p>
+                  </div>
+                  <div className="border p-4 rounded-md">
+                    <h4 className="font-medium mb-2">Document Content</h4>
+                    <pre className="whitespace-pre-wrap overflow-x-auto bg-gray-50 p-4 rounded border max-h-[60vh] overflow-y-auto">
+                      {newVersion.fileContent || "No content available"}
+                    </pre>
                   </div>
                 </div>
               </div>
