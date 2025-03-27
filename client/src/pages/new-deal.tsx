@@ -94,11 +94,11 @@ export default function NewDeal() {
     <div className="min-h-screen flex flex-col">
       <AppHeader />
       
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex">
         <Sidebar />
         
-        <div className="flex-1 flex flex-col overflow-hidden bg-neutral-50">
-          <div className="p-6 flex items-center border-b border-neutral-200 bg-white">
+        <div className="flex-1 flex flex-col bg-neutral-50">
+          <div className="p-6 flex items-center border-b border-neutral-200 bg-white sticky top-0 z-10">
             <Button 
               variant="ghost" 
               className="mr-4" 
@@ -110,8 +110,8 @@ export default function NewDeal() {
             <h1 className="text-2xl font-bold text-neutral-800">Create New Deal</h1>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-2xl mx-auto">
+          <div className="flex-1 p-6" style={{ overflowY: 'auto' }}>
+            <div className="max-w-2xl mx-auto mb-8">
               <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-6">
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
