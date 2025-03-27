@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Calendar, Edit, MoreHorizontal, Eye, Filter, Download, Share2, Trash2, Clock } from 'lucide-react';
+import { Calendar, Edit, MoreHorizontal, Eye, Filter, Download, Share2, Trash2, Clock, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -782,28 +782,92 @@ export default function DealDetail({
             <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
               <div className="flex justify-between items-center mb-3">
                 <h2 className="font-medium text-neutral-800">Deal Team</h2>
-                <Button variant="outline" size="sm" className="text-xs text-primary border-primary">
-                  + Add Team Member
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs text-primary border-primary">
+                      + Add Team Member
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add Team Member</DialogTitle>
+                      <DialogDescription>
+                        Add someone to the deal team
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="user">Select User</Label>
+                        <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select team member" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">John Doe (Legal Counsel)</SelectItem>
+                            <SelectItem value="2">Jane Smith (Deal Lead)</SelectItem>
+                            <SelectItem value="3">Michael Johnson (Analyst)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="role">Role</Label>
+                        <Select defaultValue="member">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="lead">Deal Lead</SelectItem>
+                            <SelectItem value="counsel">Legal Counsel</SelectItem>
+                            <SelectItem value="member">Team Member</SelectItem>
+                            <SelectItem value="observer">Observer</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={() => {
+                        toast({
+                          title: "Team member added",
+                          description: "The user has been added to the deal team."
+                        });
+                        onRefreshData();
+                      }}>Add to Team</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
               
               <div className="space-y-3">
-                {dealUsers.map(user => (
-                  <div key={user.id} className="p-3 rounded-md border border-neutral-200 hover:bg-neutral-50">
-                    <div className="flex items-center">
-                      <Avatar className="h-10 w-10" style={{ backgroundColor: user.avatarColor }}>
-                        <AvatarFallback>{user.initials}</AvatarFallback>
-                      </Avatar>
-                      <div className="ml-3">
-                        <div className="font-medium">{user.fullName}</div>
-                        <div className="text-xs text-neutral-500">{user.role}</div>
-                      </div>
-                      <div className="ml-auto bg-neutral-100 text-neutral-600 text-xs px-2 py-0.5 rounded-full">
-                        {user.role}
+                {dealUsers.length === 0 ? (
+                  <div className="text-center py-8 text-neutral-500">
+                    <div className="mb-2">No team members assigned to this deal</div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> 
+                      Add First Team Member
+                    </Button>
+                  </div>
+                ) : (
+                  dealUsers.map(user => (
+                    <div key={user.id} className="p-3 rounded-md border border-neutral-200 hover:bg-neutral-50">
+                      <div className="flex items-center">
+                        <Avatar className="h-10 w-10" style={{ backgroundColor: user.avatarColor }}>
+                          <AvatarFallback>{user.initials}</AvatarFallback>
+                        </Avatar>
+                        <div className="ml-3">
+                          <div className="font-medium">{user.fullName}</div>
+                          <div className="text-xs text-neutral-500">{user.email}</div>
+                        </div>
+                        <div className="ml-auto bg-neutral-100 text-neutral-600 text-xs px-2 py-0.5 rounded-full">
+                          {user.role}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
             

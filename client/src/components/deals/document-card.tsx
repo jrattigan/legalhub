@@ -10,7 +10,8 @@ import {
   Eye, 
   ChevronDown, 
   ChevronUp, 
-  MoreHorizontal 
+  MoreHorizontal,
+  Plus 
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -31,21 +32,75 @@ import { apiRequest } from '@/lib/queryClient';
 import { DocumentCompare } from '@/components/ui/document-compare';
 
 interface DocumentCardProps {
-  document: Document & { versions: number };
+  documents?: (Document & { versions: number })[];
+  document?: Document & { versions: number };
   onRefreshData: () => void;
   preview?: boolean;
+  dealId?: number;
 }
 
-export default function DocumentCard({ document, onRefreshData, preview = false }: DocumentCardProps) {
+export default function DocumentCard({ document, documents = [], onRefreshData, preview = false, dealId }: DocumentCardProps) {
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [compareDialogOpen, setCompareDialogOpen] = useState(false);
+  const [isNewDocDialogOpen, setIsNewDocDialogOpen] = useState(false);
   const [compareVersions, setCompareVersions] = useState<{
     version1?: DocumentVersion & { uploadedBy: any };
     version2?: DocumentVersion & { uploadedBy: any };
     diff?: string;
   }>({});
+
+  // If this is a list view with no documents
+  if (documents.length === 0 && !document) {
+    return (
+      <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-full">
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="font-medium text-neutral-800">Documents</h2>
+          <Dialog open={isNewDocDialogOpen} onOpenChange={setIsNewDocDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="link" className="text-xs text-primary hover:text-primary-dark" disabled={!dealId}>
+                + Add Document
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Upload New Document</DialogTitle>
+                <DialogDescription>
+                  Add a new document to this deal
+                </DialogDescription>
+              </DialogHeader>
+              <FileUpload
+                onUpload={(fileData) => {
+                  // Here you would handle the document creation
+                  setIsNewDocDialogOpen(false);
+                  onRefreshData();
+                }}
+                isUploading={false}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+        
+        <div className="text-center py-8 text-neutral-500">
+          <div className="mb-2">No documents found for this deal</div>
+          {dealId && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setIsNewDocDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4 mr-1" /> 
+              Upload First Document
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // If we don't have a document, return null
+  if (!document) return null;
 
   // Fetch document versions
   const { data: versions, isLoading: versionsLoading } = useQuery({
