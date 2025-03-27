@@ -86,7 +86,11 @@ export default function Documents() {
         <div className="flex-1 overflow-y-auto bg-neutral-50 p-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-neutral-800">Documents</h1>
-            <Button>
+            <Button onClick={() => {
+              // Use first deal's ID for demonstration purposes
+              const dealId = deals && deals.length > 0 ? deals[0].id : 1;
+              navigate(`/deals/${dealId}?tab=documents&action=new`);
+            }}>
               <Upload className="h-4 w-4 mr-2" />
               Upload Document
             </Button>

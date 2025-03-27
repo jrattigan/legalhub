@@ -93,7 +93,11 @@ export default function Tasks() {
         <div className="flex-1 overflow-y-auto bg-neutral-50 p-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-neutral-800">Tasks</h1>
-            <Button>
+            <Button onClick={() => {
+              // Use first deal's ID for demonstration purposes
+              const dealId = deals && deals.length > 0 ? deals[0].id : 1;
+              window.location.href = `/deals/${dealId}?tab=tasks&action=new`;
+            }}>
               <PlusCircle className="h-4 w-4 mr-2" />
               New Task
             </Button>
@@ -167,7 +171,15 @@ export default function Tasks() {
                   ) : pendingTasks.length === 0 ? (
                     <div className="text-center py-8 text-neutral-500">
                       <div className="mb-2">No pending tasks found</div>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          // Use first deal's ID for demonstration purposes
+                          const dealId = deals && deals.length > 0 ? deals[0].id : 1;
+                          window.location.href = `/deals/${dealId}?tab=tasks&action=new`;
+                        }}
+                      >
                         <PlusCircle className="h-4 w-4 mr-1" /> 
                         Create Task
                       </Button>
