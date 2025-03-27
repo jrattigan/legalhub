@@ -93,7 +93,7 @@ export async function generateDocumentComparisonSummary(original: string, update
         {
           role: "system",
           content: `You are an expert legal document analyst. You will be provided with two versions of a legal document. 
-          Your task is to analyze the changes between them and provide a structured summary. Focus on substantive 
+          Your task is to analyze the changes between them and provide a structured JSON summary. Focus on substantive 
           changes that affect legal meaning, financial terms, rights, and obligations.`
         },
         {
@@ -106,11 +106,13 @@ export async function generateDocumentComparisonSummary(original: string, update
           UPDATED VERSION:
           ${truncatedUpdated}
           
-          Analyze the changes and provide a structured output with:
-          1. A list of significant changes with the section they appear in, the type of change (addition, removal, modification), 
-          a description of the change, and its significance (high, medium, low)
-          2. A list of sections that remained unchanged
-          3. A concise overall summary of the changes (max 50 words)`
+          Analyze the changes and provide a structured output in JSON format with:
+          1. A list of "significant_changes" with each having "section", "change_type" (addition, removal, modification), 
+          "description" of the change, and "significance" (high, medium, low)
+          2. A list of "unchanged_sections" as strings
+          3. A "summary" field with a concise overall summary of the changes (max 50 words)
+          
+          Return your analysis as a JSON object with these fields.`
         }
       ],
       response_format: { type: "json_object" },
@@ -133,18 +135,21 @@ export async function generateDocumentComparisonSummary(original: string, update
   } catch (error) {
     console.error("Error generating document comparison:", error);
     
+    // Properly handle error with TypeScript
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    
     // Return a fallback response in case of error
     return {
       significant_changes: [
         {
           section: "Error",
           change_type: "error",
-          description: error.message || "Unable to analyze document due to an error",
+          description: errorMessage,
           significance: "medium"
         }
       ],
       unchanged_sections: [],
-      summary: `An error occurred while analyzing the document changes: ${error.message || "Unknown error"}. Please try again with smaller documents.`
+      summary: `An error occurred while analyzing the document changes: ${errorMessage}. Please try again with smaller documents.`
     };
   }
 }
