@@ -681,7 +681,7 @@ export class MemStorage implements IStorage {
     const olderVersion = version1.version < version2.version ? version1 : version2;
     const newerVersion = version1.version > version2.version ? version1 : version2;
     
-    // For demo purposes, create a more detailed diff
+    // For demo purposes, create a detailed diff with sections that would be analyzed for AI summary
     return `
       <div class="diff">
         <div class="diff-header">
@@ -690,14 +690,14 @@ export class MemStorage implements IStorage {
         
         <h3 class="text-lg font-medium mb-3">Document: ${newerVersion.fileName}</h3>
         
-        <div class="diff-section mb-4">
+        <div class="diff-section mb-4" data-section="introduction" data-changed="false">
           <h4 class="font-medium mb-2">Section 1: Introduction</h4>
           <div class="diff-unchanged">
             This document outlines the terms and conditions for the transaction.
           </div>
         </div>
         
-        <div class="diff-section mb-4">
+        <div class="diff-section mb-4" data-section="financial-terms" data-changed="true" data-significance="high">
           <h4 class="font-medium mb-2">Section 2: Changes to Financial Terms</h4>
           <div class="diff-removed">
             The initial investment will be $5,000,000 with a valuation cap of $25,000,000.
@@ -707,7 +707,7 @@ export class MemStorage implements IStorage {
           </div>
         </div>
         
-        <div class="diff-section mb-4">
+        <div class="diff-section mb-4" data-section="governance" data-changed="true" data-significance="medium">
           <h4 class="font-medium mb-2">Section 3: Board Representation</h4>
           <div class="diff-unchanged">
             The investor will have the right to appoint one member to the board of directors.
@@ -717,7 +717,7 @@ export class MemStorage implements IStorage {
           </div>
         </div>
         
-        <div class="diff-section mb-4">
+        <div class="diff-section mb-4" data-section="intellectual-property" data-changed="true" data-significance="high">
           <h4 class="font-medium mb-2">Section 4: Intellectual Property</h4>
           <div class="diff-removed">
             The company represents that it owns all intellectual property related to its products.
@@ -727,7 +727,7 @@ export class MemStorage implements IStorage {
           </div>
         </div>
         
-        <div class="diff-section">
+        <div class="diff-section" data-section="closing-conditions" data-changed="false">
           <h4 class="font-medium mb-2">Section 5: Closing Conditions</h4>
           <div class="diff-unchanged">
             The transaction is subject to standard closing conditions including regulatory approval.

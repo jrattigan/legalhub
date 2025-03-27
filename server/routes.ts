@@ -278,9 +278,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      // Get the diff HTML from storage
       const diff = await storage.compareDocumentVersions(versionId1, versionId2);
-      res.json({ diff });
+      
+      // Get the document versions to access their content
+      const version1 = await storage.getDocumentVersion(versionId1);
+      const version2 = await storage.getDocumentVersion(versionId2);
+      
+      if (!version1 || !version2) {
+        return res.status(404).json({ message: "One or both document versions not found" });
+      }
+      
+      // Import the OpenAI integration for document comparison
+      const { generateDocumentComparisonSummary } = await import('./openai');
+      
+      // Generate AI summary of changes
+      const aiSummary = await generateDocumentComparisonSummary(
+        version1.fileContent, 
+        version2.fileContent
+      );
+      
+      res.json({ 
+        diff,
+        aiSummary
+      });
     } catch (error) {
+      console.error("Error comparing document versions:", error);
       res.status(500).json({ message: "Failed to compare document versions" });
     }
   });

@@ -49,6 +49,16 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
     version1?: DocumentVersion & { uploadedBy: any };
     version2?: DocumentVersion & { uploadedBy: any };
     diff?: string;
+    aiSummary?: {
+      significant_changes: Array<{
+        section: string;
+        change_type: string;
+        description: string;
+        significance: string;
+      }>;
+      unchanged_sections: string[];
+      summary: string;
+    };
   }>({});
 
   // If this is a list view with no documents
@@ -149,7 +159,8 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
         setCompareVersions({
           version1: versions[1],
           version2: versions[0],
-          diff: data.diff
+          diff: data.diff,
+          aiSummary: data.aiSummary
         });
         setCompareDialogOpen(true);
       }
@@ -318,6 +329,7 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
           originalVersion={compareVersions.version1}
           newVersion={compareVersions.version2}
           diff={compareVersions.diff}
+          aiSummary={compareVersions.aiSummary}
           onClose={() => setCompareDialogOpen(false)}
         />
       )}
