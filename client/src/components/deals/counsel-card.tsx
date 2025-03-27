@@ -64,11 +64,19 @@ export default function CounselCard({ counsel, onRefreshData, preview = false, d
 
   // Add counsel mutation
   const addCounselMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof counselSchema>) => {
-      const response = await apiRequest('POST', '/api/deal-counsels', {
+    mutationFn: async (data: z.infer<typeof counselSchema> & { dealId?: number }) => {
+      if (!dealId) {
+        throw new Error("Deal ID is required");
+      }
+      
+      // Ensure dealId is properly included in the request payload
+      const payload = {
         ...data,
         dealId: dealId
-      });
+      };
+      
+      console.log('Sending data to API:', payload);
+      const response = await apiRequest('POST', '/api/deal-counsels', payload);
       return response.json();
     },
     onSuccess: () => {
@@ -76,30 +84,50 @@ export default function CounselCard({ counsel, onRefreshData, preview = false, d
       setIsDialogOpen(false);
       onRefreshData();
       form.reset();
+    },
+    onError: (error) => {
+      console.error('Error adding counsel:', error);
     }
   });
 
   // Form validation schema
-  const counselSchema = insertDealCounselSchema.extend({
+  // Define a more specific schema to handle the string-to-number conversions properly
+  const counselSchema = z.object({
     lawFirmId: z.union([z.number(), z.string()]).transform(val => 
-      typeof val === 'string' ? parseInt(val) : val
+      typeof val === 'string' ? parseInt(val, 10) : val
     ),
-    attorneyId: z.union([z.number(), z.string()]).optional().transform(val => 
-      val === '' || val === 'none' ? undefined : typeof val === 'string' ? parseInt(val) : val
+    role: z.string(),
+    attorneyId: z.union([z.number(), z.string(), z.literal('none')]).optional().transform(val => 
+      val === '' || val === 'none' || val === undefined ? null : typeof val === 'string' ? parseInt(val, 10) : val
     )
   });
 
   const form = useForm<z.infer<typeof counselSchema>>({
     resolver: zodResolver(counselSchema),
     defaultValues: {
-      lawFirmId: undefined,
+      // Use an empty string instead of undefined for lawFirmId to avoid type errors
+      lawFirmId: '',
       role: 'Supporting',
       attorneyId: undefined
     }
   });
 
   const onSubmit = (data: z.infer<typeof counselSchema>) => {
-    addCounselMutation.mutate(data);
+    if (!dealId) {
+      console.error('No deal ID provided');
+      return;
+    }
+    
+    console.log('Form submitted with data:', data);
+    
+    // Ensure dealId is included in the mutation
+    const submissionData = {
+      ...data,
+      dealId: dealId as number // Force type to number since we've checked it exists
+    };
+    
+    console.log('Submitting to mutation:', submissionData);
+    addCounselMutation.mutate(submissionData);
   };
 
   // Watch for law firm changes to load attorneys
