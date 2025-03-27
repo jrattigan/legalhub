@@ -183,12 +183,28 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
     }
   };
 
-  const handleCompareLatestVersions = () => {
+  const handleCompareLatestVersions = (e: React.MouseEvent) => {
+    // Stop propagation to prevent the isExpanded toggle
+    e.stopPropagation();
+    
     if (versions && versions.length >= 2) {
-      compareMutation.mutate({
-        version1Id: versions[1].id,
-        version2Id: versions[0].id
+      // Log for debugging
+      console.log("Comparing versions:", {
+        version1: versions[1],
+        version2: versions[0]
       });
+      
+      // Ensure we have valid IDs before triggering the mutation
+      if (versions[1]?.id && versions[0]?.id) {
+        compareMutation.mutate({
+          version1Id: versions[1].id,
+          version2Id: versions[0].id
+        });
+      } else {
+        console.error("Invalid version IDs", versions);
+      }
+    } else {
+      console.error("Not enough versions to compare", versions);
     }
   };
 
@@ -324,11 +340,11 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
       )}
 
       {/* Document comparison dialog */}
-      {compareDialogOpen && compareVersions.version1 && compareVersions.version2 && compareVersions.diff && (
+      {compareDialogOpen && compareVersions.version1 && compareVersions.version2 && (
         <DocumentCompare
           originalVersion={compareVersions.version1}
           newVersion={compareVersions.version2}
-          diff={compareVersions.diff}
+          diff={compareVersions.diff || "<div>Diff data not available</div>"}
           aiSummary={compareVersions.aiSummary}
           onClose={() => setCompareDialogOpen(false)}
         />
