@@ -46,6 +46,7 @@ import TaskCard from './task-card';
 import IssueCard from './issue-card';
 import CounselCard from './counsel-card';
 import TimelineCard from './timeline-card';
+import { FileUpload } from '@/components/ui/file-upload';
 
 type DealDetailProps = {
   deal: Deal;
@@ -620,10 +621,10 @@ export default function DealDetail({
             </div>
             
             {/* Tasks Summary Card */}
-            <TaskCard tasks={tasks} onRefreshData={onRefreshData} preview={true} />
+            <TaskCard tasks={tasks} onRefreshData={onRefreshData} preview={true} dealId={deal.id} />
             
             {/* Issues Summary Card */}
-            <IssueCard issues={issues} onRefreshData={onRefreshData} preview={true} />
+            <IssueCard issues={issues} onRefreshData={onRefreshData} preview={true} dealId={deal.id} />
             
             {/* Documents Card */}
             <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-1 md:col-span-2">
@@ -679,6 +680,7 @@ export default function DealDetail({
                     document={document} 
                     onRefreshData={onRefreshData} 
                     preview={true}
+                    dealId={deal.id}
                   />
                 ))}
               </div>
@@ -693,7 +695,7 @@ export default function DealDetail({
             </div>
             
             {/* Outside Counsel Card */}
-            <CounselCard counsel={counsel} onRefreshData={onRefreshData} preview={true} />
+            <CounselCard counsel={counsel} onRefreshData={onRefreshData} preview={true} dealId={deal.id} />
             
             {/* Timeline Card */}
             <TimelineCard events={timelineEvents} onRefreshData={onRefreshData} preview={true} />
@@ -705,14 +707,38 @@ export default function DealDetail({
             <div className="flex justify-between items-center mb-3">
               <h2 className="font-medium text-neutral-800">All Documents</h2>
               <div className="flex space-x-2">
-                <Button variant="outline" size="sm" className="text-xs text-primary border-primary">
-                  <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M7 10L12 15L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Upload New Document
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs text-primary border-primary">
+                      <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M7 10L12 15L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Upload New Document
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Upload Document</DialogTitle>
+                      <DialogDescription>
+                        Upload a document for this deal
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <FileUpload 
+                        onUpload={(fileData) => {
+                          toast({
+                            title: "Document uploaded",
+                            description: "Your document has been uploaded successfully."
+                          });
+                          onRefreshData();
+                        }}
+                        isUploading={false}
+                      />
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <Button variant="outline" size="sm" className="text-xs text-neutral-600 border-neutral-300">
                   <Filter className="w-3 h-3 mr-1" />
                   Filter
@@ -754,15 +780,40 @@ export default function DealDetail({
                   document={document} 
                   onRefreshData={onRefreshData} 
                   preview={false}
+                  dealId={deal.id}
                 />
               ))}
               
               {documents.length === 0 && (
                 <div className="text-center py-8 text-neutral-500">
                   <div className="mb-2">No documents found for this deal</div>
-                  <Button variant="outline" size="sm">
-                    Upload First Document
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        Upload First Document
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Upload Document</DialogTitle>
+                        <DialogDescription>
+                          Upload a document for this deal
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <FileUpload 
+                          onUpload={(fileData) => {
+                            toast({
+                              title: "Document uploaded",
+                              description: "Your document has been uploaded successfully."
+                            });
+                            onRefreshData();
+                          }}
+                          isUploading={false}
+                        />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               )}
             </div>
@@ -770,11 +821,11 @@ export default function DealDetail({
         </TabsContent>
         
         <TabsContent value="tasks" className="m-0" hidden={activeTab !== 'tasks'}>
-          <TaskCard tasks={tasks} onRefreshData={onRefreshData} preview={false} />
+          <TaskCard tasks={tasks} onRefreshData={onRefreshData} preview={false} dealId={deal.id} />
         </TabsContent>
         
         <TabsContent value="issues" className="m-0" hidden={activeTab !== 'issues'}>
-          <IssueCard issues={issues} onRefreshData={onRefreshData} preview={false} />
+          <IssueCard issues={issues} onRefreshData={onRefreshData} preview={false} dealId={deal.id} />
         </TabsContent>
         
         <TabsContent value="team" className="m-0" hidden={activeTab !== 'team'}>
@@ -871,7 +922,7 @@ export default function DealDetail({
               </div>
             </div>
             
-            <CounselCard counsel={counsel} onRefreshData={onRefreshData} preview={false} />
+            <CounselCard counsel={counsel} onRefreshData={onRefreshData} preview={false} dealId={deal.id} />
           </div>
         </TabsContent>
         
