@@ -81,6 +81,9 @@ export default function CounselCard({ counsel, onRefreshData, preview = false, d
 
   // Form validation schema
   const counselSchema = insertDealCounselSchema.extend({
+    lawFirmId: z.union([z.number(), z.string()]).transform(val => 
+      typeof val === 'string' ? parseInt(val) : val
+    ),
     attorneyId: z.union([z.number(), z.string()]).optional().transform(val => 
       val === '' || val === 'none' ? undefined : typeof val === 'string' ? parseInt(val) : val
     )
