@@ -124,15 +124,15 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     },
     onSuccess: (data) => {
       console.log("Task created successfully:", data);
+      toast({
+        title: "Success",
+        description: "Task created successfully",
+        variant: "default",
+      });
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/tasks`] });
       setIsDialogOpen(false);
       onRefreshData();
       form.reset();
-      
-      toast({
-        title: "Task created",
-        description: "Task has been successfully created",
-      });
     },
     onError: (error: any) => {
       console.error("Task creation error:", error);
@@ -186,8 +186,17 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       return;
     }
     
-    console.log("Submitting task:", { ...data, dealId });
-    createTaskMutation.mutate(data);
+    // Format the data for submission (ensure dates are properly formatted)
+    const formattedData = {
+      ...data,
+      dealId,
+      dueDate: data.dueDate ? new Date(data.dueDate) : null,
+      assigneeId: data.assigneeId === "unassigned" || !data.assigneeId ? null : 
+        typeof data.assigneeId === "string" ? parseInt(data.assigneeId) : data.assigneeId,
+    };
+    
+    console.log("Submitting task:", formattedData);
+    createTaskMutation.mutate(formattedData);
   };
 
   const getTaskPriorityBadge = (priority: string) => {
@@ -207,16 +216,16 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     <div className={`bg-white rounded-lg border border-neutral-200 shadow-sm p-4 ${preview ? 'col-span-1' : 'col-span-full'}`}>
       <div className="flex justify-between items-center mb-3">
         <h2 className="font-medium text-neutral-800">Tasks</h2>
-        <Button 
-          variant="link" 
-          className="text-xs text-primary hover:text-primary-dark" 
-          disabled={!dealId}
-          onClick={() => setIsDialogOpen(true)}
-        >
-          + Add Task
-        </Button>
-        
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button 
+              variant="link" 
+              className="text-xs text-primary hover:text-primary-dark" 
+              disabled={!dealId}
+            >
+              + Add Task
+            </Button>
+          </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New Task</DialogTitle>
