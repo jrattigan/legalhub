@@ -681,57 +681,57 @@ export class MemStorage implements IStorage {
     const olderVersion = version1.version < version2.version ? version1 : version2;
     const newerVersion = version1.version > version2.version ? version1 : version2;
     
-    // For demo purposes, create a detailed diff with sections that would be analyzed for AI summary
+    // For demo purposes, create a track changes style diff that shows inline changes
     return `
-      <div class="diff">
-        <div class="diff-header">
-          <p>Comparing version ${olderVersion.version} to version ${newerVersion.version}</p>
-        </div>
-        
+      <div class="document-compare">
         <h3 class="text-lg font-medium mb-3">Document: ${newerVersion.fileName}</h3>
         
-        <div class="diff-section mb-4" data-section="introduction" data-changed="false">
-          <h4 class="font-medium mb-2">Section 1: Introduction</h4>
-          <div class="diff-unchanged">
+        <div class="section mb-6">
+          <h4 class="text-base font-medium mb-2">Section 1: Introduction</h4>
+          <p class="mb-2">
             This document outlines the terms and conditions for the transaction.
-          </div>
+          </p>
         </div>
         
-        <div class="diff-section mb-4" data-section="financial-terms" data-changed="true" data-significance="high">
-          <h4 class="font-medium mb-2">Section 2: Changes to Financial Terms</h4>
-          <div class="diff-removed">
-            The initial investment will be $5,000,000 with a valuation cap of $25,000,000.
-          </div>
-          <div class="diff-added">
-            The initial investment will be $7,500,000 with a valuation cap of $30,000,000.
-          </div>
+        <div class="section mb-6">
+          <h4 class="text-base font-medium mb-2">Section 2: Financial Terms</h4>
+          <p class="mb-2">
+            The initial investment will be <span class="bg-red-100 text-red-800 line-through px-1">$5,000,000</span> <span class="bg-green-100 text-green-800 px-1">$7,500,000</span> with a valuation cap of <span class="bg-red-100 text-red-800 line-through px-1">$25,000,000</span> <span class="bg-green-100 text-green-800 px-1">$30,000,000</span>.
+          </p>
         </div>
         
-        <div class="diff-section mb-4" data-section="governance" data-changed="true" data-significance="medium">
-          <h4 class="font-medium mb-2">Section 3: Board Representation</h4>
-          <div class="diff-unchanged">
+        <div class="section mb-6">
+          <h4 class="text-base font-medium mb-2">Section 3: Board Representation</h4>
+          <p class="mb-2">
             The investor will have the right to appoint one member to the board of directors.
-          </div>
-          <div class="diff-added">
-            Additionally, the investor will have observer rights for all board meetings.
-          </div>
+            <span class="bg-green-100 text-green-800 px-1">Additionally, the investor will have observer rights for all board meetings.</span>
+          </p>
         </div>
         
-        <div class="diff-section mb-4" data-section="intellectual-property" data-changed="true" data-significance="high">
-          <h4 class="font-medium mb-2">Section 4: Intellectual Property</h4>
-          <div class="diff-removed">
-            The company represents that it owns all intellectual property related to its products.
-          </div>
-          <div class="diff-added">
-            The company represents that it owns or has properly licensed all intellectual property related to its products, and has conducted a thorough IP audit to confirm this representation.
-          </div>
+        <div class="section mb-6">
+          <h4 class="text-base font-medium mb-2">Section 4: Intellectual Property</h4>
+          <p class="mb-2">
+            The company represents that it <span class="bg-red-100 text-red-800 line-through px-1">owns all</span> <span class="bg-green-100 text-green-800 px-1">owns or has properly licensed all</span> intellectual property related to its products<span class="bg-green-100 text-green-800 px-1">, and has conducted a thorough IP audit to confirm this representation</span>.
+          </p>
         </div>
         
-        <div class="diff-section" data-section="closing-conditions" data-changed="false">
-          <h4 class="font-medium mb-2">Section 5: Closing Conditions</h4>
-          <div class="diff-unchanged">
+        <div class="section mb-6">
+          <h4 class="text-base font-medium mb-2">Section 5: Closing Conditions</h4>
+          <p class="mb-2">
             The transaction is subject to standard closing conditions including regulatory approval.
-          </div>
+          </p>
+        </div>
+        
+        <div class="section mb-6">
+          <h4 class="text-base font-medium mb-2">Section 6: Confidentiality</h4>
+          <p class="mb-2">
+            <span class="bg-green-100 text-green-800 px-1">All parties agree to maintain strict confidentiality regarding the terms of this agreement for a period of 3 years following execution.</span>
+          </p>
+        </div>
+        
+        <div class="legend text-xs text-gray-600 border-t pt-3 mt-4">
+          <div class="mb-1"><span class="bg-red-100 text-red-800 line-through px-1">Red strikethrough text</span>: Deleted content</div>
+          <div><span class="bg-green-100 text-green-800 px-1">Green text</span>: Added content</div>
         </div>
       </div>
     `;

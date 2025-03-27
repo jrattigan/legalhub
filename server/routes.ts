@@ -292,39 +292,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const diff = await storage.compareDocumentVersions(versionId1, versionId2);
       console.log("Diff generated successfully");
       
-      try {
-        // Import the OpenAI integration for document comparison
-        const { generateDocumentComparisonSummary } = await import('./openai');
-        
-        // Generate AI summary of changes
-        const aiSummary = await generateDocumentComparisonSummary(
-          version1.fileContent, 
-          version2.fileContent
-        );
-        
-        console.log("AI summary generated successfully");
-        
-        res.json({ 
-          diff,
-          aiSummary
-        });
-      } catch (aiError) {
-        // If AI summary fails, still return the diff with an error note
-        console.error("Error generating AI summary:", aiError);
-        res.json({ 
-          diff,
-          aiSummary: {
-            significant_changes: [{ 
-              section: "Error", 
-              change_type: "error",
-              description: "Failed to generate AI summary",
-              significance: "medium"
-            }],
-            unchanged_sections: [],
-            summary: "Unable to generate AI summary. The document comparison is still available."
-          }
-        });
-      }
+      // Return just the diff without AI summary as requested
+      res.json({ 
+        diff,
+        // Send an empty AI summary structure to avoid UI errors
+        aiSummary: null
+      });
     } catch (error) {
       console.error("Error comparing document versions:", error);
       res.status(500).json({ 
