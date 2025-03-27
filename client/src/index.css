@@ -2,6 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Word-like document styling */
+.document-content {
+  font-family: 'Calibri', 'Arial', sans-serif;
+  color: #333;
+}
+
+.document-content h1 {
+  font-size: 16pt;
+  font-weight: bold;
+  margin-bottom: 12pt;
+  color: #2b579a;
+}
+
+.document-content h2 {
+  font-size: 14pt;
+  font-weight: bold;
+  margin-bottom: 10pt;
+  color: #2b579a;
+}
+
+.document-content h3 {
+  font-size: 12pt;
+  font-weight: bold;
+  margin-bottom: 8pt;
+}
+
+.document-content p {
+  margin-bottom: 8pt;
+}
+
+.document-content ul, .document-content ol {
+  margin-left: 20pt;
+  margin-bottom: 8pt;
+}
+
+.document-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 12pt;
+}
+
+.document-content th, .document-content td {
+  border: 1px solid #d1d5db;
+  padding: 6pt;
+}
+
+.document-content th {
+  background-color: #f9fafb;
+  font-weight: bold;
+}
+
+/* Styles for the diff view */
+.document-content ins {
+  background-color: #e6ffec;
+  text-decoration: none;
+  padding: 1px 0;
+}
+
+.document-content del {
+  background-color: #ffebe9;
+  text-decoration: line-through;
+  padding: 1px 0;
+}
+
 @layer base {
   :root {
     --primary: 222.2 47.4% 40%;

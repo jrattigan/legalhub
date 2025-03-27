@@ -39,6 +39,39 @@ export function DocumentCompare({
   const [newContent, setNewContent] = useState<string>(
     contentV2 || newVersion.fileContent || "No content available"
   );
+  
+  // Process content to preserve formatting
+  const processContent = (content: string): string => {
+    if (!content || content === "No content available") return content;
+    
+    // Try to detect if content is already HTML
+    if (content.trim().startsWith('<') && (
+        content.includes('<p>') || 
+        content.includes('<div>') || 
+        content.includes('<span>') || 
+        content.includes('<h')
+    )) {
+      // Content is probably already HTML, return as is
+      return content;
+    }
+    
+    // Convert plain text to HTML with paragraphs
+    let processed = content
+      // Replace newlines with paragraph breaks
+      .replace(/\n\n+/g, '</p><p>')
+      // Replace single newlines with line breaks
+      .replace(/\n/g, '<br>')
+      // Bold formatting
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/__(.*?)__/g, '<strong>$1</strong>')
+      // Italic formatting
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/_(.*?)_/g, '<em>$1</em>')
+      // Underline formatting (common in some markdown extensions)
+      .replace(/~(.*?)~/g, '<u>$1</u>');
+      
+    return `<p>${processed}</p>`;
+  };
 
   // Ensure diff HTML is properly sanitized and formatted
   useEffect(() => {
@@ -48,9 +81,12 @@ export function DocumentCompare({
     // The diff is already properly formatted HTML from the server
     setRenderedDiff(diff || "<div>No differences found</div>");
     
-    // Set original and new content
-    setOriginalContent(contentV1 || originalVersion.fileContent || "No content available");
-    setNewContent(contentV2 || newVersion.fileContent || "No content available");
+    // Set original and new content with preserved formatting
+    const processedOriginal = processContent(contentV1 || originalVersion.fileContent || "No content available");
+    const processedNew = processContent(contentV2 || newVersion.fileContent || "No content available");
+    
+    setOriginalContent(processedOriginal);
+    setNewContent(processedNew);
     
     // Escape key to close modal
     const handleEscapeKey = (event: KeyboardEvent) => {
@@ -155,13 +191,16 @@ export function DocumentCompare({
               
               {/* Word-like Document Display */}
               <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6 h-[calc(100vh-18rem)]">
-                <div className="bg-white shadow-md w-full max-w-4xl p-8 mx-auto border border-gray-200 overflow-x-auto" 
+                <div className="bg-white shadow-md w-full max-w-4xl mx-auto border border-gray-200 overflow-x-auto print:shadow-none" 
                      style={{ 
                        fontFamily: "'Calibri', 'Arial', sans-serif", 
                        fontSize: "11pt", 
                        lineHeight: "1.5", 
                        color: "#333",
-                       maxWidth: "100%"
+                       maxWidth: "100%",
+                       minHeight: "11in",
+                       padding: "1in",
+                       boxShadow: "0 0 10px rgba(0,0,0,0.1)"
                      }}>
                   <div className="document-content max-w-full" dangerouslySetInnerHTML={{ __html: renderedDiff }} />
                 </div>
@@ -186,17 +225,18 @@ export function DocumentCompare({
               
               {/* Word-like Document Display */}
               <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6 h-[calc(100vh-18rem)]">
-                <div className="bg-white shadow-md w-full max-w-4xl p-8 mx-auto border border-gray-200 overflow-x-auto" 
+                <div className="bg-white shadow-md w-full max-w-4xl mx-auto border border-gray-200 overflow-x-auto print:shadow-none" 
                      style={{ 
                        fontFamily: "'Calibri', 'Arial', sans-serif", 
                        fontSize: "11pt", 
                        lineHeight: "1.5", 
                        color: "#333",
-                       maxWidth: "100%"
+                       maxWidth: "100%",
+                       minHeight: "11in",
+                       padding: "1in",
+                       boxShadow: "0 0 10px rgba(0,0,0,0.1)"
                      }}>
-                  <div className="document-content max-w-full whitespace-pre-wrap">
-                    {originalContent}
-                  </div>
+                  <div className="document-content max-w-full" dangerouslySetInnerHTML={{ __html: originalContent }} />
                 </div>
               </div>
             </div>
@@ -219,17 +259,18 @@ export function DocumentCompare({
               
               {/* Word-like Document Display */}
               <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6 h-[calc(100vh-18rem)]">
-                <div className="bg-white shadow-md w-full max-w-4xl p-8 mx-auto border border-gray-200 overflow-x-auto" 
+                <div className="bg-white shadow-md w-full max-w-4xl mx-auto border border-gray-200 overflow-x-auto print:shadow-none" 
                      style={{ 
                        fontFamily: "'Calibri', 'Arial', sans-serif", 
                        fontSize: "11pt", 
                        lineHeight: "1.5", 
                        color: "#333",
-                       maxWidth: "100%"
+                       maxWidth: "100%",
+                       minHeight: "11in",
+                       padding: "1in",
+                       boxShadow: "0 0 10px rgba(0,0,0,0.1)"
                      }}>
-                  <div className="document-content max-w-full whitespace-pre-wrap">
-                    {newContent}
-                  </div>
+                  <div className="document-content max-w-full" dangerouslySetInnerHTML={{ __html: newContent }} />
                 </div>
               </div>
             </div>
