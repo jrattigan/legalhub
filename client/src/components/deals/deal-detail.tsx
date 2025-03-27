@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Calendar, Edit, MoreHorizontal, Eye, Filter, Download, Share2, Trash2, Clock, Plus } from 'lucide-react';
+import { 
+  Calendar, Edit, MoreHorizontal, Eye, Filter, Download, Share2, 
+  Trash2, Clock, Plus, File, CheckSquare, AlertCircle as Alert, Users 
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { 
@@ -188,6 +192,18 @@ export default function DealDetail({
     setIsShareDialogOpen(false);
   };
   
+  // Mobile tab items with icons for easier navigation
+  const tabItems = [
+    { id: 'overview', label: 'Overview', icon: <Eye className="h-4 w-4" /> },
+    { id: 'documents', label: 'Docs', icon: <File className="h-4 w-4" /> },
+    { id: 'tasks', label: 'Tasks', icon: <CheckSquare className="h-4 w-4" /> },
+    { id: 'issues', label: 'Issues', icon: <Alert className="h-4 w-4" /> },
+    { id: 'team', label: 'Team', icon: <Users className="h-4 w-4" /> },
+    { id: 'timeline', label: 'Timeline', icon: <Clock className="h-4 w-4" /> },
+  ];
+
+  const isMobile = useIsMobile();
+      
   return (
     <div className="flex-1 flex flex-col bg-neutral-50">
       {/* Edit Deal Dialog */}
@@ -384,11 +400,11 @@ export default function DealDetail({
       </Dialog>
       
       <div className="border-b border-neutral-200 bg-white px-6 py-4">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-start md:items-center">
           <div>
             <h1 className="font-semibold text-xl text-neutral-800">{deal.title}</h1>
-            <div className="flex items-center mt-1 text-sm text-neutral-500">
-              <span className="mr-4">Deal ID: {deal.dealId}</span>
+            <div className={`${isMobile ? 'flex flex-col' : 'flex items-center'} mt-1 text-sm text-neutral-500`}>
+              <span className={isMobile ? 'mb-1' : 'mr-4'}>Deal ID: {deal.dealId}</span>
               <span className="flex items-center">
                 <Calendar className="h-4 w-4 mr-1" />
                 {deal.dueDate ? 
@@ -397,16 +413,18 @@ export default function DealDetail({
               </span>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="text-sm"
-              onClick={() => setActiveTab('timeline')}
-            >
-              <Eye className="h-4 w-4 mr-1" />
-              Timeline
-            </Button>
+          <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center space-x-2'}`}>
+            {!isMobile && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-sm"
+                onClick={() => setActiveTab('timeline')}
+              >
+                <Eye className="h-4 w-4 mr-1" />
+                Timeline
+              </Button>
+            )}
             <Button 
               variant="outline" 
               size="sm" 
@@ -419,7 +437,7 @@ export default function DealDetail({
             <div className="relative">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="sm" className="text-sm">
+                  <Button size="sm" className="text-sm w-full">
                     <MoreHorizontal className="h-4 w-4 mr-1" />
                     Actions
                   </Button>
@@ -447,79 +465,29 @@ export default function DealDetail({
           </div>
         </div>
         
-        <div className="flex items-center mt-4 border-t border-neutral-200 pt-4">
-          <div className="flex space-x-4">
-            <Button 
-              variant="ghost" 
-              className={`px-4 py-1.5 text-sm font-medium ${
-                activeTab === 'overview' ? 
-                'text-neutral-800 border-b-2 border-primary' : 
-                'text-neutral-500 hover:text-neutral-800'
-              }`}
-              onClick={() => setActiveTab('overview')}
-            >
-              Overview
-            </Button>
-            <Button 
-              variant="ghost" 
-              className={`px-4 py-1.5 text-sm font-medium ${
-                activeTab === 'documents' ? 
-                'text-neutral-800 border-b-2 border-primary' : 
-                'text-neutral-500 hover:text-neutral-800'
-              }`}
-              onClick={() => setActiveTab('documents')}
-            >
-              Documents
-            </Button>
-            <Button 
-              variant="ghost" 
-              className={`px-4 py-1.5 text-sm font-medium ${
-                activeTab === 'tasks' ? 
-                'text-neutral-800 border-b-2 border-primary' : 
-                'text-neutral-500 hover:text-neutral-800'
-              }`}
-              onClick={() => setActiveTab('tasks')}
-            >
-              Tasks
-            </Button>
-            <Button 
-              variant="ghost" 
-              className={`px-4 py-1.5 text-sm font-medium ${
-                activeTab === 'issues' ? 
-                'text-neutral-800 border-b-2 border-primary' : 
-                'text-neutral-500 hover:text-neutral-800'
-              }`}
-              onClick={() => setActiveTab('issues')}
-            >
-              Issues
-            </Button>
-            <Button 
-              variant="ghost" 
-              className={`px-4 py-1.5 text-sm font-medium ${
-                activeTab === 'team' ? 
-                'text-neutral-800 border-b-2 border-primary' : 
-                'text-neutral-500 hover:text-neutral-800'
-              }`}
-              onClick={() => setActiveTab('team')}
-            >
-              Team
-            </Button>
-            <Button 
-              variant="ghost" 
-              className={`px-4 py-1.5 text-sm font-medium ${
-                activeTab === 'timeline' ? 
-                'text-neutral-800 border-b-2 border-primary' : 
-                'text-neutral-500 hover:text-neutral-800'
-              }`}
-              onClick={() => setActiveTab('timeline')}
-            >
-              Timeline
-            </Button>
+        {!isMobile && (
+          <div className="flex items-center mt-4 border-t border-neutral-200 pt-4">
+            <div className="flex space-x-4">
+              {tabItems.map((tab) => (
+                <Button 
+                  key={tab.id}
+                  variant="ghost" 
+                  className={`px-4 py-1.5 text-sm font-medium ${
+                    activeTab === tab.id ? 
+                    'text-neutral-800 border-b-2 border-primary' : 
+                    'text-neutral-500 hover:text-neutral-800'
+                  }`}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  {tab.label}
+                </Button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
       
-      <div className="p-6 overflow-auto">
+      <div className={`p-6 overflow-auto ${isMobile ? 'pb-24' : ''}`}>
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} value={activeTab} className="flex flex-col">
           <TabsList className="hidden">
             <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -1034,6 +1002,26 @@ export default function DealDetail({
         </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Mobile Tab Navigation */}
+      {isMobile && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 flex justify-between items-center p-2 z-10">
+          {tabItems.map((tab) => (
+            <button
+              key={tab.id}
+              className={`flex-1 flex flex-col items-center justify-center py-2 ${
+                activeTab === tab.id 
+                  ? 'text-primary' 
+                  : 'text-neutral-500'
+              }`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.icon}
+              <span className="text-xs mt-1">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

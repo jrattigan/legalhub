@@ -5,13 +5,15 @@ import AppHeader from '@/components/layout/app-header';
 import Sidebar from '@/components/layout/sidebar';
 import { Button } from '@/components/ui/button';
 import DealDetail from '@/components/deals/deal-detail';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, ArrowLeft } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function DealDetailPage() {
   const [, params] = useRoute('/deals/:id');
   const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
   const dealId = params?.id ? parseInt(params.id) : null;
+  const isMobile = useIsMobile();
   
   // Get current user
   const { data: user } = useQuery({ queryKey: ['/api/users/1'] });
@@ -97,10 +99,26 @@ export default function DealDetailPage() {
     <div className="min-h-screen flex flex-col max-h-screen">
       <AppHeader user={user} notifications={2} />
       
+      {isMobile && (
+        <div className="flex items-center px-4 py-2 bg-white border-b border-neutral-200">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="mr-2 p-0 h-8 w-8" 
+            onClick={handleBack}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="text-sm font-medium truncate flex-1">
+            {deal?.title || 'Deal Detail'}
+          </h2>
+        </div>
+      )}
+      
       <div className="flex-1 flex overflow-auto">
-        <Sidebar recentDeals={[]} />
+        {!isMobile && <Sidebar recentDeals={[]} />}
         
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto w-full">
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center h-full">
               <div className="text-center">
