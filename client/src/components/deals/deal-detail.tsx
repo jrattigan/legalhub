@@ -6,6 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 import { Deal, User, Document, Task, Issue, LawFirm, Attorney, TimelineEvent } from '@shared/schema';
 import DocumentCard from './document-card';
 import TaskCard from './task-card';
@@ -77,18 +84,52 @@ export default function DealDetail({
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" className="text-sm">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-sm"
+              onClick={() => setActiveTab('timeline')}
+            >
               <Eye className="h-4 w-4 mr-1" />
               Timeline
             </Button>
-            <Button variant="outline" size="sm" className="text-sm">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-sm"
+              onClick={() => {
+                // Open edit dialog (to be implemented)
+                alert('Edit functionality will be implemented soon!');
+              }}
+            >
               <Edit className="h-4 w-4 mr-1" />
               Edit
             </Button>
-            <Button size="sm" className="text-sm">
-              <MoreHorizontal className="h-4 w-4 mr-1" />
-              Actions
-            </Button>
+            <div className="relative">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" className="text-sm">
+                    <MoreHorizontal className="h-4 w-4 mr-1" />
+                    Actions
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56">
+                  <DropdownMenuItem onClick={() => alert('Share functionality coming soon!')}>
+                    Share Deal
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => alert('Export functionality coming soon!')}>
+                    Export Details
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    className="text-destructive focus:text-destructive" 
+                    onClick={() => alert('Delete functionality coming soon!')}
+                  >
+                    Delete Deal
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
         
