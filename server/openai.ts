@@ -4,6 +4,29 @@ import OpenAI from "openai";
 // The newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Maximum token limit to stay safely within OpenAI's constraints
+const MAX_TOKEN_LIMIT = 24000; // Leaving buffer for response tokens
+
+/**
+ * Truncate text to approximately fit within token limit
+ * A conservative estimate is 4 characters per token
+ * @param text The text to truncate
+ * @param maxTokens Maximum token limit
+ * @returns Truncated text
+ */
+function truncateTextToTokenLimit(text: string, maxTokens: number): string {
+  // Estimate: 4 characters per token (conservative)
+  const maxLength = maxTokens * 4;
+  
+  if (text.length <= maxLength) {
+    return text;
+  }
+  
+  // If text is too long, truncate it and add a note
+  return text.substring(0, maxLength) + 
+    "\n\n[NOTE: The document has been truncated due to size constraints. This analysis covers only the first portion of the document.]";
+}
+
 /**
  * Analyzes two document versions and generates a summary of changes
  * @param original The original document content
@@ -41,6 +64,28 @@ export async function generateDocumentComparisonSummary(original: string, update
       };
     }
 
+    // Calculate total characters and estimate tokens
+    const totalCharacters = original.length + updated.length;
+    const estimatedTokens = totalCharacters / 4; // Rough estimate
+    
+    console.log(`Estimated tokens for document comparison: ${estimatedTokens}`);
+    
+    // Check if we need to truncate documents
+    let truncatedOriginal = original;
+    let truncatedUpdated = updated;
+    
+    if (estimatedTokens > MAX_TOKEN_LIMIT) {
+      console.log(`Document too large, truncating to fit token limit...`);
+      
+      // Allocate tokens proportionally to original and updated
+      const originalRatio = original.length / totalCharacters;
+      const originalTokens = Math.floor(MAX_TOKEN_LIMIT * originalRatio);
+      const updatedTokens = MAX_TOKEN_LIMIT - originalTokens;
+      
+      truncatedOriginal = truncateTextToTokenLimit(original, originalTokens);
+      truncatedUpdated = truncateTextToTokenLimit(updated, updatedTokens);
+    }
+
     // Create a prompt that instructs the model to compare the documents
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -56,10 +101,10 @@ export async function generateDocumentComparisonSummary(original: string, update
           content: `I need you to compare these two versions of a legal document and summarize the key changes:
           
           ORIGINAL VERSION:
-          ${original}
+          ${truncatedOriginal}
           
           UPDATED VERSION:
-          ${updated}
+          ${truncatedUpdated}
           
           Analyze the changes and provide a structured output with:
           1. A list of significant changes with the section they appear in, the type of change (addition, removal, modification), 
@@ -74,10 +119,16 @@ export async function generateDocumentComparisonSummary(original: string, update
 
     const result = JSON.parse(response.choices[0].message.content);
     
+    // If documents were truncated, add a note to the summary
+    let summary = result.summary || "";
+    if (estimatedTokens > MAX_TOKEN_LIMIT) {
+      summary += " Note: Due to document size, only the first portion was analyzed.";
+    }
+    
     return {
       significant_changes: result.significant_changes || [],
       unchanged_sections: result.unchanged_sections || [],
-      summary: result.summary || ""
+      summary: summary
     };
   } catch (error) {
     console.error("Error generating document comparison:", error);
@@ -88,12 +139,12 @@ export async function generateDocumentComparisonSummary(original: string, update
         {
           section: "Error",
           change_type: "error",
-          description: "Unable to analyze document due to an error",
+          description: error.message || "Unable to analyze document due to an error",
           significance: "medium"
         }
       ],
       unchanged_sections: [],
-      summary: "An error occurred while analyzing the document changes. Please try again later."
+      summary: `An error occurred while analyzing the document changes: ${error.message || "Unknown error"}. Please try again with smaller documents.`
     };
   }
 }
