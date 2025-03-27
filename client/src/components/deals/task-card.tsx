@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Check, Plus, Calendar } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { 
   Dialog, 
@@ -48,6 +48,7 @@ interface TaskCardProps {
 export default function TaskCard({ tasks, onRefreshData, preview = false, dealId }: TaskCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   const formattedTasks = {
     pending: tasks.filter(task => !task.completed),
@@ -58,6 +59,29 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   const { data: users } = useQuery({
     queryKey: ['/api/users'],
     enabled: isDialogOpen
+  });
+
+  // Form validation schema
+  const taskSchema = insertTaskSchema.extend({
+    description: z.string().optional(),
+    dueDate: z.union([z.date(), z.string()]).optional().transform(val => 
+      val === '' ? null : typeof val === 'string' ? new Date(val) : val
+    ),
+    assigneeId: z.union([z.number(), z.string()]).optional().transform(val => 
+      val === '' || val === 'unassigned' ? undefined : typeof val === 'string' ? parseInt(val) : val
+    )
+  });
+
+  const form = useForm<z.infer<typeof taskSchema>>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      status: 'active',
+      priority: 'medium',
+      dueDate: '',
+      assigneeId: undefined
+    }
   });
 
   // Complete task mutation
@@ -74,8 +98,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       
       return response.json();
     },
-    onSuccess: (data) => {
-      console.log("Task completed successfully:", data);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/tasks`] });
       onRefreshData();
       
@@ -122,17 +145,16 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       
       return response.json();
     },
-    onSuccess: (data) => {
-      console.log("Task created successfully:", data);
-      toast({
-        title: "Success",
-        description: "Task created successfully",
-        variant: "default",
-      });
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/tasks`] });
       setIsDialogOpen(false);
       onRefreshData();
       form.reset();
+      
+      toast({
+        title: "Success",
+        description: "Task created successfully",
+      });
     },
     onError: (error: any) => {
       console.error("Task creation error:", error);
@@ -143,31 +165,6 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       });
     }
   });
-
-  // Form validation schema
-  const taskSchema = insertTaskSchema.extend({
-    description: z.string().optional(),
-    dueDate: z.union([z.date(), z.string()]).optional().transform(val => 
-      val === '' ? null : typeof val === 'string' ? new Date(val) : val
-    ),
-    assigneeId: z.union([z.number(), z.string()]).optional().transform(val => 
-      val === '' || val === 'unassigned' ? undefined : typeof val === 'string' ? parseInt(val) : val
-    )
-  });
-
-  const form = useForm<z.infer<typeof taskSchema>>({
-    resolver: zodResolver(taskSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      status: 'active',
-      priority: 'medium',
-      dueDate: '',
-      assigneeId: undefined
-    }
-  });
-
-  const { toast } = useToast();
   
   // Make sure form gets reset when dialog closes
   useEffect(() => {
