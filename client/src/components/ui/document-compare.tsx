@@ -84,16 +84,16 @@ export function DocumentCompare({
         style={{ maxHeight: 'calc(100vh - 32px)' }}
       >
         {/* Header */}
-        <div className="p-4 flex justify-between items-center border-b bg-muted/30">
+        <div className="p-4 flex justify-between items-center border-b bg-[#2b579a]">
           <div className="flex items-center">
-            <FileText className="h-5 w-5 mr-2" />
-            <h2 className="text-lg font-semibold">Document Comparison</h2>
+            <FileText className="h-5 w-5 mr-2 text-white" />
+            <h2 className="text-lg font-semibold text-white">Document Comparison</h2>
           </div>
-          <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
+          <Button variant="outline" size="sm" onClick={onClose} className="bg-white hover:bg-gray-100">Close</Button>
         </div>
         
         {/* Document Info */}
-        <div className="p-3 flex justify-between bg-slate-50 border-b">
+        <div className="p-3 flex justify-between bg-gray-50 border-b">
           <div>
             <div className="text-sm font-medium">Original Version</div>
             <div className="text-xs text-muted-foreground">
@@ -108,24 +108,24 @@ export function DocumentCompare({
           </div>
         </div>
         
-        {/* Tabs */}
-        <div className="bg-muted/10 border-b p-1 flex">
+        {/* Word-style Ribbon Bar */}
+        <div className="bg-[#f3f2f1] border-b flex">
           <button 
-            className={`flex items-center px-4 py-2 rounded-md text-sm ${activeTab === 'changes' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+            className={`flex items-center px-4 py-2 text-sm font-medium ${activeTab === 'changes' ? 'bg-white border-t border-x border-gray-300 rounded-t-md -mb-px' : 'text-gray-700 hover:bg-gray-200'}`}
             onClick={() => setActiveTab('changes')}
           >
             <Eye className="h-4 w-4 mr-2" />
             View Changes
           </button>
           <button 
-            className={`flex items-center px-4 py-2 rounded-md text-sm ${activeTab === 'original' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+            className={`flex items-center px-4 py-2 text-sm font-medium ${activeTab === 'original' ? 'bg-white border-t border-x border-gray-300 rounded-t-md -mb-px' : 'text-gray-700 hover:bg-gray-200'}`}
             onClick={() => setActiveTab('original')}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Original
           </button>
           <button 
-            className={`flex items-center px-4 py-2 rounded-md text-sm ${activeTab === 'new' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+            className={`flex items-center px-4 py-2 text-sm font-medium ${activeTab === 'new' ? 'bg-white border-t border-x border-gray-300 rounded-t-md -mb-px' : 'text-gray-700 hover:bg-gray-200'}`}
             onClick={() => setActiveTab('new')}
           >
             <ArrowRight className="h-4 w-4 mr-2" />
@@ -134,11 +134,11 @@ export function DocumentCompare({
         </div>
         
         {/* Main Content Area - Flexbox to take up all remaining height */}
-        <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-hidden bg-white">
           {/* Changes Tab */}
           {activeTab === 'changes' && (
             <div className="h-full flex flex-col">
-              <div className="p-2 text-xs text-slate-700 bg-slate-50 flex flex-wrap items-center justify-between border-b">
+              <div className="p-2 text-xs text-slate-700 bg-[#f3f2f1] flex flex-wrap items-center justify-between border-b">
                 <div className="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
                     <path d="M12 3v5"></path>  
@@ -152,8 +152,18 @@ export function DocumentCompare({
                   <span className="inline-block"><span className="bg-green-100 text-green-700 px-1 py-0.5 text-xs rounded">Green text</span>: Added</span>
                 </div>
               </div>
-              <div className="flex-1 overflow-auto">
-                <div className="p-4 min-w-full" dangerouslySetInnerHTML={{ __html: renderedDiff }} />
+              
+              {/* Word-like Document Display */}
+              <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6">
+                <div className="bg-white shadow-md w-full max-w-4xl min-h-full p-8 mx-auto border border-gray-200" 
+                     style={{ 
+                       fontFamily: "'Calibri', 'Arial', sans-serif", 
+                       fontSize: "11pt", 
+                       lineHeight: "1.5", 
+                       color: "#333" 
+                     }}>
+                  <div className="document-content" dangerouslySetInnerHTML={{ __html: renderedDiff }} />
+                </div>
               </div>
             </div>
           )}
@@ -161,7 +171,7 @@ export function DocumentCompare({
           {/* Original Tab */}
           {activeTab === 'original' && (
             <div className="h-full flex flex-col">
-              <div className="p-2 text-xs text-slate-700 bg-slate-50 flex items-center justify-between border-b">
+              <div className="p-2 text-xs text-slate-700 bg-[#f3f2f1] flex items-center justify-between border-b">
                 <div className="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -172,8 +182,20 @@ export function DocumentCompare({
                   v{originalVersion.version} | Uploaded by {originalName} | {new Date(originalVersion.createdAt).toLocaleString()}
                 </div>
               </div>
-              <div className="flex-1 overflow-auto">
-                <pre className="whitespace-pre-wrap p-4">{originalContent}</pre>
+              
+              {/* Word-like Document Display */}
+              <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6">
+                <div className="bg-white shadow-md w-full max-w-4xl min-h-full p-8 mx-auto border border-gray-200" 
+                     style={{ 
+                       fontFamily: "'Calibri', 'Arial', sans-serif", 
+                       fontSize: "11pt", 
+                       lineHeight: "1.5", 
+                       color: "#333" 
+                     }}>
+                  <div className="document-content whitespace-pre-wrap">
+                    {originalContent}
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -181,7 +203,7 @@ export function DocumentCompare({
           {/* New Version Tab */}
           {activeTab === 'new' && (
             <div className="h-full flex flex-col">
-              <div className="p-2 text-xs text-slate-700 bg-slate-50 flex items-center justify-between border-b">
+              <div className="p-2 text-xs text-slate-700 bg-[#f3f2f1] flex items-center justify-between border-b">
                 <div className="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -192,8 +214,20 @@ export function DocumentCompare({
                   v{newVersion.version} | Uploaded by {newName} | {new Date(newVersion.createdAt).toLocaleString()}
                 </div>
               </div>
-              <div className="flex-1 overflow-auto">
-                <pre className="whitespace-pre-wrap p-4">{newContent}</pre>
+              
+              {/* Word-like Document Display */}
+              <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-6">
+                <div className="bg-white shadow-md w-full max-w-4xl min-h-full p-8 mx-auto border border-gray-200" 
+                     style={{ 
+                       fontFamily: "'Calibri', 'Arial', sans-serif", 
+                       fontSize: "11pt", 
+                       lineHeight: "1.5", 
+                       color: "#333" 
+                     }}>
+                  <div className="document-content whitespace-pre-wrap">
+                    {newContent}
+                  </div>
+                </div>
               </div>
             </div>
           )}

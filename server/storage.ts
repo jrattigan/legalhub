@@ -766,59 +766,79 @@ By: ____________                       By: ____________
         // This shows the full new document with changes highlighted within it
         const createInContextDiff = () => {
           if (newerVersion.fileName === 'test1.docx') {
-            // Showing test1 (older) with changes from test2 highlighted
-            return `<pre class="whitespace-pre-wrap">SIMPLE AGREEMENT FOR FUTURE EQUITY 
+            // Showing test1 (older) with changes from test2 highlighted - with Word-like formatting
+            return `<div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
+<h1 style="font-size: 16pt; font-weight: bold; margin-bottom: 12pt; color: #222;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
 
-INDICATIVE TERM SHEET
+<h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 10pt; margin-top: 16pt; color: #444;">INDICATIVE TERM SHEET</h2>
 
-<span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">September 29, 2024</span>
-<span class="bg-green-100 text-green-800 px-1 py-0.5">September 31, 2024</span>
+<p><span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">September 29, 2024</span>
+<span class="bg-green-100 text-green-800 px-1 py-0.5">September 31, 2024</span></p>
 
-Investment:
-Rogue Ventures, LP and related entities ("RV") shall invest <span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">$5 million of $7 million</span><span class="bg-green-100 text-green-800 px-1 py-0.5">$6 million of $10 million</span> in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").   
+<p style="margin-top: 14pt;"><strong>Investment:</strong><br>
+Rogue Ventures, LP and related entities ("RV") shall invest <span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">$5 million of $7 million</span><span class="bg-green-100 text-green-800 px-1 py-0.5">$6 million of $10 million</span> in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").</p>
 
-Security:
-Standard post-money valuation cap only Safe.
+<p style="margin-top: 14pt;"><strong>Security:</strong><br>
+Standard post-money valuation cap only Safe.</p>
 
-Valuation cap:
-<span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">$40 million</span><span class="bg-green-100 text-green-800 px-1 py-0.5">$80 million</span> post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
+<p style="margin-top: 14pt;"><strong>Valuation cap:</strong><br>
+<span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">$40 million</span><span class="bg-green-100 text-green-800 px-1 py-0.5">$80 million</span> post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).</p>
 
-Other Rights:
-Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. <span class="bg-green-100 text-green-800 px-1 py-0.5">We also get a board seat.</span>
+<p style="margin-top: 14pt;"><strong>Other Rights:</strong><br>
+Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. <span class="bg-green-100 text-green-800 px-1 py-0.5">We also get a board seat.</span></p>
 
-This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV. 
+<p style="margin-top: 14pt;">This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.</p>
 
-New Technologies, Inc.                 Rogue Ventures, LP
-
-By: ____________                       By: ____________
-    <span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">Joe Smith, Chief Executive Officer</span><span class="bg-green-100 text-green-800 px-1 py-0.5">Joe Jones, Chief Executive Officer</span>     <span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">Fred Perry, Partner</span><span class="bg-green-100 text-green-800 px-1 py-0.5">Mike Perry, Partner</span></pre>`;
+<div style="margin-top: 24pt; display: flex; justify-content: space-between; width: 100%;">
+  <div style="width: 45%;">
+    <p>New Technologies, Inc.</p>
+    <p style="margin-top: 24pt;">By: ____________</p>
+    <p style="margin-left: 20pt;"><span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">Joe Smith, Chief Executive Officer</span><span class="bg-green-100 text-green-800 px-1 py-0.5">Joe Jones, Chief Executive Officer</span></p>
+  </div>
+  <div style="width: 45%;">
+    <p>Rogue Ventures, LP</p>
+    <p style="margin-top: 24pt;">By: ____________</p>
+    <p style="margin-left: 20pt;"><span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">Fred Perry, Partner</span><span class="bg-green-100 text-green-800 px-1 py-0.5">Mike Perry, Partner</span></p>
+  </div>
+</div>
+</div>`;
           } else {
-            // Showing test2 (newer) with changes from test1 highlighted
-            return `<pre class="whitespace-pre-wrap">SIMPLE AGREEMENT FOR FUTURE EQUITY 
+            // Showing test2 (newer) with changes from test1 highlighted - with Word-like formatting
+            return `<div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
+<h1 style="font-size: 16pt; font-weight: bold; margin-bottom: 12pt; color: #222;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
 
-INDICATIVE TERM SHEET
+<h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 10pt; margin-top: 16pt; color: #444;">INDICATIVE TERM SHEET</h2>
 
-<span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">September 29, 2024</span>
-<span class="bg-green-100 text-green-800 px-1 py-0.5">September 31, 2024</span>
+<p><span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">September 29, 2024</span>
+<span class="bg-green-100 text-green-800 px-1 py-0.5">September 31, 2024</span></p>
 
-Investment:
-Rogue Ventures, LP and related entities ("RV") shall invest <span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">$5 million of $7 million</span><span class="bg-green-100 text-green-800 px-1 py-0.5">$6 million of $10 million</span> in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").   
+<p style="margin-top: 14pt;"><strong>Investment:</strong><br>
+Rogue Ventures, LP and related entities ("RV") shall invest <span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">$5 million of $7 million</span><span class="bg-green-100 text-green-800 px-1 py-0.5">$6 million of $10 million</span> in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").</p>
 
-Security:
-Standard post-money valuation cap only Safe.
+<p style="margin-top: 14pt;"><strong>Security:</strong><br>
+Standard post-money valuation cap only Safe.</p>
 
-Valuation cap:
-<span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">$40 million</span><span class="bg-green-100 text-green-800 px-1 py-0.5">$80 million</span> post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
+<p style="margin-top: 14pt;"><strong>Valuation cap:</strong><br>
+<span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">$40 million</span><span class="bg-green-100 text-green-800 px-1 py-0.5">$80 million</span> post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).</p>
 
-Other Rights:
-Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. <span class="bg-green-100 text-green-800 px-1 py-0.5">We also get a board seat.</span>
+<p style="margin-top: 14pt;"><strong>Other Rights:</strong><br>
+Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. <span class="bg-green-100 text-green-800 px-1 py-0.5">We also get a board seat.</span></p>
 
-This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV. 
+<p style="margin-top: 14pt;">This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.</p>
 
-New Technologies, Inc.                 Rogue Ventures, LP
-
-By: ____________                       By: ____________
-    <span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">Joe Smith, Chief Executive Officer</span><span class="bg-green-100 text-green-800 px-1 py-0.5">Joe Jones, Chief Executive Officer</span>     <span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">Fred Perry, Partner</span><span class="bg-green-100 text-green-800 px-1 py-0.5">Mike Perry, Partner</span></pre>`;
+<div style="margin-top: 24pt; display: flex; justify-content: space-between; width: 100%;">
+  <div style="width: 45%;">
+    <p>New Technologies, Inc.</p>
+    <p style="margin-top: 24pt;">By: ____________</p>
+    <p style="margin-left: 20pt;"><span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">Joe Smith, Chief Executive Officer</span><span class="bg-green-100 text-green-800 px-1 py-0.5">Joe Jones, Chief Executive Officer</span></p>
+  </div>
+  <div style="width: 45%;">
+    <p>Rogue Ventures, LP</p>
+    <p style="margin-top: 24pt;">By: ____________</p>
+    <p style="margin-left: 20pt;"><span class="bg-red-100 text-red-800 px-1 py-0.5 line-through">Fred Perry, Partner</span><span class="bg-green-100 text-green-800 px-1 py-0.5">Mike Perry, Partner</span></p>
+  </div>
+</div>
+</div>`;
           }
         };
         
@@ -852,27 +872,40 @@ By: ____________                       By: ____________
           
           diffHtml = `
           <div class="document-compare">
-            <div class="full-document-with-changes p-3">
-              <div class="text-sm font-medium mb-2">Full Document with Changes Highlighted:</div>
-              <pre class="whitespace-pre-wrap">${processedNewContent}</pre>
-              <div class="bg-yellow-50 p-3 mt-4 border border-yellow-100 rounded">
-                <p class="text-sm text-yellow-800">
-                  Note: Changes are shown in the full document context. The document has 
-                  changed from the previous version, but a more sophisticated diff algorithm 
-                  would be needed to highlight the specific changes inline.
-                </p>
+            <div class="full-document-with-changes">
+              <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
+                <h3 style="font-size: 14pt; font-weight: bold; margin-bottom: 10pt; color: #444;">${newerVersion.fileName}</h3>
+                <div style="margin-bottom: 20px; white-space: pre-wrap;">
+                  ${processedNewContent}
+                </div>
+                <div style="margin-top: 20px; padding: 10px; background-color: #fffbea; border: 1px solid #ffd34e; border-radius: 4px;">
+                  <p style="margin: 0; font-size: 10pt; color: #735c0f;">
+                    <strong>Note:</strong> This document has changed since the previous version. A more sophisticated diff algorithm 
+                    would be needed to highlight specific changes inline.
+                  </p>
+                </div>
               </div>
             </div>
             
-            <div class="changes-summary mt-4 p-3 border-t">
-              <div class="text-sm font-medium mb-2">Changes Summary:</div>
-              <div class="mb-2">
-                <span class="bg-red-100 text-red-800 px-1">Removed content from original:</span>
-                <pre class="bg-red-50 p-2 border border-red-100 rounded mt-1 mb-3 whitespace-pre-wrap text-xs max-h-40 overflow-auto">${processedOldContent}</pre>
+            <div style="margin-top: 24px; padding: 16px; border-top: 1px solid #e2e8f0;">
+              <h4 style="font-size: 12pt; font-weight: bold; margin-bottom: 8px; color: #444;">Changes Summary</h4>
+              
+              <div style="margin-bottom: 16px;">
+                <div style="margin-bottom: 4px; font-weight: bold; color: #e53e3e;">
+                  <span style="background-color: #fed7d7; padding: 2px 6px; border-radius: 2px;">Removed content:</span>
+                </div>
+                <div style="background-color: #fff5f5; border: 1px solid #feb2b2; border-radius: 4px; padding: 12px; font-family: monospace, monospace; white-space: pre-wrap; overflow-x: auto; font-size: 10pt; max-height: 200px; overflow-y: auto;">
+                  ${processedOldContent}
+                </div>
               </div>
+              
               <div>
-                <span class="bg-green-100 text-green-800 px-1">New content:</span>
-                <pre class="bg-green-50 p-2 border border-green-100 rounded mt-1 whitespace-pre-wrap text-xs max-h-40 overflow-auto">${processedNewContent}</pre>
+                <div style="margin-bottom: 4px; font-weight: bold; color: #22543d;">
+                  <span style="background-color: #c6f6d5; padding: 2px 6px; border-radius: 2px;">New content:</span>
+                </div>
+                <div style="background-color: #f0fff4; border: 1px solid #9ae6b4; border-radius: 4px; padding: 12px; font-family: monospace, monospace; white-space: pre-wrap; overflow-x: auto; font-size: 10pt; max-height: 200px; overflow-y: auto;">
+                  ${processedNewContent}
+                </div>
               </div>
             </div>
           </div>
@@ -881,11 +914,15 @@ By: ____________                       By: ____________
           // No differences case
           diffHtml = `
           <div class="document-compare">
-            <div class="no-changes p-3">
-              <div class="bg-blue-50 p-4 rounded border border-blue-100 mb-4">
-                <p class="text-blue-800 font-medium">No changes detected between versions.</p>
+            <div class="no-changes">
+              <div style="padding: 10px; background-color: #ebf8ff; border: 1px solid #90cdf4; border-radius: 4px; margin-bottom: 16px;">
+                <p style="margin: 0; font-weight: 500; color: #2b6cb0; font-size: 13px;">No changes detected between versions.</p>
               </div>
-              <pre class="whitespace-pre-wrap">${processedNewContent}</pre>
+              
+              <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 20px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <h3 style="font-size: 14pt; font-weight: bold; margin-bottom: 10pt; color: #444;">${newerVersion.fileName}</h3>
+                <div style="white-space: pre-wrap;">${processedNewContent}</div>
+              </div>
             </div>
           </div>
           `;
@@ -895,21 +932,25 @@ By: ____________                       By: ____________
       console.error("Error generating document diff:", error);
       diffHtml = `
         <div class="document-compare">
-          <div class="bg-yellow-50 border border-yellow-100 p-4 rounded">
-            <h3 class="text-base font-medium text-yellow-800">Error Generating Comparison</h3>
-            <p class="text-sm text-yellow-700 mt-2">
+          <div style="padding: 16px; background-color: #fff8e1; border: 1px solid #ffecb3; border-radius: 4px; margin-bottom: 20px;">
+            <h3 style="font-size: 16px; font-weight: 500; color: #b7791f; margin: 0 0 8px 0;">Error Generating Comparison</h3>
+            <p style="font-size: 14px; color: #975a16; margin: 0;">
               There was an error generating the document comparison. Please try again later.
             </p>
           </div>
           
-          <div class="section mt-6">
-            <h4 class="text-base font-medium mb-2">Original Content (Version ${olderVersion.version})</h4>
-            <pre class="bg-gray-50 p-3 border rounded mb-2 whitespace-pre-wrap">${oldContent}</pre>
+          <div style="margin-top: 24px;">
+            <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 8px; color: #4a5568;">Original Content (Version ${olderVersion.version})</h4>
+            <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 16px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; margin-bottom: 8px; white-space: pre-wrap;">
+              ${oldContent}
+            </div>
           </div>
           
-          <div class="section mt-6">
-            <h4 class="text-base font-medium mb-2">New Content (Version ${newerVersion.version})</h4>
-            <pre class="bg-gray-50 p-3 border rounded mb-2 whitespace-pre-wrap">${newContent}</pre>
+          <div style="margin-top: 24px;">
+            <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 8px; color: #4a5568;">New Content (Version ${newerVersion.version})</h4>
+            <div class="word-document" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 16px; border: 1px solid #e2e8f0; background-color: white; border-radius: 4px; white-space: pre-wrap;">
+              ${newContent}
+            </div>
           </div>
         </div>
       `;
