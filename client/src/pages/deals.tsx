@@ -14,28 +14,15 @@ export default function Deals() {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [location, navigate] = useLocation();
   
-  // Get current user
-  const { data: user } = useQuery({ 
-    queryKey: ['/api/users/1'] 
+  // Get combined data in a single query
+  const { data, isLoading: dealsLoading } = useQuery({ 
+    queryKey: ['/api/combined-data']
   });
   
-  // Get all deals
-  const { data: deals, isLoading: dealsLoading } = useQuery({ 
-    queryKey: ['/api/deals']
-  });
-  
-  // Get deal users for each deal
-  const processedDeals = deals?.map((deal: any) => {
-    const { data: dealUsers } = useQuery({
-      queryKey: [`/api/deals/${deal.id}/users`],
-      enabled: !!deals
-    });
-    
-    return {
-      ...deal,
-      users: dealUsers?.map((du: any) => du.user) || []
-    };
-  });
+  // Extract values from the combined data
+  const user = data?.user;
+  const deals = data?.deals;
+  const processedDeals = data?.processedDeals || [];
 
   // Handle creating a new deal
   const handleNewDeal = () => {

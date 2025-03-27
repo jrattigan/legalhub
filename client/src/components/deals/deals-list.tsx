@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Search, Filter, ListFilter } from 'lucide-react';
+import { Search, Filter, ListFilter, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Deal, User } from '@shared/schema';

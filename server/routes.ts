@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { format } from "date-fns";
@@ -15,6 +15,31 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Combined data endpoint for deals page
+  app.get('/api/combined-data', async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser(1); // Default to first user for demo
+      const deals = await storage.getDeals();
+      
+      // For each deal, get the users
+      const processedDeals = await Promise.all(deals.map(async (deal) => {
+        const dealUsers = await storage.getDealUsers(deal.id);
+        return {
+          ...deal,
+          users: dealUsers.map(du => du.user)
+        };
+      }));
+      
+      res.json({
+        user,
+        deals,
+        processedDeals
+      });
+    } catch (error) {
+      console.error('Error fetching combined data:', error);
+      res.status(500).json({ error: 'Failed to fetch combined data' });
+    }
+  });
   const httpServer = createServer(app);
 
   // Users API
