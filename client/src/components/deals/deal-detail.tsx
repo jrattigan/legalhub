@@ -294,7 +294,7 @@ export default function DealDetail({
   const isMobile = useIsMobile();
       
   return (
-    <div className="flex-1 flex flex-col bg-neutral-50">
+    <div className="flex-1 flex flex-col bg-neutral-50 h-full">
       {/* Edit Deal Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -584,8 +584,8 @@ export default function DealDetail({
         )}
       </div>
       
-      <div className={`p-6 overflow-auto ${isMobile ? 'pb-24' : ''}`}>
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} value={activeTab} className="flex flex-col">
+      <div className={`p-6 flex-1 ${isMobile ? 'pb-24' : ''}`}>
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} value={activeTab} className="flex flex-col h-full">
           <TabsList className="hidden">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>

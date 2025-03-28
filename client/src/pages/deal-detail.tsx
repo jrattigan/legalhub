@@ -103,12 +103,12 @@ export default function DealDetailPage() {
 
   return (
     <AppLayout>
-      <div className="p-6 h-full overflow-auto">
-        <div className="mb-6">
+      <div className="flex flex-col h-full overflow-auto">
+        <div className="p-6 mb-2">
           <Button 
             variant="ghost" 
             onClick={handleBack}
-            className="mb-4"
+            className="mb-2"
           >
             <ChevronLeft className="h-4 w-4 mr-2" />
             Back to Deals
@@ -116,14 +116,14 @@ export default function DealDetailPage() {
         </div>
         
         {isLoading ? (
-          <div className="flex-1 flex items-center justify-center h-64">
+          <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <div className="w-8 h-8 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin inline-block mb-2"></div>
               <p>Loading deal data...</p>
             </div>
           </div>
         ) : dealError ? (
-          <div className="flex-1 flex items-center justify-center h-64">
+          <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <p className="text-destructive mb-2">Error loading deal data</p>
               <Button variant="outline" onClick={handleBack}>
@@ -133,16 +133,18 @@ export default function DealDetailPage() {
             </div>
           </div>
         ) : deal ? (
-          <DealDetail 
-            deal={deal}
-            dealUsers={formattedDealUsers}
-            documents={documents || []}
-            tasks={tasks || []}
-            issues={issues || []}
-            counsel={counsel || []}
-            timelineEvents={timelineEvents || []}
-            onRefreshData={refreshData}
-          />
+          <div className="flex-1 overflow-auto px-6 pb-6">
+            <DealDetail 
+              deal={deal}
+              dealUsers={formattedDealUsers}
+              documents={documents || []}
+              tasks={tasks || []}
+              issues={issues || []}
+              counsel={counsel || []}
+              timelineEvents={timelineEvents || []}
+              onRefreshData={refreshData}
+            />
+          </div>
         ) : null}
       </div>
     </AppLayout>
