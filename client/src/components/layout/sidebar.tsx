@@ -55,6 +55,11 @@ export default function Sidebar({ recentDeals = [] }: SidebarProps) {
 
   return (
     <div className="bg-white w-14 md:w-56 border-r border-neutral-200 flex-shrink-0 transition-all duration-300 h-full flex flex-col">
+      <div className="py-4 px-3 border-b border-neutral-200">
+        <Link href="/dashboard" className="font-bold text-gradient text-xl hidden md:block">
+          LegalDeal
+        </Link>
+      </div>
       <div className="p-2 flex-1 overflow-y-auto scrollbar-hide">
         <div className="space-y-1">
           {navItems.map(item => (
