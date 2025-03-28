@@ -225,7 +225,8 @@ export function DocumentCompare({
                        fontSize: "11pt", 
                        lineHeight: "1.5", 
                        color: "#333",
-                       maxWidth: "100%",
+                       maxWidth: "800px",
+                       width: "800px",
                        minHeight: "11in",
                        padding: "1in",
                        boxShadow: "0 0 10px rgba(0,0,0,0.1)"
@@ -260,7 +261,8 @@ export function DocumentCompare({
                        fontSize: "11pt", 
                        lineHeight: "1.5", 
                        color: "#333",
-                       maxWidth: "100%",
+                       maxWidth: "800px",
+                       width: "800px",
                        minHeight: "11in",
                        padding: "1in",
                        boxShadow: "0 0 10px rgba(0,0,0,0.1)"
@@ -294,7 +296,8 @@ export function DocumentCompare({
                        fontSize: "11pt", 
                        lineHeight: "1.5", 
                        color: "#333",
-                       maxWidth: "100%",
+                       maxWidth: "800px",
+                       width: "800px",
                        minHeight: "11in",
                        padding: "1in",
                        boxShadow: "0 0 10px rgba(0,0,0,0.1)"
