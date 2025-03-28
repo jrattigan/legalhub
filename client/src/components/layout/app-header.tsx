@@ -15,21 +15,38 @@ interface AppHeaderProps {
 export default function AppHeader({ title, user, notifications = 0 }: AppHeaderProps) {
   const [location] = useLocation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  
+  // Determine if we're on a companies-related page
+  const isCompaniesPage = location.startsWith('/companies');
 
-  const navItems = [
-    { name: 'Deals', path: '/deals' },
-    { name: 'Documents', path: '/documents' },
-    { name: 'Tasks', path: '/tasks' },
-    { name: 'Outside Counsel', path: '/counsel' },
-    { name: 'Reports', path: '/reports' },
-  ];
+  // Display different nav items based on current section
+  const navItems = isCompaniesPage 
+    ? [
+        { name: 'Companies', path: '/companies' },
+        { name: 'Deals', path: '/deals' },
+        { name: 'Documents', path: '/documents' },
+      ]
+    : [
+        { name: 'Deals', path: '/deals' },
+        { name: 'Documents', path: '/documents' },
+        { name: 'Tasks', path: '/tasks' },
+        { name: 'Outside Counsel', path: '/counsel' },
+        { name: 'Reports', path: '/reports' },
+      ];
 
   return (
     <header className="bg-white border-b border-neutral-200 h-16 flex items-center px-4 justify-between z-10 shadow-sm">
       <div className="flex items-center space-x-4">
-        <Link href="/dashboard" className="font-bold text-gradient text-xl cursor-pointer">
-          {title || "LegalDeal"}
-        </Link>
+        <div className="flex items-center">
+          <Link href="/dashboard" className="font-bold text-gradient text-xl cursor-pointer">
+            LegalDeal
+          </Link>
+          {title && title !== "LegalDeal" && (
+            <span className="text-neutral-500 ml-2 px-2 py-0.5 text-sm font-medium">
+              {title}
+            </span>
+          )}
+        </div>
 
         <div className="hidden md:flex items-center space-x-1">
           {navItems.map((item) => (
@@ -107,9 +124,16 @@ export default function AppHeader({ title, user, notifications = 0 }: AppHeaderP
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] sm:w-[320px] border-l-neutral-200">
               <div className="py-4 space-y-6">
-                <Link href="/dashboard" className="font-bold text-gradient text-xl px-2">
-                  {title || "LegalDeal"}
-                </Link>
+                <div className="flex items-center px-2">
+                  <Link href="/dashboard" className="font-bold text-gradient text-xl">
+                    LegalDeal
+                  </Link>
+                  {title && title !== "LegalDeal" && (
+                    <span className="text-neutral-500 ml-2 px-2 py-0.5 text-sm font-medium">
+                      {title}
+                    </span>
+                  )}
+                </div>
                 <nav className="flex flex-col space-y-1">
                   {navItems.map((item) => (
                     <Link 
