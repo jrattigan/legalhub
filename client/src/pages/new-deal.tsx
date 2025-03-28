@@ -35,11 +35,15 @@ export default function NewDeal() {
   const { toast } = useToast();
 
   // Form validation schema
-  const dealSchema = insertDealSchema.extend({
+  const dealSchema = z.object({
+    title: z.string().min(1, "Title is required"),
+    description: z.string().nullable().optional(),
+    company: z.string().min(1, "Company name is required"),
+    dealId: z.string().min(1, "Deal ID is required"),
+    status: z.string().default("draft"),
     dueDate: z.union([z.date(), z.string(), z.null()]).optional().transform(val => 
       typeof val === 'string' && val ? new Date(val) : val
     ),
-    description: z.string().nullable().optional(),
     amount: z.string().nullable().optional(),
   });
 
@@ -108,13 +112,20 @@ export default function NewDeal() {
     // Convert string date to actual Date object if it exists
     const dueDateValue = data.dueDate ? new Date(data.dueDate) : null;
     
-    // Ensure null values are properly set
+    // Map form data to the API format
     const preparedData = {
-      ...data,
+      title: data.title,
       description: data.description || null,
-      amount: data.amount || null,
-      dueDate: dueDateValue
+      dealId: data.dealId,
+      status: data.status,
+      dueDate: dueDateValue,
+      // For API compatibility: set both companyName (for backward compatibility) and companyId
+      companyName: data.company,
+      // We'll use a placeholder companyId for now; the backend will handle this properly
+      companyId: 1, // This will be associated with an existing company on the backend
+      amount: data.amount || null
     };
+    
     console.log('Submitting prepared data:', preparedData);
     createDealMutation.mutate(preparedData);
   };
