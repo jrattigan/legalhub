@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -24,6 +24,38 @@ export const insertUserSchema = createInsertSchema(users).pick({
   avatarColor: true,
 });
 
+// Companies schema
+export const companies = pgTable("companies", {
+  id: serial("id").primaryKey(),
+  legalName: text("legal_name").notNull(),
+  displayName: text("display_name").notNull(),
+  url: text("url"),
+  bcvTeam: json("bcv_team").$type<string[]>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCompanySchema = createInsertSchema(companies).pick({
+  legalName: true,
+  displayName: true,
+  url: true,
+  bcvTeam: true,
+}).transform((data) => {
+  // Ensure URL and bcvTeam are null and not undefined when empty
+  const transformedData = { ...data };
+  
+  if (transformedData.url === undefined) {
+    transformedData.url = null;
+  }
+  
+  if (transformedData.bcvTeam === undefined) {
+    transformedData.bcvTeam = null;
+  }
+  
+  return transformedData;
+});
+
+
 // Deals schema
 export const deals = pgTable("deals", {
   id: serial("id").primaryKey(),
@@ -32,7 +64,8 @@ export const deals = pgTable("deals", {
   dealId: text("deal_id").notNull().unique(),
   status: text("status").notNull().default("draft"),
   dueDate: timestamp("due_date"),
-  company: text("company").notNull(),
+  companyId: integer("company_id").notNull(),  // Foreign key to companies table
+  companyName: text("company_name").notNull(), // For backward compatibility
   amount: text("amount"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -44,8 +77,18 @@ export const insertDealSchema = createInsertSchema(deals).pick({
   dealId: true,
   status: true,
   dueDate: true,
-  company: true,
+  companyId: true,
+  companyName: true,
   amount: true,
+}).transform((data) => {
+  const transformedData = { ...data };
+  
+  // Handle date conversion from string to Date
+  if (transformedData.dueDate && typeof transformedData.dueDate === 'string') {
+    transformedData.dueDate = new Date(transformedData.dueDate);
+  }
+  
+  return transformedData;
 });
 
 // Deal users (team members)
@@ -284,6 +327,9 @@ export const insertTimelineEventSchema = createInsertSchema(timelineEvents).pick
 // Export types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type Company = typeof companies.$inferSelect;
+export type InsertCompany = z.infer<typeof insertCompanySchema>;
 
 export type Deal = typeof deals.$inferSelect;
 export type InsertDeal = z.infer<typeof insertDealSchema>;

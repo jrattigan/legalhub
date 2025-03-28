@@ -1,5 +1,6 @@
 import {
   users, User, InsertUser,
+  companies, Company, InsertCompany,
   deals, Deal, InsertDeal,
   dealUsers, DealUser, InsertDealUser,
   documents, Document, InsertDocument,
@@ -20,6 +21,13 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getUsers(): Promise<User[]>;
+  
+  // Companies
+  getCompany(id: number): Promise<Company | undefined>;
+  getCompanies(): Promise<Company[]>;
+  createCompany(company: InsertCompany): Promise<Company>;
+  updateCompany(id: number, company: Partial<InsertCompany>): Promise<Company | undefined>;
+  deleteCompany(id: number): Promise<boolean>;
 
   // Deals
   getDeal(id: number): Promise<Deal | undefined>;
@@ -90,6 +98,7 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
+  private companies: Map<number, Company>;
   private deals: Map<number, Deal>;
   private dealUsers: Map<number, DealUser>;
   private documents: Map<number, Document>;
@@ -102,6 +111,7 @@ export class MemStorage implements IStorage {
   private timelineEvents: Map<number, TimelineEvent>;
 
   currentUserId: number;
+  currentCompanyId: number;
   currentDealId: number;
   currentDealUserId: number;
   currentDocumentId: number;
@@ -115,6 +125,7 @@ export class MemStorage implements IStorage {
 
   constructor() {
     this.users = new Map();
+    this.companies = new Map();
     this.deals = new Map();
     this.dealUsers = new Map();
     this.documents = new Map();
@@ -127,6 +138,7 @@ export class MemStorage implements IStorage {
     this.timelineEvents = new Map();
 
     this.currentUserId = 1;
+    this.currentCompanyId = 1;
     this.currentDealId = 1;
     this.currentDealUserId = 1;
     this.currentDocumentId = 1;
@@ -261,14 +273,72 @@ export class MemStorage implements IStorage {
     };
     this.attorneys.set(attorneyId2, createdAttorney2);
 
-    // Create deals
+    // Create sample companies
+    const company1: InsertCompany = {
+      legalName: "Acme Corporation",
+      displayName: "Acme Corp",
+      url: "https://acmecorp.com",
+      bcvTeam: ["Sarah Johnson", "Mike Chen"]
+    };
+    
+    const company2: InsertCompany = {
+      legalName: "TechStart Incorporated",
+      displayName: "TechStart Inc.",
+      url: "https://techstart.io",
+      bcvTeam: ["David Lee", "Emily Wong"]
+    };
+    
+    const company3: InsertCompany = {
+      legalName: "HealthTech Solutions",
+      displayName: "HealthTech",
+      url: "https://healthtech.com",
+      bcvTeam: ["James Smith", "Aisha Patel"]
+    };
+    
+    // Create companies directly for sample data
+    const now4 = new Date();
+    const companyId1 = this.currentCompanyId++;
+    const createdCompany1: Company = {
+      ...company1,
+      id: companyId1,
+      createdAt: now4,
+      updatedAt: now4,
+      url: company1.url || null,
+      bcvTeam: company1.bcvTeam || null
+    };
+    this.companies.set(companyId1, createdCompany1);
+    
+    const companyId2 = this.currentCompanyId++;
+    const createdCompany2: Company = {
+      ...company2,
+      id: companyId2,
+      createdAt: now4,
+      updatedAt: now4,
+      url: company2.url || null,
+      bcvTeam: company2.bcvTeam || null
+    };
+    this.companies.set(companyId2, createdCompany2);
+    
+    const companyId3 = this.currentCompanyId++;
+    const createdCompany3: Company = {
+      ...company3,
+      id: companyId3,
+      createdAt: now4,
+      updatedAt: now4,
+      url: company3.url || null,
+      bcvTeam: company3.bcvTeam || null
+    };
+    this.companies.set(companyId3, createdCompany3);
+    
+    // Create deals with proper company references
     const deal1: InsertDeal = {
       title: "Acme Corp Series C Financing",
       description: "$45M investment round led by Venture Partners",
       dealId: "ACM-2023-C",
       status: "in-progress",
       dueDate: new Date("2023-10-15"),
-      company: "Acme Corp",
+      companyId: createdCompany1.id,
+      companyName: createdCompany1.displayName,
       amount: "$45M"
     };
     const deal2: InsertDeal = {
@@ -277,7 +347,8 @@ export class MemStorage implements IStorage {
       dealId: "TS-2023-ACQ",
       status: "completed",
       dueDate: new Date("2023-09-22"),
-      company: "TechStart Inc.",
+      companyId: createdCompany2.id,
+      companyName: createdCompany2.displayName,
       amount: "$28M"
     };
     const deal3: InsertDeal = {
@@ -286,7 +357,8 @@ export class MemStorage implements IStorage {
       dealId: "HT-2023-A",
       status: "urgent",
       dueDate: new Date("2023-10-05"),
-      company: "HealthTech",
+      companyId: createdCompany3.id,
+      companyName: createdCompany3.displayName,
       amount: "$12M"
     };
 
@@ -722,6 +794,57 @@ export class MemStorage implements IStorage {
 
   async getUsers(): Promise<User[]> {
     return Array.from(this.users.values());
+  }
+
+  // Company methods
+  async getCompany(id: number): Promise<Company | undefined> {
+    return this.companies.get(id);
+  }
+
+  async getCompanies(): Promise<Company[]> {
+    return Array.from(this.companies.values());
+  }
+
+  async createCompany(insertCompany: InsertCompany): Promise<Company> {
+    const id = this.currentCompanyId++;
+    const now = new Date();
+    const company: Company = {
+      ...insertCompany,
+      id,
+      createdAt: now,
+      updatedAt: now,
+      url: insertCompany.url || null,
+      bcvTeam: insertCompany.bcvTeam || null
+    };
+    this.companies.set(id, company);
+    return company;
+  }
+
+  async updateCompany(id: number, companyUpdate: Partial<InsertCompany>): Promise<Company | undefined> {
+    const company = await this.getCompany(id);
+    if (!company) return undefined;
+
+    const updatedCompany: Company = {
+      ...company,
+      ...companyUpdate,
+      id,
+      updatedAt: new Date()
+    };
+    this.companies.set(id, updatedCompany);
+    return updatedCompany;
+  }
+
+  async deleteCompany(id: number): Promise<boolean> {
+    // First check if any deals are using this company
+    const deals = await this.getDeals();
+    const associatedDeals = deals.filter(deal => deal.companyId === id);
+    
+    if (associatedDeals.length > 0) {
+      // Cannot delete a company that is still being used
+      return false;
+    }
+    
+    return this.companies.delete(id);
   }
 
   // Deal methods

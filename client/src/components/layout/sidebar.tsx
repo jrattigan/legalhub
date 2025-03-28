@@ -6,7 +6,8 @@ import {
   FileText, 
   CheckSquare, 
   File, 
-  Users
+  Users,
+  Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMediaQuery } from '@/hooks/use-mobile';
@@ -25,6 +26,11 @@ export default function Sidebar({ recentDeals = [] }: SidebarProps) {
       name: 'Dashboard', 
       path: '/dashboard', 
       icon: <LayoutDashboard className="h-5 w-5" />
+    },
+    {
+      name: 'Companies',
+      path: '/companies',
+      icon: <Building2 className="h-5 w-5" />
     },
     { 
       name: 'My Deals', 

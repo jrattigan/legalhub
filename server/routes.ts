@@ -12,6 +12,7 @@ import {
   insertAttorneySchema,
   insertDealCounselSchema,
   insertDocumentVersionSchema,
+  insertCompanySchema,
   documents, // Import the base schema tables for creating partial schemas
 } from "@shared/schema";
 import { createInsertSchema } from "drizzle-zod";
@@ -51,6 +52,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
   // Users API
+  // Companies API
+  app.get("/api/companies", async (req, res) => {
+    const companies = await storage.getCompanies();
+    res.json(companies);
+  });
+
+  app.get("/api/companies/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid company ID" });
+    }
+
+    const company = await storage.getCompany(id);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    res.json(company);
+  });
+
+  app.post("/api/companies", async (req, res) => {
+    try {
+      const validatedData = insertCompanySchema.parse(req.body);
+      const company = await storage.createCompany(validatedData);
+      res.status(201).json(company);
+    } catch (error) {
+      console.error("Error creating company:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid company data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create company" });
+    }
+  });
+
+  app.patch("/api/companies/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid company ID" });
+    }
+
+    try {
+      // For transformed schemas, create a new partial schema from the base
+      const validatedData = z.object({
+        legalName: z.string().optional(),
+        displayName: z.string().optional(),
+        url: z.string().nullable().optional(),
+        bcvTeam: z.array(z.string()).nullable().optional()
+      }).parse(req.body);
+      
+      const updatedCompany = await storage.updateCompany(id, validatedData);
+      if (!updatedCompany) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      res.json(updatedCompany);
+    } catch (error) {
+      console.error("Error updating company:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid company data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update company" });
+    }
+  });
+
+  app.delete("/api/companies/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid company ID" });
+    }
+
+    const success = await storage.deleteCompany(id);
+    if (!success) {
+      return res.status(404).json({ message: "Company not found or has associated deals" });
+    }
+
+    res.status(204).end();
+  });
+
+  // Get deals by company
+  app.get("/api/companies/:id/deals", async (req, res) => {
+    const companyId = parseInt(req.params.id);
+    if (isNaN(companyId)) {
+      return res.status(400).json({ message: "Invalid company ID" });
+    }
+
+    try {
+      const allDeals = await storage.getDeals();
+      const companyDeals = allDeals.filter(deal => deal.companyId === companyId);
+      res.json(companyDeals);
+    } catch (error) {
+      console.error("Error fetching company deals:", error);
+      res.status(500).json({ message: "Failed to fetch company deals" });
+    }
+  });
+
   app.get("/api/users", async (req, res) => {
     const users = await storage.getUsers();
     res.json(users);
@@ -123,8 +219,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         data.dueDate = new Date(data.dueDate);
       }
       
-      const partialDealSchema = insertDealSchema.partial();
-      const validatedData = partialDealSchema.parse(data);
+      // Use a custom schema for validation
+      const validatedData = z.object({
+        title: z.string().optional(),
+        description: z.string().nullable().optional(),
+        dealId: z.string().optional(),
+        status: z.string().optional(),
+        dueDate: z.date().nullable().optional(),
+        companyId: z.number().optional(),
+        companyName: z.string().optional(),
+        amount: z.string().nullable().optional()
+      }).parse(data);
       
       const updatedDeal = await storage.updateDeal(id, validatedData);
       if (!updatedDeal) {

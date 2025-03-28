@@ -10,12 +10,14 @@ import DealDetailPage from "@/pages/deal-detail";
 import Documents from "@/pages/documents";
 import Tasks from "@/pages/tasks";
 import Counsel from "@/pages/counsel";
+import Companies from "@/pages/companies";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/companies" component={Companies} />
       <Route path="/deals" component={Deals} />
       <Route path="/deals/new" component={NewDeal} />
       <Route path="/deals/:id" component={DealDetailPage} />
