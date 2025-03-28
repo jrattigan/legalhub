@@ -198,7 +198,13 @@ export default function DealDetail({
   // Handle form submission
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateDealMutation.mutate(editDealForm);
+    // The mutation expects the field 'company' but our form has companyId and companyName
+    // So we need to make sure we're using the right format
+    updateDealMutation.mutate({
+      ...editDealForm,
+      // The following fields are already correct and don't need transformation:
+      // title, description, companyId, companyName, amount, status, dueDate
+    });
   };
   
   // Handle sharing deal

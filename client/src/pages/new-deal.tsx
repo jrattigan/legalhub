@@ -28,11 +28,14 @@ import {
 import { apiRequest } from '@/lib/queryClient';
 import { insertDealSchema } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
+import { CompanySelect } from '@/components/ui/company-select';
 
 export default function NewDeal() {
   const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | undefined>(undefined);
+  const [selectedCompanyName, setSelectedCompanyName] = useState<string>('');
 
   // Form validation schema
   const dealSchema = z.object({
@@ -120,14 +123,20 @@ export default function NewDeal() {
       status: data.status,
       dueDate: dueDateValue,
       // For API compatibility: set both companyName (for backward compatibility) and companyId
-      companyName: data.company,
-      // We'll use a placeholder companyId for now; the backend will handle this properly
-      companyId: 1, // This will be associated with an existing company on the backend
+      companyName: selectedCompanyName || data.company,
+      // Use the selected company ID from the CompanySelect component, or default to the company name
+      companyId: selectedCompanyId || 0,
       amount: data.amount || null
     };
     
-    console.log('Submitting prepared data:', preparedData);
-    createDealMutation.mutate(preparedData);
+    // Add the company property needed by the API
+    const apiData = {
+      ...preparedData,
+      company: preparedData.companyName
+    };
+    
+    console.log('Submitting prepared data:', apiData);
+    createDealMutation.mutate(apiData);
   };
 
   return (
@@ -177,11 +186,17 @@ export default function NewDeal() {
                       name="company"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Company Name*</FormLabel>
+                          <FormLabel>Company*</FormLabel>
                           <FormControl>
-                            <Input 
-                              placeholder="Enter company name" 
-                              {...field} 
+                            <CompanySelect
+                              value={selectedCompanyId}
+                              displayValue={selectedCompanyName}
+                              onValueChange={(companyId, companyName) => {
+                                setSelectedCompanyId(companyId);
+                                setSelectedCompanyName(companyName);
+                                field.onChange(companyName); // Update the form field value
+                              }}
+                              placeholder="Select or create a company"
                             />
                           </FormControl>
                           <FormMessage />
