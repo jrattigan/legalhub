@@ -772,6 +772,448 @@ export class MemStorage implements IStorage {
       referenceType: event3.referenceType || null
     };
     this.timelineEvents.set(eventId3, createdEvent3);
+    
+    // Add data for TechStart Acquisition (Deal 2)
+    // Documents for deal 2
+    const techDoc1: InsertDocument = {
+      dealId: createdDeal2.id,
+      title: "Acquisition Agreement",
+      description: "Main agreement for the TechStart acquisition",
+      category: "Legal",
+      status: "Draft",
+      fileType: "docx",
+      assigneeId: 3
+    };
+    const techDocId1 = this.currentDocumentId++;
+    const techDoc1Date = new Date();
+    const createdTechDoc1: Document = {
+      id: techDocId1,
+      dealId: techDoc1.dealId,
+      title: techDoc1.title,
+      description: techDoc1.description,
+      category: techDoc1.category,
+      status: techDoc1.status,
+      fileType: techDoc1.fileType,
+      assigneeId: techDoc1.assigneeId,
+      createdAt: techDoc1Date,
+      updatedAt: techDoc1Date
+    };
+    this.documents.set(techDocId1, createdTechDoc1);
+    
+    const techDoc2: InsertDocument = {
+      dealId: createdDeal2.id,
+      title: "Due Diligence Report",
+      description: "Complete analysis of TechStart assets and liabilities",
+      category: "Financial",
+      status: "Final",
+      fileType: "pdf",
+      assigneeId: 2
+    };
+    const techDocId2 = this.currentDocumentId++;
+    const techDoc2Date = new Date();
+    const createdTechDoc2: Document = {
+      id: techDocId2,
+      dealId: techDoc2.dealId,
+      title: techDoc2.title,
+      description: techDoc2.description,
+      category: techDoc2.category,
+      status: techDoc2.status,
+      fileType: techDoc2.fileType,
+      assigneeId: techDoc2.assigneeId,
+      createdAt: techDoc2Date,
+      updatedAt: techDoc2Date
+    };
+    this.documents.set(techDocId2, createdTechDoc2);
+    
+    // Document versions for TechStart deal
+    const techVersion1: InsertDocumentVersion = {
+      documentId: techDocId1,
+      version: 1,
+      fileName: "acquisition-agreement-v1.docx",
+      fileSize: 145000,
+      fileType: "docx",
+      uploadedById: 3,
+      content: "This Acquisition Agreement (the \"Agreement\") is made and entered into as of [Date], by and between Acme Corporation (\"Buyer\") and TechStart Inc. (\"Target\")..."
+    };
+    const techVersionId1 = this.currentVersionId++;
+    const techVersionDate1 = new Date();
+    const createdTechVersion1: DocumentVersion = {
+      id: techVersionId1,
+      documentId: techVersion1.documentId,
+      version: techVersion1.version,
+      fileName: techVersion1.fileName,
+      fileSize: techVersion1.fileSize,
+      fileType: techVersion1.fileType,
+      uploadedById: techVersion1.uploadedById,
+      content: techVersion1.content,
+      createdAt: techVersionDate1
+    };
+    this.documentVersions.set(techVersionId1, createdTechVersion1);
+    
+    // Tasks for TechStart deal
+    const techTask1: InsertTask = {
+      dealId: createdDeal2.id,
+      title: "Complete regulatory filings",
+      description: "File all required regulatory paperwork for the acquisition",
+      status: "in-progress",
+      priority: "high",
+      dueDate: new Date(new Date().setDate(new Date().getDate() + 14)),
+      assigneeId: 3
+    };
+    const techTaskId1 = this.currentTaskId++;
+    const techTaskDate1 = new Date();
+    const createdTechTask1: Task = {
+      id: techTaskId1,
+      dealId: techTask1.dealId,
+      title: techTask1.title,
+      description: techTask1.description,
+      status: techTask1.status,
+      priority: techTask1.priority,
+      dueDate: techTask1.dueDate,
+      assigneeId: techTask1.assigneeId,
+      createdAt: techTaskDate1,
+      updatedAt: techTaskDate1,
+      completedAt: null
+    };
+    this.tasks.set(techTaskId1, createdTechTask1);
+    
+    const techTask2: InsertTask = {
+      dealId: createdDeal2.id,
+      title: "Finalize asset transfer plan",
+      description: "Complete the detailed plan for transferring all TechStart assets",
+      status: "open",
+      priority: "medium",
+      dueDate: new Date(new Date().setDate(new Date().getDate() + 21)),
+      assigneeId: 2
+    };
+    const techTaskId2 = this.currentTaskId++;
+    const techTaskDate2 = new Date();
+    const createdTechTask2: Task = {
+      id: techTaskId2,
+      dealId: techTask2.dealId,
+      title: techTask2.title,
+      description: techTask2.description,
+      status: techTask2.status,
+      priority: techTask2.priority,
+      dueDate: techTask2.dueDate,
+      assigneeId: techTask2.assigneeId,
+      createdAt: techTaskDate2,
+      updatedAt: techTaskDate2,
+      completedAt: null
+    };
+    this.tasks.set(techTaskId2, createdTechTask2);
+    
+    // Issues for TechStart deal
+    const techIssue1: InsertIssue = {
+      dealId: createdDeal2.id,
+      title: "IP ownership question",
+      description: "Need to clarify ownership of three pending patents",
+      status: "open",
+      priority: "high",
+      assigneeId: 3
+    };
+    const techIssueId1 = this.currentIssueId++;
+    const techIssueDate1 = new Date();
+    const createdTechIssue1: Issue = {
+      id: techIssueId1,
+      dealId: techIssue1.dealId,
+      title: techIssue1.title,
+      description: techIssue1.description,
+      status: techIssue1.status,
+      priority: techIssue1.priority,
+      assigneeId: techIssue1.assigneeId,
+      createdAt: techIssueDate1,
+      updatedAt: techIssueDate1
+    };
+    this.issues.set(techIssueId1, createdTechIssue1);
+    
+    // Deal Counsel for TechStart deal
+    const techCounsel1: InsertDealCounsel = {
+      dealId: createdDeal2.id,
+      lawFirmId: createdFirm2.id,
+      attorneyId: createdAttorney2.id,
+      role: "Lead Counsel",
+      notes: "Handling all acquisition documentation"
+    };
+    const techCounselId1 = this.currentDealCounselId++;
+    const techCounselDate1 = new Date();
+    const createdTechCounsel1: DealCounsel = {
+      id: techCounselId1,
+      dealId: techCounsel1.dealId,
+      lawFirmId: techCounsel1.lawFirmId,
+      attorneyId: techCounsel1.attorneyId,
+      role: techCounsel1.role,
+      notes: techCounsel1.notes,
+      createdAt: techCounselDate1,
+      updatedAt: techCounselDate1
+    };
+    this.dealCounsels.set(techCounselId1, createdTechCounsel1);
+    
+    // Timeline events for TechStart deal
+    const techEvent1: InsertTimelineEvent = {
+      dealId: createdDeal2.id,
+      title: "Acquisition Agreement Drafted",
+      description: "Initial draft of the acquisition agreement completed by legal team.",
+      eventType: "document",
+      referenceId: createdTechDoc1.id,
+      referenceType: "document"
+    };
+    const techEventId1 = this.currentTimelineEventId++;
+    const techEventDate1 = new Date();
+    const createdTechEvent1: TimelineEvent = {
+      id: techEventId1,
+      dealId: techEvent1.dealId,
+      title: techEvent1.title,
+      description: techEvent1.description,
+      eventType: techEvent1.eventType,
+      createdAt: techEventDate1,
+      referenceId: techEvent1.referenceId || null,
+      referenceType: techEvent1.referenceType || null
+    };
+    this.timelineEvents.set(techEventId1, createdTechEvent1);
+    
+    const techEvent2: InsertTimelineEvent = {
+      dealId: createdDeal2.id,
+      title: "IP Issue Identified",
+      description: "Legal team identified potential issues with patent ownership.",
+      eventType: "issue",
+      referenceId: createdTechIssue1.id,
+      referenceType: "issue"
+    };
+    const techEventId2 = this.currentTimelineEventId++;
+    const techEventDate2 = new Date();
+    const createdTechEvent2: TimelineEvent = {
+      id: techEventId2,
+      dealId: techEvent2.dealId,
+      title: techEvent2.title,
+      description: techEvent2.description,
+      eventType: techEvent2.eventType,
+      createdAt: techEventDate2,
+      referenceId: techEvent2.referenceId || null,
+      referenceType: techEvent2.referenceType || null
+    };
+    this.timelineEvents.set(techEventId2, createdTechEvent2);
+    
+    // Add data for HealthTech Series A (Deal 3)
+    // Documents for deal 3
+    const healthDoc1: InsertDocument = {
+      dealId: createdDeal3.id,
+      title: "Series A Term Sheet",
+      description: "Term sheet for the HealthTech Series A round",
+      category: "Legal",
+      status: "Draft",
+      fileType: "docx",
+      assigneeId: 1
+    };
+    const healthDocId1 = this.currentDocumentId++;
+    const healthDoc1Date = new Date();
+    const createdHealthDoc1: Document = {
+      id: healthDocId1,
+      dealId: healthDoc1.dealId,
+      title: healthDoc1.title,
+      description: healthDoc1.description,
+      category: healthDoc1.category,
+      status: healthDoc1.status,
+      fileType: healthDoc1.fileType,
+      assigneeId: healthDoc1.assigneeId,
+      createdAt: healthDoc1Date,
+      updatedAt: healthDoc1Date
+    };
+    this.documents.set(healthDocId1, createdHealthDoc1);
+    
+    const healthDoc2: InsertDocument = {
+      dealId: createdDeal3.id,
+      title: "Investor Presentation",
+      description: "Pitch deck for Series A investors",
+      category: "Financial",
+      status: "Final",
+      fileType: "pdf",
+      assigneeId: 1
+    };
+    const healthDocId2 = this.currentDocumentId++;
+    const healthDoc2Date = new Date();
+    const createdHealthDoc2: Document = {
+      id: healthDocId2,
+      dealId: healthDoc2.dealId,
+      title: healthDoc2.title,
+      description: healthDoc2.description,
+      category: healthDoc2.category,
+      status: healthDoc2.status,
+      fileType: healthDoc2.fileType,
+      assigneeId: healthDoc2.assigneeId,
+      createdAt: healthDoc2Date,
+      updatedAt: healthDoc2Date
+    };
+    this.documents.set(healthDocId2, createdHealthDoc2);
+    
+    // Document versions for HealthTech deal
+    const healthVersion1: InsertDocumentVersion = {
+      documentId: healthDocId1,
+      version: 1,
+      fileName: "series-a-term-sheet-v1.docx",
+      fileSize: 120000,
+      fileType: "docx",
+      uploadedById: 1,
+      content: "This Term Sheet summarizes the principal terms of the Series A Preferred Stock Financing of HealthTech Solutions, Inc., a Delaware corporation (the \"Company\")..."
+    };
+    const healthVersionId1 = this.currentVersionId++;
+    const healthVersionDate1 = new Date();
+    const createdHealthVersion1: DocumentVersion = {
+      id: healthVersionId1,
+      documentId: healthVersion1.documentId,
+      version: healthVersion1.version,
+      fileName: healthVersion1.fileName,
+      fileSize: healthVersion1.fileSize,
+      fileType: healthVersion1.fileType,
+      uploadedById: healthVersion1.uploadedById,
+      content: healthVersion1.content,
+      createdAt: healthVersionDate1
+    };
+    this.documentVersions.set(healthVersionId1, createdHealthVersion1);
+    
+    // Tasks for HealthTech deal
+    const healthTask1: InsertTask = {
+      dealId: createdDeal3.id,
+      title: "Complete investors list",
+      description: "Finalize the list of participating investors",
+      status: "in-progress",
+      priority: "high",
+      dueDate: new Date(new Date().setDate(new Date().getDate() + 5)),
+      assigneeId: 1
+    };
+    const healthTaskId1 = this.currentTaskId++;
+    const healthTaskDate1 = new Date();
+    const createdHealthTask1: Task = {
+      id: healthTaskId1,
+      dealId: healthTask1.dealId,
+      title: healthTask1.title,
+      description: healthTask1.description,
+      status: healthTask1.status,
+      priority: healthTask1.priority,
+      dueDate: healthTask1.dueDate,
+      assigneeId: healthTask1.assigneeId,
+      createdAt: healthTaskDate1,
+      updatedAt: healthTaskDate1,
+      completedAt: null
+    };
+    this.tasks.set(healthTaskId1, createdHealthTask1);
+    
+    const healthTask2: InsertTask = {
+      dealId: createdDeal3.id,
+      title: "Negotiate valuation cap",
+      description: "Finalize terms for the valuation cap with lead investor",
+      status: "open",
+      priority: "urgent",
+      dueDate: new Date(new Date().setDate(new Date().getDate() + 3)),
+      assigneeId: 1
+    };
+    const healthTaskId2 = this.currentTaskId++;
+    const healthTaskDate2 = new Date();
+    const createdHealthTask2: Task = {
+      id: healthTaskId2,
+      dealId: healthTask2.dealId,
+      title: healthTask2.title,
+      description: healthTask2.description,
+      status: healthTask2.status,
+      priority: healthTask2.priority,
+      dueDate: healthTask2.dueDate,
+      assigneeId: healthTask2.assigneeId,
+      createdAt: healthTaskDate2,
+      updatedAt: healthTaskDate2,
+      completedAt: null
+    };
+    this.tasks.set(healthTaskId2, createdHealthTask2);
+    
+    // Issues for HealthTech deal
+    const healthIssue1: InsertIssue = {
+      dealId: createdDeal3.id,
+      title: "Liquidation preference disagreement",
+      description: "Lead investor requesting 2x liquidation preference, need to negotiate down",
+      status: "open",
+      priority: "high",
+      assigneeId: 1
+    };
+    const healthIssueId1 = this.currentIssueId++;
+    const healthIssueDate1 = new Date();
+    const createdHealthIssue1: Issue = {
+      id: healthIssueId1,
+      dealId: healthIssue1.dealId,
+      title: healthIssue1.title,
+      description: healthIssue1.description,
+      status: healthIssue1.status,
+      priority: healthIssue1.priority,
+      assigneeId: healthIssue1.assigneeId,
+      createdAt: healthIssueDate1,
+      updatedAt: healthIssueDate1
+    };
+    this.issues.set(healthIssueId1, createdHealthIssue1);
+    
+    // Deal Counsel for HealthTech deal
+    const healthCounsel1: InsertDealCounsel = {
+      dealId: createdDeal3.id,
+      lawFirmId: createdFirm1.id,
+      attorneyId: createdAttorney1.id,
+      role: "Lead Counsel",
+      notes: "Handling all Series A documentation"
+    };
+    const healthCounselId1 = this.currentDealCounselId++;
+    const healthCounselDate1 = new Date();
+    const createdHealthCounsel1: DealCounsel = {
+      id: healthCounselId1,
+      dealId: healthCounsel1.dealId,
+      lawFirmId: healthCounsel1.lawFirmId,
+      attorneyId: healthCounsel1.attorneyId,
+      role: healthCounsel1.role,
+      notes: healthCounsel1.notes,
+      createdAt: healthCounselDate1,
+      updatedAt: healthCounselDate1
+    };
+    this.dealCounsels.set(healthCounselId1, createdHealthCounsel1);
+    
+    // Timeline events for HealthTech deal
+    const healthEvent1: InsertTimelineEvent = {
+      dealId: createdDeal3.id,
+      title: "Term Sheet Drafted",
+      description: "Initial draft of the Series A term sheet completed",
+      eventType: "document",
+      referenceId: createdHealthDoc1.id,
+      referenceType: "document"
+    };
+    const healthEventId1 = this.currentTimelineEventId++;
+    const healthEventDate1 = new Date();
+    const createdHealthEvent1: TimelineEvent = {
+      id: healthEventId1,
+      dealId: healthEvent1.dealId,
+      title: healthEvent1.title,
+      description: healthEvent1.description,
+      eventType: healthEvent1.eventType,
+      createdAt: healthEventDate1,
+      referenceId: healthEvent1.referenceId || null,
+      referenceType: healthEvent1.referenceType || null
+    };
+    this.timelineEvents.set(healthEventId1, createdHealthEvent1);
+    
+    const healthEvent2: InsertTimelineEvent = {
+      dealId: createdDeal3.id,
+      title: "Lead Investor Commitment",
+      description: "Received formal commitment from lead investor for $5M",
+      eventType: "milestone",
+      referenceId: null,
+      referenceType: null
+    };
+    const healthEventId2 = this.currentTimelineEventId++;
+    const healthEventDate2 = new Date();
+    const createdHealthEvent2: TimelineEvent = {
+      id: healthEventId2,
+      dealId: healthEvent2.dealId,
+      title: healthEvent2.title,
+      description: healthEvent2.description,
+      eventType: healthEvent2.eventType,
+      createdAt: healthEventDate2,
+      referenceId: healthEvent2.referenceId || null,
+      referenceType: healthEvent2.referenceType || null
+    };
+    this.timelineEvents.set(healthEventId2, createdHealthEvent2);
   }
 
   // User methods
