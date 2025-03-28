@@ -80,9 +80,18 @@ export async function generateDocumentComparison(
         </p>
         
         <div style="margin-top: 30pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.8;">
-          New Technologies, Inc. Rogue Ventures, LP<br>
-          By: ____________ By: ____________<br>
-          <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Joe Smith</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Joe Jones</span>, Chief Executive Officer <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Fred Perry</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Mike Perry</span>, Partner
+          <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 10pt;">
+            <div style="width: 45%;">New Technologies, Inc.</div>
+            <div style="width: 45%;">Rogue Ventures, LP</div>
+          </div>
+          <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 10pt;">
+            <div style="width: 45%;">By: ________________________</div>
+            <div style="width: 45%;">By: ________________________</div>
+          </div>
+          <div style="display: flex; justify-content: space-between; width: 100%;">
+            <div style="width: 45%;"><span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Joe Smith</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Joe Jones</span>, Chief Executive Officer</div>
+            <div style="width: 45%;"><span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Fred Perry</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Mike Perry</span>, Partner</div>
+          </div>
         </div>
       </div>`;
       
