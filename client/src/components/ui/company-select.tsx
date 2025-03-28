@@ -42,7 +42,7 @@ export type Company = {
 };
 
 type CompanySelectProps = {
-  value?: number;
+  value?: number | string;
   displayValue?: string;
   onValueChange: (value: number, displayName: string) => void;
   placeholder?: string;
@@ -186,7 +186,9 @@ export function CompanySelect({
                       <Check
                         className={cn(
                           "mr-2 h-4 w-4",
-                          value === company.id ? "opacity-100" : "opacity-0"
+                          (value === company.id || 
+                          (typeof value === 'string' && parseInt(value) === company.id)) 
+                            ? "opacity-100" : "opacity-0"
                         )}
                       />
                       {company.displayName}

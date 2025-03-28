@@ -874,16 +874,48 @@ export class MemStorage implements IStorage {
   }
 
   async updateDeal(id: number, dealUpdate: Partial<InsertDeal>): Promise<Deal | undefined> {
+    console.log('updateDeal called with id:', id, 'and update data:', JSON.stringify(dealUpdate));
+    
     const existingDeal = this.deals.get(id);
     if (!existingDeal) {
+      console.log('Deal not found with id:', id);
       return undefined;
     }
     
+    // Process companyId specifically
+    let processedDealUpdate = { ...dealUpdate };
+    
+    // Ensure companyId is a number
+    if (dealUpdate.companyId !== undefined) {
+      const companyId = typeof dealUpdate.companyId === 'string'
+        ? parseInt(dealUpdate.companyId)
+        : dealUpdate.companyId;
+      
+      // If we have a valid companyId, get the company info
+      const company = this.companies.get(companyId);
+      
+      console.log('Processing companyId:', companyId, 'Found company:', company ? 'Yes' : 'No');
+      
+      // Update both companyId and companyName if we have a valid company
+      if (company) {
+        processedDealUpdate = {
+          ...processedDealUpdate,
+          companyId: companyId,
+          companyName: company.displayName
+        };
+      }
+    }
+    
+    console.log('Processed deal update:', JSON.stringify(processedDealUpdate));
+    
     const updatedDeal: Deal = { 
       ...existingDeal, 
-      ...dealUpdate, 
+      ...processedDealUpdate, 
       updatedAt: new Date() 
     };
+    
+    console.log('Final updated deal:', JSON.stringify(updatedDeal));
+    
     this.deals.set(id, updatedDeal);
     return updatedDeal;
   }

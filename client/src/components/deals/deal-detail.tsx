@@ -202,17 +202,23 @@ export default function DealDetail({
     e.preventDefault();
     
     // Make sure all fields are correctly formatted for the API
+    // Ensure companyId is a number
+    const companyId = typeof editDealForm.companyId === 'string' 
+      ? parseInt(editDealForm.companyId)
+      : editDealForm.companyId;
+      
     const formattedData = {
       title: editDealForm.title,
       description: editDealForm.description,
-      companyId: editDealForm.companyId,
+      companyId: companyId,
       companyName: editDealForm.companyName,
       amount: editDealForm.amount,
       status: editDealForm.status,
       dueDate: editDealForm.dueDate ? editDealForm.dueDate : null,
     };
     
-    console.log('Submitting update:', formattedData);
+    console.log('Submitting update with companyId:', companyId, 'type:', typeof companyId);
+    console.log('Full formatted data:', formattedData);
     updateDealMutation.mutate(formattedData);
   };
   
