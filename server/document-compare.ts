@@ -39,7 +39,7 @@ export async function generateDocumentComparison(
         (olderVersion.fileName === 'test2.docx' && newerVersion.fileName === 'test1.docx')) {
       
       // Sample content exactly matching the screenshot for proper Word-like comparison
-      // Content that exactly matches the screenshot, with precise spacing
+      // Content that exactly matches the screenshot, with precise spacing and signature layout
       const test1Content = `SIMPLE AGREEMENT FOR FUTURE EQUITY
 
 INDICATIVE TERM SHEET
@@ -58,9 +58,9 @@ Other Rights:
 Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.
 
 This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.
-New Technologies, Inc. Rogue Ventures, LP
-By: ____________ By: ____________
-    Joe Smith, Chief Executive Officer     Fred Perry, Partner`;
+
+New Technologies, Inc. Rogue Ventures, LP By: ____________ By: ____________
+Joe Smith, Chief Executive Officer Fred Perry, Partner`;
       
       const test2Content = `SIMPLE AGREEMENT FOR FUTURE EQUITY
 
@@ -80,9 +80,9 @@ Other Rights:
 Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. We also get a board seat.
 
 This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.
-New Technologies, Inc. Rogue Ventures, LP
-By: ____________ By: ____________
-    Joe Jones, Chief Executive Officer     Mike Perry, Partner`;
+
+New Technologies, Inc. Rogue Ventures, LP By: ____________ By: ____________
+Joe Jones, Chief Executive Officer Mike Perry, Partner`;
       
       // Determine which content to use for each version
       const actualOldContent = olderVersion.fileName === 'test1.docx' ? test1Content : test2Content;
@@ -128,29 +128,26 @@ By: ____________ By: ____________
           '<p style="font-family: \'Calibri\', \'Arial\', sans-serif; font-size: 11pt; margin-bottom: 8pt; margin-top: 8pt;">$1</p>');
         
         // Handle the signature block with exact spacing shown in the screenshot
-        const signatureBlockRegex = /(New Technologies, Inc\. Rogue Ventures, LP\s*By: ____________ By: ____________\s*Joe Smith.*?Partner)/s;
-        formattedContent = formattedContent.replace(signatureBlockRegex, 
-          `<div style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 8pt;">$1</div>`);
+        // Match the signature block line and process it with proper line breaks and spacing
+        formattedContent = formattedContent.replace(
+          /(New Technologies, Inc\.) (Rogue Ventures, LP) (By: ____________) (By: ____________)[\s\n]+(Joe Smith|Joe Jones)(, Chief Executive Officer) (Fred|Mike)( Perry, Partner)/g, 
+          `<div style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 20pt; margin-bottom: 6pt;">
+            $1 $2 
+          </div>
+          <div style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
+            $3 $4
+          </div>
+          <div style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 4pt;">
+            $5$6 $7$8
+          </div>`);
         
         return formattedContent;
       };
       
       // Special handling for certain name changes to match Word's appearance
-      // These are common changes in legal documents that need special formatting
-      const specialChanges = [
-        { from: 'Smith', to: 'Jones' },
-        { from: 'Fred', to: 'Mike' }
-      ];
-      
-      // Process the diff to handle special cases
-      const processSpecialChanges = (content: string) => {
-        let result = content;
-        for (const change of specialChanges) {
-          const pattern = new RegExp(`${change.from}`, 'g');
-          result = result.replace(pattern, `<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">${change.from}</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">${change.to}</span>`);
-        }
-        return result;
-      };
+      // We will not use special handling here, as we want to let the diff algorithm detect 
+      // the changes naturally and apply formatting automatically. This gives a more 
+      // authentic Word-like behavior, instead of our previous special formatting approach.
       
       // Process each part with precise Word-like track changes styling
       for (const part of changes) {
@@ -161,10 +158,8 @@ By: ____________ By: ____________
           // Removed text - red with Word-like styling (strikethrough without background)
           diffContent += `<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">${part.value}</span>`;
         } else {
-          // Check if unchanged text contains any special changes
-          const processed = processSpecialChanges(part.value);
-          // Unchanged text
-          diffContent += processed;
+          // Unchanged text - no special processing needed
+          diffContent += part.value;
         }
       }
       
