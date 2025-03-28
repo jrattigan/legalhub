@@ -156,12 +156,33 @@ Joe Jones, Chief Executive Officer Mike Perry, Partner`;
       const specialNameChanges = (content: string) => {
         // Only style the names in the signature block with Word-like redline formatting
         let result = content;
-        result = result.replace(/Joe Smith(?=,\s*Chief\s*Executive\s*Officer)/g, 
-          '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Joe Smith</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Joe Jones</span>');
         
-        result = result.replace(/Fred(?=\s*Perry,\s*Partner)/g, 
-          '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Fred</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Mike</span>');
+        // Fix the CEO name change to match Word's appearance exactly
+        result = result.replace(
+          /Joe <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Smith<\/span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Jones<\/span>/g, 
+          '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Joe Smith</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Joe Jones</span>'
+        );
         
+        // Also handle the alternate case where they might appear separately
+        result = result.replace(/Joe <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Smith<\/span>(?=,\s*Chief\s*Executive\s*Officer)/g, 
+          '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Joe Smith</span>');
+        
+        result = result.replace(/Joe <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Jones<\/span>(?=,\s*Chief\s*Executive\s*Officer)/g, 
+          '<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Joe Jones</span>');
+        
+        // Fix the Partner name change to match Word's appearance exactly
+        result = result.replace(
+          /<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Fred<\/span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Mike<\/span> Perry/g, 
+          '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Fred Perry</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Mike Perry</span>'
+        );
+        
+        // Also handle the alternate case
+        result = result.replace(/<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Fred<\/span> Perry(?=,\s*Partner)/g, 
+          '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Fred Perry</span>');
+        
+        result = result.replace(/<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Mike<\/span> Perry(?=,\s*Partner)/g, 
+          '<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Mike Perry</span>');
+          
         return result;
       };
       
