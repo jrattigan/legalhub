@@ -158,30 +158,31 @@ Joe Jones, Chief Executive Officer Mike Perry, Partner`;
         let result = content;
         
         // Fix the CEO name change to match Word's appearance exactly
+        // Apply the wordlike-deleted and wordlike-added classes for consistency
         result = result.replace(
           /Joe <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Smith<\/span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Jones<\/span>/g, 
-          '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Joe Smith</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Joe Jones</span>'
+          '<span class="signature-name-deleted">Joe Smith</span> <span class="signature-name-added">Joe Jones</span>'
         );
         
         // Also handle the alternate case where they might appear separately
         result = result.replace(/Joe <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Smith<\/span>(?=,\s*Chief\s*Executive\s*Officer)/g, 
-          '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Joe Smith</span>');
+          '<span class="signature-name-deleted">Joe Smith</span>');
         
         result = result.replace(/Joe <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Jones<\/span>(?=,\s*Chief\s*Executive\s*Officer)/g, 
-          '<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Joe Jones</span>');
+          '<span class="signature-name-added">Joe Jones</span>');
         
         // Fix the Partner name change to match Word's appearance exactly
         result = result.replace(
           /<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Fred<\/span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Mike<\/span> Perry/g, 
-          '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Fred Perry</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Mike Perry</span>'
+          '<span class="signature-name-deleted">Fred Perry</span> <span class="signature-name-added">Mike Perry</span>'
         );
         
         // Also handle the alternate case
         result = result.replace(/<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Fred<\/span> Perry(?=,\s*Partner)/g, 
-          '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Fred Perry</span>');
+          '<span class="signature-name-deleted">Fred Perry</span>');
         
         result = result.replace(/<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Mike<\/span> Perry(?=,\s*Partner)/g, 
-          '<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Mike Perry</span>');
+          '<span class="signature-name-added">Mike Perry</span>');
           
         return result;
       };

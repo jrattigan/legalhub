@@ -203,6 +203,37 @@
   margin-top: 2pt;
 }
 
+/* New classes for Word-like signature name styling */
+.signature-name-deleted {
+  color: #991b1b !important;
+  text-decoration: line-through !important;
+  text-decoration-color: #991b1b !important;
+  display: inline-block !important;
+  font-weight: normal !important;
+}
+
+.signature-name-added {
+  color: #166534 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #166534 !important;
+  display: inline-block !important;
+  margin-left: 5px !important;
+  font-weight: normal !important;
+}
+
+/* General classes for Word-like styling */
+.wordlike-deleted {
+  color: #991b1b !important;
+  text-decoration: line-through !important;
+  text-decoration-color: #991b1b !important;
+}
+
+.wordlike-added {
+  color: #166534 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #166534 !important;
+}
+
 .document-content ul, .document-content ol {
   margin-left: 20pt;
   margin-bottom: 10pt;

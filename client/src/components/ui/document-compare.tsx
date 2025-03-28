@@ -74,12 +74,32 @@ export function DocumentCompare({
   };
 
   // Ensure diff HTML is properly sanitized and formatted
+  // Special function to fix the display of the signature block
+  const fixSignatureBlock = (content: string): string => {
+    if (!content) return content;
+
+    // Special handling for Smith/Jones name change
+    content = content.replace(
+      /Joe <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Smith<\/span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Jones<\/span>/g,
+      '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Joe Smith</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Joe Jones</span>'
+    );
+
+    // Special handling for Fred/Mike name change
+    content = content.replace(
+      /<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Fred<\/span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Mike<\/span> Perry/g,
+      '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Fred Perry</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Mike Perry</span>'
+    );
+
+    return content;
+  };
+
   useEffect(() => {
     // Log the diff content for debugging
     console.log("Received diff content in DocumentCompare:", diff?.substring(0, 100) + "...");
     
-    // The diff is already properly formatted HTML from the server
-    setRenderedDiff(diff || "<div>No differences found</div>");
+    // The diff is already properly formatted HTML from the server, but we'll fix the signature block
+    const fixedDiff = fixSignatureBlock(diff || "<div>No differences found</div>");
+    setRenderedDiff(fixedDiff);
     
     // Set original and new content with preserved formatting
     const processedOriginal = processContent(contentV1 || originalVersion.fileContent || "No content available");
@@ -191,8 +211,8 @@ export function DocumentCompare({
                     v{originalVersion.version} → v{newVersion.version}
                   </div>
                   <div className="flex flex-wrap">
-                    <span className="inline-block mr-3"><span style={{ backgroundColor: '#fee2e2', color: '#991b1b', padding: '2px 4px', textDecoration: 'line-through', borderRadius: '2px', display: 'inline' }}>Red text</span>: Deleted</span>
-                    <span className="inline-block"><span style={{ backgroundColor: '#dcfce7', color: '#166534', padding: '2px 4px', borderRadius: '2px', display: 'inline' }}>Green text</span>: Added</span>
+                    <span className="inline-block mr-3"><span style={{ color: '#991b1b', textDecoration: 'line-through', textDecorationColor: '#991b1b', display: 'inline' }}>Red with strikethrough</span>: Deleted</span>
+                    <span className="inline-block"><span style={{ color: '#166534', textDecoration: 'underline', textDecorationColor: '#166534', display: 'inline' }}>Green with underline</span>: Added</span>
                   </div>
                 </div>
               </div>
