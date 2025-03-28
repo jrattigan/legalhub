@@ -81,13 +81,13 @@ export function DocumentCompare({
     // Special handling for Smith/Jones name change
     content = content.replace(
       /Joe <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Smith<\/span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Jones<\/span>/g,
-      '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Joe Smith</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Joe Jones</span>'
+      '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;">Joe Smith</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;">Joe Jones</span>'
     );
 
     // Special handling for Fred/Mike name change
     content = content.replace(
       /<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Fred<\/span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Mike<\/span> Perry/g,
-      '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Fred Perry</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Mike Perry</span>'
+      '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;">Fred Perry</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;">Mike Perry</span>'
     );
 
     return content;
@@ -211,8 +211,8 @@ export function DocumentCompare({
                     v{originalVersion.version} → v{newVersion.version}
                   </div>
                   <div className="flex flex-wrap">
-                    <span className="inline-block mr-3"><span style={{ color: '#991b1b', textDecoration: 'line-through', textDecorationColor: '#991b1b', display: 'inline' }}>Red with strikethrough</span>: Deleted</span>
-                    <span className="inline-block"><span style={{ color: '#166534', textDecoration: 'underline', textDecorationColor: '#166534', display: 'inline' }}>Green with underline</span>: Added</span>
+                    <span className="inline-block mr-3"><span style={{ color: '#991b1b', textDecoration: 'line-through', textDecorationColor: '#991b1b', backgroundColor: '#fee2e2', display: 'inline' }}>Red with strikethrough</span>: Deleted</span>
+                    <span className="inline-block"><span style={{ color: '#166534', textDecoration: 'underline', textDecorationColor: '#166534', backgroundColor: '#dcfce7', display: 'inline' }}>Green with underline</span>: Added</span>
                   </div>
                 </div>
               </div>

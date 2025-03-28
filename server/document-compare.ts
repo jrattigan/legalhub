@@ -45,12 +45,12 @@ export async function generateDocumentComparison(
         
         <h2 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 14pt; font-weight: bold; text-align: center; margin-bottom: 15pt;">INDICATIVE TERM SHEET</h2>
         
-        <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 8pt;">September <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">29</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">31</span>, 2024</p>
+        <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 8pt;">September <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;">29</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;">31</span>, 2024</p>
         
         <div style="margin-bottom: 12pt;">
           <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">Investment:</div>
           <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt;">
-            Rogue Ventures, LP and related entities ("RV") shall invest <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">$5</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">$6</span> million of <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">$7</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">$10</span> million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
+            Rogue Ventures, LP and related entities ("RV") shall invest <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;">$5</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;">$6</span> million of <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;">$7</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;">$10</span> million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
           </div>
         </div>
         
@@ -64,14 +64,14 @@ export async function generateDocumentComparison(
         <div style="margin-bottom: 12pt;">
           <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">Valuation cap:</div>
           <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt;">
-            <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">$40</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">$80</span> million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
+            <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;">$40</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;">$80</span> million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
           </div>
         </div>
         
         <div style="margin-bottom: 12pt;">
           <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">Other Rights:</div>
           <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt;">
-            Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;"> We also get a board seat.</span>
+            Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;"> We also get a board seat.</span>
           </div>
         </div>
         
@@ -89,8 +89,8 @@ export async function generateDocumentComparison(
             <div style="width: 45%;">By: ________________________</div>
           </div>
           <div style="display: flex; justify-content: space-between; width: 100%;">
-            <div style="width: 45%;"><span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Joe Smith</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Joe Jones</span>, Chief Executive Officer</div>
-            <div style="width: 45%;"><span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Fred Perry</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Mike Perry</span>, Partner</div>
+            <div style="width: 45%;"><span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;">Joe Smith</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;">Joe Jones</span>, Chief Executive Officer</div>
+            <div style="width: 45%;"><span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;">Fred Perry</span><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;">Mike Perry</span>, Partner</div>
           </div>
         </div>
       </div>`;
@@ -100,8 +100,8 @@ export async function generateDocumentComparison(
       <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
         <div class="full-document-with-changes">
           <div class="legend" style="margin-bottom: 16px; font-size: 11pt; color: #333;">
-            <div style="margin-bottom: 6px;"><span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Red with strikethrough</span>: Removed content</div>
-            <div><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Green with underline</span>: Added content</div>
+            <div style="margin-bottom: 6px;"><span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;">Red with strikethrough</span>: Removed content</div>
+            <div><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;">Green with underline</span>: Added content</div>
           </div>
           ${exactMatchHtml}
         </div>
@@ -119,11 +119,11 @@ export async function generateDocumentComparison(
       let processedContent = '';
       for (const part of changes) {
         if (part.added) {
-          // Added text - green with Word-like styling (underline instead of background)
-          processedContent += `<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">${part.value}</span>`;
+          // Added text - green with Word-like styling (underline with background)
+          processedContent += `<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7; display: inline;">${part.value}</span>`;
         } else if (part.removed) {
-          // Removed text - red with Word-like styling (strikethrough without background)
-          processedContent += `<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">${part.value}</span>`;
+          // Removed text - red with Word-like styling (strikethrough with background)
+          processedContent += `<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2; display: inline;">${part.value}</span>`;
         } else {
           processedContent += part.value;
         }
@@ -146,8 +146,8 @@ export async function generateDocumentComparison(
       <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
         <div class="full-document-with-changes">
           <div class="legend" style="margin-bottom: 16px; font-size: 11pt; color: #333;">
-            <div style="margin-bottom: 6px;"><span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Red with strikethrough</span>: Removed content</div>
-            <div><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Green with underline</span>: Added content</div>
+            <div style="margin-bottom: 6px;"><span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2; display: inline;">Red with strikethrough</span>: Removed content</div>
+            <div><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7; display: inline;">Green with underline</span>: Added content</div>
           </div>
           <div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">
             <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 24pt;">${newerVersion.fileName}</h1>
