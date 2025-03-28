@@ -63,22 +63,11 @@ export default function CompanyDealsPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex h-screen bg-neutral-50">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <AppHeader 
-            title="Company Deals" 
-            user={{
-              fullName: "John Doe",
-              email: "jdoe@company.com",
-              initials: "JD",
-              avatarColor: "#22c55e",
-              username: "jdoe",
-              password: "",
-              id: 1,
-              role: "General Counsel"
-            }}
-          />
+      <div className="min-h-screen flex flex-col">
+        <AppHeader user={user} notifications={2} />
+        
+        <div className="flex-1 flex overflow-hidden">
+          <Sidebar />
           <div className="flex-1 overflow-auto p-6">
             <div className="flex items-center mb-6">
               <Button 
@@ -108,11 +97,7 @@ export default function CompanyDealsPage() {
     );
   }
 
-  // Fetch user data
-  const { data: user } = useQuery({
-    queryKey: ['/api/users/1'],
-    retry: 1,
-  });
+  // User data is already fetched at the top of the component
 
   // Error state for company
   if (!company) {
