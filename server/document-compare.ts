@@ -79,11 +79,11 @@ export async function generateDocumentComparison(
           This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.
         </p>
         
-        <p style="margin-top: 30pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5;">
+        <div style="margin-top: 30pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5;">
           New Technologies, Inc. Rogue Ventures, LP<br>
           By: ____________ By: ____________<br>
           <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Joe Smith</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Joe Jones</span>, Chief Executive Officer <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Fred Perry</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Mike Perry</span>, Partner
-        </p>
+        </div>
       </div>`;
       
       // The completed diff HTML
