@@ -24,7 +24,7 @@
   text-decoration: underline !important;
   text-decoration-color: #166534 !important;
   padding: 0 !important; /* No padding to be exactly like Word */
-  background-color: transparent !important; /* Word doesn't use background */
+  background-color: #dcfce7 !important; /* Light green background */
   display: inline !important; /* Changed to inline for better text flow */
   font-family: 'Calibri', 'Arial', sans-serif !important;
   font-size: 11pt !important;
@@ -41,7 +41,7 @@
   text-decoration: line-through !important;
   text-decoration-color: #991b1b !important;
   padding: 0 !important; /* No padding to be exactly like Word */
-  background-color: transparent !important; /* Word doesn't use background */
+  background-color: #fee2e2 !important; /* Light red background */
   display: inline !important; /* Changed to inline for better text flow */
   font-family: 'Calibri', 'Arial', sans-serif !important;
   font-size: 11pt !important;
@@ -54,7 +54,7 @@
 /* Legacy styling for backward compatibility */
 .document-compare span[style*="background-color: #dcfce7"],
 .document-content span[style*="background-color: #dcfce7"] {
-  background-color: transparent !important; /* Remove background */
+  background-color: #dcfce7 !important; /* Keep green background */
   color: #166534 !important;
   text-decoration: underline !important;
   text-decoration-color: #166534 !important;
@@ -70,7 +70,7 @@
 
 .document-compare span[style*="background-color: #fee2e2"],
 .document-content span[style*="background-color: #fee2e2"] {
-  background-color: transparent !important; /* Remove background */
+  background-color: #fee2e2 !important; /* Keep red background */
   color: #991b1b !important;
   text-decoration: line-through !important;
   text-decoration-color: #991b1b !important;
@@ -208,6 +208,7 @@
   color: #991b1b !important;
   text-decoration: line-through !important;
   text-decoration-color: #991b1b !important;
+  background-color: #fee2e2 !important;
   display: inline-block !important;
   font-weight: normal !important;
 }
@@ -216,6 +217,7 @@
   color: #166534 !important;
   text-decoration: underline !important;
   text-decoration-color: #166534 !important;
+  background-color: #dcfce7 !important;
   display: inline-block !important;
   margin-left: 5px !important;
   font-weight: normal !important;
@@ -226,12 +228,14 @@
   color: #991b1b !important;
   text-decoration: line-through !important;
   text-decoration-color: #991b1b !important;
+  background-color: #fee2e2 !important;
 }
 
 .wordlike-added {
   color: #166534 !important;
   text-decoration: underline !important;
   text-decoration-color: #166534 !important;
+  background-color: #dcfce7 !important;
 }
 
 .document-content ul, .document-content ol {
@@ -257,7 +261,7 @@
 
 /* Styles for the diff view */
 .document-content ins {
-  background-color: transparent;
+  background-color: #dcfce7;
   color: #166534;
   text-decoration: underline;
   text-decoration-color: #166534;
@@ -265,7 +269,7 @@
 }
 
 .document-content del {
-  background-color: transparent;
+  background-color: #fee2e2;
   color: #991b1b;
   text-decoration: line-through;
   text-decoration-color: #991b1b;
