@@ -18,6 +18,8 @@ export default function AppHeader({ title, user, notifications = 0 }: AppHeaderP
   
   // Consistent nav items for all pages
   const navItems = [
+    { name: 'Dashboard', path: '/dashboard' },
+    { name: 'Companies', path: '/companies' },
     { name: 'Deals', path: '/deals' },
     { name: 'Documents', path: '/documents' },
     { name: 'Tasks', path: '/tasks' },
