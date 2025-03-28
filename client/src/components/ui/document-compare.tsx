@@ -76,22 +76,16 @@ export function DocumentCompare({
   };
 
   // Ensure diff HTML is properly sanitized and formatted
-  // Function to add background highlighting to all changes
+  // Function to process the content (no modifications needed with updated server code)
   const fixSignatureBlock = (content: string): string => {
     if (!content) return content;
     
-    // Add background highlighting to ALL deleted text (red with strikethrough)
+    // Remove redundant legend if present
     content = content.replace(
-      /<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">([^<]*?)<\/span>/g, 
-      '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;">$1</span>'
+      /<div class="legend".*?<\/div><\/div>/s,
+      '</div>'
     );
     
-    // Add background highlighting to ALL added text (green with underline)
-    content = content.replace(
-      /<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">([^<]*?)<\/span>/g, 
-      '<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;">$1</span>'
-    );
-
     return content;
   };
 
@@ -208,13 +202,13 @@ export function DocumentCompare({
                   </svg>
                   <span className="text-sm font-medium">{newVersion.fileName} (with changes)</span>
                 </div>
-                <div className="text-xs text-muted-foreground flex justify-between items-center">
-                  <div className="mr-4">
+                <div className="text-xs text-muted-foreground flex items-center justify-between">
+                  <div>
                     v{originalVersion.version} → v{newVersion.version}
                   </div>
                   <div className="flex flex-wrap">
-                    <span className="inline-block mr-3"><span style={{ color: '#991b1b', textDecoration: 'line-through', textDecorationColor: '#991b1b', backgroundColor: '#fee2e2', display: 'inline' }}>Red with strikethrough</span>: Deleted</span>
-                    <span className="inline-block"><span style={{ color: '#166534', textDecoration: 'underline', textDecorationColor: '#166534', backgroundColor: '#dcfce7', display: 'inline' }}>Green with underline</span>: Added</span>
+                    <span className="inline-block mr-3"><span style={{ color: '#991b1b', textDecoration: 'line-through', textDecorationColor: '#991b1b', backgroundColor: '#fee2e2', display: 'inline' }}>Deleted</span></span>
+                    <span className="inline-block"><span style={{ color: '#166534', textDecoration: 'underline', textDecorationColor: '#166534', backgroundColor: '#dcfce7', display: 'inline' }}>Added</span></span>
                   </div>
                 </div>
               </div>
