@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'wouter';
 import { 
-  PlusCircle, 
   LayoutDashboard, 
   FileText, 
   CheckSquare, 
@@ -9,7 +8,7 @@ import {
   Users,
   Building2
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+
 import { useMediaQuery } from '@/hooks/use-mobile';
 import { Deal } from '@shared/schema';
 
@@ -57,14 +56,7 @@ export default function Sidebar({ recentDeals = [] }: SidebarProps) {
   return (
     <div className="bg-white w-14 md:w-56 border-r border-neutral-200 flex-shrink-0 transition-all duration-300 h-full flex flex-col">
       <div className="p-2 flex-1 overflow-y-auto scrollbar-hide">
-        <Link href="/deals/new">
-          <Button className="w-full flex items-center justify-center md:justify-start px-3 py-2 bg-primary-light text-primary font-medium rounded-md my-2">
-            <PlusCircle className="h-5 w-5 md:mr-2" />
-            <span className="hidden md:inline">New Deal</span>
-          </Button>
-        </Link>
-        
-        <div className="mt-6 space-y-1">
+        <div className="space-y-1">
           {navItems.map(item => (
             <Link 
               key={item.path} 
