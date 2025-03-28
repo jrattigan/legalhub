@@ -6,12 +6,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle } from 'lucide-react';
+import { Deal } from '@shared/schema';
 
 export default function Deals() {
   const [, navigate] = useLocation();
   
   // Get deals data
-  const { data: deals, isLoading: dealsLoading } = useQuery({ 
+  const { data: deals, isLoading: dealsLoading } = useQuery<Deal[]>({ 
     queryKey: ['/api/deals']
   });
 
@@ -48,7 +49,7 @@ export default function Deals() {
               </CardContent>
             </Card>
           ) : (
-            deals.map((deal: any) => (
+            (deals || []).map((deal) => (
               <Card 
                 key={deal.id} 
                 className="cursor-pointer hover:shadow-md transition-shadow" 

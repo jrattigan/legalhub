@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import DealDetail from '@/components/deals/deal-detail';
 import { ChevronLeft } from 'lucide-react';
 import AppLayout from '@/components/layout/app-layout';
+import { Deal, Document, Task, Issue, User, DealCounsel, TimelineEvent } from '@shared/schema';
 
 export default function DealDetailPage() {
   const [, params] = useRoute('/deals/:id');
@@ -13,43 +14,46 @@ export default function DealDetailPage() {
   const dealId = params?.id ? parseInt(params.id) : null;
   
   // Get deal data
-  const { data: deal, isLoading: dealLoading, error: dealError } = useQuery({
+  const { data: deal, isLoading: dealLoading, error: dealError } = useQuery<Deal>({
     queryKey: [`/api/deals/${dealId}`],
     enabled: !!dealId
   });
   
   // Get deal users
-  const { data: dealUsers, isLoading: usersLoading } = useQuery({
+  const { data: dealUsers, isLoading: usersLoading } = useQuery<(DealUser & { user: User })[]>({
     queryKey: [`/api/deals/${dealId}/users`],
     enabled: !!dealId
   });
   
   // Get documents
-  const { data: documents, isLoading: documentsLoading } = useQuery({
+  const { data: documents, isLoading: documentsLoading } = useQuery<(Document & { versions: number })[]>({
     queryKey: [`/api/deals/${dealId}/documents`],
     enabled: !!dealId
   });
   
   // Get tasks
-  const { data: tasks, isLoading: tasksLoading } = useQuery({
+  const { data: tasks, isLoading: tasksLoading } = useQuery<(Task & { assignee?: User })[]>({
     queryKey: [`/api/deals/${dealId}/tasks`],
     enabled: !!dealId
   });
   
   // Get issues
-  const { data: issues, isLoading: issuesLoading } = useQuery({
+  const { data: issues, isLoading: issuesLoading } = useQuery<(Issue & { assignee?: User })[]>({
     queryKey: [`/api/deals/${dealId}/issues`],
     enabled: !!dealId
   });
   
   // Get counsel
-  const { data: counsel, isLoading: counselLoading } = useQuery({
+  const { data: counsel, isLoading: counselLoading } = useQuery<(DealCounsel & { 
+    lawFirm: any, 
+    attorney?: any 
+  })[]>({
     queryKey: [`/api/deals/${dealId}/counsel`],
     enabled: !!dealId
   });
   
   // Get timeline events
-  const { data: timelineEvents, isLoading: timelineLoading } = useQuery({
+  const { data: timelineEvents, isLoading: timelineLoading } = useQuery<TimelineEvent[]>({
     queryKey: [`/api/deals/${dealId}/timeline`],
     enabled: !!dealId
   });
@@ -72,8 +76,16 @@ export default function DealDetailPage() {
     }
   };
   
+  // Define the DealUser interface
+  interface DealUser {
+    id: number;
+    dealId: number;
+    userId: number;
+    role: string;
+  }
+  
   // Format deal users with roles
-  const formattedDealUsers = dealUsers?.map((du: any) => ({
+  const formattedDealUsers = dealUsers?.map((du) => ({
     ...du.user,
     role: du.role
   })) || [];
@@ -91,7 +103,7 @@ export default function DealDetailPage() {
 
   return (
     <AppLayout>
-      <div className="p-6">
+      <div className="p-6 h-full overflow-auto">
         <div className="mb-6">
           <Button 
             variant="ghost" 

@@ -29,7 +29,7 @@ import {
 import { Document, DocumentVersion } from '@shared/schema';
 import { FileUpload } from '@/components/ui/file-upload';
 import { apiRequest } from '@/lib/queryClient';
-import { DocumentCompare } from '@/components/ui/document-compare';
+import { DocumentCompare } from '@/components/ui/document-compare-new';
 import { useToast } from '@/hooks/use-toast';
 
 interface DocumentCardProps {
