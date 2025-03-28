@@ -10,6 +10,7 @@ import DealDetailPage from "@/pages/deal-detail";
 import Documents from "@/pages/documents";
 import Tasks from "@/pages/tasks";
 import Counsel from "@/pages/counsel";
+import Reports from "@/pages/reports";
 import Companies from "@/pages/companies";
 import CompanyDetailPage from "@/pages/company-detail";
 import CompanyDealsPage from "@/pages/company-deals";
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/documents" component={Documents} />
       <Route path="/tasks" component={Tasks} />
       <Route path="/counsel" component={Counsel} />
+      <Route path="/reports" component={Reports} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>

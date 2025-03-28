@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import AppHeader from '@/components/layout/app-header';
-import Sidebar from '@/components/layout/sidebar';
+import AppLayout from '@/components/layout/app-layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -53,11 +52,6 @@ export default function Counsel() {
   const [isAttorneyDialogOpen, setIsAttorneyDialogOpen] = useState(false);
   const [selectedFirmId, setSelectedFirmId] = useState<number | null>(null);
   const queryClient = useQueryClient();
-  
-  // Get current user
-  const { data: user } = useQuery({ 
-    queryKey: ['/api/users/1'] 
-  });
   
   // Get all law firms
   const { data: lawFirms, isLoading: firmsLoading } = useQuery({ 
@@ -171,433 +165,420 @@ export default function Counsel() {
   };
   
   return (
-    <div className="min-h-screen flex flex-col">
-      <AppHeader user={user} notifications={2} />
-      
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar recentDeals={[]} />
-        
-        <div className="flex-1 overflow-y-auto bg-neutral-50 p-6 h-[calc(100vh-4rem)]">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-neutral-800">Outside Counsel</h1>
-            <div className="flex space-x-2">
-              <Dialog open={isLawFirmDialogOpen} onOpenChange={setIsLawFirmDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Add Law Firm
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Law Firm</DialogTitle>
-                    <DialogDescription>
-                      Enter the details of the law firm you want to add.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <Form {...lawFirmForm}>
-                    <form onSubmit={lawFirmForm.handleSubmit(handleSubmitLawFirm)} className="space-y-4">
-                      <FormField
-                        control={lawFirmForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Firm Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter firm name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={lawFirmForm.control}
-                        name="specialty"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Specialty</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. Corporate Securities, IP Law" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={lawFirmForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Contact email" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={lawFirmForm.control}
-                        name="phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Phone</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Contact phone number" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <DialogFooter>
-                        <Button 
-                          type="submit" 
-                          disabled={lawFirmMutation.isPending}
-                        >
-                          {lawFirmMutation.isPending ? 'Saving...' : 'Save Law Firm'}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-              
-              <Dialog open={isAttorneyDialogOpen} onOpenChange={setIsAttorneyDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <User className="h-4 w-4 mr-2" />
-                    Add Attorney
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Attorney</DialogTitle>
-                    <DialogDescription>
-                      Enter the details of the attorney you want to add.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <Form {...attorneyForm}>
-                    <form onSubmit={attorneyForm.handleSubmit(handleSubmitAttorney)} className="space-y-4">
-                      <FormField
-                        control={attorneyForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Full Name</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="Enter full name" 
-                                {...field} 
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  handleAttorneyNameChange(e.target.value);
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={attorneyForm.control}
-                          name="position"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Position</FormLabel>
-                              <Select 
-                                onValueChange={field.onChange} 
-                                defaultValue={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select position" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="Partner">Partner</SelectItem>
-                                  <SelectItem value="Senior Associate">Senior Associate</SelectItem>
-                                  <SelectItem value="Associate">Associate</SelectItem>
-                                  <SelectItem value="Junior Associate">Junior Associate</SelectItem>
-                                  <SelectItem value="Of Counsel">Of Counsel</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={attorneyForm.control}
-                          name="initials"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Initials</FormLabel>
-                              <FormControl>
-                                <Input maxLength={2} {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <FormField
-                        control={attorneyForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Email address" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={attorneyForm.control}
-                        name="phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Phone</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Phone number" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={attorneyForm.control}
-                        name="avatarColor"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Avatar Color</FormLabel>
-                            <div className="flex space-x-2">
-                              {avatarColors.map((color) => (
-                                <div 
-                                  key={color}
-                                  className={`w-8 h-8 rounded-full cursor-pointer border-2 ${
-                                    field.value === color ? 'border-primary' : 'border-transparent'
-                                  }`}
-                                  style={{ backgroundColor: color }}
-                                  onClick={() => attorneyForm.setValue('avatarColor', color)}
-                                />
-                              ))}
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <DialogFooter>
-                        <Button 
-                          type="submit" 
-                          disabled={attorneyMutation.isPending || !selectedFirmId}
-                        >
-                          {attorneyMutation.isPending ? 'Saving...' : 'Save Attorney'}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-          
-          <Card className="mb-6">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-400" />
-                  <Input 
-                    placeholder="Search law firms or attorneys..." 
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Tabs defaultValue="firms" className="space-y-4" onValueChange={(value) => setCurrentTab(value)}>
-            <TabsList>
-              <TabsTrigger value="firms">Law Firms</TabsTrigger>
-              <TabsTrigger value="attorneys">Attorneys</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="firms">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Outside Counsel Firms</CardTitle>
-                  <CardDescription>List of law firms your organization works with</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {firmsLoading ? (
-                    <div className="text-center py-8">
-                      <div className="w-8 h-8 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin inline-block mb-2"></div>
-                      <p>Loading law firms...</p>
-                    </div>
-                  ) : filteredLawFirms.length === 0 ? (
-                    <div className="text-center py-8 text-neutral-500">
-                      <Users className="h-12 w-12 mx-auto mb-4 text-neutral-300" />
-                      <h3 className="text-lg font-medium mb-1">No law firms found</h3>
-                      <p className="mb-4">Add your first law firm to get started</p>
-                      <Button onClick={() => setIsLawFirmDialogOpen(true)}>
-                        <PlusCircle className="h-4 w-4 mr-2" />
-                        Add Law Firm
+    <AppLayout>
+      <div className="overflow-y-auto bg-neutral-50 p-6 h-[calc(100vh-4rem)]">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-neutral-800">Outside Counsel</h1>
+          <div className="flex space-x-2">
+            <Dialog open={isLawFirmDialogOpen} onOpenChange={setIsLawFirmDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Add Law Firm
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Law Firm</DialogTitle>
+                  <DialogDescription>
+                    Enter the details of the law firm you want to add.
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...lawFirmForm}>
+                  <form onSubmit={lawFirmForm.handleSubmit(handleSubmitLawFirm)} className="space-y-4">
+                    <FormField
+                      control={lawFirmForm.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Firm Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter firm name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={lawFirmForm.control}
+                      name="specialty"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Specialty</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. Corporate Securities, IP Law" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={lawFirmForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Contact email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={lawFirmForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Contact phone number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <DialogFooter>
+                      <Button 
+                        type="submit" 
+                        disabled={lawFirmMutation.isPending}
+                      >
+                        {lawFirmMutation.isPending ? 'Saving...' : 'Save Law Firm'}
                       </Button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {filteredLawFirms.map((firm: LawFirm) => (
-                        <Card 
-                          key={firm.id} 
-                          className="cursor-pointer hover:shadow-md transition-shadow"
-                          onClick={() => {
-                            setSelectedFirmId(firm.id);
-                            setCurrentTab('attorneys');
-                          }}
-                        >
-                          <CardContent className="p-4">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-full bg-primary-light flex items-center justify-center mr-3">
-                                <Users className="h-5 w-5 text-primary" />
-                              </div>
-                              <div>
-                                <h3 className="font-medium">{firm.name}</h3>
-                                <p className="text-sm text-neutral-500">{firm.specialty}</p>
-                              </div>
-                            </div>
-                            
-                            <div className="mt-3 text-sm text-neutral-600">
-                              {firm.email && (
-                                <div className="flex items-center mt-1">
-                                  <Mail className="h-4 w-4 mr-2 text-neutral-400" />
-                                  <span>{firm.email}</span>
-                                </div>
-                              )}
-                              {firm.phone && (
-                                <div className="flex items-center mt-1">
-                                  <Phone className="h-4 w-4 mr-2 text-neutral-400" />
-                                  <span>{firm.phone}</span>
-                                </div>
-                              )}
-                            </div>
-                            
-                            <div className="mt-3 pt-3 border-t border-neutral-200 flex justify-between items-center">
-                              <span className="text-xs text-neutral-500">Click to view attorneys</span>
-                              <Button variant="ghost" size="sm" className="h-8 px-2">
-                                View
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
             
-            <TabsContent value="attorneys">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <div>
-                    <CardTitle>Attorneys</CardTitle>
-                    <CardDescription>
-                      {selectedFirmId 
-                        ? `Attorneys from ${lawFirms?.find((f: LawFirm) => f.id === selectedFirmId)?.name || 'selected firm'}`
-                        : 'Select a law firm to view its attorneys'
-                      }
-                    </CardDescription>
+            <Dialog open={isAttorneyDialogOpen} onOpenChange={setIsAttorneyDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <User className="h-4 w-4 mr-2" />
+                  Add Attorney
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Attorney</DialogTitle>
+                  <DialogDescription>
+                    Enter the details of the attorney you want to add.
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...attorneyForm}>
+                  <form onSubmit={attorneyForm.handleSubmit(handleSubmitAttorney)} className="space-y-4">
+                    <FormField
+                      control={attorneyForm.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full Name</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Enter full name" 
+                              {...field} 
+                              onChange={(e) => {
+                                field.onChange(e);
+                                handleAttorneyNameChange(e.target.value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={attorneyForm.control}
+                        name="position"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Position</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select position" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="Partner">Partner</SelectItem>
+                                <SelectItem value="Senior Associate">Senior Associate</SelectItem>
+                                <SelectItem value="Associate">Associate</SelectItem>
+                                <SelectItem value="Junior Associate">Junior Associate</SelectItem>
+                                <SelectItem value="Of Counsel">Of Counsel</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={attorneyForm.control}
+                        name="initials"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Initials</FormLabel>
+                            <FormControl>
+                              <Input maxLength={2} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={attorneyForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Email address" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={attorneyForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Phone number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={attorneyForm.control}
+                      name="avatarColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Avatar Color</FormLabel>
+                          <div className="flex space-x-2">
+                            {avatarColors.map((color) => (
+                              <div 
+                                key={color}
+                                className={`w-8 h-8 rounded-full cursor-pointer border-2 ${
+                                  field.value === color ? 'border-primary' : 'border-transparent'
+                                }`}
+                                style={{ backgroundColor: color }}
+                                onClick={() => attorneyForm.setValue('avatarColor', color)}
+                              />
+                            ))}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <DialogFooter>
+                      <Button 
+                        type="submit" 
+                        disabled={attorneyMutation.isPending || !selectedFirmId}
+                      >
+                        {attorneyMutation.isPending ? 'Saving...' : 'Save Attorney'}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+        
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input 
+              placeholder="Search law firms and attorneys..." 
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+        
+        <Tabs value={currentTab} onValueChange={setCurrentTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="firms">Law Firms</TabsTrigger>
+            <TabsTrigger value="attorneys">Attorneys</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="firms">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl">Law Firms</CardTitle>
+                <CardDescription>
+                  Manage outside counsel firms and their information
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {firmsLoading ? (
+                  <div className="py-20 text-center">
+                    <div className="w-12 h-12 border-4 border-t-primary border-primary/30 rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-neutral-500">Loading law firms...</p>
                   </div>
-                  {selectedFirmId && (
+                ) : filteredLawFirms.length === 0 ? (
+                  <div className="py-20 text-center">
+                    <Users className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
+                    <h3 className="font-medium text-lg mb-2">No law firms found</h3>
+                    <p className="text-neutral-500 mb-6">
+                      {searchTerm ? `No results matching "${searchTerm}"` : "You haven't added any law firms yet"}
+                    </p>
+                    <Button onClick={() => setIsLawFirmDialogOpen(true)}>
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Add Law Firm
+                    </Button>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Firm Name</TableHead>
+                        <TableHead>Specialty</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredLawFirms.map((firm: LawFirm) => (
+                        <TableRow key={firm.id}>
+                          <TableCell className="font-medium">{firm.name}</TableCell>
+                          <TableCell>{firm.specialty}</TableCell>
+                          <TableCell>{firm.email}</TableCell>
+                          <TableCell>{firm.phone || '—'}</TableCell>
+                          <TableCell className="text-right space-x-2">
+                            <Button variant="outline" size="sm" onClick={() => setSelectedFirmId(firm.id)}>
+                              View Attorneys
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Mail className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Phone className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="attorneys">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl">Attorneys</CardTitle>
+                <CardDescription>
+                  {selectedFirmId && lawFirms ? 
+                    `Attorneys at ${lawFirms.find((f: LawFirm) => f.id === selectedFirmId)?.name}` : 
+                    'Select a law firm to view its attorneys'
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {!selectedFirmId ? (
+                  <div className="py-20 text-center">
+                    <User className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
+                    <h3 className="font-medium text-lg mb-2">No law firm selected</h3>
+                    <p className="text-neutral-500 mb-6">
+                      Please select a law firm to view its attorneys
+                    </p>
+                    <Select onValueChange={(value) => setSelectedFirmId(Number(value))}>
+                      <SelectTrigger className="w-[280px] mx-auto">
+                        <SelectValue placeholder="Select a law firm" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {lawFirms?.map((firm: LawFirm) => (
+                          <SelectItem key={firm.id} value={firm.id.toString()}>
+                            {firm.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : attorneysLoading ? (
+                  <div className="py-20 text-center">
+                    <div className="w-12 h-12 border-4 border-t-primary border-primary/30 rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-neutral-500">Loading attorneys...</p>
+                  </div>
+                ) : !attorneys || attorneys.length === 0 ? (
+                  <div className="py-20 text-center">
+                    <User className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
+                    <h3 className="font-medium text-lg mb-2">No attorneys found</h3>
+                    <p className="text-neutral-500 mb-6">
+                      This law firm doesn't have any attorneys yet
+                    </p>
                     <Button 
-                      variant="outline" 
-                      size="sm"
                       onClick={() => setIsAttorneyDialogOpen(true)}
+                      disabled={!selectedFirmId}
                     >
                       <PlusCircle className="h-4 w-4 mr-2" />
                       Add Attorney
                     </Button>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  {!selectedFirmId ? (
-                    <div className="text-center py-8 text-neutral-500">
-                      <User className="h-12 w-12 mx-auto mb-4 text-neutral-300" />
-                      <h3 className="text-lg font-medium mb-1">No firm selected</h3>
-                      <p className="mb-4">Select a law firm to view its attorneys</p>
-                    </div>
-                  ) : attorneysLoading ? (
-                    <div className="text-center py-8">
-                      <div className="w-8 h-8 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin inline-block mb-2"></div>
-                      <p>Loading attorneys...</p>
-                    </div>
-                  ) : attorneys?.length === 0 ? (
-                    <div className="text-center py-8 text-neutral-500">
-                      <User className="h-12 w-12 mx-auto mb-4 text-neutral-300" />
-                      <h3 className="text-lg font-medium mb-1">No attorneys found</h3>
-                      <p className="mb-4">Add attorneys to this law firm</p>
-                      <Button onClick={() => setIsAttorneyDialogOpen(true)}>
-                        <PlusCircle className="h-4 w-4 mr-2" />
-                        Add Attorney
-                      </Button>
-                    </div>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Position</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Phone</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Position</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {attorneys?.map((attorney: Attorney) => (
+                        <TableRow key={attorney.id}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center">
+                              <Avatar className="h-8 w-8 mr-2" style={{ backgroundColor: attorney.avatarColor }}>
+                                <AvatarFallback>{attorney.initials}</AvatarFallback>
+                              </Avatar>
+                              {attorney.name}
+                            </div>
+                          </TableCell>
+                          <TableCell>{attorney.position}</TableCell>
+                          <TableCell>{attorney.email}</TableCell>
+                          <TableCell>{attorney.phone || '—'}</TableCell>
+                          <TableCell className="text-right space-x-2">
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Mail className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Phone className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {attorneys?.map((attorney: Attorney) => (
-                          <TableRow key={attorney.id}>
-                            <TableCell className="font-medium">
-                              <div className="flex items-center">
-                                <Avatar className="h-8 w-8 mr-2" style={{ backgroundColor: attorney.avatarColor }}>
-                                  <AvatarFallback>{attorney.initials}</AvatarFallback>
-                                </Avatar>
-                                {attorney.name}
-                              </div>
-                            </TableCell>
-                            <TableCell>{attorney.position}</TableCell>
-                            <TableCell>{attorney.email}</TableCell>
-                            <TableCell>{attorney.phone || '—'}</TableCell>
-                            <TableCell className="text-right space-x-2">
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Mail className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Phone className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-    </div>
+    </AppLayout>
   );
 }
