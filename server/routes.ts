@@ -224,11 +224,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      // Log the incoming request body for debugging
+      console.log("Update deal request for deal ID:", id);
+      console.log("Request body:", JSON.stringify(req.body));
+      
       // Ensure dueDate is properly converted to a Date object if it exists
       const data = req.body;
       if (data.dueDate && !(data.dueDate instanceof Date)) {
         data.dueDate = new Date(data.dueDate);
       }
+      
+      // Make sure companyId is a number
+      if (data.companyId && typeof data.companyId === 'string') {
+        data.companyId = parseInt(data.companyId);
+      }
+      
+      console.log("Processed data:", JSON.stringify(data));
       
       // Use a custom schema for validation
       const validatedData = z.object({
@@ -242,10 +253,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         amount: z.string().nullable().optional()
       }).parse(data);
       
+      console.log("Validated data:", JSON.stringify(validatedData));
+      
       const updatedDeal = await storage.updateDeal(id, validatedData);
       if (!updatedDeal) {
         return res.status(404).json({ message: "Deal not found" });
       }
+      
+      console.log("Updated deal:", JSON.stringify(updatedDeal));
       
       res.json(updatedDeal);
     } catch (error) {
