@@ -42,6 +42,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CompanySelect } from '@/components/ui/company-select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Deal, User, Document, Task, Issue, LawFirm, Attorney, TimelineEvent } from '@shared/schema';
@@ -104,7 +105,8 @@ export default function DealDetail({
   const [editDealForm, setEditDealForm] = useState({
     title: deal.title,
     description: deal.description || '',
-    company: deal.companyName,
+    companyId: deal.companyId,
+    companyName: deal.companyName,
     amount: deal.amount || '',
     status: deal.status,
     dueDate: deal.dueDate ? new Date(deal.dueDate).toISOString().split('T')[0] : ''
@@ -126,7 +128,8 @@ export default function DealDetail({
     mutationFn: async (updatedDeal: {
       title: string;
       description: string | null;
-      company: string;
+      companyId: number;
+      companyName: string;
       amount: string | null;
       status: string;
       dueDate: string | null;
@@ -135,7 +138,8 @@ export default function DealDetail({
       const apiPayload = {
         title: updatedDeal.title,
         description: updatedDeal.description,
-        companyName: updatedDeal.company,
+        companyId: updatedDeal.companyId,
+        companyName: updatedDeal.companyName,
         amount: updatedDeal.amount,
         status: updatedDeal.status,
         dueDate: updatedDeal.dueDate ? new Date(updatedDeal.dueDate) : null
@@ -265,14 +269,20 @@ export default function DealDetail({
                 <Label htmlFor="company" className="text-right">
                   Company
                 </Label>
-                <Input
-                  id="company"
-                  name="company"
-                  value={editDealForm.company}
-                  onChange={handleFormChange}
-                  className="col-span-3"
-                  required
-                />
+                <div className="col-span-3">
+                  <CompanySelect
+                    value={editDealForm.companyId}
+                    displayValue={editDealForm.companyName}
+                    onValueChange={(companyId, companyName) => {
+                      setEditDealForm({
+                        ...editDealForm,
+                        companyId,
+                        companyName
+                      });
+                    }}
+                    placeholder="Select a company"
+                  />
+                </div>
               </div>
               
               <div className="grid grid-cols-4 items-center gap-4">
