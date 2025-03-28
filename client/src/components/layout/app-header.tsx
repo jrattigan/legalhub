@@ -7,11 +7,12 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { User } from '@shared/schema';
 
 interface AppHeaderProps {
+  title?: string;
   user?: User;
   notifications?: number;
 }
 
-export default function AppHeader({ user, notifications = 0 }: AppHeaderProps) {
+export default function AppHeader({ title, user, notifications = 0 }: AppHeaderProps) {
   const [location] = useLocation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -27,7 +28,7 @@ export default function AppHeader({ user, notifications = 0 }: AppHeaderProps) {
     <header className="bg-white border-b border-neutral-200 h-16 flex items-center px-4 justify-between z-10 shadow-sm">
       <div className="flex items-center space-x-4">
         <Link href="/dashboard" className="font-bold text-gradient text-xl cursor-pointer">
-          LegalDeal
+          {title || "LegalDeal"}
         </Link>
 
         <div className="hidden md:flex items-center space-x-1">
@@ -107,7 +108,7 @@ export default function AppHeader({ user, notifications = 0 }: AppHeaderProps) {
             <SheetContent side="right" className="w-[280px] sm:w-[320px] border-l-neutral-200">
               <div className="py-4 space-y-6">
                 <Link href="/dashboard" className="font-bold text-gradient text-xl px-2">
-                  LegalDeal
+                  {title || "LegalDeal"}
                 </Link>
                 <nav className="flex flex-col space-y-1">
                   {navItems.map((item) => (

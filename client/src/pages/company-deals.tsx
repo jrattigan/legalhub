@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Building2, ArrowLeft, Calendar, CircleDollarSign, ExternalLink, FileText, PlusCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "wouter";
+import AppHeader from "@/components/layout/app-header";
+import Sidebar from "@/components/layout/sidebar";
 
 interface Company {
   id: number;
@@ -55,28 +57,46 @@ export default function CompanyDealsPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate("/companies")}
-            className="mr-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <div className="h-6 w-40 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
-        </div>
-        <div className="grid grid-cols-1 gap-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader className="h-16 bg-gray-200 dark:bg-gray-800" />
-              <CardContent className="p-6">
-                <div className="h-4 w-2/3 bg-gray-200 dark:bg-gray-800 rounded mb-3" />
-                <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-800 rounded" />
-              </CardContent>
-            </Card>
-          ))}
+      <div className="flex h-screen bg-neutral-50">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <AppHeader 
+            title="Company Deals" 
+            user={{
+              fullName: "John Doe",
+              email: "jdoe@company.com",
+              initials: "JD",
+              avatarColor: "#22c55e",
+              username: "jdoe",
+              password: "",
+              id: 1,
+              role: "General Counsel"
+            }}
+          />
+          <div className="flex-1 overflow-auto p-6">
+            <div className="flex items-center mb-6">
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate("/companies")}
+                className="mr-4"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+              <div className="h-6 w-40 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardHeader className="h-16 bg-gray-200 dark:bg-gray-800" />
+                  <CardContent className="p-6">
+                    <div className="h-4 w-2/3 bg-gray-200 dark:bg-gray-800 rounded mb-3" />
+                    <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-800 rounded" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -85,49 +105,83 @@ export default function CompanyDealsPage() {
   // Error state for company
   if (!company) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate("/companies")}
-            className="mr-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-2xl font-bold">Company Not Found</h1>
+      <div className="flex h-screen bg-neutral-50">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <AppHeader 
+            title="Company Not Found" 
+            user={{
+              fullName: "John Doe",
+              email: "jdoe@company.com",
+              initials: "JD",
+              avatarColor: "#22c55e",
+              username: "jdoe",
+              password: "",
+              id: 1,
+              role: "General Counsel"
+            }}
+          />
+          <div className="flex-1 overflow-auto p-6">
+            <div className="flex items-center mb-6">
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate("/companies")}
+                className="mr-4"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+              <h1 className="text-2xl font-bold">Company Not Found</h1>
+            </div>
+            <Card>
+              <CardContent className="p-6 text-center">
+                <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-lg mb-4">
+                  The company you're looking for could not be found.
+                </p>
+                <Button onClick={() => navigate("/companies")}>Go Back to Companies</Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-        <Card>
-          <CardContent className="p-6 text-center">
-            <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-lg mb-4">
-              The company you're looking for could not be found.
-            </p>
-            <Button onClick={() => navigate("/companies")}>Go Back to Companies</Button>
-          </CardContent>
-        </Card>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6">
-      {/* Header with back button */}
-      <div className="flex items-center mb-6">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate("/companies")}
-          className="mr-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
-        <h1 className="text-2xl font-bold flex items-center">
-          {company.displayName}
-          <span className="mx-2">-</span>
-          <span className="text-muted-foreground font-normal">Deals</span>
-        </h1>
-      </div>
+    <div className="flex h-screen bg-neutral-50">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <AppHeader 
+          title={`${company.displayName} - Deals`}
+          user={{
+            fullName: "John Doe",
+            email: "jdoe@company.com",
+            initials: "JD",
+            avatarColor: "#22c55e",
+            username: "jdoe",
+            password: "",
+            id: 1,
+            role: "General Counsel"
+          }}
+        />
+        <div className="flex-1 overflow-auto p-6">
+          {/* Header with back button */}
+          <div className="flex items-center mb-6">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate("/companies")}
+              className="mr-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <h1 className="text-2xl font-bold flex items-center">
+              {company.displayName}
+              <span className="mx-2">-</span>
+              <span className="text-muted-foreground font-normal">Deals</span>
+            </h1>
+          </div>
 
       {/* Company summary card */}
       <Card className="mb-6">
@@ -239,6 +293,8 @@ export default function CompanyDealsPage() {
           ))}
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 }

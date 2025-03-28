@@ -304,7 +304,7 @@ export class MemStorage implements IStorage {
       createdAt: now4,
       updatedAt: now4,
       url: company1.url || null,
-      bcvTeam: company1.bcvTeam || []
+      bcvTeam: Array.isArray(company1.bcvTeam) ? company1.bcvTeam : []
     };
     this.companies.set(companyId1, createdCompany1);
     
@@ -315,7 +315,7 @@ export class MemStorage implements IStorage {
       createdAt: now4,
       updatedAt: now4,
       url: company2.url || null,
-      bcvTeam: company2.bcvTeam || []
+      bcvTeam: Array.isArray(company2.bcvTeam) ? company2.bcvTeam : []
     };
     this.companies.set(companyId2, createdCompany2);
     
@@ -326,7 +326,7 @@ export class MemStorage implements IStorage {
       createdAt: now4,
       updatedAt: now4,
       url: company3.url || null,
-      bcvTeam: company3.bcvTeam || []
+      bcvTeam: Array.isArray(company3.bcvTeam) ? company3.bcvTeam : []
     };
     this.companies.set(companyId3, createdCompany3);
     
@@ -824,11 +824,17 @@ export class MemStorage implements IStorage {
     const company = await this.getCompany(id);
     if (!company) return undefined;
 
+    // Handle bcvTeam explicitly to ensure proper typing
+    const bcvTeam = companyUpdate.bcvTeam !== undefined 
+      ? (Array.isArray(companyUpdate.bcvTeam) ? companyUpdate.bcvTeam : []) 
+      : company.bcvTeam;
+
     const updatedCompany: Company = {
       ...company,
       ...companyUpdate,
       id,
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      bcvTeam
     };
     this.companies.set(id, updatedCompany);
     return updatedCompany;
