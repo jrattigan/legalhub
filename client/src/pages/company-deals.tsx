@@ -102,8 +102,8 @@ export default function CompanyDealsPage() {
     );
   }
 
-  // Fetch user data for error state
-  const { data: errorUser } = useQuery({
+  // Fetch user data
+  const { data: user } = useQuery({
     queryKey: ['/api/users/1'],
     retry: 1,
   });
@@ -112,7 +112,7 @@ export default function CompanyDealsPage() {
   if (!company) {
     return (
       <div className="min-h-screen flex flex-col">
-        <AppHeader user={errorUser} notifications={2} />
+        <AppHeader user={user} notifications={2} />
         
         <div className="flex-1 flex overflow-hidden">
           <Sidebar />
@@ -142,12 +142,6 @@ export default function CompanyDealsPage() {
       </div>
     );
   }
-
-    // Fetch user data
-  const { data: user } = useQuery({
-    queryKey: ['/api/users/1'],
-    retry: 1,
-  });
 
   return (
     <div className="min-h-screen flex flex-col">
