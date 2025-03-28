@@ -17,12 +17,14 @@
 }
 
 /* Microsoft Word track changes style for additions and deletions */
-.document-compare span[style*="background-color: #dcfce7"],
-.document-content span[style*="background-color: #dcfce7"] {
-  background-color: #dcfce7 !important; /* Word add color */
-  color: #166534 !important;
-  padding: 1px 0 !important; /* More subtle padding like in MS Word */
-  text-decoration: none !important;
+/* New styling for added text - using underline like Word */
+.document-compare span[style*="color: #166534"],
+.document-content span[style*="color: #166534"] {
+  color: #166534 !important; /* Word add color (green) */
+  text-decoration: underline !important;
+  text-decoration-color: #166534 !important;
+  padding: 0 !important; /* No padding to be exactly like Word */
+  background-color: transparent !important; /* Word doesn't use background */
   display: inline !important; /* Changed to inline for better text flow */
   font-family: 'Calibri', 'Arial', sans-serif !important;
   font-size: 11pt !important;
@@ -32,18 +34,53 @@
   vertical-align: baseline !important;
 }
 
-.document-compare span[style*="background-color: #fee2e2"],
-.document-content span[style*="background-color: #fee2e2"] {
-  background-color: #fee2e2 !important; /* Word delete color */
-  color: #991b1b !important;
-  padding: 1px 0 !important; /* More subtle padding like in MS Word */
+/* New styling for removed text - using strikethrough like Word */
+.document-compare span[style*="color: #991b1b"],
+.document-content span[style*="color: #991b1b"] {
+  color: #991b1b !important; /* Word delete color (red) */
   text-decoration: line-through !important;
+  text-decoration-color: #991b1b !important;
+  padding: 0 !important; /* No padding to be exactly like Word */
+  background-color: transparent !important; /* Word doesn't use background */
   display: inline !important; /* Changed to inline for better text flow */
   font-family: 'Calibri', 'Arial', sans-serif !important;
   font-size: 11pt !important;
   line-height: inherit !important; /* Use inherited line height to maintain flow */
   margin: 0 !important;
   border-radius: 0 !important; /* MS Word doesn't use rounded corners */
+  vertical-align: baseline !important;
+}
+
+/* Legacy styling for backward compatibility */
+.document-compare span[style*="background-color: #dcfce7"],
+.document-content span[style*="background-color: #dcfce7"] {
+  background-color: transparent !important; /* Remove background */
+  color: #166534 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #166534 !important;
+  padding: 0 !important;
+  display: inline !important;
+  font-family: 'Calibri', 'Arial', sans-serif !important;
+  font-size: 11pt !important;
+  line-height: inherit !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  vertical-align: baseline !important;
+}
+
+.document-compare span[style*="background-color: #fee2e2"],
+.document-content span[style*="background-color: #fee2e2"] {
+  background-color: transparent !important; /* Remove background */
+  color: #991b1b !important;
+  text-decoration: line-through !important;
+  text-decoration-color: #991b1b !important;
+  padding: 0 !important;
+  display: inline !important;
+  font-family: 'Calibri', 'Arial', sans-serif !important;
+  font-size: 11pt !important;
+  line-height: inherit !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
   vertical-align: baseline !important;
 }
 
@@ -189,15 +226,19 @@
 
 /* Styles for the diff view */
 .document-content ins {
-  background-color: #e6ffec;
-  text-decoration: none;
-  padding: 1px 0;
+  background-color: transparent;
+  color: #166534;
+  text-decoration: underline;
+  text-decoration-color: #166534;
+  padding: 0;
 }
 
 .document-content del {
-  background-color: #ffebe9;
+  background-color: transparent;
+  color: #991b1b;
   text-decoration: line-through;
-  padding: 1px 0;
+  text-decoration-color: #991b1b;
+  padding: 0;
 }
 
 @layer base {

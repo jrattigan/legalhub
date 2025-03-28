@@ -38,7 +38,7 @@ export async function generateDocumentComparison(
     if ((olderVersion.fileName === 'test1.docx' && newerVersion.fileName === 'test2.docx') ||
         (olderVersion.fileName === 'test2.docx' && newerVersion.fileName === 'test1.docx')) {
       
-      // Sample content for test documents - improved for SAFE term sheet
+      // Sample content for test documents - structured like a real Word document with SAFE term sheet
       const test1Content = `SIMPLE AGREEMENT FOR FUTURE EQUITY 
 
 INDICATIVE TERM SHEET
@@ -96,31 +96,67 @@ By: ____________                       By: ____________
       // Create simple diff with words and apply proper formatting
       const changes = diff.diffWords(actualOldContent, actualNewContent);
       
-      // Build HTML content with proper styling
+      // Build HTML content with Microsoft Word-like track changes styling
       let diffContent = '';
+      
+      // Helper function to convert content with proper Microsoft Word-like styling
+      const formatSection = (content: string) => {
+        // Format document structure with proper indentation and spacing
+        let formattedContent = content;
+        
+        // Add Word-like styling to headings (all caps text at the beginning)
+        formattedContent = formattedContent.replace(/^(SIMPLE AGREEMENT FOR FUTURE EQUITY)$/m, 
+          '<h1 style="font-family: \'Calibri\', \'Arial\', sans-serif; font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 12pt; margin-top: 0;">$1</h1>');
+        
+        formattedContent = formattedContent.replace(/^(INDICATIVE TERM SHEET)$/m, 
+          '<h2 style="font-family: \'Calibri\', \'Arial\', sans-serif; font-size: 14pt; font-weight: bold; text-align: center; margin-bottom: 15pt;">$1</h2>');
+        
+        // Format date line with proper spacing
+        formattedContent = formattedContent.replace(/^(September \d{1,2}, 2024)$/m, 
+          '<p style="font-family: \'Calibri\', \'Arial\', sans-serif; font-size: 11pt; margin-bottom: 15pt;">$1</p>');
+        
+        // Format sections with labels and indentation
+        const sectionLabels = ['Investment:', 'Security:', 'Valuation cap:', 'Other Rights:'];
+        
+        for (const label of sectionLabels) {
+          const regex = new RegExp(`(${label})([^\\n]+(?:\\n(?!\\n).*?)*)`, 'g');
+          formattedContent = formattedContent.replace(regex, 
+            `<div style="margin-bottom: 15pt;">
+              <span style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">$1</span>
+              <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">$2</div>
+            </div>`);
+        }
+        
+        return formattedContent;
+      };
+      
+      // Process each part with Word-like track changes styling
       for (const part of changes) {
         if (part.added) {
-          diffContent += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline;">${part.value}</span>`;
+          // Added text - green with Word-like styling (underline instead of background)
+          diffContent += `<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">${part.value}</span>`;
         } else if (part.removed) {
-          diffContent += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline;">${part.value}</span>`;
+          // Removed text - red with Word-like styling (strikethrough without background)
+          diffContent += `<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">${part.value}</span>`;
         } else {
+          // Unchanged text
           diffContent += part.value;
         }
       }
       
-      // Convert newlines to breaks for proper HTML display
-      diffContent = diffContent.replace(/\n/g, '<br>');
+      // Apply our Word-like formatting to the content
+      const formattedContent = formatSection(diffContent);
       
-      // Generate the final HTML with legend
+      // Generate the final HTML with legend and Word-like styling
       diffHtml = `
-      <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
+      <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
         <div class="full-document-with-changes">
-          <div class="legend" style="margin-bottom: 12px; font-size: 11px; color: #666;">
-            <div style="margin-bottom: 4px;"><span style="background-color: #fee2e2; color: #b91c1c; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline;">Red</span>: Removed content</div>
-            <div><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline;">Green</span>: Added content</div>
+          <div class="legend" style="margin-bottom: 16px; font-size: 11px; color: #666;">
+            <div style="margin-bottom: 4px;"><span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Red with strikethrough</span>: Removed content</div>
+            <div><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Green with underline</span>: Added content</div>
           </div>
           <div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">
-            ${diffContent}
+            ${formattedContent}
           </div>
         </div>
       </div>`;
@@ -132,13 +168,15 @@ By: ____________                       By: ____________
       const hasDifferences = changes.some(part => part.added || part.removed);
       
       if (hasDifferences) {
-        // Process content with proper styling
+        // Process content with Word-like styling
         let processedContent = '';
         for (const part of changes) {
           if (part.added) {
-            processedContent += `<span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline;">${part.value}</span>`;
+            // Added text - green with Word-like styling (underline instead of background)
+            processedContent += `<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">${part.value}</span>`;
           } else if (part.removed) {
-            processedContent += `<span style="background-color: #fee2e2; color: #991b1b; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline;">${part.value}</span>`;
+            // Removed text - red with Word-like styling (strikethrough without background)
+            processedContent += `<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">${part.value}</span>`;
           } else {
             processedContent += part.value;
           }
@@ -156,16 +194,16 @@ By: ____________                       By: ____________
           formattedContent = `<p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 10pt;">${processedContent}</p>`;
         }
         
-        // Create document with title and content
+        // Create document with title and content - using Word-like styling
         diffHtml = `
-        <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
+        <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
           <div class="full-document-with-changes">
-            <div class="legend" style="margin-bottom: 12px; font-size: 11px; color: #666;">
-              <div style="margin-bottom: 4px;"><span style="background-color: #fee2e2; color: #b91c1c; padding: 2px 4px; text-decoration: line-through; border-radius: 2px; display: inline;">Red</span>: Removed content</div>
-              <div><span style="background-color: #dcfce7; color: #166534; padding: 2px 4px; border-radius: 2px; display: inline;">Green</span>: Added content</div>
+            <div class="legend" style="margin-bottom: 16px; font-size: 11px; color: #666;">
+              <div style="margin-bottom: 4px;"><span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; display: inline;">Red with strikethrough</span>: Removed content</div>
+              <div><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; display: inline;">Green with underline</span>: Added content</div>
             </div>
             <div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">
-              <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 12pt;">${newerVersion.fileName.toUpperCase()}</h1>
+              <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 24pt;">${newerVersion.fileName}</h1>
               ${formattedContent}
             </div>
           </div>
