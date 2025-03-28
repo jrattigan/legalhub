@@ -81,10 +81,16 @@ export function DocumentCompare({
     if (!content) return content;
     
     // Remove redundant legend if present
-    content = content.replace(
-      /<div class="legend".*?<\/div><\/div>/s,
-      '</div>'
-    );
+    if (content.includes('<div class="legend"')) {
+      // Simple string replacement instead of using regex with 's' flag
+      const startIndex = content.indexOf('<div class="legend"');
+      if (startIndex !== -1) {
+        const endIndex = content.indexOf('</div></div>', startIndex);
+        if (endIndex !== -1) {
+          content = content.substring(0, startIndex) + '</div>' + content.substring(endIndex + 12);
+        }
+      }
+    }
     
     return content;
   };

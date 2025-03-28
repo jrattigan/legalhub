@@ -99,10 +99,6 @@ export async function generateDocumentComparison(
       return `
       <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
         <div class="full-document-with-changes">
-          <div class="legend" style="margin-bottom: 16px; font-size: 11pt; color: #333;">
-            <div style="margin-bottom: 6px;"><span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;">Red with strikethrough</span>: Removed content</div>
-            <div><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;">Green with underline</span>: Added content</div>
-          </div>
           ${exactMatchHtml}
         </div>
       </div>`;
@@ -145,10 +141,6 @@ export async function generateDocumentComparison(
       diffHtml = `
       <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
         <div class="full-document-with-changes">
-          <div class="legend" style="margin-bottom: 16px; font-size: 11pt; color: #333;">
-            <div style="margin-bottom: 6px;"><span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2; display: inline;">Red with strikethrough</span>: Removed content</div>
-            <div><span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7; display: inline;">Green with underline</span>: Added content</div>
-          </div>
           <div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">
             <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 24pt;">${newerVersion.fileName}</h1>
             ${formattedContent}
