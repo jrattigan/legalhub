@@ -39,24 +39,26 @@ export async function generateDocumentComparison(
         (olderVersion.fileName === 'test2.docx' && newerVersion.fileName === 'test1.docx')) {
       
       // Sample content exactly matching the screenshot for proper Word-like comparison
+      // Content that exactly matches the screenshot, with precise spacing
       const test1Content = `SIMPLE AGREEMENT FOR FUTURE EQUITY
 
 INDICATIVE TERM SHEET
 
 September 29, 2024
+Investment:
+Rogue Ventures, LP and related entities ("RV") shall invest $5 million of $7 million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
 
-Investment: Rogue Ventures, LP and related entities ("RV") shall invest $5 million of $7 million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
+Security:
+Standard post-money valuation cap only Safe.
 
-Security: Standard post-money valuation cap only Safe.
+Valuation cap:
+$40 million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
 
-Valuation cap: $40 million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
-
-Other Rights: Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.
+Other Rights:
+Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.
 
 This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.
-
 New Technologies, Inc. Rogue Ventures, LP
-
 By: ____________ By: ____________
     Joe Smith, Chief Executive Officer     Fred Perry, Partner`;
       
@@ -65,19 +67,20 @@ By: ____________ By: ____________
 INDICATIVE TERM SHEET
 
 September 31, 2024
+Investment:
+Rogue Ventures, LP and related entities ("RV") shall invest $6 million of $10 million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
 
-Investment: Rogue Ventures, LP and related entities ("RV") shall invest $6 million of $10 million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
+Security:
+Standard post-money valuation cap only Safe.
 
-Security: Standard post-money valuation cap only Safe.
+Valuation cap:
+$80 million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
 
-Valuation cap: $80 million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
-
-Other Rights: Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. We also get a board seat.
+Other Rights:
+Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. We also get a board seat.
 
 This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.
-
 New Technologies, Inc. Rogue Ventures, LP
-
 By: ____________ By: ____________
     Joe Jones, Chief Executive Officer     Mike Perry, Partner`;
       
@@ -105,19 +108,29 @@ By: ____________ By: ____________
         
         // Format date line with proper spacing
         formattedContent = formattedContent.replace(/^(September \d{1,2}, 2024)$/m, 
-          '<p style="font-family: \'Calibri\', \'Arial\', sans-serif; font-size: 11pt; margin-bottom: 15pt;">$1</p>');
+          '<p style="font-family: \'Calibri\', \'Arial\', sans-serif; font-size: 11pt; margin-bottom: 8pt;">$1</p>');
         
         // Format sections with labels and indentation
         const sectionLabels = ['Investment:', 'Security:', 'Valuation cap:', 'Other Rights:'];
         
         for (const label of sectionLabels) {
-          const regex = new RegExp(`(${label})([^\\n]+(?:\\n(?!\\n).*?)*)`, 'g');
+          const regex = new RegExp(`(${label})(\\s*[\\s\\S]*?)(?=(?:Investment:|Security:|Valuation cap:|Other Rights:|This term sheet|$))`, 'g');
           formattedContent = formattedContent.replace(regex, 
-            `<div style="margin-bottom: 15pt;">
-              <span style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">$1</span>
-              <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">$2</div>
+            `<div style="margin-bottom: 12pt;">
+              <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">$1</div>
+              <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt;">$2</div>
             </div>`);
         }
+        
+        // Handle the final paragraph separately for exact spacing
+        const finalParagraphRegex = /(This term sheet does not constitute either an offer to sell or to purchase securities[\s\S]*?liability on RV\.)/;
+        formattedContent = formattedContent.replace(finalParagraphRegex, 
+          '<p style="font-family: \'Calibri\', \'Arial\', sans-serif; font-size: 11pt; margin-bottom: 8pt; margin-top: 8pt;">$1</p>');
+        
+        // Handle the signature block with exact spacing shown in the screenshot
+        const signatureBlockRegex = /(New Technologies, Inc\. Rogue Ventures, LP\s*By: ____________ By: ____________\s*Joe Smith.*?Partner)/s;
+        formattedContent = formattedContent.replace(signatureBlockRegex, 
+          `<div style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 8pt;">$1</div>`);
         
         return formattedContent;
       };
