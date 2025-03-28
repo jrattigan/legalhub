@@ -1,22 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useRoute, useLocation } from 'wouter';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import AppHeader from '@/components/layout/app-header';
-import Sidebar from '@/components/layout/sidebar';
 import { Button } from '@/components/ui/button';
 import DealDetail from '@/components/deals/deal-detail';
-import { ChevronLeft, ArrowLeft } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { ChevronLeft } from 'lucide-react';
+import AppLayout from '@/components/layout/app-layout';
 
 export default function DealDetailPage() {
   const [, params] = useRoute('/deals/:id');
-  const [location, navigate] = useLocation();
+  const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
   const dealId = params?.id ? parseInt(params.id) : null;
-  const isMobile = useIsMobile();
-  
-  // Get current user
-  const { data: user } = useQuery({ queryKey: ['/api/users/1'] });
   
   // Get deal data
   const { data: deal, isLoading: dealLoading, error: dealError } = useQuery({
@@ -96,60 +90,49 @@ export default function DealDetailPage() {
                     tasksLoading || issuesLoading || counselLoading || timelineLoading;
 
   return (
-    <div className="min-h-screen flex flex-col max-h-screen">
-      <AppHeader user={user} notifications={2} />
-      
-      {isMobile && (
-        <div className="flex items-center px-4 py-2 bg-white border-b border-neutral-200">
+    <AppLayout>
+      <div className="p-6">
+        <div className="mb-6">
           <Button 
             variant="ghost" 
-            size="sm" 
-            className="mr-2 p-0 h-8 w-8" 
             onClick={handleBack}
+            className="mb-4"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Back to Deals
           </Button>
-          <h2 className="text-sm font-medium truncate flex-1">
-            {deal?.title || 'Deal Detail'}
-          </h2>
         </div>
-      )}
-      
-      <div className="flex-1 flex overflow-auto">
-        {!isMobile && <Sidebar recentDeals={[]} />}
         
-        <div className="flex-1 overflow-auto w-full">
-          {isLoading ? (
-            <div className="flex-1 flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="w-8 h-8 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin inline-block mb-2"></div>
-                <p>Loading deal data...</p>
-              </div>
+        {isLoading ? (
+          <div className="flex-1 flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="w-8 h-8 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin inline-block mb-2"></div>
+              <p>Loading deal data...</p>
             </div>
-          ) : dealError ? (
-            <div className="flex-1 flex items-center justify-center h-full">
-              <div className="text-center">
-                <p className="text-destructive mb-2">Error loading deal data</p>
-                <Button variant="outline" onClick={handleBack}>
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Back to Deals
-                </Button>
-              </div>
+          </div>
+        ) : dealError ? (
+          <div className="flex-1 flex items-center justify-center h-64">
+            <div className="text-center">
+              <p className="text-destructive mb-2">Error loading deal data</p>
+              <Button variant="outline" onClick={handleBack}>
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Back to Deals
+              </Button>
             </div>
-          ) : deal ? (
-            <DealDetail 
-              deal={deal}
-              dealUsers={formattedDealUsers}
-              documents={documents || []}
-              tasks={tasks || []}
-              issues={issues || []}
-              counsel={counsel || []}
-              timelineEvents={timelineEvents || []}
-              onRefreshData={refreshData}
-            />
-          ) : null}
-        </div>
+          </div>
+        ) : deal ? (
+          <DealDetail 
+            deal={deal}
+            dealUsers={formattedDealUsers}
+            documents={documents || []}
+            tasks={tasks || []}
+            issues={issues || []}
+            counsel={counsel || []}
+            timelineEvents={timelineEvents || []}
+            onRefreshData={refreshData}
+          />
+        ) : null}
       </div>
-    </div>
+    </AppLayout>
   );
 }
