@@ -54,7 +54,7 @@ export default function CompaniesPage() {
       legalName: "",
       displayName: "",
       url: "",
-      bcvTeam: ""
+      bcvTeam: [] as unknown as string
     }
   });
 

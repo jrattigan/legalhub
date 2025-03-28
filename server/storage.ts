@@ -304,7 +304,7 @@ export class MemStorage implements IStorage {
       createdAt: now4,
       updatedAt: now4,
       url: company1.url || null,
-      bcvTeam: company1.bcvTeam || null
+      bcvTeam: company1.bcvTeam || []
     };
     this.companies.set(companyId1, createdCompany1);
     
@@ -315,7 +315,7 @@ export class MemStorage implements IStorage {
       createdAt: now4,
       updatedAt: now4,
       url: company2.url || null,
-      bcvTeam: company2.bcvTeam || null
+      bcvTeam: company2.bcvTeam || []
     };
     this.companies.set(companyId2, createdCompany2);
     
@@ -326,7 +326,7 @@ export class MemStorage implements IStorage {
       createdAt: now4,
       updatedAt: now4,
       url: company3.url || null,
-      bcvTeam: company3.bcvTeam || null
+      bcvTeam: company3.bcvTeam || []
     };
     this.companies.set(companyId3, createdCompany3);
     
@@ -814,7 +814,7 @@ export class MemStorage implements IStorage {
       createdAt: now,
       updatedAt: now,
       url: insertCompany.url || null,
-      bcvTeam: insertCompany.bcvTeam || null
+      bcvTeam: Array.isArray(insertCompany.bcvTeam) ? insertCompany.bcvTeam : []
     };
     this.companies.set(id, company);
     return company;

@@ -134,7 +134,7 @@ export default function DealDetail({
       status: string;
       dueDate: string | null;
     }) => {
-      // Map the form values to match the expected API format
+      // Create a clean version of the payload with proper date formatting
       const apiPayload = {
         title: updatedDeal.title,
         description: updatedDeal.description,
@@ -144,6 +144,8 @@ export default function DealDetail({
         status: updatedDeal.status,
         dueDate: updatedDeal.dueDate ? new Date(updatedDeal.dueDate) : null
       };
+      
+      console.log('API Payload:', apiPayload);
       return await apiRequest(`/api/deals/${deal.id}`, 'PATCH', apiPayload);
     },
     onSuccess: () => {
@@ -198,13 +200,20 @@ export default function DealDetail({
   // Handle form submission
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // The mutation expects the field 'company' but our form has companyId and companyName
-    // So we need to make sure we're using the right format
-    updateDealMutation.mutate({
-      ...editDealForm,
-      // The following fields are already correct and don't need transformation:
-      // title, description, companyId, companyName, amount, status, dueDate
-    });
+    
+    // Make sure all fields are correctly formatted for the API
+    const formattedData = {
+      title: editDealForm.title,
+      description: editDealForm.description,
+      companyId: editDealForm.companyId,
+      companyName: editDealForm.companyName,
+      amount: editDealForm.amount,
+      status: editDealForm.status,
+      dueDate: editDealForm.dueDate ? editDealForm.dueDate : null,
+    };
+    
+    console.log('Submitting update:', formattedData);
+    updateDealMutation.mutate(formattedData);
   };
   
   // Handle sharing deal
