@@ -16,32 +16,23 @@ export default function AppHeader({ title, user, notifications = 0 }: AppHeaderP
   const [location] = useLocation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   
-  // Determine if we're on a companies-related page
-  const isCompaniesPage = location.startsWith('/companies');
-
-  // Display different nav items based on current section
-  const navItems = isCompaniesPage 
-    ? [
-        { name: 'Companies', path: '/companies' },
-        { name: 'Deals', path: '/deals' },
-        { name: 'Documents', path: '/documents' },
-      ]
-    : [
-        { name: 'Deals', path: '/deals' },
-        { name: 'Documents', path: '/documents' },
-        { name: 'Tasks', path: '/tasks' },
-        { name: 'Outside Counsel', path: '/counsel' },
-        { name: 'Reports', path: '/reports' },
-      ];
+  // Consistent nav items for all pages
+  const navItems = [
+    { name: 'Deals', path: '/deals' },
+    { name: 'Documents', path: '/documents' },
+    { name: 'Tasks', path: '/tasks' },
+    { name: 'Outside Counsel', path: '/counsel' },
+    { name: 'Reports', path: '/reports' },
+  ];
 
   return (
     <header className="bg-white border-b border-neutral-200 h-16 flex items-center px-4 justify-between z-10 shadow-sm">
       <div className="flex items-center space-x-4">
         <div className="flex items-center">
-          {/* Always show the logo but make it invisible on company pages to maintain spacing */}
+          {/* Always show the logo on all pages */}
           <Link 
             href="/dashboard" 
-            className={`font-bold text-gradient text-xl cursor-pointer ${isCompaniesPage ? 'invisible' : 'visible'}`}
+            className="font-bold text-gradient text-xl cursor-pointer"
           >
             LegalDeal
           </Link>
@@ -131,7 +122,7 @@ export default function AppHeader({ title, user, notifications = 0 }: AppHeaderP
                 <div className="flex items-center px-2">
                   <Link 
                     href="/dashboard" 
-                    className={`font-bold text-gradient text-xl ${isCompaniesPage ? 'invisible' : 'visible'}`}
+                    className="font-bold text-gradient text-xl"
                   >
                     LegalDeal
                   </Link>
