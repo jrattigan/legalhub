@@ -104,7 +104,7 @@ export default function DealDetail({
   const [editDealForm, setEditDealForm] = useState({
     title: deal.title,
     description: deal.description || '',
-    company: deal.company,
+    company: deal.companyName,
     amount: deal.amount || '',
     status: deal.status,
     dueDate: deal.dueDate ? new Date(deal.dueDate).toISOString().split('T')[0] : ''
@@ -123,8 +123,24 @@ export default function DealDetail({
   
   // Mutation to update deal
   const updateDealMutation = useMutation({
-    mutationFn: async (updatedDeal: any) => {
-      return await apiRequest(`/api/deals/${deal.id}`, 'PATCH', updatedDeal);
+    mutationFn: async (updatedDeal: {
+      title: string;
+      description: string | null;
+      company: string;
+      amount: string | null;
+      status: string;
+      dueDate: string | null;
+    }) => {
+      // Map the form values to match the expected API format
+      const apiPayload = {
+        title: updatedDeal.title,
+        description: updatedDeal.description,
+        companyName: updatedDeal.company,
+        amount: updatedDeal.amount,
+        status: updatedDeal.status,
+        dueDate: updatedDeal.dueDate ? new Date(updatedDeal.dueDate) : null
+      };
+      return await apiRequest(`/api/deals/${deal.id}`, 'PATCH', apiPayload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/combined-data'] });
@@ -404,7 +420,9 @@ export default function DealDetail({
           <div>
             <h1 className="font-semibold text-xl text-neutral-800">{deal.title}</h1>
             <div className={`${isMobile ? 'flex flex-col' : 'flex items-center'} mt-1 text-sm text-neutral-500`}>
-              <span className={isMobile ? 'mb-1' : 'mr-4'}>Company: {deal.companyName}</span>
+              <span className={isMobile ? 'mb-1' : 'mr-4'}>
+                <a href={`/companies/${deal.companyId}`} className="text-primary hover:underline">{deal.companyName}</a>
+              </span>
               <span className="flex items-center">
                 <Calendar className="h-4 w-4 mr-1" />
                 {deal.dueDate ? 
