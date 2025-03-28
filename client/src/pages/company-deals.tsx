@@ -39,6 +39,12 @@ export default function CompanyDealsPage() {
   const [_, navigate] = useLocation();
   const companyId = params.id;
   
+  // Always fetch user data first
+  const { data: user } = useQuery({
+    queryKey: ['/api/users/1'],
+    retry: 1,
+  });
+  
   // Fetch company data
   const { data: company, isLoading: companyLoading } = useQuery<Company>({
     queryKey: [`/api/companies/${companyId}`],
