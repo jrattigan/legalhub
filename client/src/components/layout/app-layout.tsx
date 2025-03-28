@@ -15,10 +15,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
   });
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen h-screen flex flex-col">
       <AppHeader user={user} notifications={2} />
       
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-hidden">
         {children}
       </div>
     </div>

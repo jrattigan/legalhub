@@ -103,12 +103,12 @@ export default function DealDetailPage() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col h-full overflow-auto">
-        <div className="p-6 mb-2">
+      <div className="flex flex-col h-full">
+        <div className="px-6 py-4">
           <Button 
             variant="ghost" 
             onClick={handleBack}
-            className="mb-2"
+            className="mb-0"
           >
             <ChevronLeft className="h-4 w-4 mr-2" />
             Back to Deals
@@ -133,7 +133,7 @@ export default function DealDetailPage() {
             </div>
           </div>
         ) : deal ? (
-          <div className="flex-1 overflow-auto px-6 pb-6">
+          <div className="flex-1 overflow-auto">
             <DealDetail 
               deal={deal}
               dealUsers={formattedDealUsers}
