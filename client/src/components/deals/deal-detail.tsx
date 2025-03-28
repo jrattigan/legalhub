@@ -404,7 +404,7 @@ export default function DealDetail({
           <div>
             <h1 className="font-semibold text-xl text-neutral-800">{deal.title}</h1>
             <div className={`${isMobile ? 'flex flex-col' : 'flex items-center'} mt-1 text-sm text-neutral-500`}>
-              <span className={isMobile ? 'mb-1' : 'mr-4'}>Deal ID: {deal.dealId}</span>
+              <span className={isMobile ? 'mb-1' : 'mr-4'}>Company: {deal.companyName}</span>
               <span className="flex items-center">
                 <Calendar className="h-4 w-4 mr-1" />
                 {deal.dueDate ? 
