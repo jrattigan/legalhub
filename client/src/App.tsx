@@ -11,6 +11,8 @@ import Documents from "@/pages/documents";
 import Tasks from "@/pages/tasks";
 import Counsel from "@/pages/counsel";
 import Companies from "@/pages/companies";
+import CompanyDetailPage from "@/pages/company-detail";
+import CompanyDealsPage from "@/pages/company-deals";
 
 function Router() {
   return (
@@ -18,6 +20,8 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/companies" component={Companies} />
+      <Route path="/companies/:id" component={CompanyDetailPage} />
+      <Route path="/companies/:id/deals" component={CompanyDealsPage} />
       <Route path="/deals" component={Deals} />
       <Route path="/deals/new" component={NewDeal} />
       <Route path="/deals/:id" component={DealDetailPage} />

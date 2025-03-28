@@ -71,6 +71,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     res.json(company);
   });
+  
+  app.get("/api/companies/:id/deals", async (req, res) => {
+    const companyId = parseInt(req.params.id);
+    if (isNaN(companyId)) {
+      return res.status(400).json({ message: "Invalid company ID" });
+    }
+
+    try {
+      // First check if the company exists
+      const company = await storage.getCompany(companyId);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      // Get all deals
+      const allDeals = await storage.getDeals();
+      
+      // Filter deals for this company
+      const companyDeals = allDeals.filter(deal => deal.companyId === companyId);
+      
+      res.json(companyDeals);
+    } catch (error) {
+      console.error("Error fetching company deals:", error);
+      res.status(500).json({ message: "Failed to fetch company deals" });
+    }
+  });
 
   app.post("/api/companies", async (req, res) => {
     try {
@@ -130,22 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(204).end();
   });
 
-  // Get deals by company
-  app.get("/api/companies/:id/deals", async (req, res) => {
-    const companyId = parseInt(req.params.id);
-    if (isNaN(companyId)) {
-      return res.status(400).json({ message: "Invalid company ID" });
-    }
 
-    try {
-      const allDeals = await storage.getDeals();
-      const companyDeals = allDeals.filter(deal => deal.companyId === companyId);
-      res.json(companyDeals);
-    } catch (error) {
-      console.error("Error fetching company deals:", error);
-      res.status(500).json({ message: "Failed to fetch company deals" });
-    }
-  });
 
   app.get("/api/users", async (req, res) => {
     const users = await storage.getUsers();
