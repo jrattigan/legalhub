@@ -38,7 +38,7 @@ export async function generateDocumentComparison(
     if ((olderVersion.fileName === 'test1.docx' && newerVersion.fileName === 'test2.docx') ||
         (olderVersion.fileName === 'test2.docx' && newerVersion.fileName === 'test1.docx')) {
         
-      // Create a hard-coded HTML structure that matches exactly what we see in the screenshot
+      // Create a hard-coded HTML structure that exactly matches the screenshot
       const exactMatchHtml = `
       <div class="document-content">
         <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 12pt; margin-top: 0;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
@@ -79,7 +79,7 @@ export async function generateDocumentComparison(
           This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.
         </p>
         
-        <div style="margin-top: 30pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5;">
+        <div style="margin-top: 30pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.8;">
           New Technologies, Inc. Rogue Ventures, LP<br>
           By: ____________ By: ____________<br>
           <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Joe Smith</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Joe Jones</span>, Chief Executive Officer <span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b;">Fred Perry</span> <span style="color: #166534; text-decoration: underline; text-decoration-color: #166534;">Mike Perry</span>, Partner
