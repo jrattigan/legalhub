@@ -99,26 +99,22 @@ export default function CompaniesPage() {
     }
   };
 
+  // Fetch user data
+  const { data: user } = useQuery({
+    queryKey: ['/api/users/1'],
+    retry: 1,
+  });
+
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex h-screen bg-neutral-50">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <AppHeader 
-            title="Companies" 
-            user={{
-              fullName: "John Doe",
-              email: "jdoe@company.com",
-              initials: "JD",
-              avatarColor: "#22c55e",
-              username: "jdoe",
-              password: "",
-              id: 1,
-              role: "General Counsel"
-            }}
-          />
-          <div className="flex-1 overflow-auto p-6">
+      <div className="min-h-screen flex flex-col">
+        <AppHeader user={user} notifications={2} />
+        
+        <div className="flex-1 flex overflow-hidden">
+          <Sidebar />
+          
+          <div className="flex-1 overflow-auto bg-neutral-50 p-6">
             <h1 className="text-2xl font-bold mb-6">Companies</h1>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3].map((i) => (
@@ -138,22 +134,11 @@ export default function CompaniesPage() {
   }
 
   return (
-    <div className="flex h-screen bg-neutral-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <AppHeader 
-          title="Companies" 
-          user={{
-            fullName: "John Doe",
-            email: "jdoe@company.com",
-            initials: "JD",
-            avatarColor: "#22c55e",
-            username: "jdoe",
-            password: "",
-            id: 1,
-            role: "General Counsel"
-          }}
-        />
+    <div className="min-h-screen flex flex-col">
+      <AppHeader user={user} notifications={2} />
+      
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar />
         <div className="flex-1 overflow-auto p-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Companies</h1>

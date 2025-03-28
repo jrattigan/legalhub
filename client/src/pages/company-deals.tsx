@@ -102,25 +102,20 @@ export default function CompanyDealsPage() {
     );
   }
 
+  // Fetch user data for error state
+  const { data: errorUser } = useQuery({
+    queryKey: ['/api/users/1'],
+    retry: 1,
+  });
+
   // Error state for company
   if (!company) {
     return (
-      <div className="flex h-screen bg-neutral-50">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <AppHeader 
-            title="Company Not Found" 
-            user={{
-              fullName: "John Doe",
-              email: "jdoe@company.com",
-              initials: "JD",
-              avatarColor: "#22c55e",
-              username: "jdoe",
-              password: "",
-              id: 1,
-              role: "General Counsel"
-            }}
-          />
+      <div className="min-h-screen flex flex-col">
+        <AppHeader user={errorUser} notifications={2} />
+        
+        <div className="flex-1 flex overflow-hidden">
+          <Sidebar />
           <div className="flex-1 overflow-auto p-6">
             <div className="flex items-center mb-6">
               <Button 
@@ -148,23 +143,18 @@ export default function CompanyDealsPage() {
     );
   }
 
+    // Fetch user data
+  const { data: user } = useQuery({
+    queryKey: ['/api/users/1'],
+    retry: 1,
+  });
+
   return (
-    <div className="flex h-screen bg-neutral-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <AppHeader 
-          title={`${company.displayName} - Deals`}
-          user={{
-            fullName: "John Doe",
-            email: "jdoe@company.com",
-            initials: "JD",
-            avatarColor: "#22c55e",
-            username: "jdoe",
-            password: "",
-            id: 1,
-            role: "General Counsel"
-          }}
-        />
+    <div className="min-h-screen flex flex-col">
+      <AppHeader user={user} notifications={2} />
+      
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar />
         <div className="flex-1 overflow-auto p-6">
           {/* Header with back button */}
           <div className="flex items-center mb-6">
