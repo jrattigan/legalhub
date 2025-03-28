@@ -38,11 +38,13 @@ export default function AppHeader({ title, user, notifications = 0 }: AppHeaderP
     <header className="bg-white border-b border-neutral-200 h-16 flex items-center px-4 justify-between z-10 shadow-sm">
       <div className="flex items-center space-x-4">
         <div className="flex items-center">
-          {!isCompaniesPage && (
-            <Link href="/dashboard" className="font-bold text-gradient text-xl cursor-pointer">
-              LegalDeal
-            </Link>
-          )}
+          {/* Always show the logo but make it invisible on company pages to maintain spacing */}
+          <Link 
+            href="/dashboard" 
+            className={`font-bold text-gradient text-xl cursor-pointer ${isCompaniesPage ? 'invisible' : 'visible'}`}
+          >
+            LegalDeal
+          </Link>
           {title && title !== "LegalDeal" && (
             <span className="text-neutral-500 ml-2 px-2 py-0.5 text-sm font-medium">
               {title}
@@ -127,11 +129,12 @@ export default function AppHeader({ title, user, notifications = 0 }: AppHeaderP
             <SheetContent side="right" className="w-[280px] sm:w-[320px] border-l-neutral-200">
               <div className="py-4 space-y-6">
                 <div className="flex items-center px-2">
-                  {!isCompaniesPage && (
-                    <Link href="/dashboard" className="font-bold text-gradient text-xl">
-                      LegalDeal
-                    </Link>
-                  )}
+                  <Link 
+                    href="/dashboard" 
+                    className={`font-bold text-gradient text-xl ${isCompaniesPage ? 'invisible' : 'visible'}`}
+                  >
+                    LegalDeal
+                  </Link>
                   {title && title !== "LegalDeal" && (
                     <span className="text-neutral-500 ml-2 px-2 py-0.5 text-sm font-medium">
                       {title}
