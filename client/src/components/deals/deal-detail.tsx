@@ -203,9 +203,25 @@ export default function DealDetail({
     
     // Make sure all fields are correctly formatted for the API
     // Ensure companyId is a number
-    const companyId = typeof editDealForm.companyId === 'string' 
-      ? parseInt(editDealForm.companyId)
-      : editDealForm.companyId;
+    let companyId: number;
+    if (typeof editDealForm.companyId === 'string') {
+      companyId = parseInt(editDealForm.companyId, 10);
+      console.log('Converted string to number:', editDealForm.companyId, '->', companyId);
+    } else {
+      companyId = editDealForm.companyId as number;
+      console.log('Already a number:', companyId);
+    }
+    
+    // Validate that we have a valid number
+    if (isNaN(companyId)) {
+      console.error('Invalid companyId:', editDealForm.companyId);
+      toast({
+        title: 'Invalid Company ID',
+        description: `Could not process company ID: ${editDealForm.companyId}`,
+        variant: 'destructive',
+      });
+      return;
+    }
       
     const formattedData = {
       title: editDealForm.title,
@@ -219,7 +235,39 @@ export default function DealDetail({
     
     console.log('Submitting update with companyId:', companyId, 'type:', typeof companyId);
     console.log('Full formatted data:', formattedData);
-    updateDealMutation.mutate(formattedData);
+    
+    // Direct API call instead of using mutation to troubleshoot
+    fetch(`/api/deals/${deal.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formattedData),
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`API call failed with status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('API response:', data);
+      queryClient.invalidateQueries({ queryKey: ['/api/combined-data'] });
+      toast({
+        title: 'Deal Updated',
+        description: 'The deal has been successfully updated.',
+      });
+      onRefreshData();
+      setIsEditDialogOpen(false);
+    })
+    .catch(error => {
+      console.error('Error updating deal:', error);
+      toast({
+        title: 'Failed to Update',
+        description: 'There was an error updating the deal. Please try again.',
+        variant: 'destructive',
+      });
+    });
   };
   
   // Handle sharing deal
