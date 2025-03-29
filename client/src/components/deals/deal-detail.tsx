@@ -1734,14 +1734,8 @@ export default function DealDetail({
       
       {/* Term Sheet Viewer Dialog */}
       <Dialog open={isTermSheetViewerOpen} onOpenChange={setIsTermSheetViewerOpen}>
-        <DialogContent className="sm:max-w-4xl h-[80vh] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Term Sheet</DialogTitle>
-            <DialogDescription>
-              View the term sheet for this deal.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="h-full overflow-y-auto mt-4">
+        <DialogContent className="sm:max-w-5xl h-[90vh] max-h-[90vh] p-4 overflow-hidden">
+          <div className="h-full">
             {deal.termSheetUrl && (
               <div className="flex flex-col h-full">
                 {deal.termSheetUrl.includes('data:application/pdf') ? (
@@ -1754,8 +1748,8 @@ export default function DealDetail({
                 ) : deal.termSheetUrl.includes('data:application/vnd.openxmlformats-officedocument.wordprocessingml.document') ? (
                   // For DOCX files, use Office Online viewer
                   <div className="flex flex-col h-full">
-                    <div className="h-[600px] border rounded w-full flex items-center justify-center bg-gray-50">
-                      <div className="w-[85%] h-[95%] relative">
+                    <div className="h-[calc(100%-40px)] border rounded w-full flex items-center justify-center bg-gray-50 p-1">
+                      <div className="w-[95%] h-[98%] relative">
                         {/* We need to create a temporary link to the doc and pass it to the viewer */}
                         {(() => {
                           // Creating a blob URL to pass to the Microsoft Viewer
@@ -1789,7 +1783,14 @@ export default function DealDetail({
                         })()}
                       </div>
                     </div>
-                    <div className="mt-2 flex justify-end">
+                    <div className="mt-1 flex justify-between">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setIsTermSheetViewerOpen(false)}
+                      >
+                        Close
+                      </Button>
                       <Button 
                         variant="outline" 
                         size="sm"
@@ -1804,7 +1805,7 @@ export default function DealDetail({
                         }}
                       >
                         <Download className="h-4 w-4 mr-2" />
-                        Download Word Document
+                        Download
                       </Button>
                     </div>
                   </div>
@@ -1835,31 +1836,7 @@ export default function DealDetail({
                     {deal.termSheetUrl}
                   </div>
                 )}
-                <div className="flex justify-between mt-4">
-                  <Button variant="outline" onClick={() => setIsTermSheetViewerOpen(false)}>
-                    Close
-                  </Button>
-                  <Button onClick={() => {
-                    if (!deal.termSheetUrl) return;
-                    
-                    // Determine file extension based on data URL
-                    let extension = 'pdf';
-                    if (deal.termSheetUrl.includes('data:application/vnd.openxmlformats-officedocument.wordprocessingml.document')) {
-                      extension = 'docx';
-                    }
-                    
-                    // Create and trigger download
-                    const a = document.createElement('a');
-                    a.href = deal.termSheetUrl;
-                    a.download = `term-sheet.${extension}`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                  }}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </Button>
-                </div>
+                {/* Footer buttons are now in each specific viewer type */}
               </div>
             )}
           </div>
