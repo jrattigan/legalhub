@@ -1430,6 +1430,29 @@ export class MemStorage implements IStorage {
     this.dealUsers.set(id, dealUser);
     return dealUser;
   }
+  
+  async updateDealTeam(dealId: number, teamMembers: InsertDealUser[]): Promise<DealUser[]> {
+    // First, remove all existing team members for this deal
+    const dealUserIds: number[] = [];
+    this.dealUsers.forEach((dealUser, id) => {
+      if (dealUser.dealId === dealId) {
+        dealUserIds.push(id);
+      }
+    });
+    
+    dealUserIds.forEach(id => {
+      this.dealUsers.delete(id);
+    });
+    
+    // Then add all new team members
+    const newTeamMembers: DealUser[] = [];
+    for (const member of teamMembers) {
+      const newMember = await this.addUserToDeal(member);
+      newTeamMembers.push(newMember);
+    }
+    
+    return newTeamMembers;
+  }
 
   async removeUserFromDeal(dealId: number, userId: number): Promise<boolean> {
     const dealUser = Array.from(this.dealUsers.values())

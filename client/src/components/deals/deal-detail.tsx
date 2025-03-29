@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Calendar, Edit, MoreHorizontal, Eye, Filter, Download, Share2, 
@@ -119,6 +119,31 @@ export default function DealDetail({
     leadInvestorAttorneys: [],
   });
   
+  // State for team members
+  const [teamMembers, setTeamMembers] = useState<Array<{
+    userId: number;
+    role: string;
+    user?: any; // For display purposes
+  }>>([]);
+  
+  // Initialize team members from dealUsers when dialog opens
+  useEffect(() => {
+    if (isEditDialogOpen) {
+      // Map existing deal users to the format needed for the form
+      const initialTeamMembers = dealUsers.map(user => ({
+        userId: user.id,
+        role: user.role,
+        user: {
+          id: user.id,
+          fullName: user.fullName,
+          initials: user.initials,
+          avatarColor: user.avatarColor
+        }
+      }));
+      setTeamMembers(initialTeamMembers);
+    }
+  }, [isEditDialogOpen, dealUsers]);
+  
   // Define type for law firm options including attorneys
   type LawFirmOption = {
     id: number;
@@ -211,6 +236,12 @@ export default function DealDetail({
   // QueryClient for mutations
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  
+  // Query to fetch all users for team assignment
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['/api/users'],
+    refetchOnWindowFocus: false
+  });
   
   // Mutation to update deal
   const updateDealMutation = useMutation({
@@ -368,7 +399,7 @@ export default function DealDetail({
     console.log('Submitting update with companyId:', companyId, 'type:', typeof companyId);
     console.log('Full formatted data:', formattedData);
     
-    // Direct API call instead of using mutation to troubleshoot
+    // Process the updates in sequence - first the deal, then the team
     fetch(`/api/deals/${deal.id}`, {
       method: 'PATCH',
       headers: {
@@ -383,24 +414,49 @@ export default function DealDetail({
       return response.json();
     })
     .then(data => {
-      console.log('API response:', data);
+      console.log('Deal API response:', data);
+      
+      // Now update the team members
+      const teamMembersData = teamMembers.map(member => ({
+        userId: member.userId,
+        role: member.role
+      }));
+      
+      return fetch(`/api/deals/${deal.id}/team`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ teamMembers: teamMembersData }),
+      });
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Team update API call failed with status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(teamData => {
+      console.log('Team API response:', teamData);
+      
       // Invalidate all relevant queries to ensure data is refreshed everywhere
       queryClient.invalidateQueries({ queryKey: ['/api/combined-data'] });
       queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${deal.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/deals/${deal.id}/users`] });
       
       toast({
         title: 'Deal Updated',
-        description: 'The deal has been successfully updated.',
+        description: 'The deal and team members have been successfully updated.',
       });
       onRefreshData();
       setIsEditDialogOpen(false);
     })
     .catch(error => {
-      console.error('Error updating deal:', error);
+      console.error('Error updating deal or team:', error);
       toast({
         title: 'Failed to Update',
-        description: 'There was an error updating the deal. Please try again.',
+        description: 'There was an error updating the deal or team members. Please try again.',
         variant: 'destructive',
       });
     });
@@ -660,6 +716,143 @@ export default function DealDetail({
                   className="col-span-3"
                   placeholder="$0.00"
                 />
+              </div>
+              
+              {/* Team Members Section */}
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label className="text-right pt-2">
+                  Team Members
+                </Label>
+                <div className="col-span-3 space-y-3">
+                  {teamMembers.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {teamMembers.map((member, index) => {
+                        const user = member.user;
+                        const isLead = member.role === 'Lead';
+                        return (
+                          <div 
+                            key={index}
+                            className={`flex items-center px-2 py-1 ${
+                              isLead 
+                                ? 'bg-primary/10 border-primary/30 border rounded-full' 
+                                : 'bg-neutral-100'
+                            } rounded-md group relative`}
+                          >
+                            <div
+                              className={`h-6 w-6 rounded-full mr-1.5 flex items-center justify-center text-white text-xs font-medium`}
+                              style={{ backgroundColor: user.avatarColor }}
+                            >
+                              {user.initials}
+                            </div>
+                            <span className="text-sm font-medium">{user.fullName}</span>
+                            {isLead && (
+                              <span className="ml-1 text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">Lead</span>
+                            )}
+                            <button
+                              type="button"
+                              className="ml-1 p-1 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700"
+                              onClick={() => {
+                                // Remove this member
+                                setTeamMembers(teamMembers.filter((_, i) => i !== index));
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-neutral-500 italic">No team members assigned</div>
+                  )}
+                  
+                  {/* Add member UI */}
+                  <div className="flex items-center gap-2">
+                    <Select 
+                      onValueChange={(value) => {
+                        const userId = parseInt(value);
+                        const user = allUsers.find((u: any) => u.id === userId);
+                        
+                        // Check if user is already in team members
+                        if (teamMembers.some(member => member.userId === userId)) {
+                          toast({
+                            title: "User already added",
+                            description: "This user is already part of the team.",
+                            variant: "warning"
+                          });
+                          return;
+                        }
+                        
+                        if (user) {
+                          setTeamMembers([
+                            ...teamMembers,
+                            {
+                              userId: user.id,
+                              role: 'Member',
+                              user: {
+                                id: user.id,
+                                fullName: user.fullName,
+                                initials: user.initials,
+                                avatarColor: user.avatarColor
+                              }
+                            }
+                          ]);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Add team member" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allUsers.map((user: any) => (
+                          <SelectItem key={user.id} value={user.id.toString()}>
+                            <div className="flex items-center">
+                              <div
+                                className="h-5 w-5 rounded-full mr-2 flex items-center justify-center text-white text-xs font-medium"
+                                style={{ backgroundColor: user.avatarColor }}
+                              >
+                                {user.initials}
+                              </div>
+                              {user.fullName}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Promote to lead */}
+                  {teamMembers.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="lead-member" className="shrink-0">Lead Member:</Label>
+                      <Select
+                        id="lead-member"
+                        onValueChange={(value) => {
+                          const userId = parseInt(value);
+                          // Update role for this user to 'Lead' and others to 'Member'
+                          setTeamMembers(
+                            teamMembers.map(member => ({
+                              ...member,
+                              role: member.userId === userId ? 'Lead' : 'Member'
+                            }))
+                          );
+                        }}
+                        value={teamMembers.find(m => m.role === 'Lead')?.userId.toString()}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select lead member" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {teamMembers.map(member => (
+                            <SelectItem key={member.userId} value={member.userId.toString()}>
+                              {member.user.fullName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div className="grid grid-cols-4 items-center gap-4">

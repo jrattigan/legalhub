@@ -301,6 +301,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const dealUsers = await storage.getDealUsers(dealId);
     res.json(dealUsers);
   });
+  
+  // Add a user to a deal
+  app.post("/api/deals/:id/users", async (req, res) => {
+    const dealId = parseInt(req.params.id);
+    if (isNaN(dealId)) {
+      return res.status(400).json({ message: "Invalid deal ID" });
+    }
+
+    try {
+      const { userId, role } = req.body;
+      const dealUser = await storage.addUserToDeal({
+        dealId,
+        userId,
+        role
+      });
+      res.status(201).json(dealUser);
+    } catch (error) {
+      console.error("Error adding user to deal:", error);
+      res.status(500).json({ message: "Failed to add user to deal" });
+    }
+  });
+  
+  // Update all team members for a deal
+  app.put("/api/deals/:id/team", async (req, res) => {
+    const dealId = parseInt(req.params.id);
+    if (isNaN(dealId)) {
+      return res.status(400).json({ message: "Invalid deal ID" });
+    }
+
+    try {
+      const { teamMembers } = req.body;
+      if (!Array.isArray(teamMembers)) {
+        return res.status(400).json({ message: "teamMembers must be an array" });
+      }
+      
+      // Validate each team member
+      for (const member of teamMembers) {
+        if (!member.userId || !member.role) {
+          return res.status(400).json({ 
+            message: "Each team member must have userId and role" 
+          });
+        }
+      }
+      
+      // Add dealId to each team member
+      const dealTeamMembers = teamMembers.map(member => ({
+        ...member,
+        dealId
+      }));
+      
+      const updatedTeam = await storage.updateDealTeam(dealId, dealTeamMembers);
+      res.json(updatedTeam);
+    } catch (error) {
+      console.error("Error updating deal team:", error);
+      res.status(500).json({ message: "Failed to update deal team" });
+    }
+  });
 
   // Documents API
   app.get("/api/deals/:id/documents", async (req, res) => {
