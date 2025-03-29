@@ -48,6 +48,7 @@ export default function NewDeal() {
       typeof val === 'string' && val ? new Date(val) : val
     ),
     amount: z.string().nullable().optional(),
+    isCommitted: z.boolean().default(false),
   });
 
   // Generate a unique dealId
@@ -72,13 +73,14 @@ export default function NewDeal() {
       amount: null,
       status: 'draft',
       dueDate: null,
-      dealId: generateDealId()
+      dealId: generateDealId(),
+      isCommitted: false
     }
   });
 
   // Create deal mutation
   const createDealMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof dealSchema>) => {
+    mutationFn: async (data: z.infer<typeof dealSchema> & { isCommitted: boolean }) => {
       console.log('Submitting deal data:', data);
       try {
         const response = await apiRequest('POST', '/api/deals', data);
@@ -126,7 +128,8 @@ export default function NewDeal() {
       companyName: selectedCompanyName || data.company,
       // Use the selected company ID from the CompanySelect component, or default to the company name
       companyId: selectedCompanyId || 0,
-      amount: data.amount || null
+      amount: data.amount || null,
+      isCommitted: data.isCommitted
     };
     
     // Add the company property needed by the API
@@ -252,23 +255,51 @@ export default function NewDeal() {
                       />
                     </div>
                     
-                    <FormField
-                      control={form.control}
-                      name="dueDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Closing Date</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="date" 
-                              {...field}
-                              value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="dueDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Closing Date</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="date" 
+                                {...field}
+                                value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="isCommitted"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-2">
+                            <FormControl>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  checked={field.value}
+                                  onChange={field.onChange}
+                                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                />
+                                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                  Committed?
+                                </label>
+                                {field.value && (
+                                  <div className="text-lg" title="Committed Closing Date">🤝</div>
+                                )}
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                     
                     <FormField
                       control={form.control}

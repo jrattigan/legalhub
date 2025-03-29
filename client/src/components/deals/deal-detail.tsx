@@ -110,7 +110,8 @@ export default function DealDetail({
     companyName: deal.companyName,
     amount: deal.amount || '',
     status: deal.status,
-    dueDate: deal.dueDate ? new Date(deal.dueDate).toISOString().split('T')[0] : ''
+    dueDate: deal.dueDate ? new Date(deal.dueDate).toISOString().split('T')[0] : '',
+    isCommitted: deal.isCommitted || false
   });
 
   // State for delete confirmation dialog
@@ -134,6 +135,7 @@ export default function DealDetail({
       amount: string | null;
       status: string;
       dueDate: string | null;
+      isCommitted: boolean;
     }) => {
       // Create a clean version of the payload with proper date formatting
       const apiPayload = {
@@ -143,7 +145,8 @@ export default function DealDetail({
         companyName: updatedDeal.companyName,
         amount: updatedDeal.amount,
         status: updatedDeal.status,
-        dueDate: updatedDeal.dueDate ? new Date(updatedDeal.dueDate) : null
+        dueDate: updatedDeal.dueDate ? new Date(updatedDeal.dueDate) : null,
+        isCommitted: updatedDeal.isCommitted
       };
       
       console.log('API Payload:', apiPayload);
@@ -232,6 +235,7 @@ export default function DealDetail({
       amount: editDealForm.amount,
       status: editDealForm.status,
       dueDate: editDealForm.dueDate ? editDealForm.dueDate : null,
+      isCommitted: editDealForm.isCommitted,
     };
     
     console.log('Submitting update with companyId:', companyId, 'type:', typeof companyId);
@@ -404,6 +408,25 @@ export default function DealDetail({
                   className="col-span-3"
                 />
               </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="isCommitted" className="text-right">
+                  Committed?
+                </Label>
+                <div className="col-span-3 flex items-center space-x-2">
+                  <input
+                    id="isCommitted"
+                    name="isCommitted"
+                    type="checkbox"
+                    checked={editDealForm.isCommitted}
+                    onChange={(e) => setEditDealForm({...editDealForm, isCommitted: e.target.checked})}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  {editDealForm.isCommitted && (
+                    <div className="text-lg" title="Committed Closing Date">🤝</div>
+                  )}
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button 
@@ -505,9 +528,16 @@ export default function DealDetail({
               </span>
               <span className="flex items-center">
                 <Calendar className="h-4 w-4 mr-1" />
-                {deal.dueDate ? 
-                  `Closing Date: ${format(new Date(deal.dueDate), 'MMM dd, yyyy')}` : 
-                  'No closing date'}
+                {deal.dueDate ? (
+                  <span className="flex items-center space-x-1">
+                    <span>Closing Date: {format(new Date(deal.dueDate), 'MMM dd, yyyy')}</span>
+                    {deal.isCommitted && (
+                      <span className="text-lg ml-1" title="Committed Closing Date">🤝</span>
+                    )}
+                  </span>
+                ) : (
+                  'No closing date'
+                )}
               </span>
             </div>
           </div>
