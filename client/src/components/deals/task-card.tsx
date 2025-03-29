@@ -119,7 +119,10 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   // Get attorneys associated with law firms
   const { data: dealCounsels = [] } = useQuery<any[]>({
     queryKey: ['/api/deals', dealId, 'counsel'],
-    enabled: isDialogOpen && Boolean(dealId) && currentTaskType === 'external'
+    enabled: isDialogOpen && Boolean(dealId) && currentTaskType === 'external',
+    onSuccess: (data) => {
+      console.log("Deal counsels loaded:", JSON.stringify(data));
+    }
   });
 
   // Complete task mutation
