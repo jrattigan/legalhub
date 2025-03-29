@@ -3,7 +3,7 @@
  */
 
 /**
- * Converts a File object to a base64 string
+ * Converts a File object to a base64 string with data URL prefix
  * Used for document upload and version control
  */
 export async function convertFileToBase64(file: File): Promise<string> {
@@ -12,9 +12,8 @@ export async function convertFileToBase64(file: File): Promise<string> {
     reader.readAsDataURL(file);
     reader.onload = () => {
       if (typeof reader.result === 'string') {
-        // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
-        const base64String = reader.result.split(',')[1];
-        resolve(base64String);
+        // Keep the full data URL (e.g., "data:application/pdf;base64,BASE64DATA")
+        resolve(reader.result);
       } else {
         reject(new Error('Failed to convert file to base64'));
       }

@@ -1745,19 +1745,59 @@ export default function DealDetail({
             {deal.termSheetUrl && (
               <div className="flex flex-col h-full">
                 {deal.termSheetUrl.includes('data:application/pdf') ? (
+                  // PDF files can be displayed directly in an iframe
                   <iframe 
                     src={deal.termSheetUrl} 
                     className="w-full h-full min-h-[500px] border rounded" 
                     title="Term Sheet PDF"
                   />
+                ) : deal.termSheetUrl.includes('data:application/vnd.openxmlformats-officedocument.wordprocessingml.document') ? (
+                  // For DOCX files, show a message that they need to be downloaded
+                  <div className="flex flex-col items-center justify-center p-8 border rounded bg-gray-50 min-h-[500px]">
+                    <File className="h-16 w-16 text-primary mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Word Document</h3>
+                    <p className="text-center text-muted-foreground mb-4">
+                      Word documents cannot be previewed directly. Please download the file to view it.
+                    </p>
+                    <Button onClick={() => {
+                      if (!deal.termSheetUrl) return;
+                      const a = document.createElement('a');
+                      a.href = deal.termSheetUrl;
+                      a.download = 'term-sheet.docx';
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                    }}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Word Document
+                    </Button>
+                  </div>
+                ) : deal.termSheetUrl.includes('data:') ? (
+                  // For other data URLs, show a generic message
+                  <div className="flex flex-col items-center justify-center p-8 border rounded bg-gray-50 min-h-[500px]">
+                    <File className="h-16 w-16 text-primary mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Document</h3>
+                    <p className="text-center text-muted-foreground mb-4">
+                      This document format cannot be previewed. Please download the file to view it.
+                    </p>
+                    <Button onClick={() => {
+                      if (!deal.termSheetUrl) return;
+                      const a = document.createElement('a');
+                      a.href = deal.termSheetUrl;
+                      a.download = 'term-sheet';
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                    }}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Document
+                    </Button>
+                  </div>
                 ) : (
-                  <div 
-                    className="w-full overflow-y-auto rounded border p-6 bg-white" 
-                    dangerouslySetInnerHTML={{ __html: deal.termSheetUrl.includes('data:') 
-                      ? 'Document format not supported for preview. Please download to view.' 
-                      : deal.termSheetUrl 
-                    }} 
-                  />
+                  // For non-data URLs or plain text
+                  <div className="w-full overflow-y-auto rounded border p-6 bg-white">
+                    {deal.termSheetUrl}
+                  </div>
                 )}
                 <div className="flex justify-between mt-4">
                   <Button variant="outline" onClick={() => setIsTermSheetViewerOpen(false)}>
@@ -1765,9 +1805,17 @@ export default function DealDetail({
                   </Button>
                   <Button onClick={() => {
                     if (!deal.termSheetUrl) return;
+                    
+                    // Determine file extension based on data URL
+                    let extension = 'pdf';
+                    if (deal.termSheetUrl.includes('data:application/vnd.openxmlformats-officedocument.wordprocessingml.document')) {
+                      extension = 'docx';
+                    }
+                    
+                    // Create and trigger download
                     const a = document.createElement('a');
-                    a.href = deal.termSheetUrl || '';
-                    a.download = 'term-sheet.pdf';
+                    a.href = deal.termSheetUrl;
+                    a.download = `term-sheet.${extension}`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
