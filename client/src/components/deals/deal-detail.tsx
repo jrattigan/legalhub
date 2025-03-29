@@ -110,6 +110,7 @@ export default function DealDetail({
     description: deal.description || '',
     companyId: deal.companyId,
     companyName: deal.companyName,
+    companyCounsel: deal.companyCounsel || '',
     amount: deal.amount || '',
     status: deal.status,
     dueDate: deal.dueDate ? new Date(deal.dueDate).toISOString().split('T')[0] : '',
@@ -250,6 +251,7 @@ export default function DealDetail({
       description: string | null;
       companyId: number;
       companyName: string;
+      companyCounsel: string | null;
       amount: string | null;
       status: string;
       dueDate: string | null;
@@ -264,6 +266,7 @@ export default function DealDetail({
         description: updatedDeal.description,
         companyId: updatedDeal.companyId,
         companyName: updatedDeal.companyName,
+        companyCounsel: updatedDeal.companyCounsel,
         amount: updatedDeal.amount,
         status: updatedDeal.status,
         dueDate: updatedDeal.dueDate ? new Date(updatedDeal.dueDate) : null,
@@ -387,6 +390,7 @@ export default function DealDetail({
       description: editDealForm.description,
       companyId: companyId,
       companyName: editDealForm.companyName,
+      companyCounsel: editDealForm.companyCounsel,
       amount: editDealForm.amount,
       status: editDealForm.status,
       dueDate: editDealForm.dueDate ? editDealForm.dueDate : null,
@@ -552,6 +556,21 @@ export default function DealDetail({
     }
   };
   
+  // Render company information with its counsel
+  const renderCompanyInfo = () => {
+    return (
+      <div className="flex flex-col text-sm text-neutral-500">
+        <div className="flex items-center">
+          <Building className="h-4 w-4 mr-1" />
+          <span>
+            Company: {deal.companyName}
+            {deal.companyCounsel && ` / Counsel: ${deal.companyCounsel}`}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   // Format the lead investor information
   const renderLeadInvestorInfo = () => {
     if (!deal.leadInvestor) {
@@ -708,6 +727,33 @@ export default function DealDetail({
                     }}
                     placeholder="Select a company"
                   />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="companyCounsel" className="text-right">
+                  Company Counsel
+                </Label>
+                <div className="col-span-3">
+                  <Select
+                    value={editDealForm.companyCounsel}
+                    onValueChange={(value) => setEditDealForm({
+                      ...editDealForm,
+                      companyCounsel: value
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a law firm" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      {allLawFirms.map((firm: LawFirmOption) => (
+                        <SelectItem key={firm.id} value={firm.name}>
+                          {firm.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               
@@ -1188,6 +1234,8 @@ export default function DealDetail({
                 )}
               </span>
             </div>
+            {/* Company Information */}
+            {renderCompanyInfo()}
             {/* Lead Investor Information */}
             {renderLeadInvestorInfo()}
             {renderInvestmentTeam()}
