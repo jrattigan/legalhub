@@ -119,10 +119,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   // Get attorneys associated with law firms
   const { data: dealCounsels = [] } = useQuery<any[]>({
     queryKey: ['/api/deals', dealId, 'counsel'],
-    enabled: isDialogOpen && Boolean(dealId) && currentTaskType === 'external',
-    onSuccess: (data) => {
-      console.log("Deal counsels loaded:", JSON.stringify(data));
-    }
+    enabled: isDialogOpen && Boolean(dealId) && currentTaskType === 'external'
   });
 
   // Complete task mutation
@@ -451,32 +448,13 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                               {user.fullName}
                             </SelectItem>
                           ))}
-                          {currentTaskType === 'external' && dealCounsels?.map((counsel: any) => {
-                            // Check if the counsel object has the expected structure before using it
-                            if (!counsel || typeof counsel !== 'object') {
-                              console.warn("Invalid counsel object:", counsel);
-                              return null;
-                            }
-
-                            // Get the law firm and attorney from the counsel object, using optional chaining
-                            const lawFirmId = counsel.lawFirmId;
-                            const attorneyId = counsel.attorneyId;
-                            const role = counsel.role || 'Unknown';
-                            
-                            // Find actual law firm and attorney objects from their IDs
-                            const lawFirm = lawFirms.find(firm => firm.id === lawFirmId);
-                            
-                            // Only render if we have valid objects
-                            if (lawFirm) {
-                              return (
-                                <SelectItem key={`firm-${lawFirmId}`} value={`firm-${lawFirmId}`}>
-                                  {lawFirm.name} ({role})
-                                </SelectItem>
-                              );
-                            }
-                            
-                            return null;
-                          })}
+                          {currentTaskType === 'external' && Array.isArray(lawFirms) && lawFirms.length > 0 && 
+                            lawFirms.map((lawFirm: any) => (
+                              <SelectItem key={`firm-${lawFirm.id}`} value={`firm-${lawFirm.id}`}>
+                                {lawFirm.name}
+                              </SelectItem>
+                            ))
+                          }
                         </SelectContent>
                       </Select>
                       <FormMessage />
