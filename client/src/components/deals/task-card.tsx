@@ -380,8 +380,9 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
         }
       });
       
-      // Only keep custom assignees that are actually used in tasks
-      return mergedList.filter(ca => usedIds.has(ca.id));
+      // Return the merged list without filtering out unused assignees
+      // so they persist even when no tasks are using them
+      return mergedList;
     });
   }, [tasks]);
 
