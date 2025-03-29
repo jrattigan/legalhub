@@ -1741,12 +1741,14 @@ export default function DealDetail({
             {deal.termSheetUrl && (
               <div className="flex flex-col h-full">
                 {deal.termSheetUrl.includes('data:application/pdf') ? (
-                  // PDF files can be displayed directly in an iframe
-                  <iframe 
-                    src={deal.termSheetUrl} 
-                    className="w-full h-full min-h-[500px]" 
-                    title="Term Sheet PDF"
-                  />
+                  // PDF files can be displayed directly in an iframe with customized viewer
+                  <div className="w-full h-full relative">
+                    <iframe 
+                      src={`${deal.termSheetUrl}#toolbar=1&navpanes=0&scrollbar=0&view=FitH`}
+                      className="w-full h-full min-h-[500px]" 
+                      title="Term Sheet PDF"
+                    />
+                  </div>
                 ) : deal.termSheetUrl.includes('data:application/vnd.openxmlformats-officedocument.wordprocessingml.document') ? (
                   // For DOCX files, use Office Online viewer
                   <div className="flex flex-col h-full">
