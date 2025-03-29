@@ -723,7 +723,7 @@ export default function DealDetail({
                                 title: fileData.fileName,
                                 dealId: deal.id,
                                 description: "Uploaded document",
-                                category: "General",
+                                category: "Primary",
                                 status: "Draft",
                                 fileType: fileData.fileType,
                                 assigneeId: null
@@ -962,7 +962,7 @@ export default function DealDetail({
                                 title: fileData.fileName,
                                 dealId: deal.id,
                                 description: "Uploaded document",
-                                category: "General",
+                                category: "Primary",
                                 status: "Draft",
                                 fileType: fileData.fileType,
                                 assigneeId: null
