@@ -811,6 +811,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete a task
+  app.delete("/api/tasks/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid task ID" });
+    }
+
+    try {
+      const deleted = await storage.deleteTask(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      res.status(200).json({ success: true, message: "Task deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      res.status(500).json({ message: "Failed to delete task" });
+    }
+  });
+
   app.post("/api/tasks/:id/complete", async (req, res) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
