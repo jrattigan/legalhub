@@ -1029,20 +1029,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Extract unique lead investor names from existing deals
       const customLeadInvestors = new Set<string>();
       
+      // Build a map to count how many times each investor appears
+      // This helps us track which investors are actually used in deals
+      const investorUsageCounts: Record<string, number> = {};
+      
       // Log all lead investors from deals for debugging
       console.log("Extracting lead investors from deals:");
       deals.forEach((deal: any) => {
         if (deal.leadInvestor) {
           console.log(`Deal ${deal.id}: Lead investor = "${deal.leadInvestor}"`);
+          
+          // Add to the set of custom investors
           customLeadInvestors.add(deal.leadInvestor);
+          
+          // Increment the count for this investor
+          investorUsageCounts[deal.leadInvestor] = (investorUsageCounts[deal.leadInvestor] || 0) + 1;
         }
       });
       
       // Log custom lead investors extracted from deals
       console.log("Custom lead investors extracted:", Array.from(customLeadInvestors));
+      console.log("Investor usage counts:", investorUsageCounts);
       
-      // Add common VC firms to the options
-      const vcFirms = [
+      // Add common VC firms to the options - default list
+      const defaultVcFirms = [
         "8VC",
         "Accel Partners",
         "Andreessen Horowitz",
@@ -1068,7 +1078,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "Institutional Venture Partners (IVP)",
         "Khosla Ventures",
         "Kleiner Perkins Caufield Byers",
-        "LSVP", // Added LSVP explicitly to ensure it's included
         "Lightspeed Venture Partners",
         "Lux Capital",
         "Madrona Venture Group",
@@ -1078,7 +1087,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "QED Investors",
         "Redpoint Ventures",
         "Ribbit Capital",
-        "Rogue Capital Ventures", // Added based on existing data
         "Sapphire Ventures",
         "Scale Venture Partners",
         "Sequoia Capital",
@@ -1089,14 +1097,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "Union Square Ventures"
       ];
       
-      // Start with all custom lead investors
-      const allLeadInvestors = new Set<string>(customLeadInvestors);
+      // Start with only the custom lead investors that are actually in use
+      const activeLeadInvestors = new Set<string>();
       
-      // Add VC firms that aren't already in the custom list
-      vcFirms.forEach(firm => allLeadInvestors.add(firm));
+      // Add only investors that are actually used in current deals
+      for (const investor of customLeadInvestors) {
+        if (investorUsageCounts[investor] && investorUsageCounts[investor] > 0) {
+          console.log(`Adding active investor: ${investor} (used in ${investorUsageCounts[investor]} deals)`);
+          activeLeadInvestors.add(investor);
+        } else {
+          console.log(`Skipping unused investor: ${investor}`);
+        }
+      }
+      
+      // Add default VC firms 
+      defaultVcFirms.forEach(firm => activeLeadInvestors.add(firm));
       
       // Sort alphabetically and return as array
-      const result = Array.from(allLeadInvestors).sort();
+      const result = Array.from(activeLeadInvestors).sort();
       console.log("Final lead investors list (first 10):", result.slice(0, 10), "...");
       
       res.json(result);
