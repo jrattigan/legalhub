@@ -186,15 +186,23 @@ export default function AllocationsTab({ dealId, onRefreshData }: AllocationsTab
 
   // Handle form submission
   const onSubmit = (data: AllocationFormValues) => {
+    // Ensure fundId is a number 
+    const cleanedData = {
+      ...data,
+      fundId: Number(data.fundId),
+      // Ensure numberOfShares is either a number or null
+      numberOfShares: data.numberOfShares ? Number(data.numberOfShares) : null
+    };
+    
     if (isEditingAllocation !== null) {
       // Update existing allocation
       updateAllocationMutation.mutate({
         id: isEditingAllocation,
-        allocation: data
+        allocation: cleanedData
       });
     } else {
       // Create new allocation
-      createAllocationMutation.mutate(data);
+      createAllocationMutation.mutate(cleanedData);
     }
   };
 
