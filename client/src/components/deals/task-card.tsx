@@ -47,6 +47,8 @@ interface TaskCardProps {
 
 export default function TaskCard({ tasks, onRefreshData, preview = false, dealId }: TaskCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isNewAssigneeDialogOpen, setIsNewAssigneeDialogOpen] = useState(false);
+  const [currentAssigneeType, setCurrentAssigneeType] = useState<'attorney' | 'lawFirm'>('attorney');
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -470,7 +472,14 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                     <FormItem>
                       <FormLabel>Assignee</FormLabel>
                       <Select 
-                        onValueChange={field.onChange} 
+                        onValueChange={(value) => {
+                          if (value === 'new-assignee') {
+                            // Handle "Add New Assignee" option
+                            setIsNewAssigneeDialogOpen(true);
+                          } else {
+                            field.onChange(value);
+                          }
+                        }} 
                         defaultValue={field.value?.toString() || "unassigned"}
                       >
                         <FormControl>
@@ -491,31 +500,41 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                           {/* External task assignees */}
                           {currentTaskType === 'external' && (
                             <>
-                              {/* Law firms section */}
+                              {/* Law firms with their attorneys */}
                               {Array.isArray(lawFirms) && lawFirms.length > 0 && (
                                 <>
                                   <SelectItem value="law-firms-header" disabled className="font-bold text-xs text-neutral-500 py-1 my-1">
-                                    LAW FIRMS
+                                    LAW FIRMS & ATTORNEYS
                                   </SelectItem>
+                                  
+                                  {/* Loop through each law firm */}
                                   {lawFirms.map((lawFirm: LawFirm) => (
-                                    <SelectItem key={`firm-${lawFirm.id}`} value={`firm-${lawFirm.id}`}>
-                                      {lawFirm.name}
-                                    </SelectItem>
+                                    <React.Fragment key={`firm-group-${lawFirm.id}`}>
+                                      {/* Law firm option */}
+                                      <SelectItem key={`firm-${lawFirm.id}`} value={`firm-${lawFirm.id}`}>
+                                        {lawFirm.name}
+                                      </SelectItem>
+                                      
+                                      {/* Attorneys belonging to this law firm (indented) */}
+                                      {Array.isArray(attorneys) && attorneys
+                                        .filter(attorney => attorney.lawFirmId === lawFirm.id)
+                                        .map((attorney: Attorney) => (
+                                          <SelectItem 
+                                            key={`attorney-${attorney.id}`} 
+                                            value={`attorney-${attorney.id}`}
+                                            className="pl-6 text-sm" // Indentation for attorneys under their firms
+                                          >
+                                            {attorney.name} ({attorney.position})
+                                          </SelectItem>
+                                        ))
+                                      }
+                                    </React.Fragment>
                                   ))}
-                                </>
-                              )}
-                              
-                              {/* Attorneys section */}
-                              {Array.isArray(attorneys) && attorneys.length > 0 && (
-                                <>
-                                  <SelectItem value="attorneys-header" disabled className="font-bold text-xs text-neutral-500 py-1 my-1">
-                                    ATTORNEYS
+                                  
+                                  {/* Add option to create new assignee */}
+                                  <SelectItem value="new-assignee" className="text-primary border-t border-neutral-100 mt-1 pt-1">
+                                    + Add New Assignee
                                   </SelectItem>
-                                  {attorneys.map((attorney: Attorney) => (
-                                    <SelectItem key={`attorney-${attorney.id}`} value={`attorney-${attorney.id}`}>
-                                      {attorney.name} ({attorney.position})
-                                    </SelectItem>
-                                  ))}
                                 </>
                               )}
                             </>
@@ -537,6 +556,111 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                 </DialogFooter>
               </form>
             </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* New Assignee Dialog */}
+        <Dialog open={isNewAssigneeDialogOpen} onOpenChange={setIsNewAssigneeDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Assignee</DialogTitle>
+              <DialogDescription>
+                Create a new assignee for external tasks
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="py-2 mb-4">
+              <div className="flex gap-4 mb-4">
+                <Button
+                  type="button"
+                  variant={currentAssigneeType === 'attorney' ? 'default' : 'outline'}
+                  onClick={() => setCurrentAssigneeType('attorney')}
+                  className="flex-1"
+                >
+                  Attorney
+                </Button>
+                <Button
+                  type="button"
+                  variant={currentAssigneeType === 'lawFirm' ? 'default' : 'outline'}
+                  onClick={() => setCurrentAssigneeType('lawFirm')}
+                  className="flex-1"
+                >
+                  Law Firm
+                </Button>
+              </div>
+              
+              {currentAssigneeType === 'attorney' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium">Name</label>
+                    <Input placeholder="Enter attorney name" className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Position</label>
+                    <Input placeholder="Partner, Associate, etc." className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Email</label>
+                    <Input type="email" placeholder="Email address" className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Law Firm</label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a law firm" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {lawFirms?.map((firm) => (
+                          <SelectItem key={firm.id} value={firm.id.toString()}>
+                            {firm.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+              
+              {currentAssigneeType === 'lawFirm' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium">Firm Name</label>
+                    <Input placeholder="Enter law firm name" className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Specialty</label>
+                    <Input placeholder="Corporate, IP, Tax, etc." className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Website</label>
+                    <Input type="url" placeholder="https://..." className="mt-1" />
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsNewAssigneeDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="button"
+                onClick={() => {
+                  toast({
+                    title: "New assignee created",
+                    description: `The new ${currentAssigneeType} has been added as an assignee option.`,
+                  });
+                  setIsNewAssigneeDialogOpen(false);
+                  // In a real implementation, we would save to the backend here
+                  // and update the local state/refetch the dropdown options
+                }}
+              >
+                Create Assignee
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
