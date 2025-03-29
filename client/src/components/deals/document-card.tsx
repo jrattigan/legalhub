@@ -92,7 +92,7 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
                       title: fileData.fileName,
                       dealId: dealId,
                       description: "Uploaded document",
-                      category: "General",
+                      category: "Primary",
                       status: "Draft",
                       fileType: fileData.fileType,
                       assigneeId: null

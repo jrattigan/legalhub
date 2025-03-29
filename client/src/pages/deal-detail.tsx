@@ -104,16 +104,6 @@ export default function DealDetailPage() {
   return (
     <AppLayout>
       <div className="flex flex-col h-full">
-        <div className="px-6 py-4">
-          <Button 
-            variant="ghost" 
-            onClick={handleBack}
-            className="mb-0"
-          >
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Back to Deals
-          </Button>
-        </div>
         
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">

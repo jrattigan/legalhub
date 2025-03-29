@@ -56,7 +56,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   };
 
   // Get users for assignee dropdown
-  const { data: users } = useQuery({
+  const { data: users = [] } = useQuery<User[]>({
     queryKey: ['/api/users'],
     enabled: isDialogOpen
   });
@@ -303,6 +303,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                           placeholder="Enter task description" 
                           className="resize-none" 
                           {...field} 
+                          value={field.value || ''}
                         />
                       </FormControl>
                       <FormMessage />
@@ -316,7 +317,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                     name="dueDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Due Date</FormLabel>
+                        <FormLabel>Closing Date</FormLabel>
                         <FormControl>
                           <Input 
                             type="date" 
@@ -419,7 +420,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
               </div>
               <div className="text-xs text-neutral-500 mt-0.5 flex items-center flex-wrap">
                 <span className="mr-2">
-                  {task.dueDate && `Due: ${format(new Date(task.dueDate), 'MMM d')}`}
+                  {task.dueDate && `Closing Date: ${format(new Date(task.dueDate), 'MMM d')}`}
                 </span>
                 {task.priority === 'high' && (
                   <span className="bg-destructive-light text-destructive px-1.5 py-0.5 rounded text-xs">
@@ -458,7 +459,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                     {task.title}
                   </div>
                   <div className="text-xs text-neutral-500 mt-0.5">
-                    <span>Completed: {task.completedAt ? format(new Date(task.completedAt), 'MMM d') : 'Unknown'}</span>
+                    <span>Completed on: {task.completedAt ? format(new Date(task.completedAt), 'MMM d') : 'Unknown'}</span>
                   </div>
                 </div>
                 <div className="flex-shrink-0">

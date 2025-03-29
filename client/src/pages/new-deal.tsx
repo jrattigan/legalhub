@@ -257,7 +257,7 @@ export default function NewDeal() {
                       name="dueDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Due Date</FormLabel>
+                          <FormLabel>Closing Date</FormLabel>
                           <FormControl>
                             <Input 
                               type="date" 

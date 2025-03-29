@@ -392,7 +392,7 @@ export default function DealDetail({
               
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="dueDate" className="text-right">
-                  Due Date
+                  Closing Date
                 </Label>
                 <Input
                   id="dueDate"
@@ -505,8 +505,8 @@ export default function DealDetail({
               <span className="flex items-center">
                 <Calendar className="h-4 w-4 mr-1" />
                 {deal.dueDate ? 
-                  `Due: ${format(new Date(deal.dueDate), 'MMM dd, yyyy')}` : 
-                  'No due date'}
+                  `Closing Date: ${format(new Date(deal.dueDate), 'MMM dd, yyyy')}` : 
+                  'No closing date'}
               </span>
             </div>
           </div>
@@ -778,19 +778,19 @@ export default function DealDetail({
                   variant="ghost" 
                   className="px-3 py-2 text-sm font-medium text-neutral-500 hover:text-neutral-800"
                 >
-                  Corporate
+                  Primary
                 </Button>
                 <Button 
                   variant="ghost" 
                   className="px-3 py-2 text-sm font-medium text-neutral-500 hover:text-neutral-800"
                 >
-                  Financial
+                  Ancillary
                 </Button>
                 <Button 
                   variant="ghost" 
                   className="px-3 py-2 text-sm font-medium text-neutral-500 hover:text-neutral-800"
                 >
-                  Legal
+                  Other
                 </Button>
               </div>
               
@@ -826,7 +826,7 @@ export default function DealDetail({
         <TabsContent value="documents" className="m-0 overflow-y-auto flex-1" hidden={activeTab !== 'documents'}>
           <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
             <div className="flex justify-between items-center mb-3">
-              <h2 className="font-medium text-neutral-800">All Documents</h2>
+              <h2 className="font-medium text-neutral-800">Documents</h2>
               <div className="flex space-x-2">
                 <Dialog>
                   <DialogTrigger asChild>
@@ -855,7 +855,7 @@ export default function DealDetail({
                               title: fileData.fileName,
                               dealId: deal.id,
                               description: "Uploaded document",
-                              category: "General",
+                              category: "Primary",
                               status: "Draft",
                               fileType: fileData.fileType,
                               assigneeId: null
@@ -910,19 +910,19 @@ export default function DealDetail({
                 variant="ghost" 
                 className="px-3 py-2 text-sm font-medium text-neutral-500 hover:text-neutral-800"
               >
-                Corporate
+                Primary
               </Button>
               <Button 
                 variant="ghost" 
                 className="px-3 py-2 text-sm font-medium text-neutral-500 hover:text-neutral-800"
               >
-                Financial
+                Ancillary
               </Button>
               <Button 
                 variant="ghost" 
                 className="px-3 py-2 text-sm font-medium text-neutral-500 hover:text-neutral-800"
               >
-                Legal
+                Other
               </Button>
             </div>
             

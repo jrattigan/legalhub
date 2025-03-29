@@ -1,0 +1,89 @@
+Perfect — here’s a complete and clear Replit prompt to implement your requested changes:
+
+---
+
+**Prompt for Replit (Deal Detail Page Enhancements):**
+
+**General UI Changes:**
+
+1. **Remove** the "< Back to Deals" link at the top and shift all remaining content upward to reduce vertical whitespace.
+
+2. **Update the deal name display format** to:  
+   **`[Company Display Name] - [Deal Name]`**  
+   - Pull `Company Display Name` from the linked Company page.  
+   - If blank, fall back to the `Company Legal Name`.  
+   - `Deal Name` is the `name` field on the deal record.
+
+3. **Change the "Due Date" label to "Closing Date"** throughout.  
+   - On the edit screen, include a checkbox labeled **“Committed?”**  
+   - If checked, display a **green checkmark icon** (✅) with tooltip “Committed Closing Date” next to the date.  
+   - Alternatively, use a badge that says “Committed” with green background and white text.
+
+4. **Below the Company Name**, add a new line labeled **“Lead Investor:”**  
+   - On edit screens, default to the company name from global settings (see point 8).  
+   - If the lead investor is **our firm**, display:  
+     `Lead Investor: Rogue Capital Ventures / Counsel: Smith & Wilson LLP (Sarah Wilson)`  
+     - Pull Outside Counsel data from associated deal record.  
+   - If the lead investor is **another firm**, prompt user to enter their outside counsel and display:  
+     `Lead Investor: [Firm Name] / Counsel: [Other Counsel Name (Attorney)]`  
+   - Then, on the **next line**, always show:  
+     `Rogue Capital Ventures Counsel: Smith & Wilson LLP (Sarah Wilson)`
+
+5. **Term Sheet Link:**  
+   - Add a field labeled **“Term Sheet”**.  
+   - If no file is uploaded, show an **Upload button**.  
+   - If uploaded, show the file as a **clickable hyperlink** that opens in a **modal viewer** (support `.pdf` and `.docx`).
+
+6. **Add a "Current Status" field** (free text, editable inline or via pencil icon).  
+   - When updated, append a timestamped entry to the **Deal Timeline** with the new status.
+
+7. **Show Investment Team** section.  
+   - List all members.  
+   - Visually **highlight the lead investor** with a **rounded border** and different background.
+
+8. **Add "Company Counsel"** next to Company Name, styled like the Outside Counsel field.
+
+9. **Add a "Data Room" link** field.  
+   - Show as a standard external hyperlink.
+
+---
+
+**Section Restructure:**
+
+- Add new main sections below Overview:
+
+1. **Allocations**  
+   - Fields:  
+     - `Funds` (multi-select)  
+     - `Investment Amount ($)`  
+     - `Share Class` (text)  
+     - `Number of Shares` (number)
+
+2. **Documents**  
+   - Keep existing functionality  
+   - Update document tabs to: **Primary, Ancillary, Other**
+
+3. **Issues**  
+   - Keep as-is
+
+4. **Closing Checklist**  
+   - Fields:  
+     - `Item` (text)  
+     - `Due Date` (date)  
+     - `Assignee` (internal user, show initials with tooltip showing full name)
+
+5. **Internal Tasks**  
+   - Rename “Tasks” section to “Internal Tasks”
+
+---
+
+**Global Settings:**
+
+- Create a **Global Settings** page.
+- Add a field: **“Our Company Name”**
+  - Default to **Rogue Capital Ventures**
+  - This will be used to determine logic for lead investor context above.
+
+---
+
+Let me know if you'd like a Figma reference layout or help breaking this into GitHub issues or component tasks.

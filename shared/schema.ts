@@ -63,10 +63,20 @@ export const deals = pgTable("deals", {
   description: text("description"),
   dealId: text("deal_id").notNull().unique(),
   status: text("status").notNull().default("draft"),
-  dueDate: timestamp("due_date"),
+  dueDate: timestamp("due_date"),  // Renamed to "Closing Date" in UI
+  isCommitted: boolean("is_committed").default(false),
   companyId: integer("company_id").notNull(),  // Foreign key to companies table
   companyName: text("company_name").notNull(), // For backward compatibility
   amount: text("amount"),
+  leadInvestor: text("lead_investor"),
+  leadInvestorCounsel: text("lead_investor_counsel"),
+  companyCounsel: text("company_counsel"),
+  currentStatus: text("current_status"),
+  termSheetUrl: text("term_sheet_url"),
+  dataRoomUrl: text("data_room_url"),
+  shareClass: text("share_class"),
+  numberOfShares: integer("number_of_shares"),
+  allocationFunds: json("allocation_funds").$type<string[]>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -77,9 +87,19 @@ export const insertDealSchema = createInsertSchema(deals).pick({
   dealId: true,
   status: true,
   dueDate: true,
+  isCommitted: true,
   companyId: true,
   companyName: true,
   amount: true,
+  leadInvestor: true,
+  leadInvestorCounsel: true,
+  companyCounsel: true,
+  currentStatus: true,
+  termSheetUrl: true,
+  dataRoomUrl: true,
+  shareClass: true,
+  numberOfShares: true,
+  allocationFunds: true,
 }).transform((data) => {
   const transformedData = { ...data };
   
@@ -324,6 +344,54 @@ export const insertTimelineEventSchema = createInsertSchema(timelineEvents).pick
   referenceType: true,
 });
 
+// Closing checklist items
+export const closingChecklist = pgTable("closing_checklist", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  dueDate: timestamp("due_date"),
+  assigneeId: integer("assignee_id"),
+  isComplete: boolean("is_complete").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertClosingChecklistSchema = createInsertSchema(closingChecklist).pick({
+  dealId: true,
+  title: true,
+  description: true,
+  dueDate: true,
+  assigneeId: true,
+  isComplete: true,
+}).transform((data) => {
+  const transformedData = { ...data };
+  
+  if (transformedData.assigneeId === undefined) {
+    transformedData.assigneeId = null;
+  }
+  
+  if (transformedData.dueDate && typeof transformedData.dueDate === 'string') {
+    transformedData.dueDate = new Date(transformedData.dueDate);
+  }
+  
+  return transformedData;
+});
+
+// Application global settings
+export const appSettings = pgTable("app_settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertAppSettingsSchema = createInsertSchema(appSettings).pick({
+  key: true,
+  value: true,
+});
+
 // Export types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -360,3 +428,9 @@ export type InsertDealCounsel = z.infer<typeof insertDealCounselSchema>;
 
 export type TimelineEvent = typeof timelineEvents.$inferSelect;
 export type InsertTimelineEvent = z.infer<typeof insertTimelineEventSchema>;
+
+export type ClosingChecklistItem = typeof closingChecklist.$inferSelect;
+export type InsertClosingChecklistItem = z.infer<typeof insertClosingChecklistSchema>;
+
+export type AppSetting = typeof appSettings.$inferSelect;
+export type InsertAppSetting = z.infer<typeof insertAppSettingsSchema>;
