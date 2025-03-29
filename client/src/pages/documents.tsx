@@ -23,6 +23,7 @@ import {
 import { FileText, Search, Filter, Upload, Clock, Download, Eye } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { format } from 'date-fns';
+import { Deal, Document as DocumentType } from '@shared/schema';
 
 export default function Documents() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,18 +32,18 @@ export default function Documents() {
   const [, navigate] = useLocation();
   
   // Get all deals for filter
-  const { data: deals } = useQuery({ 
+  const { data: deals } = useQuery<Deal[]>({ 
     queryKey: ['/api/deals']
   });
   
   // Get all documents from all deals
-  const { data: allDocuments, isLoading } = useQuery({
+  const { data: allDocuments, isLoading } = useQuery<DocumentType[]>({
     queryKey: ['/api/deals/1/documents']
     // In a real app, we would have an endpoint to get all documents across deals
   });
   
   // Filter documents based on search and filters
-  const filteredDocuments = allDocuments?.filter((doc: any) => {
+  const filteredDocuments = allDocuments?.filter((doc: DocumentType) => {
     const matchesSearch = searchTerm === '' || 
       doc.title.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -105,7 +106,7 @@ export default function Documents() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Deals</SelectItem>
-                    {deals?.map((deal: any) => (
+                    {deals?.map((deal: Deal) => (
                       <SelectItem key={deal.id} value={deal.id.toString()}>
                         {deal.title}
                       </SelectItem>
@@ -168,7 +169,7 @@ export default function Documents() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredDocuments?.map((doc: any) => (
+                    {filteredDocuments?.map((doc: DocumentType) => (
                       <TableRow key={doc.id} className="cursor-pointer hover:bg-neutral-50" onClick={() => navigate(`/documents/${doc.id}`)}>
                         <TableCell className="font-medium">
                           <div className="flex items-center">

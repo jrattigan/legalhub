@@ -18,7 +18,8 @@ import {
   Bar, 
   BarChart
 } from 'recharts';
-import { User, Deal } from '@shared/schema';
+import { User, Deal, Company } from '@shared/schema';
+import { formatDealTitle } from '@/lib/deal-title-formatter';
 
 export default function Dashboard() {
   const { 
@@ -39,17 +40,34 @@ export default function Dashboard() {
     retry: 2
   });
   
+  // Get companies data
+  const { 
+    data: companies, 
+    isLoading: isCompaniesLoading, 
+    error: companiesError 
+  } = useQuery<Company[]>({
+    queryKey: ['/api/companies'],
+    retry: 2
+  });
+  
+  // Find company by ID
+  const getCompanyById = (companyId: number): Company | undefined => {
+    return companies?.find(company => company.id === companyId);
+  };
+  
   // Check for loading and error states
-  const isLoading = isUserLoading || isDealsLoading;
-  const hasError = userError || dealsError;
+  const isLoading = isUserLoading || isDealsLoading || isCompaniesLoading;
+  const hasError = userError || dealsError || companiesError;
   
   console.log('Dashboard state:', { 
     isLoading, 
     hasError: hasError ? true : false, 
     userError, 
     dealsError,
+    companiesError,
     user: user ? 'User data available' : 'No user data',
-    deals: deals ? `${deals.length} deals available` : 'No deals data'
+    deals: deals ? `${deals.length} deals available` : 'No deals data',
+    companies: companies ? `${companies.length} companies available` : 'No companies data'
   });
   
   // Calculate counts based on data
@@ -104,6 +122,7 @@ export default function Dashboard() {
             <p className="text-gray-500 mb-4">
               {userError ? `User data error: ${(userError as Error).message}` : ''}
               {dealsError ? `Deals data error: ${(dealsError as Error).message}` : ''}
+              {companiesError ? `Companies data error: ${(companiesError as Error).message}` : ''}
             </p>
             <button 
               onClick={() => window.location.reload()} 
@@ -263,32 +282,35 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {deals?.slice(0, 5).map((deal) => (
-                      <Link key={deal.id} href={`/deals/${deal.id}`}>
-                        <div className="block p-3 rounded-md border border-neutral-200 hover:bg-neutral-50 cursor-pointer">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="font-medium">{deal.title}</div>
-                              <div className="text-xs text-neutral-500 mt-0.5">
-                                {deal.dealId} • {deal.status === 'completed' ? 'Closed' : 'Due'}: {deal.dueDate ? new Date(deal.dueDate).toLocaleDateString() : 'No date'}
+                    {deals?.slice(0, 5).map((deal) => {
+                      const company = getCompanyById(deal.companyId);
+                      return (
+                        <Link key={deal.id} href={`/deals/${deal.id}`}>
+                          <div className="block p-3 rounded-md border border-neutral-200 hover:bg-neutral-50 cursor-pointer">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="font-medium">{formatDealTitle(deal, company)}</div>
+                                <div className="text-xs text-neutral-500 mt-0.5">
+                                  {deal.dealId} • {deal.status === 'completed' ? 'Closed' : 'Due'}: {deal.dueDate ? new Date(deal.dueDate).toLocaleDateString() : 'No date'}
+                                </div>
+                              </div>
+                              <div className={`text-xs px-2 py-0.5 rounded-full ${
+                                deal.status === 'completed' ? 'bg-secondary-light text-secondary' :
+                                deal.status === 'urgent' ? 'bg-destructive-light text-destructive' :
+                                deal.status === 'in-progress' ? 'bg-warning-light text-warning' :
+                                'bg-neutral-200 text-neutral-600'
+                              }`}>
+                                {deal.status === 'completed' ? 'Completed' :
+                                 deal.status === 'in-progress' ? 'In Progress' :
+                                 deal.status === 'urgent' ? 'Urgent' :
+                                 deal.status === 'draft' ? 'Draft' :
+                                 deal.status.charAt(0).toUpperCase() + deal.status.slice(1)}
                               </div>
                             </div>
-                            <div className={`text-xs px-2 py-0.5 rounded-full ${
-                              deal.status === 'completed' ? 'bg-secondary-light text-secondary' :
-                              deal.status === 'urgent' ? 'bg-destructive-light text-destructive' :
-                              deal.status === 'in-progress' ? 'bg-warning-light text-warning' :
-                              'bg-neutral-200 text-neutral-600'
-                            }`}>
-                              {deal.status === 'completed' ? 'Completed' :
-                               deal.status === 'in-progress' ? 'In Progress' :
-                               deal.status === 'urgent' ? 'Urgent' :
-                               deal.status === 'draft' ? 'Draft' :
-                               deal.status.charAt(0).toUpperCase() + deal.status.slice(1)}
-                            </div>
                           </div>
-                        </div>
-                      </Link>
-                    ))}
+                        </Link>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>

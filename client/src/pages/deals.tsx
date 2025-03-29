@@ -6,7 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle } from 'lucide-react';
-import { Deal } from '@shared/schema';
+import { Deal, Company } from '@shared/schema';
+import { formatDealTitle } from '@/lib/deal-title-formatter';
 
 export default function Deals() {
   const [, navigate] = useLocation();
@@ -15,6 +16,16 @@ export default function Deals() {
   const { data: deals, isLoading: dealsLoading } = useQuery<Deal[]>({ 
     queryKey: ['/api/deals']
   });
+  
+  // Get companies data
+  const { data: companies, isLoading: companiesLoading } = useQuery<Company[]>({
+    queryKey: ['/api/companies']
+  });
+  
+  // Find company by ID
+  const getCompanyById = (companyId: number): Company | undefined => {
+    return companies?.find(company => company.id === companyId);
+  };
 
   // Handle creating a new deal
   const handleNewDeal = () => {
@@ -49,47 +60,50 @@ export default function Deals() {
               </CardContent>
             </Card>
           ) : (
-            (deals || []).map((deal) => (
-              <Card 
-                key={deal.id} 
-                className="cursor-pointer hover:shadow-md transition-shadow" 
-                onClick={() => navigate(`/deals/${deal.id}`)}
-              >
-                <CardContent className="p-5">
-                  <div className="flex justify-between items-start">
-                    <h3 className="text-lg font-medium">{deal.title}</h3>
-                    <Badge 
-                      variant="outline"
-                      className={`${
-                        deal.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
-                        deal.status === 'urgent' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
-                        deal.status === 'in-progress' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
-                        'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                      } capitalize`}
-                    >
-                      {deal.status.replace('-', ' ')}
-                    </Badge>
-                  </div>
+            deals.map((deal) => {
+              const company = getCompanyById(deal.companyId);
+              return (
+                <Card 
+                  key={deal.id} 
+                  className="cursor-pointer hover:shadow-md transition-shadow" 
+                  onClick={() => navigate(`/deals/${deal.id}`)}
+                >
+                  <CardContent className="p-5">
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-lg font-medium">{formatDealTitle(deal, company)}</h3>
+                      <Badge 
+                        variant="outline"
+                        className={`${
+                          deal.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                          deal.status === 'urgent' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
+                          deal.status === 'in-progress' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                          'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                        } capitalize`}
+                      >
+                        {deal.status.replace('-', ' ')}
+                      </Badge>
+                    </div>
                   
-                  <p className="text-neutral-600 text-sm mt-2 mb-3">
-                    {deal.description}
-                  </p>
-                  
-                  <div className="text-neutral-500 text-sm">
-                    <div className="flex justify-between mt-2">
-                      <div>
-                        <p><span className="font-medium">ID:</span> {deal.dealId}</p>
-                        <p><span className="font-medium">Company:</span> {deal.companyName}</p>
-                      </div>
-                      <div className="text-right">
-                        {deal.amount && <p>{deal.amount}</p>}
-                        {deal.dueDate && <p>Due: {new Date(deal.dueDate).toLocaleDateString()}</p>}
+                    <p className="text-neutral-600 text-sm mt-2 mb-3">
+                      {deal.description}
+                    </p>
+                    
+                    <div className="text-neutral-500 text-sm">
+                      <div className="flex justify-between mt-2">
+                        <div>
+                          <p><span className="font-medium">ID:</span> {deal.dealId}</p>
+                          <p><span className="font-medium">Company:</span> {deal.companyName}</p>
+                        </div>
+                        <div className="text-right">
+                          {deal.amount && <p>{deal.amount}</p>}
+                          {deal.dueDate && <p>Due: {new Date(deal.dueDate).toLocaleDateString()}</p>}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
       </div>
