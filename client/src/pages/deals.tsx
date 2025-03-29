@@ -96,7 +96,16 @@ export default function Deals() {
                         </div>
                         <div className="text-right">
                           {deal.amount && <p>{deal.amount}</p>}
-                          {deal.dueDate && <p>Due: {new Date(deal.dueDate).toLocaleDateString()}</p>}
+                          {deal.dueDate && (
+                            <p className="flex items-center">
+                              <span>Closing: {new Date(deal.dueDate).toLocaleDateString()}</span>
+                              {deal.isCommitted ? (
+                                <span className="text-sm ml-1" title="Committed Closing Date">🤝</span>
+                              ) : (
+                                <span className="text-sm ml-1" title="Closing Date is uncertain">🤷</span>
+                              )}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>

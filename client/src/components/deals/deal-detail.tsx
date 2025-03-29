@@ -425,7 +425,7 @@ export default function DealDetail({
                   {editDealForm.isCommitted ? (
                     <div className="text-lg" title="Committed Closing Date">🤝</div>
                   ) : (
-                    <div className="text-lg" title="Not Committed Closing Date">🤷</div>
+                    <div className="text-lg" title="Closing Date is uncertain">🤷</div>
                   )}
                 </div>
               </div>
@@ -536,7 +536,7 @@ export default function DealDetail({
                     {deal.isCommitted ? (
                       <span className="text-lg ml-1" title="Committed Closing Date">🤝</span>
                     ) : (
-                      <span className="text-lg ml-1" title="Not Committed Closing Date">🤷</span>
+                      <span className="text-lg ml-1" title="Closing Date is uncertain">🤷</span>
                     )}
                   </span>
                 ) : (
