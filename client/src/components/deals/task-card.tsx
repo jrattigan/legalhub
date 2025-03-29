@@ -51,8 +51,17 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   const { toast } = useToast();
   
   const formattedTasks = {
+    // First split by completion status
     pending: tasks.filter(task => !task.completed),
-    completed: tasks.filter(task => task.completed)
+    completed: tasks.filter(task => task.completed),
+    
+    // Then split pending tasks by type
+    internalPending: tasks.filter(task => !task.completed && (!task.taskType || task.taskType === 'internal')),
+    externalPending: tasks.filter(task => !task.completed && task.taskType === 'external'),
+    
+    // And split completed tasks by type too
+    internalCompleted: tasks.filter(task => task.completed && (!task.taskType || task.taskType === 'internal')),
+    externalCompleted: tasks.filter(task => task.completed && task.taskType === 'external')
   };
 
   // Get users for assignee dropdown
@@ -78,6 +87,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
         if (val === '' || val === 'unassigned' || val === null || val === undefined) return null;
         return typeof val === 'string' ? parseInt(val) : val;
       }),
+    taskType: z.string().default("internal"), // 'internal' or 'external'
     dealId: z.number().optional(), // Will be filled before submission
     completed: z.boolean().default(false)
   });
@@ -90,7 +100,8 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       status: 'active',
       priority: 'medium',
       dueDate: null,
-      assigneeId: null, 
+      assigneeId: null,
+      taskType: 'internal',
       completed: false,
       dealId: dealId || undefined
     }
@@ -205,6 +216,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
         dealId,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
         assigneeId: handleAssigneeId(data.assigneeId),
+        taskType: data.taskType || "internal", // Include task type
         completed: false
       };
       
@@ -390,6 +402,31 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                   )}
                 />
                 
+                <FormField
+                  control={form.control}
+                  name="taskType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Task Type</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select task type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="internal">Internal Task</SelectItem>
+                          <SelectItem value="external">External Task</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
                 <DialogFooter>
                   <Button 
                     type="submit" 
@@ -405,43 +442,93 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       </div>
       
       <div className="space-y-3">
-        {formattedTasks.pending.slice(0, preview ? 3 : undefined).map((task) => (
-          <div key={task.id} className="flex items-start p-2 rounded hover:bg-neutral-50">
-            <Checkbox 
-              id={`task-${task.id}`}
-              className="mt-1 h-4 w-4 rounded" 
-              checked={task.completed}
-              onCheckedChange={() => completeMutation.mutate(task.id)}
-              disabled={completeMutation.isPending}
-            />
-            <div className="ml-2 flex-1">
-              <div className={`font-medium text-sm text-neutral-800 ${task.completed ? 'line-through text-neutral-400' : ''}`}>
-                {task.title}
+        {/* Internal Pending Tasks Section */}
+        {formattedTasks.internalPending.length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-xs font-medium text-neutral-800 mb-2">Internal Tasks</h3>
+            {formattedTasks.internalPending.slice(0, preview ? 2 : undefined).map((task) => (
+              <div key={task.id} className="flex items-start p-2 rounded hover:bg-neutral-50">
+                <Checkbox 
+                  id={`task-${task.id}`}
+                  className="mt-1 h-4 w-4 rounded" 
+                  checked={task.completed}
+                  onCheckedChange={() => completeMutation.mutate(task.id)}
+                  disabled={completeMutation.isPending}
+                />
+                <div className="ml-2 flex-1">
+                  <div className={`font-medium text-sm text-neutral-800 ${task.completed ? 'line-through text-neutral-400' : ''}`}>
+                    {task.title}
+                  </div>
+                  <div className="text-xs text-neutral-500 mt-0.5 flex items-center flex-wrap">
+                    <span className="mr-2">
+                      {task.dueDate && `Closing Date: ${format(new Date(task.dueDate), 'MMM d')}`}
+                    </span>
+                    {task.priority === 'high' && (
+                      <span className="bg-destructive-light text-destructive px-1.5 py-0.5 rounded text-xs">
+                        Urgent
+                      </span>
+                    )}
+                  </div>
+                  {task.description && (
+                    <div className="text-xs text-neutral-600 mt-1">{task.description}</div>
+                  )}
+                </div>
+                <div className="flex-shrink-0">
+                  {task.assignee && (
+                    <Avatar className="h-6 w-6" style={{ backgroundColor: task.assignee.avatarColor }}>
+                      <AvatarFallback>{task.assignee.initials}</AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
               </div>
-              <div className="text-xs text-neutral-500 mt-0.5 flex items-center flex-wrap">
-                <span className="mr-2">
-                  {task.dueDate && `Closing Date: ${format(new Date(task.dueDate), 'MMM d')}`}
-                </span>
-                {task.priority === 'high' && (
-                  <span className="bg-destructive-light text-destructive px-1.5 py-0.5 rounded text-xs">
-                    Urgent
-                  </span>
-                )}
-              </div>
-              {task.description && (
-                <div className="text-xs text-neutral-600 mt-1">{task.description}</div>
-              )}
-            </div>
-            <div className="flex-shrink-0">
-              {task.assignee && (
-                <Avatar className="h-6 w-6" style={{ backgroundColor: task.assignee.avatarColor }}>
-                  <AvatarFallback>{task.assignee.initials}</AvatarFallback>
-                </Avatar>
-              )}
-            </div>
+            ))}
           </div>
-        ))}
+        )}
+
+        {/* External Pending Tasks Section */}
+        {formattedTasks.externalPending.length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-xs font-medium text-neutral-800 mb-2">External Tasks</h3>
+            {formattedTasks.externalPending.slice(0, preview ? 2 : undefined).map((task) => (
+              <div key={task.id} className="flex items-start p-2 rounded hover:bg-neutral-50">
+                <Checkbox 
+                  id={`task-${task.id}`}
+                  className="mt-1 h-4 w-4 rounded" 
+                  checked={task.completed}
+                  onCheckedChange={() => completeMutation.mutate(task.id)}
+                  disabled={completeMutation.isPending}
+                />
+                <div className="ml-2 flex-1">
+                  <div className={`font-medium text-sm text-neutral-800 ${task.completed ? 'line-through text-neutral-400' : ''}`}>
+                    {task.title}
+                  </div>
+                  <div className="text-xs text-neutral-500 mt-0.5 flex items-center flex-wrap">
+                    <span className="mr-2">
+                      {task.dueDate && `Closing Date: ${format(new Date(task.dueDate), 'MMM d')}`}
+                    </span>
+                    {task.priority === 'high' && (
+                      <span className="bg-destructive-light text-destructive px-1.5 py-0.5 rounded text-xs">
+                        Urgent
+                      </span>
+                    )}
+                  </div>
+                  {task.description && (
+                    <div className="text-xs text-neutral-600 mt-1">{task.description}</div>
+                  )}
+                </div>
+                <div className="flex-shrink-0">
+                  {task.assignee && (
+                    <Avatar className="h-6 w-6" style={{ backgroundColor: task.assignee.avatarColor }}>
+                      <AvatarFallback>{task.assignee.initials}</AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         
+        {/* Completed Tasks Section */}
         {formattedTasks.completed.length > 0 && (
           <div className="border-t border-neutral-100 pt-2 mt-3">
             <h3 className="text-xs font-medium text-neutral-500 mb-2">Completed Tasks</h3>

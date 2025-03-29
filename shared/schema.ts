@@ -209,6 +209,7 @@ export const tasks = pgTable("tasks", {
   priority: text("priority").notNull().default("medium"),
   dueDate: timestamp("due_date"),
   assigneeId: integer("assignee_id"),
+  taskType: text("task_type").notNull().default("internal"), // 'internal' or 'external'
   completed: boolean("completed").default(false).notNull(),
   completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -222,6 +223,7 @@ export const insertTaskSchema = createInsertSchema(tasks).pick({
   priority: true,
   dueDate: true,
   assigneeId: true,
+  taskType: true,
   completed: true,
 }).transform((data) => {
   // Handle date conversion from string to Date
@@ -230,6 +232,11 @@ export const insertTaskSchema = createInsertSchema(tasks).pick({
   // Ensure assigneeId is null and not undefined when empty
   if (transformedData.assigneeId === undefined) {
     transformedData.assigneeId = null;
+  }
+  
+  // Ensure taskType has a default if not provided
+  if (transformedData.taskType === undefined) {
+    transformedData.taskType = "internal";
   }
   
   // Parse date strings into Date objects
