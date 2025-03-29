@@ -575,6 +575,9 @@ export default function DealDetail({
   
   // Render company information with its counsel
   const renderCompanyInfo = () => {
+    // Debug: Print deal object to console to see available properties
+    console.log("Deal object in renderCompanyInfo:", deal);
+    
     return (
       <div className="flex flex-col text-sm text-neutral-500">
         <div className="flex items-center">
@@ -583,11 +586,16 @@ export default function DealDetail({
             Company: {deal.companyName}
           </span>
         </div>
-        {deal.companyCounsel && (
+        {/* Find company counsel from the counsel array */}
+        {counsel.filter(c => c.role.includes("Company") || c.role === "Supporting").length > 0 && (
           <div className="flex items-center ml-5 mt-0.5">
             <span>
-              Company Counsel: {deal.companyCounsel}
-              {deal.companyAttorneys && ` (${deal.companyAttorneys})`}
+              Company Counsel: {
+                counsel
+                  .filter(c => c.role.includes("Company") || c.role === "Supporting")
+                  .map(c => `${c.lawFirm.name}${c.attorney ? ` (${c.attorney.name})` : ''}`)
+                  .join(", ")
+              }
             </span>
           </div>
         )}
