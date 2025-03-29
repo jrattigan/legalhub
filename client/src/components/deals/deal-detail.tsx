@@ -390,7 +390,7 @@ export default function DealDetail({
       description: editDealForm.description,
       companyId: companyId,
       companyName: editDealForm.companyName,
-      companyCounsel: editDealForm.companyCounsel,
+      companyCounsel: editDealForm.companyCounsel === "none" ? "" : editDealForm.companyCounsel,
       amount: editDealForm.amount,
       status: editDealForm.status,
       dueDate: editDealForm.dueDate ? editDealForm.dueDate : null,
@@ -746,7 +746,7 @@ export default function DealDetail({
                       <SelectValue placeholder="Select a law firm" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {allLawFirms.map((firm: LawFirmOption) => (
                         <SelectItem key={firm.id} value={firm.name}>
                           {firm.name}
