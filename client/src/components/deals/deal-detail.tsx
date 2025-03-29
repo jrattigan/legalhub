@@ -3,8 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Calendar, Edit, MoreHorizontal, Eye, Filter, Download, Share2, 
   Trash2, Clock, Plus, File, CheckSquare, AlertCircle as Alert, Users,
-  Building
+  Building, FileText, Upload
 } from 'lucide-react';
+import { FileUpload } from '@/components/ui/file-upload';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -48,12 +49,12 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Deal, User, Document, Task, Issue, LawFirm, Attorney, TimelineEvent, Company } from '@shared/schema';
 import { formatDealTitle } from '@/lib/deal-title-formatter';
+import { convertFileToBase64, getFileExtension } from '@/lib/file-helpers';
 import DocumentCard from './document-card';
 import TaskCard from './task-card';
 import IssueCard from './issue-card';
 import CounselCard from './counsel-card';
 import TimelineCard from './timeline-card';
-import { FileUpload } from '@/components/ui/file-upload';
 
 type DealDetailProps = {
   deal: Deal;
@@ -201,6 +202,11 @@ export default function DealDetail({
   // State for share dialog
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [shareEmail, setShareEmail] = useState('');
+  
+  // State for term sheet
+  const [isTermSheetDialogOpen, setIsTermSheetDialogOpen] = useState(false);
+  const [isTermSheetUploading, setIsTermSheetUploading] = useState(false);
+  const [isTermSheetViewerOpen, setIsTermSheetViewerOpen] = useState(false);
   
   // QueryClient for mutations
   const queryClient = useQueryClient();
@@ -443,6 +449,52 @@ export default function DealDetail({
   
   // Find lead counsel information
   const leadCounsel = counsel.find(c => c.role === "Lead Counsel");
+  
+  // Handle term sheet upload
+  const handleTermSheetUpload = async (fileData: {
+    fileName: string;
+    fileSize: number;
+    fileType: string;
+    fileContent: string;
+    comment: string;
+  }) => {
+    // Update the deal with the new term sheet URL
+    try {
+      setIsTermSheetUploading(true);
+      
+      // Update the deal with the term sheet data
+      const response = await apiRequest(`/api/deals/${deal.id}`, 'PATCH', {
+        termSheetUrl: fileData.fileContent
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update term sheet');
+      }
+      
+      // Invalidate all relevant queries to ensure data is refreshed
+      queryClient.invalidateQueries({ queryKey: ['/api/combined-data'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/deals/${deal.id}`] });
+      
+      toast({
+        title: 'Term Sheet Updated',
+        description: 'The term sheet has been successfully uploaded.',
+      });
+      
+      onRefreshData();
+      setIsTermSheetDialogOpen(false);
+      
+    } catch (error) {
+      console.error('Error uploading term sheet:', error);
+      toast({
+        title: 'Upload Failed',
+        description: 'There was an error uploading the term sheet. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsTermSheetUploading(false);
+    }
+  };
   
   // Format the lead investor information
   const renderLeadInvestorInfo = () => {
@@ -983,6 +1035,41 @@ export default function DealDetail({
           </TabsList>
           <TabsContent value="overview" className="m-0 overflow-y-auto flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Term Sheet Card */}
+            <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-1">
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="font-medium text-neutral-800">Term Sheet</h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setIsTermSheetDialogOpen(true)}
+                >
+                  <Upload className="h-4 w-4 mr-1" />
+                  Upload
+                </Button>
+              </div>
+              
+              {deal.termSheetUrl ? (
+                <div className="flex items-center justify-between border rounded p-2 mt-2">
+                  <div className="flex items-center">
+                    <FileText className="h-5 w-5 text-primary mr-2" />
+                    <span className="text-sm font-medium">Term Sheet</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsTermSheetViewerOpen(true)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-sm text-neutral-500 italic p-2 text-center border border-dashed rounded">
+                  No term sheet uploaded yet
+                </div>
+              )}
+            </div>
+            
             {/* Deal Status Overview Card */}
             <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-1">
               <h2 className="font-medium text-neutral-800 mb-3">Deal Status</h2>
@@ -1626,6 +1713,74 @@ export default function DealDetail({
           ))}
         </div>
       )}
+
+      {/* Term Sheet Upload Dialog */}
+      <Dialog open={isTermSheetDialogOpen} onOpenChange={setIsTermSheetDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Upload Term Sheet</DialogTitle>
+            <DialogDescription>
+              Upload the term sheet for this deal. Supported formats: PDF, DOCX.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <FileUpload 
+              onUpload={handleTermSheetUpload}
+              isUploading={isTermSheetUploading}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Term Sheet Viewer Dialog */}
+      <Dialog open={isTermSheetViewerOpen} onOpenChange={setIsTermSheetViewerOpen}>
+        <DialogContent className="sm:max-w-4xl h-[80vh] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Term Sheet</DialogTitle>
+            <DialogDescription>
+              View the term sheet for this deal.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="h-full overflow-y-auto mt-4">
+            {deal.termSheetUrl && (
+              <div className="flex flex-col h-full">
+                {deal.termSheetUrl.includes('data:application/pdf') ? (
+                  <iframe 
+                    src={deal.termSheetUrl} 
+                    className="w-full h-full min-h-[500px] border rounded" 
+                    title="Term Sheet PDF"
+                  />
+                ) : (
+                  <div 
+                    className="w-full overflow-y-auto rounded border p-6 bg-white" 
+                    dangerouslySetInnerHTML={{ __html: deal.termSheetUrl.includes('data:') 
+                      ? 'Document format not supported for preview. Please download to view.' 
+                      : deal.termSheetUrl 
+                    }} 
+                  />
+                )}
+                <div className="flex justify-between mt-4">
+                  <Button variant="outline" onClick={() => setIsTermSheetViewerOpen(false)}>
+                    Close
+                  </Button>
+                  <Button onClick={() => {
+                    if (!deal.termSheetUrl) return;
+                    const a = document.createElement('a');
+                    a.href = deal.termSheetUrl || '';
+                    a.download = 'term-sheet.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                  }}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
