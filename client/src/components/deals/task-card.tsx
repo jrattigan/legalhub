@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Plus } from 'lucide-react';
+import { Plus, UserPlus } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { 
   Dialog, 
@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { apiRequest } from '@/lib/queryClient';
-import { Task, User } from '@shared/schema';
+import { Task, User, LawFirm, Attorney } from '@shared/schema';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -63,12 +63,6 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     internalCompleted: tasks.filter(task => task.completed && (!task.taskType || task.taskType === 'internal')),
     externalCompleted: tasks.filter(task => task.completed && task.taskType === 'external')
   };
-
-  // Get users for assignee dropdown
-  const { data: users = [] } = useQuery<User[]>({
-    queryKey: ['/api/users'],
-    enabled: isDialogOpen
-  });
 
   // Import the schema from shared/schema and extend it for client-side validation
   // We're using our own validation here because insertTaskSchema in shared/schema.ts doesn't have the extend method directly
@@ -105,6 +99,27 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       completed: false,
       dealId: dealId || undefined
     }
+  });
+
+  // Get task type from form for dynamic queries
+  const currentTaskType = form.watch('taskType');
+  
+  // Get users for assignee dropdown - only when internal tasks
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ['/api/users'],
+    enabled: isDialogOpen
+  });
+  
+  // Get law firms for external tasks
+  const { data: lawFirms = [] } = useQuery<LawFirm[]>({
+    queryKey: ['/api/law-firms'],
+    enabled: isDialogOpen && currentTaskType === 'external'
+  });
+  
+  // Get attorneys associated with law firms
+  const { data: dealCounsels = [] } = useQuery<any[]>({
+    queryKey: ['/api/deals', dealId, 'counsel'],
+    enabled: isDialogOpen && Boolean(dealId) && currentTaskType === 'external'
   });
 
   // Complete task mutation
@@ -267,6 +282,40 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     }
   };
 
+  // Get all available assignees based on task type
+  const getAssigneeOptions = () => {
+    if (currentTaskType === 'internal') {
+      return users?.map((user: User) => (
+        <SelectItem key={user.id} value={user.id.toString()}>
+          {user.fullName}
+        </SelectItem>
+      ));
+    } else {
+      // External task - show attorneys and law firms
+      // Combine law firm representatives from deal counsels
+      const externalAssignees = dealCounsels?.map((counsel: any) => {
+        const lawFirm = counsel.lawFirm;
+        const attorney = counsel.attorney;
+        
+        if (attorney) {
+          return (
+            <SelectItem key={`attorney-${attorney.id}`} value={`attorney-${attorney.id}`}>
+              {attorney.name} ({lawFirm.name})
+            </SelectItem>
+          );
+        } else {
+          return (
+            <SelectItem key={`firm-${lawFirm.id}`} value={`firm-${lawFirm.id}`}>
+              {lawFirm.name}
+            </SelectItem>
+          );
+        }
+      });
+      
+      return externalAssignees || [];
+    }
+  };
+
   return (
     <div className={`bg-white rounded-lg border border-neutral-200 shadow-sm p-4 ${preview ? 'col-span-1' : 'col-span-full'}`}>
       <div className="flex justify-between items-center mb-3">
@@ -329,7 +378,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                     name="dueDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Closing Date</FormLabel>
+                        <FormLabel>Due Date</FormLabel>
                         <FormControl>
                           <Input 
                             type="date" 
@@ -375,6 +424,35 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                 
                 <FormField
                   control={form.control}
+                  name="taskType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Task Type</FormLabel>
+                      <Select 
+                        onValueChange={(value) => {
+                          // Update taskType and reset assigneeId when task type changes
+                          field.onChange(value);
+                          form.setValue("assigneeId", null);
+                        }}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select task type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="internal">Internal Task</SelectItem>
+                          <SelectItem value="external">External Task</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
                   name="assigneeId"
                   render={({ field }) => (
                     <FormItem>
@@ -390,36 +468,29 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="unassigned">Unassigned</SelectItem>
-                          {users?.map((user: User) => (
+                          {currentTaskType === 'internal' && users?.map((user: User) => (
                             <SelectItem key={user.id} value={user.id.toString()}>
                               {user.fullName}
                             </SelectItem>
                           ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="taskType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Task Type</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select task type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="internal">Internal Task</SelectItem>
-                          <SelectItem value="external">External Task</SelectItem>
+                          {currentTaskType === 'external' && dealCounsels?.map((counsel: any) => {
+                            const lawFirm = counsel.lawFirm;
+                            const attorney = counsel.attorney;
+                            
+                            if (attorney) {
+                              return (
+                                <SelectItem key={`attorney-${attorney.id}`} value={`attorney-${attorney.id}`}>
+                                  {attorney.name} ({lawFirm.name})
+                                </SelectItem>
+                              );
+                            } else {
+                              return (
+                                <SelectItem key={`firm-${lawFirm.id}`} value={`firm-${lawFirm.id}`}>
+                                  {lawFirm.name}
+                                </SelectItem>
+                              );
+                            }
+                          })}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -461,7 +532,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                   </div>
                   <div className="text-xs text-neutral-500 mt-0.5 flex items-center flex-wrap">
                     <span className="mr-2">
-                      {task.dueDate && `Closing Date: ${format(new Date(task.dueDate), 'MMM d')}`}
+                      {task.dueDate && `Due Date: ${format(new Date(task.dueDate), 'MMM d')}`}
                     </span>
                     {task.priority === 'high' && (
                       <span className="bg-destructive-light text-destructive px-1.5 py-0.5 rounded text-xs">
@@ -504,7 +575,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                   </div>
                   <div className="text-xs text-neutral-500 mt-0.5 flex items-center flex-wrap">
                     <span className="mr-2">
-                      {task.dueDate && `Closing Date: ${format(new Date(task.dueDate), 'MMM d')}`}
+                      {task.dueDate && `Due Date: ${format(new Date(task.dueDate), 'MMM d')}`}
                     </span>
                     {task.priority === 'high' && (
                       <span className="bg-destructive-light text-destructive px-1.5 py-0.5 rounded text-xs">
