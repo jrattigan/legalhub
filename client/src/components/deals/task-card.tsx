@@ -50,6 +50,10 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   const [isNewAssigneeDialogOpen, setIsNewAssigneeDialogOpen] = useState(false);
   const [newAssigneeName, setNewAssigneeName] = useState('');
   const [currentAssigneeType, setCurrentAssigneeType] = useState<'attorney' | 'lawFirm'>('attorney');
+  // Track custom assignees that have been added during this session
+  const [customAssignees, setCustomAssignees] = useState<{id: string, name: string}[]>([]);
+  // Track task assignees to identify which ones are being used
+  const [usedAssigneeIds, setUsedAssigneeIds] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -227,6 +231,50 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       form.reset();
     }
   }, [isDialogOpen, form]);
+  
+  // Initialize and track custom assignees from existing tasks
+  useEffect(() => {
+    // Create set of all assignee IDs that are used in tasks
+    const usedIds = new Set<string>();
+    const customAssigneesList: { id: string, name: string }[] = [];
+    
+    tasks.forEach(task => {
+      if (task.assigneeId) {
+        usedIds.add(task.assigneeId.toString());
+      }
+      
+      // Extract custom assignees from tasks
+      if (task.assigneeType === 'custom' && task.assigneeName) {
+        const customId = `custom-${task.assigneeName}`;
+        usedIds.add(customId);
+        
+        // Add to custom assignees list if not already present
+        if (!customAssigneesList.some(ca => ca.id === customId)) {
+          customAssigneesList.push({
+            id: customId,
+            name: task.assigneeName
+          });
+        }
+      }
+    });
+    
+    setUsedAssigneeIds(usedIds);
+    
+    // Update custom assignees list, preserving any that were added in the current session
+    setCustomAssignees(prevCustomAssignees => {
+      // Create a new merged list without duplicates
+      const mergedList = [...prevCustomAssignees];
+      
+      customAssigneesList.forEach(newCA => {
+        if (!mergedList.some(ca => ca.id === newCA.id)) {
+          mergedList.push(newCA);
+        }
+      });
+      
+      // Only keep custom assignees that are actually used in tasks
+      return mergedList.filter(ca => usedIds.has(ca.id));
+    });
+  }, [tasks]);
 
   const onSubmit = (data: z.infer<typeof taskSchema>) => {
     if (!dealId) {
@@ -550,7 +598,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                                           <SelectItem 
                                             key={`attorney-${attorney.id}`} 
                                             value={`attorney-${attorney.id}`}
-                                            className="pl-6 text-sm" // Indentation for attorneys under their firms
+                                            className="ml-6 text-sm" // Indentation for attorneys under their firms (to the right)
                                           >
                                             {attorney.name} ({attorney.position})
                                           </SelectItem>
@@ -558,6 +606,21 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                                       }
                                     </React.Fragment>
                                   ))}
+                                  
+                                  {/* Display custom assignees if available */}
+                                  {customAssignees.length > 0 && (
+                                    <>
+                                      <SelectItem value="custom-assignees-header" disabled className="font-bold text-xs text-neutral-500 py-1 my-1">
+                                        CUSTOM ASSIGNEES
+                                      </SelectItem>
+                                      
+                                      {customAssignees.map(assignee => (
+                                        <SelectItem key={assignee.id} value={assignee.id}>
+                                          {assignee.name}
+                                        </SelectItem>
+                                      ))}
+                                    </>
+                                  )}
                                   
                                   {/* Add option to create new assignee */}
                                   <SelectItem value="new-assignee" className="text-primary border-t border-neutral-100 mt-1 pt-1">
@@ -626,12 +689,23 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                 type="button"
                 disabled={!newAssigneeName.trim()}
                 onClick={() => {
-                  // In a real implementation, we would save to the backend here
-                  // For now, we'll just set the value in the form
-                  // Use type assertion to tell TypeScript this is intentional
-                  form.setValue("assigneeId", `custom-${newAssigneeName}` as any);
+                  // Create a new custom assignee ID
+                  const customAssigneeId = `custom-${newAssigneeName}`;
+                  
+                  // Update form values
+                  form.setValue("assigneeId", customAssigneeId as any);
                   form.setValue("assigneeType", "custom");
                   form.setValue("assigneeName", newAssigneeName);
+                  
+                  // Add to our custom assignees list for UI display
+                  setCustomAssignees(prev => {
+                    // Check if this assignee already exists to avoid duplicates
+                    const exists = prev.some(a => a.id === customAssigneeId);
+                    if (!exists) {
+                      return [...prev, { id: customAssigneeId, name: newAssigneeName }];
+                    }
+                    return prev;
+                  });
                   
                   toast({
                     title: "New assignee added",
