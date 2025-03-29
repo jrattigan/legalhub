@@ -1754,37 +1754,40 @@ export default function DealDetail({
                 ) : deal.termSheetUrl.includes('data:application/vnd.openxmlformats-officedocument.wordprocessingml.document') ? (
                   // For DOCX files, use Office Online viewer
                   <div className="flex flex-col h-full">
-                    <div className="h-[500px] border rounded w-full">
-                      {/* We need to create a temporary link to the doc and pass it to the viewer */}
-                      {(() => {
-                        // Creating a blob URL to pass to the Microsoft Viewer
-                        const base64Content = deal.termSheetUrl.split(',')[1];
-                        const byteCharacters = atob(base64Content);
-                        const byteArrays = [];
-                        
-                        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-                          const slice = byteCharacters.slice(offset, offset + 512);
-                          const byteNumbers = new Array(slice.length);
-                          for (let i = 0; i < slice.length; i++) {
-                            byteNumbers[i] = slice.charCodeAt(i);
+                    <div className="h-[600px] border rounded w-full flex items-center justify-center bg-gray-50">
+                      <div className="w-[85%] h-[95%] relative">
+                        {/* We need to create a temporary link to the doc and pass it to the viewer */}
+                        {(() => {
+                          // Creating a blob URL to pass to the Microsoft Viewer
+                          const base64Content = deal.termSheetUrl.split(',')[1];
+                          const byteCharacters = atob(base64Content);
+                          const byteArrays = [];
+                          
+                          for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                            const slice = byteCharacters.slice(offset, offset + 512);
+                            const byteNumbers = new Array(slice.length);
+                            for (let i = 0; i < slice.length; i++) {
+                              byteNumbers[i] = slice.charCodeAt(i);
+                            }
+                            const byteArray = new Uint8Array(byteNumbers);
+                            byteArrays.push(byteArray);
                           }
-                          const byteArray = new Uint8Array(byteNumbers);
-                          byteArrays.push(byteArray);
-                        }
-                        
-                        // Create a blob and a URL from it
-                        const blob = new Blob(byteArrays, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-                        const blobUrl = URL.createObjectURL(blob);
-                        
-                        // Show the simple text content instead
-                        return (
-                          <iframe 
-                            src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(window.location.origin + `/api/viewer/term-sheet.docx?dealId=${deal.id}`)}`}
-                            className="w-full h-full border-0"
-                            title="Term Sheet Document Viewer"
-                          />
-                        );
-                      })()}
+                          
+                          // Create a blob and a URL from it
+                          const blob = new Blob(byteArrays, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                          const blobUrl = URL.createObjectURL(blob);
+                          
+                          // Show the document in an iframe with better proportions
+                          return (
+                            <iframe 
+                              src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(window.location.origin + `/api/viewer/term-sheet.docx?dealId=${deal.id}`)}`}
+                              className="w-full h-full border-0 shadow-sm"
+                              title="Term Sheet Document Viewer"
+                              style={{ aspectRatio: '8.5/11' }} // Standard letter page aspect ratio
+                            />
+                          );
+                        })()}
+                      </div>
                     </div>
                     <div className="mt-2 flex justify-end">
                       <Button 
