@@ -243,7 +243,7 @@ export default function DealDetail({
       };
       
       console.log('API Payload:', apiPayload);
-      return await apiRequest(`/api/deals/${deal.id}`, 'PATCH', apiPayload);
+      return await apiRequest('PATCH', `/api/deals/${deal.id}`, apiPayload);
     },
     onSuccess: () => {
       // Invalidate both combined data and the main deals list to ensure all views are updated
@@ -272,7 +272,7 @@ export default function DealDetail({
   // Mutation to delete deal
   const deleteDealMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest(`/api/deals/${deal.id}`, 'DELETE');
+      return await apiRequest('DELETE', `/api/deals/${deal.id}`);
     },
     onSuccess: () => {
       // Invalidate all relevant queries
@@ -463,7 +463,7 @@ export default function DealDetail({
       setIsTermSheetUploading(true);
       
       // Update the deal with the term sheet data
-      const response = await apiRequest(`/api/deals/${deal.id}`, 'PATCH', {
+      const response = await apiRequest('PATCH', `/api/deals/${deal.id}`, {
         termSheetUrl: fileData.fileContent
       });
       
