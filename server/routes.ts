@@ -1004,7 +1004,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If this is the organization name setting, update lead investors in deals
       if (setting.key === "organizationName") {
-        console.log(`Organization name updated to "${setting.value}", updating cached references`);
+        // Get the current organization name from the deals
+        let oldOrgName = "Rogue Capital Ventures"; // Default if not found
+        
+        // Try to determine the old name more reliably by looking at deals
+        try {
+          const deals = await storage.getDeals();
+          // Find org name used in most deals
+          const orgNameCount: Record<string, number> = {};
+          
+          for (const deal of deals) {
+            if (deal.leadInvestor) {
+              orgNameCount[deal.leadInvestor] = (orgNameCount[deal.leadInvestor] || 0) + 1;
+            }
+          }
+          
+          // Find the most common lead investor
+          let maxCount = 0;
+          for (const [name, count] of Object.entries(orgNameCount)) {
+            if (count > maxCount) {
+              maxCount = count;
+              oldOrgName = name;
+            }
+          }
+        } catch (error) {
+          console.error("Error determining old organization name:", error);
+        }
+        
+        console.log(`Organization name changed from "${oldOrgName}" to "${setting.value}", updating references`);
+        
+        try {
+          // Update lead investor in all deals where it's set to the old org name
+          const deals = await storage.getDeals();
+          for (const deal of deals) {
+            // If lead investor matches the old organization name, update it
+            if (deal.leadInvestor === oldOrgName) {
+              console.log(`Updating leadInvestor in deal #${deal.id} (${deal.title}) from "${deal.leadInvestor}" to "${setting.value}"`);
+              
+              await storage.updateDeal(deal.id, {
+                leadInvestor: setting.value
+              });
+            }
+          }
+          console.log("Deal lead investor references updated successfully");
+        } catch (updateError) {
+          console.error("Error updating deals with new organization name:", updateError);
+        }
       }
       
       res.json(setting);
