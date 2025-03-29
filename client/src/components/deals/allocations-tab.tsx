@@ -201,11 +201,25 @@ export default function AllocationsTab({ dealId, onRefreshData }: AllocationsTab
 
   // Handle editing an allocation
   const handleEditAllocation = (allocation: Allocation) => {
+    // Reset any previous form state
+    form.reset();
+    
+    // Set the editing allocation ID
     setIsEditingAllocation(allocation.id);
+    
+    // Set form values from the allocation
     form.setValue('fundId', allocation.fundId);
-    form.setValue('investmentAmount', allocation.investmentAmount);
+    
+    // Clean the investment amount (remove $ and commas) for the form field
+    const cleanAmount = typeof allocation.investmentAmount === 'string' 
+      ? allocation.investmentAmount.replace(/[$,]/g, '')
+      : allocation.investmentAmount;
+    form.setValue('investmentAmount', cleanAmount);
+    
     form.setValue('shareClass', allocation.shareClass || '');
     form.setValue('numberOfShares', allocation.numberOfShares || undefined);
+    
+    // Show the form
     setIsAddingAllocation(true);
   };
 
@@ -234,6 +248,30 @@ export default function AllocationsTab({ dealId, onRefreshData }: AllocationsTab
     }
     return sum + amount;
   }, 0);
+
+  // Format investment amount for display
+  const formatInvestmentAmount = (value: string | number): string => {
+    if (!value) return '$0.00';
+    
+    // Handle numeric values directly
+    let numericValue: number;
+    
+    if (typeof value === 'string') {
+      // Remove any non-numeric characters (except decimal point)
+      const cleanString = value.replace(/[^0-9.]/g, '');
+      numericValue = parseFloat(cleanString) || 0;
+    } else {
+      numericValue = value;
+    }
+    
+    // Format the number with 2 decimal places
+    return numericValue.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
 
   // Get active funds only for the dropdown
   const activeFunds = funds.filter((fund: Fund) => fund.isActive);
@@ -410,7 +448,14 @@ export default function AllocationsTab({ dealId, onRefreshData }: AllocationsTab
           <div className="bg-gray-50 p-4 mb-4 rounded-lg flex justify-between items-center">
             <div>
               <span className="text-sm text-gray-500">Total Investment</span>
-              <div className="text-xl font-bold">${totalInvestment.toLocaleString()}</div>
+              <div className="text-xl font-bold">
+                {totalInvestment.toLocaleString('en-US', {
+                  style: 'currency', 
+                  currency: 'USD',
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}
+              </div>
             </div>
             <div>
               <span className="text-sm text-gray-500">Number of Funds</span>
@@ -426,7 +471,9 @@ export default function AllocationsTab({ dealId, onRefreshData }: AllocationsTab
                 <div key={allocation.id} className="flex flex-col sm:flex-row justify-between p-4 border rounded-lg bg-white">
                   <div className="space-y-1 mb-2 sm:mb-0">
                     <h3 className="font-medium">{fund?.name || `Fund ID: ${allocation.fundId}`}</h3>
-                    <div className="text-lg font-semibold text-primary">{allocation.investmentAmount}</div>
+                    <div className="text-lg font-semibold text-primary">
+                      {formatInvestmentAmount(allocation.investmentAmount)}
+                    </div>
                     <div className="text-sm text-gray-500">
                       {allocation.shareClass && (
                         <span className="mr-3">Class: {allocation.shareClass}</span>
