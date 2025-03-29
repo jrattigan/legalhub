@@ -250,7 +250,19 @@ export default function DealDetail({
   // Handle form change
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setEditDealForm({ ...editDealForm, [name]: value });
+    
+    // If changing the lead investor and it's set to organization name, clear the investor counsel
+    if (name === 'leadInvestor' && value === organizationName) {
+      setEditDealForm({ 
+        ...editDealForm, 
+        [name]: value, 
+        leadInvestorCounsel: '' 
+      });
+      // Also reset selected attorneys
+      setSelectedAttorneys([]);
+    } else {
+      setEditDealForm({ ...editDealForm, [name]: value });
+    }
   };
   
   // Handle form submission

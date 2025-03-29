@@ -358,6 +358,9 @@ export class MemStorage implements IStorage {
     };
     this.companies.set(companyId3, createdCompany3);
     
+    // Get the organization name from settings
+    const orgName = "Rogue Capital Ventures"; // Default in case not initialized yet
+
     // Create deals with proper company references
     const deal1: InsertDeal = {
       title: "Acme Corp Series C Financing",
@@ -367,7 +370,9 @@ export class MemStorage implements IStorage {
       dueDate: new Date("2023-10-15"),
       companyId: createdCompany1.id,
       companyName: createdCompany1.displayName,
-      amount: "$45M"
+      amount: "$45M",
+      leadInvestor: orgName,
+      leadInvestorCounsel: ""  // Empty as org is the lead investor
     };
     const deal2: InsertDeal = {
       title: "TechStart Acquisition",
@@ -377,7 +382,9 @@ export class MemStorage implements IStorage {
       dueDate: new Date("2023-09-22"),
       companyId: createdCompany2.id,
       companyName: createdCompany2.displayName,
-      amount: "$28M"
+      amount: "$28M",
+      leadInvestor: orgName,
+      leadInvestorCounsel: ""  // Empty as org is the lead investor
     };
     const deal3: InsertDeal = {
       title: "HealthTech Series A",
@@ -387,7 +394,9 @@ export class MemStorage implements IStorage {
       dueDate: new Date("2023-10-05"),
       companyId: createdCompany3.id,
       companyName: createdCompany3.displayName,
-      amount: "$12M"
+      amount: "$12M",
+      leadInvestor: orgName,
+      leadInvestorCounsel: ""  // Empty as org is the lead investor
     };
 
     // Create deals directly for sample data
