@@ -13,7 +13,11 @@ import {
   insertDealCounselSchema,
   insertDocumentVersionSchema,
   insertCompanySchema,
+  insertFundSchema,
+  insertAllocationSchema,
   documents, // Import the base schema tables for creating partial schemas
+  funds,
+  allocations,
 } from "@shared/schema";
 import { createInsertSchema } from "drizzle-zod";
 
@@ -1272,6 +1276,188 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error serving document:', error);
       res.status(500).json({ error: 'Failed to serve document' });
+    }
+  });
+
+  // Funds API
+  app.get("/api/funds", async (req, res) => {
+    try {
+      const funds = await storage.getFunds();
+      res.json(funds);
+    } catch (error) {
+      console.error("Error fetching funds:", error);
+      res.status(500).json({ message: "Failed to fetch funds" });
+    }
+  });
+
+  app.get("/api/funds/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid fund ID" });
+    }
+
+    try {
+      const fund = await storage.getFund(id);
+      if (!fund) {
+        return res.status(404).json({ message: "Fund not found" });
+      }
+      res.json(fund);
+    } catch (error) {
+      console.error("Error fetching fund:", error);
+      res.status(500).json({ message: "Failed to fetch fund" });
+    }
+  });
+
+  app.post("/api/funds", async (req, res) => {
+    try {
+      // Create a base schema from the funds table
+      const validatedData = insertFundSchema.parse(req.body);
+      const fund = await storage.createFund(validatedData);
+      res.status(201).json(fund);
+    } catch (error) {
+      console.error("Error creating fund:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid fund data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create fund" });
+    }
+  });
+
+  app.patch("/api/funds/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid fund ID" });
+    }
+
+    try {
+      // For transformed schemas, create a new partial schema from the base
+      const baseFundSchema = createInsertSchema(funds).partial();
+      
+      const validatedData = baseFundSchema.parse(req.body);
+      
+      const updatedFund = await storage.updateFund(id, validatedData);
+      if (!updatedFund) {
+        return res.status(404).json({ message: "Fund not found" });
+      }
+      
+      res.json(updatedFund);
+    } catch (error) {
+      console.error("Error updating fund:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid fund data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update fund" });
+    }
+  });
+
+  app.delete("/api/funds/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid fund ID" });
+    }
+
+    try {
+      const success = await storage.deleteFund(id);
+      if (!success) {
+        return res.status(404).json({ message: "Fund not found or has associated allocations" });
+      }
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting fund:", error);
+      res.status(500).json({ message: "Failed to delete fund" });
+    }
+  });
+
+  // Allocations API
+  app.get("/api/deals/:id/allocations", async (req, res) => {
+    const dealId = parseInt(req.params.id);
+    if (isNaN(dealId)) {
+      return res.status(400).json({ message: "Invalid deal ID" });
+    }
+
+    try {
+      const allocations = await storage.getAllocations(dealId);
+      res.json(allocations);
+    } catch (error) {
+      console.error("Error fetching allocations:", error);
+      res.status(500).json({ message: "Failed to fetch allocations" });
+    }
+  });
+
+  app.post("/api/allocations", async (req, res) => {
+    try {
+      const validatedData = insertAllocationSchema.parse(req.body);
+      const allocation = await storage.createAllocation(validatedData);
+      res.status(201).json(allocation);
+    } catch (error) {
+      console.error("Error creating allocation:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid allocation data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create allocation" });
+    }
+  });
+
+  app.get("/api/allocations/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid allocation ID" });
+    }
+
+    try {
+      const allocation = await storage.getAllocation(id);
+      if (!allocation) {
+        return res.status(404).json({ message: "Allocation not found" });
+      }
+      res.json(allocation);
+    } catch (error) {
+      console.error("Error fetching allocation:", error);
+      res.status(500).json({ message: "Failed to fetch allocation" });
+    }
+  });
+
+  app.patch("/api/allocations/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid allocation ID" });
+    }
+
+    try {
+      // Create a partial schema from the allocations table
+      const baseAllocationSchema = createInsertSchema(allocations).partial();
+      
+      const validatedData = baseAllocationSchema.parse(req.body);
+      
+      const updatedAllocation = await storage.updateAllocation(id, validatedData);
+      if (!updatedAllocation) {
+        return res.status(404).json({ message: "Allocation not found" });
+      }
+      
+      res.json(updatedAllocation);
+    } catch (error) {
+      console.error("Error updating allocation:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid allocation data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update allocation" });
+    }
+  });
+
+  app.delete("/api/allocations/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid allocation ID" });
+    }
+
+    try {
+      const success = await storage.deleteAllocation(id);
+      if (!success) {
+        return res.status(404).json({ message: "Allocation not found" });
+      }
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting allocation:", error);
+      res.status(500).json({ message: "Failed to delete allocation" });
     }
   });
   

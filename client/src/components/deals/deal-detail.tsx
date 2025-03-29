@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Calendar, Edit, MoreHorizontal, Eye, Filter, Download, Share2, 
   Trash2, Clock, Plus, File, CheckSquare, AlertCircle as Alert, Users,
-  Building, FileText, Upload, ExternalLink
+  Building, FileText, Upload, ExternalLink, DollarSign
 } from 'lucide-react';
 import { FileUpload } from '@/components/ui/file-upload';
 import { format } from 'date-fns';
@@ -522,6 +522,7 @@ export default function DealDetail({
     { id: 'tasks', label: 'Tasks', icon: <CheckSquare className="h-4 w-4" /> },
     { id: 'issues', label: 'Issues', icon: <Alert className="h-4 w-4" /> },
     { id: 'team', label: 'Team', icon: <Users className="h-4 w-4" /> },
+    { id: 'allocations', label: 'Allocations', icon: <DollarSign className="h-4 w-4" /> },
     { id: 'timeline', label: 'Timeline', icon: <Clock className="h-4 w-4" /> },
   ];
 

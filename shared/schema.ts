@@ -439,3 +439,67 @@ export type InsertClosingChecklistItem = z.infer<typeof insertClosingChecklistSc
 
 export type AppSetting = typeof appSettings.$inferSelect;
 export type InsertAppSetting = z.infer<typeof insertAppSettingsSchema>;
+
+export type Fund = typeof funds.$inferSelect;
+export type InsertFund = z.infer<typeof insertFundSchema>;
+
+export type Allocation = typeof allocations.$inferSelect;
+export type InsertAllocation = z.infer<typeof insertAllocationSchema>;
+
+// Organization Funds table for tracking investment vehicles
+export const funds = pgTable("funds", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertFundSchema = createInsertSchema(funds).pick({
+  name: true,
+  description: true,
+  isActive: true,
+}).transform((data) => {
+  // Ensure description is null and not undefined when empty
+  const transformedData = { ...data };
+  
+  if (transformedData.description === undefined) {
+    transformedData.description = null;
+  }
+  
+  return transformedData;
+});
+
+// Deal Allocations table for fund-specific investment details
+export const allocations = pgTable("allocations", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull().references(() => deals.id, { onDelete: "cascade" }),
+  fundId: integer("fund_id").notNull().references(() => funds.id, { onDelete: "cascade" }),
+  investmentAmount: text("investment_amount").notNull(), // Storing as text to handle currency formatting
+  shareClass: text("share_class"),
+  numberOfShares: integer("number_of_shares"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertAllocationSchema = createInsertSchema(allocations).pick({
+  dealId: true,
+  fundId: true,
+  investmentAmount: true,
+  shareClass: true,
+  numberOfShares: true,
+}).transform((data) => {
+  // Ensure optional fields are null not undefined when empty
+  const transformedData = { ...data };
+  
+  if (transformedData.shareClass === undefined) {
+    transformedData.shareClass = null;
+  }
+  
+  if (transformedData.numberOfShares === undefined) {
+    transformedData.numberOfShares = null;
+  }
+  
+  return transformedData;
+});

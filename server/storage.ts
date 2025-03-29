@@ -11,7 +11,9 @@ import {
   attorneys, Attorney, InsertAttorney, 
   dealCounsels, DealCounsel, InsertDealCounsel,
   timelineEvents, TimelineEvent, InsertTimelineEvent,
-  appSettings, AppSetting, InsertAppSetting
+  appSettings, AppSetting, InsertAppSetting,
+  funds, Fund, InsertFund,
+  allocations, Allocation, InsertAllocation
 } from "@shared/schema";
 import { format } from 'date-fns';
 import { generateDocumentComparison } from './document-compare';
@@ -102,6 +104,20 @@ export interface IStorage {
   createAppSetting(setting: InsertAppSetting): Promise<AppSetting>;
   updateAppSetting(id: number, setting: Partial<InsertAppSetting>): Promise<AppSetting | undefined>;
   deleteAppSetting(id: number): Promise<boolean>;
+  
+  // Funds
+  getFunds(): Promise<Fund[]>;
+  getFund(id: number): Promise<Fund | undefined>;
+  createFund(fund: InsertFund): Promise<Fund>;
+  updateFund(id: number, fund: Partial<InsertFund>): Promise<Fund | undefined>;
+  deleteFund(id: number): Promise<boolean>;
+  
+  // Allocations
+  getAllocations(dealId: number): Promise<(Allocation & { fund: Fund })[]>;
+  getAllocation(id: number): Promise<Allocation | undefined>;
+  createAllocation(allocation: InsertAllocation): Promise<Allocation>;
+  updateAllocation(id: number, allocation: Partial<InsertAllocation>): Promise<Allocation | undefined>;
+  deleteAllocation(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -118,6 +134,8 @@ export class MemStorage implements IStorage {
   private dealCounsels: Map<number, DealCounsel>;
   private timelineEvents: Map<number, TimelineEvent>;
   private appSettings: Map<number, AppSetting>;
+  private funds: Map<number, Fund>;
+  private allocations: Map<number, Allocation>;
 
   currentUserId: number;
   currentCompanyId: number;
@@ -132,6 +150,8 @@ export class MemStorage implements IStorage {
   currentDealCounselId: number;
   currentTimelineEventId: number;
   currentAppSettingId: number;
+  currentFundId: number;
+  currentAllocationId: number;
 
   constructor() {
     this.users = new Map();
@@ -147,6 +167,8 @@ export class MemStorage implements IStorage {
     this.dealCounsels = new Map();
     this.timelineEvents = new Map();
     this.appSettings = new Map();
+    this.funds = new Map();
+    this.allocations = new Map();
 
     this.currentUserId = 1;
     this.currentCompanyId = 1;
@@ -161,6 +183,8 @@ export class MemStorage implements IStorage {
     this.currentDealCounselId = 1;
     this.currentTimelineEventId = 1;
     this.currentAppSettingId = 1;
+    this.currentFundId = 1;
+    this.currentAllocationId = 1;
 
     // Initialize with sample data
     this.initializeSampleData();
@@ -742,6 +766,109 @@ export class MemStorage implements IStorage {
       updatedAt: issueDate2
     };
     this.issues.set(issueId2, createdIssue2);
+
+    // Create sample funds for the organization
+    const fund1: InsertFund = {
+      name: "Rogue Capital Fund I",
+      description: "Early stage investments in tech startups",
+      isActive: true
+    };
+    
+    const fund2: InsertFund = {
+      name: "Rogue Capital Fund II",
+      description: "Growth stage investments in tech and healthcare",
+      isActive: true
+    };
+    
+    const fund3: InsertFund = {
+      name: "Rogue Special Opportunities",
+      description: "Investments in special situations and distressed assets",
+      isActive: true
+    };
+    
+    // Create funds directly for sample data
+    const fundTime = new Date();
+    const fundId1 = this.currentFundId++;
+    const createdFund1: Fund = {
+      ...fund1,
+      id: fundId1,
+      createdAt: fundTime,
+      updatedAt: fundTime
+    };
+    this.funds.set(fundId1, createdFund1);
+    
+    const fundId2 = this.currentFundId++;
+    const createdFund2: Fund = {
+      ...fund2,
+      id: fundId2,
+      createdAt: fundTime,
+      updatedAt: fundTime
+    };
+    this.funds.set(fundId2, createdFund2);
+    
+    const fundId3 = this.currentFundId++;
+    const createdFund3: Fund = {
+      ...fund3,
+      id: fundId3,
+      createdAt: fundTime,
+      updatedAt: fundTime
+    };
+    this.funds.set(fundId3, createdFund3);
+    
+    // Create allocations for Deal 1
+    const allocation1: InsertAllocation = {
+      dealId: createdDeal1.id,
+      fundId: createdFund1.id,
+      investmentAmount: 10000000, // $10M
+      shareClass: "Series C Preferred",
+      numberOfShares: 500000
+    };
+    
+    const allocation2: InsertAllocation = {
+      dealId: createdDeal1.id,
+      fundId: createdFund2.id,
+      investmentAmount: 15000000, // $15M
+      shareClass: "Series C Preferred",
+      numberOfShares: 750000
+    };
+    
+    // Create allocations directly for sample data
+    const allocationTime = new Date();
+    const allocationId1 = this.currentAllocationId++;
+    const createdAllocation1: Allocation = {
+      ...allocation1,
+      id: allocationId1,
+      createdAt: allocationTime,
+      updatedAt: allocationTime
+    };
+    this.allocations.set(allocationId1, createdAllocation1);
+    
+    const allocationId2 = this.currentAllocationId++;
+    const createdAllocation2: Allocation = {
+      ...allocation2,
+      id: allocationId2,
+      createdAt: allocationTime,
+      updatedAt: allocationTime
+    };
+    this.allocations.set(allocationId2, createdAllocation2);
+    
+    // Create allocations for Deal 3
+    const allocation3: InsertAllocation = {
+      dealId: createdDeal3.id,
+      fundId: createdFund3.id,
+      investmentAmount: 5000000, // $5M
+      shareClass: "Series A Preferred",
+      numberOfShares: 1000000
+    };
+    
+    const allocationId3 = this.currentAllocationId++;
+    const createdAllocation3: Allocation = {
+      ...allocation3,
+      id: allocationId3,
+      createdAt: allocationTime,
+      updatedAt: allocationTime
+    };
+    this.allocations.set(allocationId3, createdAllocation3);
 
     // Create timeline events directly with all required fields 
     const event1: InsertTimelineEvent = {
@@ -2053,6 +2180,98 @@ export class MemStorage implements IStorage {
 
   async deleteAppSetting(id: number): Promise<boolean> {
     return this.appSettings.delete(id);
+  }
+
+  // Funds
+  async getFunds(): Promise<Fund[]> {
+    return Array.from(this.funds.values());
+  }
+
+  async getFund(id: number): Promise<Fund | undefined> {
+    return this.funds.get(id);
+  }
+
+  async createFund(fund: InsertFund): Promise<Fund> {
+    const id = this.currentFundId++;
+    const now = new Date();
+    const created: Fund = {
+      ...fund,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.funds.set(id, created);
+    return created;
+  }
+
+  async updateFund(id: number, fund: Partial<InsertFund>): Promise<Fund | undefined> {
+    const existing = this.funds.get(id);
+    if (!existing) {
+      return undefined;
+    }
+    const updated: Fund = {
+      ...existing,
+      ...fund,
+      updatedAt: new Date()
+    };
+    this.funds.set(id, updated);
+    return updated;
+  }
+
+  async deleteFund(id: number): Promise<boolean> {
+    return this.funds.delete(id);
+  }
+
+  // Allocations
+  async getAllocations(dealId: number): Promise<(Allocation & { fund: Fund })[]> {
+    const allocations: (Allocation & { fund: Fund })[] = [];
+    for (const allocation of this.allocations.values()) {
+      if (allocation.dealId === dealId) {
+        const fund = this.funds.get(allocation.fundId);
+        if (fund) {
+          allocations.push({
+            ...allocation,
+            fund
+          });
+        }
+      }
+    }
+    return allocations;
+  }
+
+  async getAllocation(id: number): Promise<Allocation | undefined> {
+    return this.allocations.get(id);
+  }
+
+  async createAllocation(allocation: InsertAllocation): Promise<Allocation> {
+    const id = this.currentAllocationId++;
+    const now = new Date();
+    const created: Allocation = {
+      ...allocation,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.allocations.set(id, created);
+    return created;
+  }
+
+  async updateAllocation(id: number, allocation: Partial<InsertAllocation>): Promise<Allocation | undefined> {
+    const existing = this.allocations.get(id);
+    if (!existing) {
+      return undefined;
+    }
+    const updated: Allocation = {
+      ...existing,
+      ...allocation,
+      updatedAt: new Date()
+    };
+    this.allocations.set(id, updated);
+    return updated;
+  }
+
+  async deleteAllocation(id: number): Promise<boolean> {
+    return this.allocations.delete(id);
   }
 }
 
