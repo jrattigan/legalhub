@@ -48,7 +48,14 @@ export default function NewDeal() {
       typeof val === 'string' && val ? new Date(val) : val
     ),
     amount: z.string().nullable().optional(),
-    dataRoomUrl: z.string().nullable().optional(),
+    dataRoomUrl: z.string().nullable().optional().transform(val => {
+      if (!val) return null;
+      // Ensure URL has http:// or https:// prefix
+      if (!val.startsWith('http://') && !val.startsWith('https://')) {
+        return `https://${val}`;
+      }
+      return val;
+    }),
     isCommitted: z.boolean().default(false),
   });
 

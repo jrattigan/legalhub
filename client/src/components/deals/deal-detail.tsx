@@ -349,6 +349,19 @@ export default function DealDetail({
       });
       // Also reset selected attorneys
       setSelectedAttorneys([]);
+    } else if (name === 'dataRoomUrl') {
+      // Don't validate empty URLs
+      if (!value) {
+        setEditDealForm({ ...editDealForm, [name]: value });
+        return;
+      }
+      
+      // Ensure URL begins with http:// or https://
+      let validatedUrl = value;
+      if (!value.startsWith('http://') && !value.startsWith('https://')) {
+        validatedUrl = `https://${value}`;
+      }
+      setEditDealForm({ ...editDealForm, [name]: validatedUrl });
     } else {
       setEditDealForm({ ...editDealForm, [name]: value });
     }
@@ -402,6 +415,12 @@ export default function DealDetail({
       }
     }
     
+    // Ensure dataRoomUrl has proper http/https prefix if it exists
+    let dataRoomUrl = editDealForm.dataRoomUrl || null;
+    if (dataRoomUrl && !dataRoomUrl.startsWith('http://') && !dataRoomUrl.startsWith('https://')) {
+      dataRoomUrl = `https://${dataRoomUrl}`;
+    }
+    
     const formattedData = {
       title: editDealForm.title,
       description: editDealForm.description,
@@ -416,7 +435,7 @@ export default function DealDetail({
       leadInvestor: editDealForm.leadInvestor,
       leadInvestorCounsel: editDealForm.leadInvestorCounsel,
       leadInvestorAttorneys: attorneyNames,
-      dataRoomUrl: editDealForm.dataRoomUrl || null
+      dataRoomUrl: dataRoomUrl
     };
     
     console.log('Submitting update with companyId:', companyId, 'type:', typeof companyId);
@@ -614,7 +633,11 @@ export default function DealDetail({
             <ExternalLink className="h-4 w-4 mr-1" />
             <span>
               <a 
-                href={deal.dataRoomUrl} 
+                href={
+                  deal.dataRoomUrl.startsWith('http://') || deal.dataRoomUrl.startsWith('https://') 
+                    ? deal.dataRoomUrl 
+                    : `https://${deal.dataRoomUrl}`
+                }
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="text-primary hover:underline"

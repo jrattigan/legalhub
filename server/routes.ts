@@ -255,7 +255,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         leadInvestor: z.string().nullable().optional(),
         leadInvestorCounsel: z.string().nullable().optional(),
         leadInvestorAttorneys: z.string().nullable().optional(),
-        termSheetUrl: z.string().nullable().optional()
+        termSheetUrl: z.string().nullable().optional(),
+        dataRoomUrl: z.string().nullable().optional()
       }).parse(data);
       
       console.log("Validated data:", JSON.stringify(validatedData));
