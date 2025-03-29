@@ -287,12 +287,11 @@ export default function AllocationsTab({ dealId, onRefreshData }: AllocationsTab
         )}
       </div>
 
-      {isAddingAllocation && (
+      {/* Only show the add new allocation form when adding a NEW allocation (not editing) */}
+      {isAddingAllocation && isEditingAllocation === null && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-lg">
-              {isEditingAllocation !== null ? 'Edit Allocation' : 'Add New Allocation'}
-            </CardTitle>
+            <CardTitle className="text-lg">Add New Allocation</CardTitle>
             <CardDescription>
               Allocate funds to this deal with investment details
             </CardDescription>
@@ -412,7 +411,7 @@ export default function AllocationsTab({ dealId, onRefreshData }: AllocationsTab
                         <span className="mr-2 h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin"></span>
                         Saving...
                       </>
-                    ) : isEditingAllocation !== null ? 'Update Allocation' : 'Add Allocation'}
+                    ) : 'Add Allocation'}
                   </Button>
                 </div>
               </form>
@@ -466,41 +465,136 @@ export default function AllocationsTab({ dealId, onRefreshData }: AllocationsTab
           <div className="space-y-3">
             {allocations.map((allocation) => {
               const fund = funds.find((f: Fund) => f.id === allocation.fundId);
+              const isEditing = isEditingAllocation === allocation.id;
               
               return (
-                <div key={allocation.id} className="flex flex-col sm:flex-row justify-between p-4 border rounded-lg bg-white">
-                  <div className="space-y-1 mb-2 sm:mb-0">
-                    <h3 className="font-medium">{fund?.name || `Fund ID: ${allocation.fundId}`}</h3>
-                    <div className="text-lg font-semibold text-primary">
-                      {formatInvestmentAmount(allocation.investmentAmount)}
+                <div key={allocation.id} className="border rounded-lg bg-white">
+                  {/* Regular allocation view */}
+                  {!isEditing ? (
+                    <div className="flex flex-col sm:flex-row justify-between p-4">
+                      <div className="space-y-1 mb-2 sm:mb-0">
+                        <h3 className="font-medium">{fund?.name || `Fund ID: ${allocation.fundId}`}</h3>
+                        <div className="text-lg font-semibold text-primary">
+                          {formatInvestmentAmount(allocation.investmentAmount)}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {allocation.shareClass && (
+                            <span className="mr-3">Class: {allocation.shareClass}</span>
+                          )}
+                          {allocation.numberOfShares && (
+                            <span>Shares: {allocation.numberOfShares.toLocaleString()}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex space-x-2 self-end sm:self-center">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditAllocation(allocation)}
+                          disabled={isEditingAllocation !== null || isAddingAllocation}
+                        >
+                          Edit
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => handleDeleteAllocation(allocation.id)}
+                          disabled={isEditingAllocation !== null || isAddingAllocation || deleteAllocationMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {allocation.shareClass && (
-                        <span className="mr-3">Class: {allocation.shareClass}</span>
-                      )}
-                      {allocation.numberOfShares && (
-                        <span>Shares: {allocation.numberOfShares.toLocaleString()}</span>
-                      )}
+                  ) : (
+                    /* Edit form that appears inline */
+                    <div className="p-4">
+                      <h3 className="font-medium text-primary mb-3">Editing {fund?.name || `Fund ID: ${allocation.fundId}`}</h3>
+                      <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="investmentAmount"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Investment Amount</FormLabel>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                                      <Input 
+                                        placeholder="Enter investment amount" 
+                                        {...field} 
+                                        className="pl-8"
+                                      />
+                                    </div>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="shareClass"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Share Class</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="e.g. Series C Preferred" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="numberOfShares"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Number of Shares</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="number" 
+                                      placeholder="e.g. 100000"
+                                      {...field}
+                                      value={field.value === undefined ? '' : field.value}
+                                      onChange={(e) => {
+                                        const value = e.target.value === '' ? undefined : parseInt(e.target.value);
+                                        field.onChange(value);
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <div className="flex justify-end space-x-2 pt-2">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              onClick={handleCancelAllocation}
+                            >
+                              Cancel
+                            </Button>
+                            <Button 
+                              type="submit"
+                              disabled={createAllocationMutation.isPending || updateAllocationMutation.isPending}
+                            >
+                              {(createAllocationMutation.isPending || updateAllocationMutation.isPending) ? (
+                                <>
+                                  <span className="mr-2 h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin"></span>
+                                  Saving...
+                                </>
+                              ) : 'Update Allocation'}
+                            </Button>
+                          </div>
+                        </form>
+                      </Form>
                     </div>
-                  </div>
-                  <div className="flex space-x-2 self-end sm:self-center">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleEditAllocation(allocation)}
-                      disabled={isEditingAllocation !== null || isAddingAllocation}
-                    >
-                      Edit
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="destructive"
-                      onClick={() => handleDeleteAllocation(allocation.id)}
-                      disabled={isEditingAllocation !== null || isAddingAllocation || deleteAllocationMutation.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  )}
                 </div>
               );
             })}
