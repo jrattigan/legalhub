@@ -141,19 +141,25 @@ export default function DealDetail({
     }
   });
   
-  // Fetch unique lead investor names for autocomplete
+  // Fetch unique lead investor names for autocomplete with staleTime: 0 to ensure fresh data
   const { data: leadInvestors = [] } = useQuery({
     queryKey: ['/api/lead-investors'],
     queryFn: async () => {
       console.log('Fetching lead investors from API');
-      const response = await fetch('/api/lead-investors');
+      const response = await fetch('/api/lead-investors', {
+        headers: { 'Cache-Control': 'no-cache, no-store' },
+        cache: 'no-store'
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch lead investors');
       }
       const data = await response.json();
       console.log('Lead investors data received:', data);
       return data;
-    }
+    },
+    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnWindowFocus: true // Refetch when window regains focus
   });
 
   // Create a map of firm IDs to counsel attorneys for this deal
@@ -628,11 +634,21 @@ export default function DealDetail({
                       id="leadInvestor"
                       name="leadInvestor"
                       value={editDealForm.leadInvestor}
-                      onChange={handleFormChange}
-                      onFocus={() => console.log("Lead investors available:", leadInvestors)}
+                      onChange={(e) => {
+                        console.log("Lead investor changed to:", e.target.value);
+                        handleFormChange(e);
+                      }}
+                      onFocus={() => {
+                        console.log("Lead investor field focused");
+                        console.log("Lead investors available:", leadInvestors);
+                        console.log("Current datalist values:", 
+                          document.querySelectorAll('#lead-investors-list option')
+                        );
+                      }}
                       className="w-full pr-10"
                       placeholder={organizationName || "Lead Investor Name"}
                       list="lead-investors-list"
+                      autoComplete="off"
                     />
                     {/* Show a default option for the organization name */}
                     <button 

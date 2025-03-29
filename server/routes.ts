@@ -1027,13 +1027,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deals = await storage.getDeals();
       
       // Extract unique lead investor names from existing deals
-      const leadInvestors = new Set<string>();
+      const customLeadInvestors = new Set<string>();
       
+      // Log all lead investors from deals for debugging
+      console.log("Extracting lead investors from deals:");
       deals.forEach((deal: any) => {
         if (deal.leadInvestor) {
-          leadInvestors.add(deal.leadInvestor);
+          console.log(`Deal ${deal.id}: Lead investor = "${deal.leadInvestor}"`);
+          customLeadInvestors.add(deal.leadInvestor);
         }
       });
+      
+      // Log custom lead investors extracted from deals
+      console.log("Custom lead investors extracted:", Array.from(customLeadInvestors));
       
       // Add common VC firms to the options
       const vcFirms = [
@@ -1062,6 +1068,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "Institutional Venture Partners (IVP)",
         "Khosla Ventures",
         "Kleiner Perkins Caufield Byers",
+        "LSVP", // Added LSVP explicitly to ensure it's included
         "Lightspeed Venture Partners",
         "Lux Capital",
         "Madrona Venture Group",
@@ -1071,6 +1078,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "QED Investors",
         "Redpoint Ventures",
         "Ribbit Capital",
+        "Rogue Capital Ventures", // Added based on existing data
         "Sapphire Ventures",
         "Scale Venture Partners",
         "Sequoia Capital",
@@ -1081,11 +1089,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "Union Square Ventures"
       ];
       
-      // Combine existing lead investors with the VC firms list
-      vcFirms.forEach(firm => leadInvestors.add(firm));
+      // Start with all custom lead investors
+      const allLeadInvestors = new Set<string>(customLeadInvestors);
+      
+      // Add VC firms that aren't already in the custom list
+      vcFirms.forEach(firm => allLeadInvestors.add(firm));
       
       // Sort alphabetically and return as array
-      res.json(Array.from(leadInvestors).sort());
+      const result = Array.from(allLeadInvestors).sort();
+      console.log("Final lead investors list (first 10):", result.slice(0, 10), "...");
+      
+      res.json(result);
     } catch (error) {
       console.error("Error fetching lead investors:", error);
       res.status(500).json({ message: "Failed to fetch lead investors" });
