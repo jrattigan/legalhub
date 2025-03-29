@@ -48,6 +48,7 @@ import { CompanySelect } from '@/components/ui/company-select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Deal, User, Document, Task, Issue, LawFirm, Attorney, TimelineEvent, Company } from '@shared/schema';
+import { Checkbox } from "@/components/ui/checkbox";
 import { formatDealTitle } from '@/lib/deal-title-formatter';
 import { convertFileToBase64, getFileExtension } from '@/lib/file-helpers';
 import DocumentCard from './document-card';
