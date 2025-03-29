@@ -930,5 +930,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(events);
   });
 
+  // App Settings API
+  app.get("/api/settings", async (req, res) => {
+    try {
+      const settings = await storage.getAppSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching app settings:", error);
+      res.status(500).json({ message: "Failed to fetch app settings" });
+    }
+  });
+
+  app.get("/api/settings/:key", async (req, res) => {
+    try {
+      const key = req.params.key;
+      const setting = await storage.getAppSettingByKey(key);
+      
+      if (!setting) {
+        return res.status(404).json({ message: `Setting with key "${key}" not found` });
+      }
+      
+      res.json(setting);
+    } catch (error) {
+      console.error("Error fetching app setting:", error);
+      res.status(500).json({ message: "Failed to fetch app setting" });
+    }
+  });
+
+  app.post("/api/settings", async (req, res) => {
+    try {
+      const { key, value } = req.body;
+      
+      if (!key || value === undefined) {
+        return res.status(400).json({ message: "Key and value are required" });
+      }
+      
+      const setting = await storage.createAppSetting({ key, value });
+      res.status(201).json(setting);
+    } catch (error) {
+      console.error("Error creating app setting:", error);
+      res.status(500).json({ message: "Failed to create app setting" });
+    }
+  });
+
+  app.patch("/api/settings/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid setting ID" });
+      }
+      
+      const { key, value } = req.body;
+      if (!key && value === undefined) {
+        return res.status(400).json({ message: "At least one of key or value must be provided" });
+      }
+      
+      const setting = await storage.updateAppSetting(id, { key, value });
+      
+      if (!setting) {
+        return res.status(404).json({ message: "Setting not found" });
+      }
+      
+      res.json(setting);
+    } catch (error) {
+      console.error("Error updating app setting:", error);
+      res.status(500).json({ message: "Failed to update app setting" });
+    }
+  });
+
+  app.delete("/api/settings/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid setting ID" });
+      }
+      
+      const success = await storage.deleteAppSetting(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Setting not found" });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting app setting:", error);
+      res.status(500).json({ message: "Failed to delete app setting" });
+    }
+  });
+
   return httpServer;
 }

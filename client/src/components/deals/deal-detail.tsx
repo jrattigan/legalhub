@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Calendar, Edit, MoreHorizontal, Eye, Filter, Download, Share2, 
-  Trash2, Clock, Plus, File, CheckSquare, AlertCircle as Alert, Users 
+  Trash2, Clock, Plus, File, CheckSquare, AlertCircle as Alert, Users,
+  Building
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -111,7 +112,9 @@ export default function DealDetail({
     amount: deal.amount || '',
     status: deal.status,
     dueDate: deal.dueDate ? new Date(deal.dueDate).toISOString().split('T')[0] : '',
-    isCommitted: deal.isCommitted || false
+    isCommitted: deal.isCommitted || false,
+    leadInvestor: deal.leadInvestor || '',
+    leadInvestorCounsel: deal.leadInvestorCounsel || '',
   });
 
   // State for delete confirmation dialog
@@ -136,6 +139,8 @@ export default function DealDetail({
       status: string;
       dueDate: string | null;
       isCommitted: boolean;
+      leadInvestor: string;
+      leadInvestorCounsel: string;
     }) => {
       // Create a clean version of the payload with proper date formatting
       const apiPayload = {
@@ -146,7 +151,9 @@ export default function DealDetail({
         amount: updatedDeal.amount,
         status: updatedDeal.status,
         dueDate: updatedDeal.dueDate ? new Date(updatedDeal.dueDate) : null,
-        isCommitted: updatedDeal.isCommitted
+        isCommitted: updatedDeal.isCommitted,
+        leadInvestor: updatedDeal.leadInvestor,
+        leadInvestorCounsel: updatedDeal.leadInvestorCounsel
       };
       
       console.log('API Payload:', apiPayload);
@@ -244,6 +251,8 @@ export default function DealDetail({
       status: editDealForm.status,
       dueDate: editDealForm.dueDate ? editDealForm.dueDate : null,
       isCommitted: editDealForm.isCommitted,
+      leadInvestor: editDealForm.leadInvestor,
+      leadInvestorCounsel: editDealForm.leadInvestorCounsel,
     };
     
     console.log('Submitting update with companyId:', companyId, 'type:', typeof companyId);
@@ -309,6 +318,71 @@ export default function DealDetail({
   ];
 
   const isMobile = useIsMobile();
+  
+  // Query to get organization name from app settings
+  const { data: orgSettings } = useQuery({
+    queryKey: ['/api/settings/organizationName'],
+    queryFn: async () => {
+      const response = await fetch('/api/settings/organizationName');
+      if (!response.ok) {
+        throw new Error('Failed to fetch organization name');
+      }
+      return response.json();
+    }
+  });
+  
+  // Get organization name from settings
+  const organizationName = orgSettings?.value || "Your Organization";
+  
+  // Determine if organization is the lead investor
+  const isOrgLeadInvestor = deal.leadInvestor === organizationName;
+  
+  // Find lead counsel information
+  const leadCounsel = counsel.find(c => c.role === "Lead Counsel");
+  
+  // Format the lead investor information
+  const renderLeadInvestorInfo = () => {
+    if (!deal.leadInvestor) {
+      return null;
+    }
+
+    if (isOrgLeadInvestor) {
+      return (
+        <div className="flex items-center text-sm text-neutral-500 mt-1">
+          <Building className="h-4 w-4 mr-1" />
+          <span>
+            Lead Investor: {organizationName}
+            {leadCounsel && (
+              <> / Counsel: {leadCounsel.lawFirm.name}
+                {leadCounsel.attorney && ` (${leadCounsel.attorney.name})`}
+              </>
+            )}
+          </span>
+        </div>
+      );
+    } else {
+      // Another firm is lead investor
+      return (
+        <div className="flex flex-col text-sm text-neutral-500 mt-1">
+          <div className="flex items-center">
+            <Building className="h-4 w-4 mr-1" />
+            <span>
+              Lead Investor: {deal.leadInvestor}
+              {deal.leadInvestorCounsel && ` / Counsel: ${deal.leadInvestorCounsel}`}
+            </span>
+          </div>
+          {leadCounsel && (
+            <div className="flex items-center ml-5 mt-0.5">
+              <span>
+                {organizationName} Counsel: {leadCounsel.lawFirm.name}
+                {leadCounsel.attorney && ` (${leadCounsel.attorney.name})`}
+              </span>
+            </div>
+          )}
+        </div>
+      );
+    }
+  };
       
   return (
     <div className="flex flex-col bg-neutral-50 h-full">
@@ -441,6 +515,34 @@ export default function DealDetail({
                   )}
                 </div>
               </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="leadInvestor" className="text-right">
+                  Lead Investor
+                </Label>
+                <Input
+                  id="leadInvestor"
+                  name="leadInvestor"
+                  value={editDealForm.leadInvestor}
+                  onChange={handleFormChange}
+                  className="col-span-3"
+                  placeholder={organizationName || "Lead Investor Name"}
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="leadInvestorCounsel" className="text-right">
+                  Lead Investor Counsel
+                </Label>
+                <Input
+                  id="leadInvestorCounsel"
+                  name="leadInvestorCounsel"
+                  value={editDealForm.leadInvestorCounsel}
+                  onChange={handleFormChange}
+                  className="col-span-3"
+                  placeholder="Law Firm Name"
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button 
@@ -556,6 +658,8 @@ export default function DealDetail({
                 )}
               </span>
             </div>
+            {/* Lead Investor Information */}
+            {renderLeadInvestorInfo()}
           </div>
           <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center space-x-2'}`}>
             {!isMobile && (

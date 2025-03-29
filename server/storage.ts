@@ -10,7 +10,8 @@ import {
   lawFirms, LawFirm, InsertLawFirm,
   attorneys, Attorney, InsertAttorney, 
   dealCounsels, DealCounsel, InsertDealCounsel,
-  timelineEvents, TimelineEvent, InsertTimelineEvent
+  timelineEvents, TimelineEvent, InsertTimelineEvent,
+  appSettings, AppSetting, InsertAppSetting
 } from "@shared/schema";
 import { format } from 'date-fns';
 import { generateDocumentComparison } from './document-compare';
@@ -94,6 +95,13 @@ export interface IStorage {
   // Timeline
   getTimelineEvents(dealId: number): Promise<TimelineEvent[]>;
   createTimelineEvent(event: InsertTimelineEvent): Promise<TimelineEvent>;
+  
+  // App Settings
+  getAppSettings(): Promise<AppSetting[]>;
+  getAppSettingByKey(key: string): Promise<AppSetting | undefined>;
+  createAppSetting(setting: InsertAppSetting): Promise<AppSetting>;
+  updateAppSetting(id: number, setting: Partial<InsertAppSetting>): Promise<AppSetting | undefined>;
+  deleteAppSetting(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -109,6 +117,7 @@ export class MemStorage implements IStorage {
   private attorneys: Map<number, Attorney>;
   private dealCounsels: Map<number, DealCounsel>;
   private timelineEvents: Map<number, TimelineEvent>;
+  private appSettings: Map<number, AppSetting>;
 
   currentUserId: number;
   currentCompanyId: number;
@@ -122,6 +131,7 @@ export class MemStorage implements IStorage {
   currentAttorneyId: number;
   currentDealCounselId: number;
   currentTimelineEventId: number;
+  currentAppSettingId: number;
 
   constructor() {
     this.users = new Map();
@@ -136,6 +146,7 @@ export class MemStorage implements IStorage {
     this.attorneys = new Map();
     this.dealCounsels = new Map();
     this.timelineEvents = new Map();
+    this.appSettings = new Map();
 
     this.currentUserId = 1;
     this.currentCompanyId = 1;
@@ -149,6 +160,7 @@ export class MemStorage implements IStorage {
     this.currentAttorneyId = 1;
     this.currentDealCounselId = 1;
     this.currentTimelineEventId = 1;
+    this.currentAppSettingId = 1;
 
     // Initialize with sample data
     this.initializeSampleData();
@@ -156,6 +168,22 @@ export class MemStorage implements IStorage {
 
   // Initialize with sample data to have a working app on start
   private initializeSampleData() {
+    // Create global app settings
+    const organizationSetting: InsertAppSetting = {
+      key: "organizationName",
+      value: "Rogue Capital Ventures"
+    };
+    
+    const initialTime = new Date();
+    const settingId = this.currentAppSettingId++;
+    const createdSetting: AppSetting = {
+      ...organizationSetting,
+      id: settingId,
+      createdAt: initialTime,
+      updatedAt: initialTime
+    };
+    this.appSettings.set(settingId, createdSetting);
+    
     // Create users
     const user1: InsertUser = {
       username: "jdoe",
@@ -363,13 +391,13 @@ export class MemStorage implements IStorage {
     };
 
     // Create deals directly for sample data
-    const now = new Date();
+    const dealTime = new Date();
     const dealId1 = this.currentDealId++;
     const createdDeal1: Deal = { 
       ...deal1, 
       id: dealId1, 
-      createdAt: now, 
-      updatedAt: now,
+      createdAt: dealTime, 
+      updatedAt: dealTime,
       status: deal1.status || 'pending',
       description: deal1.description || null,
       dueDate: deal1.dueDate || null,
@@ -381,8 +409,8 @@ export class MemStorage implements IStorage {
     const createdDeal2: Deal = { 
       ...deal2, 
       id: dealId2, 
-      createdAt: now, 
-      updatedAt: now,
+      createdAt: dealTime, 
+      updatedAt: dealTime,
       status: deal2.status || 'pending',
       description: deal2.description || null,
       dueDate: deal2.dueDate || null,
@@ -394,8 +422,8 @@ export class MemStorage implements IStorage {
     const createdDeal3: Deal = { 
       ...deal3, 
       id: dealId3, 
-      createdAt: now, 
-      updatedAt: now,
+      createdAt: dealTime, 
+      updatedAt: dealTime,
       status: deal3.status || 'pending',
       description: deal3.description || null,
       dueDate: deal3.dueDate || null,
@@ -1933,6 +1961,66 @@ export class MemStorage implements IStorage {
     
     this.timelineEvents.set(id, event);
     return event;
+  }
+
+  // App Settings methods
+  async getAppSettings(): Promise<AppSetting[]> {
+    return Array.from(this.appSettings.values());
+  }
+
+  async getAppSettingByKey(key: string): Promise<AppSetting | undefined> {
+    for (const setting of this.appSettings.values()) {
+      if (setting.key === key) {
+        return setting;
+      }
+    }
+    return undefined;
+  }
+
+  async createAppSetting(settingInsert: InsertAppSetting): Promise<AppSetting> {
+    // Check if a setting with this key already exists
+    const existingSetting = await this.getAppSettingByKey(settingInsert.key);
+    if (existingSetting) {
+      // If it exists, update it instead
+      const updatedSetting: AppSetting = {
+        ...existingSetting,
+        value: settingInsert.value,
+        updatedAt: new Date()
+      };
+      this.appSettings.set(existingSetting.id, updatedSetting);
+      return updatedSetting;
+    }
+
+    // Create a new setting
+    const id = this.currentAppSettingId++;
+    const now = new Date();
+    const setting: AppSetting = {
+      ...settingInsert,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.appSettings.set(id, setting);
+    return setting;
+  }
+
+  async updateAppSetting(id: number, settingUpdate: Partial<InsertAppSetting>): Promise<AppSetting | undefined> {
+    const existingSetting = this.appSettings.get(id);
+    if (!existingSetting) {
+      return undefined;
+    }
+    
+    const updatedSetting: AppSetting = {
+      ...existingSetting,
+      ...settingUpdate,
+      updatedAt: new Date()
+    };
+    this.appSettings.set(id, updatedSetting);
+    return updatedSetting;
+  }
+
+  async deleteAppSetting(id: number): Promise<boolean> {
+    return this.appSettings.delete(id);
   }
 }
 
