@@ -1752,25 +1752,58 @@ export default function DealDetail({
                     title="Term Sheet PDF"
                   />
                 ) : deal.termSheetUrl.includes('data:application/vnd.openxmlformats-officedocument.wordprocessingml.document') ? (
-                  // For DOCX files, show a message that they need to be downloaded
-                  <div className="flex flex-col items-center justify-center p-8 border rounded bg-gray-50 min-h-[500px]">
-                    <File className="h-16 w-16 text-primary mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Word Document</h3>
-                    <p className="text-center text-muted-foreground mb-4">
-                      Word documents cannot be previewed directly. Please download the file to view it.
-                    </p>
-                    <Button onClick={() => {
-                      if (!deal.termSheetUrl) return;
-                      const a = document.createElement('a');
-                      a.href = deal.termSheetUrl;
-                      a.download = 'term-sheet.docx';
-                      document.body.appendChild(a);
-                      a.click();
-                      document.body.removeChild(a);
-                    }}>
-                      <Download className="h-4 w-4 mr-2" />
-                      Download Word Document
-                    </Button>
+                  // For DOCX files, use Office Online viewer
+                  <div className="flex flex-col h-full">
+                    <div className="h-[500px] border rounded w-full">
+                      {/* We need to create a temporary link to the doc and pass it to the viewer */}
+                      {(() => {
+                        // Creating a blob URL to pass to the Microsoft Viewer
+                        const base64Content = deal.termSheetUrl.split(',')[1];
+                        const byteCharacters = atob(base64Content);
+                        const byteArrays = [];
+                        
+                        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                          const slice = byteCharacters.slice(offset, offset + 512);
+                          const byteNumbers = new Array(slice.length);
+                          for (let i = 0; i < slice.length; i++) {
+                            byteNumbers[i] = slice.charCodeAt(i);
+                          }
+                          const byteArray = new Uint8Array(byteNumbers);
+                          byteArrays.push(byteArray);
+                        }
+                        
+                        // Create a blob and a URL from it
+                        const blob = new Blob(byteArrays, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                        const blobUrl = URL.createObjectURL(blob);
+                        
+                        // Show the simple text content instead
+                        return (
+                          <iframe 
+                            src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(window.location.origin + `/api/viewer/term-sheet.docx?dealId=${deal.id}`)}`}
+                            className="w-full h-full border-0"
+                            title="Term Sheet Document Viewer"
+                          />
+                        );
+                      })()}
+                    </div>
+                    <div className="mt-2 flex justify-end">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          if (!deal.termSheetUrl) return;
+                          const a = document.createElement('a');
+                          a.href = deal.termSheetUrl;
+                          a.download = 'term-sheet.docx';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                        }}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download Word Document
+                      </Button>
+                    </div>
                   </div>
                 ) : deal.termSheetUrl.includes('data:') ? (
                   // For other data URLs, show a generic message

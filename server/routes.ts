@@ -1183,5 +1183,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Special route for serving document for MS Office Viewer
+  app.get('/api/viewer/term-sheet.docx', async (req: Request, res: Response) => {
+    try {
+      const dealId = req.query.dealId as string;
+      if (!dealId) {
+        // If no deal ID is specified, return a sample document for testing
+        const sampleDocPath = './attached_assets/test1.docx';
+        res.download(sampleDocPath);
+        return;
+      }
+      
+      // Get the deal to access the term sheet
+      const deal = await storage.getDeal(parseInt(dealId, 10));
+      if (!deal || !deal.termSheetUrl) {
+        return res.status(404).json({ error: 'Term sheet not found' });
+      }
+      
+      // Extract base64 data and convert to buffer
+      const base64Data = deal.termSheetUrl.split(',')[1];
+      const buffer = Buffer.from(base64Data, 'base64');
+      
+      // Set response headers for a DOCX file
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', 'inline; filename="term-sheet.docx"');
+      res.setHeader('Content-Length', buffer.length);
+      
+      // Send the file data
+      res.send(buffer);
+    } catch (error) {
+      console.error('Error serving document:', error);
+      res.status(500).json({ error: 'Failed to serve document' });
+    }
+  });
+  
   return httpServer;
 }
