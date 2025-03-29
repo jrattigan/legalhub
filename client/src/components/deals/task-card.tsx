@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Plus, UserPlus } from 'lucide-react';
+import { Plus, UserPlus, Edit, Trash } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { 
   Dialog, 
@@ -47,6 +47,8 @@ interface TaskCardProps {
 
 export default function TaskCard({ tasks, onRefreshData, preview = false, dealId }: TaskCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isNewAssigneeDialogOpen, setIsNewAssigneeDialogOpen] = useState(false);
   const [newAssigneeName, setNewAssigneeName] = useState('');
   const [currentAssigneeType, setCurrentAssigneeType] = useState<'attorney' | 'lawFirm'>('attorney');
@@ -54,6 +56,8 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   const [customAssignees, setCustomAssignees] = useState<{id: string, name: string}[]>([]);
   // Track task assignees to identify which ones are being used
   const [usedAssigneeIds, setUsedAssigneeIds] = useState<Set<string>>(new Set());
+  // Track the current task being edited
+  const [currentTask, setCurrentTask] = useState<Task | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -177,6 +181,81 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     }
   });
 
+  // Edit task mutation
+  const editTaskMutation = useMutation({
+    mutationFn: async (data: any) => {
+      if (!data.id) {
+        throw new Error("No task ID provided");
+      }
+      
+      console.log("Updating task with data:", data);
+      
+      const response = await apiRequest('PATCH', `/api/tasks/${data.id}`, data);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Task update failed:", errorData);
+        throw new Error(errorData.message || "Failed to update task");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/tasks`] });
+      setIsEditDialogOpen(false);
+      setCurrentTask(null);
+      onRefreshData();
+      
+      toast({
+        title: "Success",
+        description: "Task updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Task update error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update task",
+      });
+    }
+  });
+  
+  // Delete task mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: number) => {
+      console.log("Deleting task:", taskId);
+      const response = await apiRequest('DELETE', `/api/tasks/${taskId}`, {});
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Task deletion failed:", errorData);
+        throw new Error(errorData.message || "Failed to delete task");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/tasks`] });
+      setIsDeleteDialogOpen(false);
+      setCurrentTask(null);
+      onRefreshData();
+      
+      toast({
+        title: "Success",
+        description: "Task deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Task deletion error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to delete task",
+      });
+    }
+  });
+  
   // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: async (data: z.infer<typeof taskSchema>) => {
@@ -611,7 +690,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                                   {customAssignees.length > 0 && (
                                     <>
                                       <SelectItem value="custom-assignees-header" disabled className="font-bold text-xs text-neutral-500 py-1 my-1">
-                                        CUSTOM ASSIGNEES
+                                        OTHER
                                       </SelectItem>
                                       
                                       {customAssignees.map(assignee => (
@@ -754,7 +833,19 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                     <div className="text-xs text-neutral-600 mt-1">{task.description}</div>
                   )}
                 </div>
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 flex items-center space-x-2">
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setCurrentTask(task);
+                      setIsEditDialogOpen(true);
+                    }} 
+                    className="text-neutral-400 hover:text-primary p-1"
+                    title="Edit task"
+                  >
+                    <Edit size={14} />
+                  </button>
                   {task.assignee && (
                     <Avatar className="h-6 w-6" style={{ backgroundColor: task.assignee.avatarColor }}>
                       <AvatarFallback>{task.assignee.initials}</AvatarFallback>
@@ -797,7 +888,19 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                     <div className="text-xs text-neutral-600 mt-1">{task.description}</div>
                   )}
                 </div>
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 flex items-center space-x-2">
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setCurrentTask(task);
+                      setIsEditDialogOpen(true);
+                    }} 
+                    className="text-neutral-400 hover:text-primary p-1"
+                    title="Edit task"
+                  >
+                    <Edit size={14} />
+                  </button>
                   {task.assignee && (
                     <Avatar className="h-6 w-6" style={{ backgroundColor: task.assignee.avatarColor }}>
                       <AvatarFallback>{task.assignee.initials}</AvatarFallback>
@@ -830,7 +933,19 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                     <span>Completed on: {task.completedAt ? format(new Date(task.completedAt), 'MMM d') : 'Unknown'}</span>
                   </div>
                 </div>
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 flex items-center space-x-2">
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setCurrentTask(task);
+                      setIsEditDialogOpen(true);
+                    }} 
+                    className="text-neutral-400 hover:text-primary p-1"
+                    title="Edit task"
+                  >
+                    <Edit size={14} />
+                  </button>
                   {task.assignee && (
                     <Avatar className="h-6 w-6" style={{ backgroundColor: task.assignee.avatarColor }}>
                       <AvatarFallback>{task.assignee.initials}</AvatarFallback>
