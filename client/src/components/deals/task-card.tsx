@@ -707,7 +707,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                                           <SelectItem 
                                             key={`attorney-${attorney.id}`} 
                                             value={`attorney-${attorney.id}`}
-                                            className="ml-6 text-sm" // Indentation for attorneys under their firms (to the right)
+                                            className="pl-6 text-sm" // Indentation for attorneys under their firms (to the right)
                                           >
                                             {attorney.name} ({attorney.position})
                                           </SelectItem>
@@ -1241,9 +1241,9 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                                         <SelectItem 
                                           key={`attorney-${attorney.id}`} 
                                           value={`attorney-${attorney.id}`}
-                                          className="pl-6" // Indent to show nesting
+                                          className="pl-6 text-sm" // Indent to show nesting
                                         >
-                                          {attorney.name}
+                                          {attorney.name} ({attorney.position})
                                         </SelectItem>
                                       ))}
                                   </React.Fragment>
@@ -1267,7 +1267,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                             )}
                             
                             {/* Option to add new assignee */}
-                            <SelectItem value="new-assignee" className="text-primary font-medium">
+                            <SelectItem value="new-assignee" className="text-primary border-t border-neutral-100 mt-1 pt-1">
                               + Add New Assignee
                             </SelectItem>
                           </>
