@@ -543,6 +543,49 @@ export default function DealDetail({
       );
     }
   };
+
+  // Render the investment team section below lead investor
+  const renderInvestmentTeam = () => {
+    return (
+      <div className="flex flex-col text-sm mt-3">
+        <div className="flex items-center mb-2">
+          <Users className="h-4 w-4 mr-1 text-neutral-500" />
+          <span className="font-medium text-neutral-700">Investment Team</span>
+        </div>
+        
+        <div className="flex flex-wrap gap-2 mt-1">
+          {dealUsers.length > 0 ? (
+            dealUsers.map(user => {
+              const isLead = user.role === 'Lead';
+              return (
+                <div 
+                  key={user.id}
+                  className={`flex items-center px-2 py-1 ${
+                    isLead 
+                      ? 'bg-primary/10 border-primary/30 border rounded-full' 
+                      : 'bg-neutral-100'
+                  } rounded-md`}
+                >
+                  <div
+                    className={`h-6 w-6 rounded-full mr-1.5 flex items-center justify-center text-white text-xs font-medium`}
+                    style={{ backgroundColor: user.avatarColor }}
+                  >
+                    {user.initials}
+                  </div>
+                  <span className="text-sm font-medium">{user.fullName}</span>
+                  {isLead && (
+                    <span className="ml-1 text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">Lead</span>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-sm text-neutral-500 italic">No team members assigned</div>
+          )}
+        </div>
+      </div>
+    );
+  };
       
   return (
     <div className="flex flex-col bg-neutral-50 h-full">
@@ -944,6 +987,7 @@ export default function DealDetail({
             </div>
             {/* Lead Investor Information */}
             {renderLeadInvestorInfo()}
+            {renderInvestmentTeam()}
           </div>
           <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center space-x-2'}`}>
             {!isMobile && (
