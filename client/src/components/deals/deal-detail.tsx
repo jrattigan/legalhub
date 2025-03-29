@@ -1734,65 +1734,64 @@ export default function DealDetail({
       
       {/* Term Sheet Viewer Dialog */}
       <Dialog open={isTermSheetViewerOpen} onOpenChange={setIsTermSheetViewerOpen}>
-        <DialogContent className="sm:max-w-5xl h-[90vh] max-h-[90vh] p-4 overflow-hidden">
-          <div className="h-full">
+        <DialogContent className="sm:max-w-5xl h-[95vh] max-h-[95vh] p-0 overflow-hidden">
+          {/* Adding a visually hidden title for accessibility */}
+          <span className="sr-only">Term Sheet Viewer</span>
+          <div className="h-full flex flex-col">
             {deal.termSheetUrl && (
               <div className="flex flex-col h-full">
                 {deal.termSheetUrl.includes('data:application/pdf') ? (
                   // PDF files can be displayed directly in an iframe
                   <iframe 
                     src={deal.termSheetUrl} 
-                    className="w-full h-full min-h-[500px] border rounded" 
+                    className="w-full h-full min-h-[500px]" 
                     title="Term Sheet PDF"
                   />
                 ) : deal.termSheetUrl.includes('data:application/vnd.openxmlformats-officedocument.wordprocessingml.document') ? (
                   // For DOCX files, use Office Online viewer
                   <div className="flex flex-col h-full">
-                    <div className="h-[calc(100%-40px)] border rounded w-full flex items-center justify-center bg-gray-50 p-1">
-                      <div className="w-[95%] h-[98%] relative">
-                        {/* We need to create a temporary link to the doc and pass it to the viewer */}
-                        {(() => {
-                          // Creating a blob URL to pass to the Microsoft Viewer
-                          const base64Content = deal.termSheetUrl.split(',')[1];
-                          const byteCharacters = atob(base64Content);
-                          const byteArrays = [];
-                          
-                          for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-                            const slice = byteCharacters.slice(offset, offset + 512);
-                            const byteNumbers = new Array(slice.length);
-                            for (let i = 0; i < slice.length; i++) {
-                              byteNumbers[i] = slice.charCodeAt(i);
-                            }
-                            const byteArray = new Uint8Array(byteNumbers);
-                            byteArrays.push(byteArray);
+                    <div className="flex-1 w-full h-[calc(100%-40px)]">
+                      {/* We need to create a temporary link to the doc and pass it to the viewer */}
+                      {(() => {
+                        // Creating a blob URL to pass to the Microsoft Viewer
+                        const base64Content = deal.termSheetUrl.split(',')[1];
+                        const byteCharacters = atob(base64Content);
+                        const byteArrays = [];
+                        
+                        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                          const slice = byteCharacters.slice(offset, offset + 512);
+                          const byteNumbers = new Array(slice.length);
+                          for (let i = 0; i < slice.length; i++) {
+                            byteNumbers[i] = slice.charCodeAt(i);
                           }
-                          
-                          // Create a blob and a URL from it
-                          const blob = new Blob(byteArrays, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-                          const blobUrl = URL.createObjectURL(blob);
-                          
-                          // Show the document in an iframe with better proportions
-                          return (
-                            <iframe 
-                              src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(window.location.origin + `/api/viewer/term-sheet.docx?dealId=${deal.id}`)}`}
-                              className="w-full h-full border-0 shadow-sm"
-                              title="Term Sheet Document Viewer"
-                              style={{ aspectRatio: '8.5/11' }} // Standard letter page aspect ratio
-                            />
-                          );
-                        })()}
-                      </div>
+                          const byteArray = new Uint8Array(byteNumbers);
+                          byteArrays.push(byteArray);
+                        }
+                        
+                        // Create a blob and a URL from it
+                        const blob = new Blob(byteArrays, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                        const blobUrl = URL.createObjectURL(blob);
+                        
+                        // Show the document in an iframe with better proportions
+                        return (
+                          <iframe 
+                            src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(window.location.origin + `/api/viewer/term-sheet.docx?dealId=${deal.id}`)}`}
+                            className="w-full h-full"
+                            title="Term Sheet Document Viewer"
+                          />
+                        );
+                      })()}
                     </div>
-                    <div className="mt-1 flex justify-between">
+                    <div className="h-[40px] px-4 flex justify-between items-center border-t bg-gray-50">
                       <Button 
-                        variant="outline" 
+                        variant="ghost" 
                         size="sm"
                         onClick={() => setIsTermSheetViewerOpen(false)}
                       >
                         Close
                       </Button>
                       <Button 
-                        variant="outline" 
+                        variant="ghost" 
                         size="sm"
                         onClick={() => {
                           if (!deal.termSheetUrl) return;
