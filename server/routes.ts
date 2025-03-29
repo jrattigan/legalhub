@@ -1020,6 +1020,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete app setting" });
     }
   });
+  
+  // Endpoint to fetch unique lead investor names
+  app.get("/api/lead-investors", async (req, res) => {
+    try {
+      const deals = await storage.getDeals();
+      
+      // Extract unique lead investor names
+      const leadInvestors = new Set<string>();
+      
+      deals.forEach((deal: any) => {
+        if (deal.leadInvestor) {
+          leadInvestors.add(deal.leadInvestor);
+        }
+      });
+      
+      res.json(Array.from(leadInvestors));
+    } catch (error) {
+      console.error("Error fetching lead investors:", error);
+      res.status(500).json({ message: "Failed to fetch lead investors" });
+    }
+  });
 
   return httpServer;
 }

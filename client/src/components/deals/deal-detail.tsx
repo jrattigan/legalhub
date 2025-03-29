@@ -118,7 +118,7 @@ export default function DealDetail({
     leadInvestorAttorneys: [],
   });
   
-  // Group counsel by law firm for easier selection
+  // Define type for law firm options including attorneys
   type LawFirmOption = {
     id: number;
     name: string;
@@ -129,27 +129,59 @@ export default function DealDetail({
     }[];
   };
 
-  const lawFirmOptions = counsel.reduce<LawFirmOption[]>((options, c) => {
-    if (!options.find(o => o.id === c.lawFirm.id)) {
-      options.push({
-        id: c.lawFirm.id,
-        name: c.lawFirm.name,
-        attorneys: []
-      });
+  // Fetch all law firms from the API
+  const { data: allLawFirms = [] } = useQuery({
+    queryKey: ['/api/law-firms'],
+    queryFn: async () => {
+      const response = await fetch('/api/law-firms');
+      if (!response.ok) {
+        throw new Error('Failed to fetch law firms');
+      }
+      return response.json();
+    }
+  });
+  
+  // Fetch unique lead investor names for autocomplete
+  const { data: leadInvestors = [] } = useQuery({
+    queryKey: ['/api/lead-investors'],
+    queryFn: async () => {
+      const response = await fetch('/api/lead-investors');
+      if (!response.ok) {
+        throw new Error('Failed to fetch lead investors');
+      }
+      return response.json();
+    }
+  });
+
+  // Create a map of firm IDs to counsel attorneys for this deal
+  const dealCounselByFirm = new Map<number, { id: number; name: string; role: string }[]>();
+  
+  counsel.forEach(c => {
+    if (!dealCounselByFirm.has(c.lawFirm.id)) {
+      dealCounselByFirm.set(c.lawFirm.id, []);
     }
     
-    // Add attorney to the law firm if available
-    const lawFirm = options.find(o => o.id === c.lawFirm.id);
-    if (lawFirm && c.attorney && !lawFirm.attorneys.some(a => a.id === c.attorney!.id)) {
-      lawFirm.attorneys.push({
-        id: c.attorney.id,
-        name: c.attorney.name,
-        role: c.role
-      });
+    if (c.attorney) {
+      const attorneys = dealCounselByFirm.get(c.lawFirm.id) || [];
+      if (!attorneys.some(a => a.id === c.attorney!.id)) {
+        attorneys.push({
+          id: c.attorney.id,
+          name: c.attorney.name,
+          role: c.role
+        });
+      }
     }
-    
-    return options;
-  }, []);
+  });
+  
+  // Create law firm options from all available law firms
+  const lawFirmOptions: LawFirmOption[] = allLawFirms.map((firm: any) => {
+    return {
+      id: firm.id,
+      name: firm.name,
+      // Add attorneys that are associated with this deal if any
+      attorneys: dealCounselByFirm.get(firm.id) || []
+    };
+  });
   
   // Selected law firm attorneys 
   const [selectedAttorneys, setSelectedAttorneys] = useState<number[]>([]);
@@ -587,14 +619,46 @@ export default function DealDetail({
                 <Label htmlFor="leadInvestor" className="text-right">
                   Lead Investor
                 </Label>
-                <Input
-                  id="leadInvestor"
-                  name="leadInvestor"
-                  value={editDealForm.leadInvestor}
-                  onChange={handleFormChange}
-                  className="col-span-3"
-                  placeholder={organizationName || "Lead Investor Name"}
-                />
+                <div className="col-span-3 relative">
+                  <div className="flex items-center">
+                    <Input
+                      id="leadInvestor"
+                      name="leadInvestor"
+                      value={editDealForm.leadInvestor}
+                      onChange={handleFormChange}
+                      className="w-full pr-10"
+                      placeholder={organizationName || "Lead Investor Name"}
+                      list="lead-investors-list"
+                    />
+                    {/* Show a default option for the organization name */}
+                    <button 
+                      type="button"
+                      className="absolute right-2 text-gray-500 hover:text-gray-700 h-8 w-8 inline-flex items-center justify-center"
+                      onClick={() => {
+                        setEditDealForm({
+                          ...editDealForm,
+                          leadInvestor: organizationName,
+                          leadInvestorCounsel: ''
+                        });
+                        setSelectedAttorneys([]);
+                      }}
+                      title="Set as organization"
+                    >
+                      <Building className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {/* Native HTML datalist for suggestions */}
+                  <datalist id="lead-investors-list">
+                    {/* Always include the organization as an option */}
+                    <option value={organizationName} />
+                    {/* Include all other lead investors from the API */}
+                    {leadInvestors
+                      .filter(investor => investor !== organizationName)
+                      .map((investor, index) => (
+                        <option key={index} value={investor} />
+                      ))}
+                  </datalist>
+                </div>
               </div>
               
               {/* Only show Lead Investor Counsel if organization is not the lead investor */}
