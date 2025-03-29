@@ -71,12 +71,12 @@ export default function Settings() {
     mutationFn: async (data: OrganizationFormValues) => {
       if (organizationSetting) {
         // Update existing setting
-        return apiRequest(`/api/settings/${organizationSetting.id}`, 'PATCH', {
+        return apiRequest('PATCH', `/api/settings/${organizationSetting.id}`, {
           value: data.organizationName
         });
       } else {
         // Create new setting
-        return apiRequest('/api/settings', 'POST', {
+        return apiRequest('POST', '/api/settings', {
           key: 'organizationName', 
           value: data.organizationName
         });
