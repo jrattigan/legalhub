@@ -115,7 +115,44 @@ export default function DealDetail({
     isCommitted: deal.isCommitted || false,
     leadInvestor: deal.leadInvestor || '',
     leadInvestorCounsel: deal.leadInvestorCounsel || '',
+    leadInvestorAttorneys: [],
   });
+  
+  // Group counsel by law firm for easier selection
+  type LawFirmOption = {
+    id: number;
+    name: string;
+    attorneys: {
+      id: number;
+      name: string;
+      role: string;
+    }[];
+  };
+
+  const lawFirmOptions = counsel.reduce<LawFirmOption[]>((options, c) => {
+    if (!options.find(o => o.id === c.lawFirm.id)) {
+      options.push({
+        id: c.lawFirm.id,
+        name: c.lawFirm.name,
+        attorneys: []
+      });
+    }
+    
+    // Add attorney to the law firm if available
+    const lawFirm = options.find(o => o.id === c.lawFirm.id);
+    if (lawFirm && c.attorney && !lawFirm.attorneys.some(a => a.id === c.attorney!.id)) {
+      lawFirm.attorneys.push({
+        id: c.attorney.id,
+        name: c.attorney.name,
+        role: c.role
+      });
+    }
+    
+    return options;
+  }, []);
+  
+  // Selected law firm attorneys 
+  const [selectedAttorneys, setSelectedAttorneys] = useState<number[]>([]);
 
   // State for delete confirmation dialog
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -535,28 +572,82 @@ export default function DealDetail({
                   Lead Investor Counsel
                 </Label>
                 <div className="col-span-3">
-                  {/* Law Firm Selector */}
+                  {/* Law Firm Selector - Only shows firms involved in this deal */}
                   <Select 
                     name="leadInvestorCounsel" 
                     value={editDealForm.leadInvestorCounsel}
-                    onValueChange={(value) => setEditDealForm({...editDealForm, leadInvestorCounsel: value})}
+                    onValueChange={(value) => {
+                      // Reset selected attorneys when law firm changes
+                      setSelectedAttorneys([]);
+                      setEditDealForm({
+                        ...editDealForm, 
+                        leadInvestorCounsel: value,
+                        leadInvestorAttorneys: []
+                      });
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a law firm" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Cooley">Cooley LLP</SelectItem>
-                      <SelectItem value="Wilson Sonsini">Wilson Sonsini</SelectItem>
-                      <SelectItem value="Gunderson Dettmer">Gunderson Dettmer</SelectItem>
-                      <SelectItem value="Smith & Wilson LLP">Smith & Wilson LLP</SelectItem>
-                      <SelectItem value="Blackstone & Roberts">Blackstone & Roberts</SelectItem>
-                      <SelectItem value="Fenwick & West">Fenwick & West</SelectItem>
-                      <SelectItem value="Goodwin Procter">Goodwin Procter</SelectItem>
-                      <SelectItem value="Orrick">Orrick</SelectItem>
+                      {lawFirmOptions.map(firm => (
+                        <SelectItem key={firm.id} value={firm.name}>{firm.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
+              
+              {/* Only show attorney selection if a law firm is selected */}
+              {editDealForm.leadInvestorCounsel && (
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label htmlFor="attorneys" className="text-right pt-2">
+                    Attorneys
+                  </Label>
+                  <div className="col-span-3">
+                    {/* Get attorneys for the selected law firm */}
+                    {(() => {
+                      const selectedFirm = lawFirmOptions.find(f => f.name === editDealForm.leadInvestorCounsel);
+                      
+                      if (selectedFirm && selectedFirm.attorneys.length > 0) {
+                        return (
+                          <div className="flex flex-col space-y-2">
+                            {selectedFirm.attorneys.map(attorney => (
+                              <div key={attorney.id} className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  id={`attorney-${attorney.id}`}
+                                  checked={selectedAttorneys.includes(attorney.id)}
+                                  onChange={(e) => {
+                                    const newValue = e.target.checked;
+                                    if (newValue) {
+                                      // Add attorney ID to the selected list
+                                      const newSelectedAttorneys = [...selectedAttorneys, attorney.id];
+                                      setSelectedAttorneys(newSelectedAttorneys);
+                                    } else {
+                                      // Remove attorney ID from the selected list
+                                      const newSelectedAttorneys = selectedAttorneys.filter(id => id !== attorney.id);
+                                      setSelectedAttorneys(newSelectedAttorneys);
+                                    }
+                                  }}
+                                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                />
+                                <label htmlFor={`attorney-${attorney.id}`} className="text-sm">
+                                  {attorney.name} ({attorney.role})
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <p className="text-sm text-neutral-500">No attorneys available for this law firm.</p>
+                        );
+                      }
+                    })()}
+                  </div>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button 
