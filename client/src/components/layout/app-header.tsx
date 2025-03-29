@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Search, Bell, Menu, X } from 'lucide-react';
+import { Search, Bell, Menu, X, User as UserIcon, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { useQuery } from '@tanstack/react-query';
 import { User } from '@shared/schema';
 
 interface AppHeaderProps {
@@ -100,12 +109,40 @@ export default function AppHeader({ title, user, notifications = 0 }: AppHeaderP
         </div>
 
         {user ? (
-          <div 
-            className="h-9 w-9 rounded-full flex items-center justify-center text-white text-sm font-medium cursor-pointer shadow-sm hover:shadow-md transition-shadow"
-            style={{ backgroundColor: user.avatarColor }}
-          >
-            <span>{user.initials}</span>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div 
+                className="h-9 w-9 rounded-full flex items-center justify-center text-white text-sm font-medium cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+                style={{ backgroundColor: user.avatarColor }}
+              >
+                <span>{user.initials}</span>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex flex-col">
+                  <span className="font-medium">{user.fullName}</span>
+                  <span className="text-xs text-neutral-500">{user.email}</span>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <Link href="/settings">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+              </Link>
+              <DropdownMenuItem>
+                <UserIcon className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Sign out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ) : (
           <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white text-sm font-medium cursor-pointer shadow-sm hover:shadow-md transition-shadow">
             <span>GC</span>
