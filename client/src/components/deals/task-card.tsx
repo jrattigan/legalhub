@@ -126,25 +126,25 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   // Get users for assignee dropdown - only when internal tasks
   const { data: users = [] } = useQuery<User[]>({
     queryKey: ['/api/users'],
-    enabled: isDialogOpen
+    enabled: isDialogOpen || isEditDialogOpen
   });
   
   // Get law firms for external tasks
   const { data: lawFirms = [] } = useQuery<LawFirm[]>({
     queryKey: ['/api/law-firms'],
-    enabled: isDialogOpen && currentTaskType === 'external'
+    enabled: (isDialogOpen || isEditDialogOpen) && currentTaskType === 'external'
   });
   
   // Get attorneys associated with law firms for the current deal
   const { data: dealCounsels = [] } = useQuery<any[]>({
     queryKey: ['/api/deals', dealId, 'counsel'],
-    enabled: isDialogOpen && Boolean(dealId) && currentTaskType === 'external'
+    enabled: (isDialogOpen || isEditDialogOpen) && Boolean(dealId) && currentTaskType === 'external'
   });
   
   // Get all attorneys for selection
   const { data: attorneys = [] } = useQuery<Attorney[]>({
     queryKey: ['/api/attorneys'],
-    enabled: isDialogOpen && currentTaskType === 'external'
+    enabled: (isDialogOpen || isEditDialogOpen) && currentTaskType === 'external'
   });
 
   // Complete task mutation
@@ -317,17 +317,27 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       form.reset({
         title: currentTask.title,
         description: currentTask.description,
+        status: currentTask.status || 'active',
         priority: currentTask.priority,
         dueDate: currentTask.dueDate,
         taskType: currentTask.taskType || 'internal',
         assigneeId: currentTask.assigneeId ? 
-          (currentTask.assigneeType === 'custom' ? 
-            `custom-${currentTask.assigneeId}` : 
+          (currentTask.assigneeType === 'custom' && currentTask.assigneeName ? 
+            `custom-${currentTask.assigneeName}` : 
             currentTask.assigneeId.toString()) : 
           'unassigned',
-        assigneeType: currentTask.assigneeType || 'user',
-        assigneeName: currentTask.assigneeName
+        assigneeType: (currentTask.assigneeType === 'attorney' || currentTask.assigneeType === 'firm' || 
+                      currentTask.assigneeType === 'custom' || currentTask.assigneeType === 'user') ? 
+                      (currentTask.assigneeType as "attorney" | "firm" | "custom" | "user") : 'user',
+        assigneeName: currentTask.assigneeName,
+        completed: Boolean(currentTask.completed),
+        dealId: currentTask.dealId
       });
+      
+      // If the task is external, make sure to update the currentTaskType so proper assignees load
+      if (currentTask.taskType === 'external') {
+        form.setValue('taskType', 'external');
+      }
     }
   }, [currentTask, isEditDialogOpen, form]);
   
