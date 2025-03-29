@@ -238,7 +238,7 @@ export default function DealDetail({
   const { toast } = useToast();
   
   // Query to fetch all users for team assignment
-  const { data: allUsers = [] } = useQuery({
+  const { data: allUsers = [] } = useQuery<User[]>({
     queryKey: ['/api/users'],
     refetchOnWindowFocus: false
   });
@@ -647,7 +647,7 @@ export default function DealDetail({
     <div className="flex flex-col bg-neutral-50 h-full">
       {/* Edit Deal Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Edit Deal Details</DialogTitle>
             <DialogDescription>
@@ -655,7 +655,7 @@ export default function DealDetail({
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit}>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 py-4 overflow-y-auto max-h-[calc(80vh-8rem)]">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="title" className="text-right">
                   Deal Title
@@ -771,14 +771,14 @@ export default function DealDetail({
                     <Select 
                       onValueChange={(value) => {
                         const userId = parseInt(value);
-                        const user = allUsers.find((u: any) => u.id === userId);
+                        const user = allUsers.find((u) => u.id === userId);
                         
                         // Check if user is already in team members
                         if (teamMembers.some(member => member.userId === userId)) {
                           toast({
                             title: "User already added",
                             description: "This user is already part of the team.",
-                            variant: "warning"
+                            variant: "destructive"
                           });
                           return;
                         }
@@ -824,9 +824,8 @@ export default function DealDetail({
                   {/* Promote to lead */}
                   {teamMembers.length > 0 && (
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="lead-member" className="shrink-0">Lead Member:</Label>
+                      <Label className="shrink-0">Lead Member:</Label>
                       <Select
-                        id="lead-member"
                         onValueChange={(value) => {
                           const userId = parseInt(value);
                           // Update role for this user to 'Lead' and others to 'Member'
