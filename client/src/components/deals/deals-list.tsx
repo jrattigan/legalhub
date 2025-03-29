@@ -148,15 +148,18 @@ export default function DealsList({ deals, activeFilter, setActiveFilter, select
                     <path d="M16 2V6M8 2V6M3 10H21" stroke="currentColor" strokeWidth="2" />
                   </svg>
                   {deal.dueDate ? (
-                    deal.status === 'completed' ? 
-                      `Closed: ${format(new Date(deal.dueDate), 'MMM dd, yyyy')}` : 
+                    deal.status === 'completed' ? (
+                      `Closed: ${format(new Date(deal.dueDate), 'MMM dd, yyyy')}`
+                    ) : (
                       <span className="flex items-center">
-                        {`Closing: ${format(new Date(deal.dueDate), 'MMM dd, yyyy')}`}
-                        {deal.isCommitted ? 
-                          <span className="text-sm ml-1" title="Committed Closing Date">🤝</span> :
+                        <span>Closing: {format(new Date(deal.dueDate), 'MMM dd, yyyy')}</span>
+                        {deal.isCommitted ? (
+                          <span className="text-sm ml-1" title="Committed Closing Date">🤝</span>
+                        ) : (
                           <span className="text-sm ml-1" title="Not Committed Closing Date">🤷</span>
-                        }
+                        )}
                       </span>
+                    )
                   ) : 'No closing date'}
                 </span>
               </div>

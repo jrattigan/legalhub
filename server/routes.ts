@@ -248,6 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dealId: z.string().optional(),
         status: z.string().optional(),
         dueDate: z.date().nullable().optional(),
+        isCommitted: z.boolean().optional(),
         companyId: z.number().optional(),
         companyName: z.string().optional(),
         amount: z.string().nullable().optional()
