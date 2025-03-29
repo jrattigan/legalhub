@@ -150,8 +150,14 @@ export default function DealsList({ deals, activeFilter, setActiveFilter, select
                   {deal.dueDate ? (
                     deal.status === 'completed' ? 
                       `Closed: ${format(new Date(deal.dueDate), 'MMM dd, yyyy')}` : 
-                      `Due: ${format(new Date(deal.dueDate), 'MMM dd, yyyy')}`
-                  ) : 'No due date'}
+                      <span className="flex items-center">
+                        {`Closing: ${format(new Date(deal.dueDate), 'MMM dd, yyyy')}`}
+                        {deal.isCommitted ? 
+                          <span className="text-sm ml-1" title="Committed Closing Date">🤝</span> :
+                          <span className="text-sm ml-1" title="Not Committed Closing Date">🤷</span>
+                        }
+                      </span>
+                  ) : 'No closing date'}
                 </span>
               </div>
               <div className="mt-2 text-xs text-neutral-600">
