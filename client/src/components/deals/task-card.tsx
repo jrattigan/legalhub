@@ -48,6 +48,7 @@ interface TaskCardProps {
 export default function TaskCard({ tasks, onRefreshData, preview = false, dealId }: TaskCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isNewAssigneeDialogOpen, setIsNewAssigneeDialogOpen] = useState(false);
+  const [newAssigneeName, setNewAssigneeName] = useState('');
   const [currentAssigneeType, setCurrentAssigneeType] = useState<'attorney' | 'lawFirm'>('attorney');
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -81,11 +82,15 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     assigneeId: z.union([z.number(), z.string(), z.null()]).optional().nullable()
       .transform(val => {
         if (val === '' || val === 'unassigned' || val === null || val === undefined) return null;
+        // For custom assignees, we need to keep the string value
+        if (typeof val === 'string' && val.startsWith('custom-')) return val;
         return typeof val === 'string' ? parseInt(val) : val;
       }),
-    // Add assigneeType to track what kind of entity the assignee is (user, attorney, firm)
-    assigneeType: z.enum(['user', 'attorney', 'firm']).optional().nullable()
+    // Add assigneeType to track what kind of entity the assignee is (user, attorney, firm, custom)
+    assigneeType: z.enum(['user', 'attorney', 'firm', 'custom']).optional().nullable()
       .default('user'),
+    // Add assigneeName for custom assignees
+    assigneeName: z.string().optional().nullable(),
     taskType: z.string().default("internal"), // 'internal' or 'external'
     dealId: z.number().optional(), // Will be filled before submission
     completed: z.boolean().default(false)
@@ -234,19 +239,35 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     }
     
     try {
+      // Get the processed assignee ID (could be a number, string, or null)
+      const processedAssigneeId = handleAssigneeId(data.assigneeId);
+      
       // Format the data for submission (ensure dates are properly formatted)
-      const formattedData = {
+      const formattedData: any = {
         title: data.title,
         description: data.description || "", // Ensure we have a string, not null or undefined
         status: data.status || "active",
         priority: data.priority || "medium",
         dealId,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
-        assigneeId: handleAssigneeId(data.assigneeId),
-        assigneeType: data.assigneeType || "user", // Include assignee type (user, attorney, firm)
+        assigneeType: data.assigneeType || "user", // Include assignee type (user, attorney, firm, custom)
         taskType: data.taskType || "internal", // Include task type
-        completed: false
+        completed: false,
+        assigneeName: null // Default to null, will be set below for custom assignees
       };
+      
+      // Special handling for custom assignees
+      if (typeof processedAssigneeId === 'string' && processedAssigneeId.startsWith('custom-')) {
+        // For custom assignees, store the name directly (strip the 'custom-' prefix)
+        formattedData.assigneeName = processedAssigneeId.replace('custom-', '');
+        formattedData.assigneeId = null; // No numeric ID for custom assignees
+        formattedData.assigneeType = 'custom'; // Ensure assigneeType is set correctly
+      } else {
+        // For regular assignees (users, attorneys, firms), store the numeric ID
+        formattedData.assigneeId = processedAssigneeId;
+        // Make sure assigneeName is null for non-custom assignees
+        formattedData.assigneeName = null;
+      }
       
       console.log("Submitting task with data:", formattedData);
       
@@ -267,20 +288,27 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   };
 
   // Helper function to handle assignee ID processing
-  const handleAssigneeId = (assigneeId: any): number | null => {
+  const handleAssigneeId = (assigneeId: any): number | string | null => {
     // Case 1: No assignee selected
     if (assigneeId === "unassigned" || assigneeId === undefined || assigneeId === null || assigneeId === '') {
       return null;
     }
     
-    // Case 2: Handle external assignees (firm-123 or attorney-456 format)
+    // Case 2: Handle string assignee values
     if (typeof assigneeId === 'string') {
       // Skip the section headers
       if (assigneeId === 'law-firms-header' || assigneeId === 'attorneys-header') {
         return null;
       }
       
-      // For external assignees, extract the ID part from the prefixed string
+      // Case 2a: Handle custom assignee (custom-Name format)
+      if (assigneeId.startsWith('custom-')) {
+        form.setValue('assigneeType', 'custom');
+        // For custom assignees, just return the whole string which will be handled by the backend
+        return assigneeId;
+      }
+      
+      // Case 2b: For external assignees, extract the ID part from the prefixed string
       if (assigneeId.startsWith('firm-') || assigneeId.startsWith('attorney-')) {
         const [type, id] = assigneeId.split('-');
         
@@ -303,7 +331,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       return parseInt(assigneeId);
     }
     
-    // Case 3: Already a number
+    // Case 3: Already a number (usually a user ID)
     form.setValue('assigneeType', 'user'); // Default to user if type not specified
     return assigneeId;
   };
@@ -565,78 +593,26 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
             <DialogHeader>
               <DialogTitle>Add New Assignee</DialogTitle>
               <DialogDescription>
-                Create a new assignee for external tasks
+                Create a new assignee for this task
               </DialogDescription>
             </DialogHeader>
             
-            <div className="py-2 mb-4">
-              <div className="flex gap-4 mb-4">
-                <Button
-                  type="button"
-                  variant={currentAssigneeType === 'attorney' ? 'default' : 'outline'}
-                  onClick={() => setCurrentAssigneeType('attorney')}
-                  className="flex-1"
-                >
-                  Attorney
-                </Button>
-                <Button
-                  type="button"
-                  variant={currentAssigneeType === 'lawFirm' ? 'default' : 'outline'}
-                  onClick={() => setCurrentAssigneeType('lawFirm')}
-                  className="flex-1"
-                >
-                  Law Firm
-                </Button>
+            <div className="py-4">
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="newAssigneeName" className="text-sm font-medium">Assignee Name</label>
+                  <Input 
+                    id="newAssigneeName"
+                    placeholder="Enter assignee name" 
+                    className="mt-1" 
+                    value={newAssigneeName}
+                    onChange={(e) => setNewAssigneeName(e.target.value)}
+                  />
+                  <p className="text-xs text-neutral-500 mt-1">
+                    This could be an individual, law firm, or any external party
+                  </p>
+                </div>
               </div>
-              
-              {currentAssigneeType === 'attorney' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Name</label>
-                    <Input placeholder="Enter attorney name" className="mt-1" />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Position</label>
-                    <Input placeholder="Partner, Associate, etc." className="mt-1" />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Email</label>
-                    <Input type="email" placeholder="Email address" className="mt-1" />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Law Firm</label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a law firm" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {lawFirms?.map((firm) => (
-                          <SelectItem key={firm.id} value={firm.id.toString()}>
-                            {firm.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-              
-              {currentAssigneeType === 'lawFirm' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Firm Name</label>
-                    <Input placeholder="Enter law firm name" className="mt-1" />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Specialty</label>
-                    <Input placeholder="Corporate, IP, Tax, etc." className="mt-1" />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Website</label>
-                    <Input type="url" placeholder="https://..." className="mt-1" />
-                  </div>
-                </div>
-              )}
             </div>
             
             <DialogFooter>
@@ -648,17 +624,24 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
               </Button>
               <Button 
                 type="button"
+                disabled={!newAssigneeName.trim()}
                 onClick={() => {
+                  // In a real implementation, we would save to the backend here
+                  // For now, we'll just set the value in the form
+                  // Use type assertion to tell TypeScript this is intentional
+                  form.setValue("assigneeId", `custom-${newAssigneeName}` as any);
+                  form.setValue("assigneeType", "custom");
+                  form.setValue("assigneeName", newAssigneeName);
+                  
                   toast({
-                    title: "New assignee created",
-                    description: `The new ${currentAssigneeType} has been added as an assignee option.`,
+                    title: "New assignee added",
+                    description: `"${newAssigneeName}" has been added as an assignee.`,
                   });
                   setIsNewAssigneeDialogOpen(false);
-                  // In a real implementation, we would save to the backend here
-                  // and update the local state/refetch the dropdown options
+                  setNewAssigneeName('');
                 }}
               >
-                Create Assignee
+                Add Assignee
               </Button>
             </DialogFooter>
           </DialogContent>

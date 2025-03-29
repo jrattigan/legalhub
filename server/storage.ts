@@ -1817,11 +1817,13 @@ export class MemStorage implements IStorage {
       priority: insertTask.priority || 'medium',
       dueDate: insertTask.dueDate || null,
       assigneeId: insertTask.assigneeId || null,
-      assigneeType: insertTask.assigneeType || 'user', // Handle assignee type (user, attorney, firm)
+      assigneeType: insertTask.assigneeType || 'user', // Handle assignee type (user, attorney, firm, custom)
+      assigneeName: insertTask.assigneeName || null, // Store name for custom assignees
       taskType: insertTask.taskType || 'internal', // Handle task type (internal or external)
       completed: insertTask.completed || false,
       completedAt: null,
-      createdAt: new Date()
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     
     this.tasks.set(id, task);
@@ -1856,9 +1858,24 @@ export class MemStorage implements IStorage {
       }
     }
     
+    // Special handling for custom assignees
+    if (taskUpdate.assigneeType === 'custom' && !taskUpdate.assigneeName) {
+      // For custom assignee type, we need to ensure a name is provided
+      if (existingTask.assigneeType === 'custom' && existingTask.assigneeName) {
+        // Keep existing custom assignee name if not provided in update
+        taskUpdate.assigneeName = existingTask.assigneeName;
+      }
+    }
+    
+    // For non-custom assignees, clear assigneeName
+    if (taskUpdate.assigneeType && taskUpdate.assigneeType !== 'custom') {
+      taskUpdate.assigneeName = null;
+    }
+    
     const updatedTask: Task = { 
       ...existingTask, 
-      ...taskUpdate
+      ...taskUpdate,
+      updatedAt: new Date() // Always update the updatedAt timestamp
     };
     this.tasks.set(id, updatedTask);
     
@@ -1895,10 +1912,12 @@ export class MemStorage implements IStorage {
       return undefined;
     }
     
+    const now = new Date();
     const completedTask: Task = { 
       ...task, 
       completed: true, 
-      completedAt: new Date() 
+      completedAt: now,
+      updatedAt: now 
     };
     this.tasks.set(id, completedTask);
     
