@@ -383,18 +383,21 @@ export default function DealDetail({
       return null;
     }
 
+    // Find the organization's main counsel
+    const orgCounsel = counsel.find(c => c.role === "Lead Counsel");
+    
     if (isOrgLeadInvestor) {
+      // Organization is the lead investor - display in same format as other lead investor
       return (
-        <div className="flex items-center text-sm text-neutral-500 mt-1">
-          <Building className="h-4 w-4 mr-1" />
-          <span>
-            Lead Investor: {organizationName}
-            {leadCounsel && (
-              <> / Counsel: {leadCounsel.lawFirm.name}
-                {leadCounsel.attorney && ` (${leadCounsel.attorney.name})`}
-              </>
-            )}
-          </span>
+        <div className="flex flex-col text-sm text-neutral-500 mt-1">
+          <div className="flex items-center">
+            <Building className="h-4 w-4 mr-1" />
+            <span>
+              Lead Investor: {organizationName}
+              {orgCounsel && ` / Counsel: ${orgCounsel.lawFirm.name}`}
+              {orgCounsel && orgCounsel.attorney && ` (${orgCounsel.attorney.name})`}
+            </span>
+          </div>
         </div>
       );
     } else {
@@ -408,11 +411,11 @@ export default function DealDetail({
               {deal.leadInvestorCounsel && ` / Counsel: ${deal.leadInvestorCounsel}`}
             </span>
           </div>
-          {leadCounsel && (
+          {orgCounsel && (
             <div className="flex items-center ml-5 mt-0.5">
               <span>
-                {organizationName} Counsel: {leadCounsel.lawFirm.name}
-                {leadCounsel.attorney && ` (${leadCounsel.attorney.name})`}
+                {organizationName} Counsel: {orgCounsel.lawFirm.name}
+                {orgCounsel.attorney && ` (${orgCounsel.attorney.name})`}
               </span>
             </div>
           )}
@@ -567,39 +570,42 @@ export default function DealDetail({
                 />
               </div>
               
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="leadInvestorCounsel" className="text-right">
-                  Lead Investor Counsel
-                </Label>
-                <div className="col-span-3">
-                  {/* Law Firm Selector - Only shows firms involved in this deal */}
-                  <Select 
-                    name="leadInvestorCounsel" 
-                    value={editDealForm.leadInvestorCounsel}
-                    onValueChange={(value) => {
-                      // Reset selected attorneys when law firm changes
-                      setSelectedAttorneys([]);
-                      setEditDealForm({
-                        ...editDealForm, 
-                        leadInvestorCounsel: value,
-                        leadInvestorAttorneys: []
-                      });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a law firm" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {lawFirmOptions.map(firm => (
-                        <SelectItem key={firm.id} value={firm.name}>{firm.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              {/* Only show Lead Investor Counsel if organization is not the lead investor */}
+              {editDealForm.leadInvestor !== organizationName && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="leadInvestorCounsel" className="text-right">
+                    Lead Investor Counsel
+                  </Label>
+                  <div className="col-span-3">
+                    {/* Law Firm Selector - Only shows firms involved in this deal */}
+                    <Select 
+                      name="leadInvestorCounsel" 
+                      value={editDealForm.leadInvestorCounsel}
+                      onValueChange={(value) => {
+                        // Reset selected attorneys when law firm changes
+                        setSelectedAttorneys([]);
+                        setEditDealForm({
+                          ...editDealForm, 
+                          leadInvestorCounsel: value,
+                          leadInvestorAttorneys: []
+                        });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a law firm" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {lawFirmOptions.map(firm => (
+                          <SelectItem key={firm.id} value={firm.name}>{firm.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </div>
+              )}
               
-              {/* Only show attorney selection if a law firm is selected */}
-              {editDealForm.leadInvestorCounsel && (
+              {/* Only show attorney selection if a law firm is selected and NOT the organization */}
+              {editDealForm.leadInvestorCounsel && editDealForm.leadInvestor !== organizationName && (
                 <div className="grid grid-cols-4 items-start gap-4">
                   <Label htmlFor="attorneys" className="text-right pt-2">
                     Attorneys
