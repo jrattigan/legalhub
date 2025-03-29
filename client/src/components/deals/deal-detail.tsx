@@ -111,6 +111,7 @@ export default function DealDetail({
     companyId: deal.companyId,
     companyName: deal.companyName,
     companyCounsel: deal.companyCounsel || '',
+    companyAttorneys: [],
     amount: deal.amount || '',
     status: deal.status,
     dueDate: deal.dueDate ? new Date(deal.dueDate).toISOString().split('T')[0] : '',
@@ -221,6 +222,9 @@ export default function DealDetail({
   
   // Selected law firm attorneys 
   const [selectedAttorneys, setSelectedAttorneys] = useState<number[]>([]);
+  
+  // Selected company counsel attorneys
+  const [selectedCompanyAttorneys, setSelectedCompanyAttorneys] = useState<number[]>([]);
 
   // State for delete confirmation dialog
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -374,7 +378,7 @@ export default function DealDetail({
       return;
     }
       
-    // Format the selected attorney data
+    // Format the selected lead investor attorney data
     let attorneyNames = "";
     if (selectedAttorneys.length > 0 && editDealForm.leadInvestorCounsel) {
       // Get attorney names from the selected firm
@@ -385,12 +389,24 @@ export default function DealDetail({
       }
     }
     
+    // Format the selected company attorney data
+    let companyAttorneyNames = "";
+    if (selectedCompanyAttorneys.length > 0 && editDealForm.companyCounsel) {
+      // Get attorney names from the selected firm
+      const selectedFirm = lawFirmOptions.find(f => f.name === editDealForm.companyCounsel);
+      if (selectedFirm) {
+        const selectedAttorneyObjects = selectedFirm.attorneys.filter(a => selectedCompanyAttorneys.includes(a.id));
+        companyAttorneyNames = selectedAttorneyObjects.map(a => a.name).join(", ");
+      }
+    }
+    
     const formattedData = {
       title: editDealForm.title,
       description: editDealForm.description,
       companyId: companyId,
       companyName: editDealForm.companyName,
       companyCounsel: editDealForm.companyCounsel === "none" ? "" : editDealForm.companyCounsel,
+      companyAttorneys: companyAttorneyNames,
       amount: editDealForm.amount,
       status: editDealForm.status,
       dueDate: editDealForm.dueDate ? editDealForm.dueDate : null,
@@ -565,6 +581,7 @@ export default function DealDetail({
           <span>
             Company: {deal.companyName}
             {deal.companyCounsel && ` / Counsel: ${deal.companyCounsel}`}
+            {deal.companyAttorneys && ` (${deal.companyAttorneys})`}
           </span>
         </div>
       </div>
@@ -737,10 +754,15 @@ export default function DealDetail({
                 <div className="col-span-3">
                   <Select
                     value={editDealForm.companyCounsel}
-                    onValueChange={(value) => setEditDealForm({
-                      ...editDealForm,
-                      companyCounsel: value
-                    })}
+                    onValueChange={(value) => {
+                      // Reset selected attorneys when law firm changes
+                      setSelectedCompanyAttorneys([]);
+                      setEditDealForm({
+                        ...editDealForm,
+                        companyCounsel: value,
+                        companyAttorneys: []
+                      });
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a law firm" />
@@ -756,6 +778,58 @@ export default function DealDetail({
                   </Select>
                 </div>
               </div>
+              
+              {/* Company attorneys selection - only shown if a company counsel is selected */}
+              {editDealForm.companyCounsel && editDealForm.companyCounsel !== "none" && (
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label htmlFor="companyAttorneys" className="text-right pt-2">
+                    Company Attorneys
+                  </Label>
+                  <div className="col-span-3">
+                    {/* Find the selected law firm to get its attorneys */}
+                    {(() => {
+                      const selectedFirm = lawFirmOptions.find(firm => firm.name === editDealForm.companyCounsel);
+                      
+                      if (!selectedFirm || selectedFirm.attorneys.length === 0) {
+                        return (
+                          <div className="text-sm text-neutral-500 italic">
+                            No attorneys available for this law firm
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <div className="space-y-2">
+                          {/* Attorney checkboxes */}
+                          {selectedFirm.attorneys.map(attorney => (
+                            <div key={attorney.id} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`attorney-${attorney.id}`}
+                                checked={selectedCompanyAttorneys.includes(attorney.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedCompanyAttorneys([...selectedCompanyAttorneys, attorney.id]);
+                                  } else {
+                                    setSelectedCompanyAttorneys(
+                                      selectedCompanyAttorneys.filter(id => id !== attorney.id)
+                                    );
+                                  }
+                                }}
+                              />
+                              <Label 
+                                htmlFor={`attorney-${attorney.id}`}
+                                className="text-sm font-normal cursor-pointer"
+                              >
+                                {attorney.name}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
               
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="amount" className="text-right">
