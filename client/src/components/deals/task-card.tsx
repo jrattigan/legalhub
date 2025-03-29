@@ -369,21 +369,9 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     
     setUsedAssigneeIds(usedIds);
     
-    // Update custom assignees list, preserving any that were added in the current session
-    setCustomAssignees(prevCustomAssignees => {
-      // Create a new merged list without duplicates
-      const mergedList = [...prevCustomAssignees];
-      
-      customAssigneesList.forEach(newCA => {
-        if (!mergedList.some(ca => ca.id === newCA.id)) {
-          mergedList.push(newCA);
-        }
-      });
-      
-      // Return the merged list without filtering out unused assignees
-      // so they persist even when no tasks are using them
-      return mergedList;
-    });
+    // Update custom assignees list
+    // ONLY include custom assignees that are currently in use
+    setCustomAssignees(customAssigneesList);
   }, [tasks]);
 
   const onSubmit = (data: z.infer<typeof taskSchema>) => {
