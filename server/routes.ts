@@ -948,6 +948,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(attorneys);
   });
 
+  // Get all attorneys
+  app.get("/api/attorneys", async (req, res) => {
+    const attorneys = await storage.getAttorneys();
+    res.json(attorneys);
+  });
+
   app.post("/api/attorneys", async (req, res) => {
     try {
       const validatedData = insertAttorneySchema.parse(req.body);

@@ -209,6 +209,7 @@ export const tasks = pgTable("tasks", {
   priority: text("priority").notNull().default("medium"),
   dueDate: timestamp("due_date"),
   assigneeId: integer("assignee_id"),
+  assigneeType: text("assignee_type").default("user"), // 'user', 'attorney', or 'firm'
   taskType: text("task_type").notNull().default("internal"), // 'internal' or 'external'
   completed: boolean("completed").default(false).notNull(),
   completedAt: timestamp("completed_at"),
@@ -223,6 +224,7 @@ export const insertTaskSchema = createInsertSchema(tasks).pick({
   priority: true,
   dueDate: true,
   assigneeId: true,
+  assigneeType: true,
   taskType: true,
   completed: true,
 }).transform((data) => {
@@ -232,6 +234,11 @@ export const insertTaskSchema = createInsertSchema(tasks).pick({
   // Ensure assigneeId is null and not undefined when empty
   if (transformedData.assigneeId === undefined) {
     transformedData.assigneeId = null;
+  }
+  
+  // Ensure assigneeType has a default if not provided
+  if (transformedData.assigneeType === undefined) {
+    transformedData.assigneeType = "user";
   }
   
   // Ensure taskType has a default if not provided

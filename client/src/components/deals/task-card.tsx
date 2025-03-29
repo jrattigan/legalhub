@@ -81,6 +81,9 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
         if (val === '' || val === 'unassigned' || val === null || val === undefined) return null;
         return typeof val === 'string' ? parseInt(val) : val;
       }),
+    // Add assigneeType to track what kind of entity the assignee is (user, attorney, firm)
+    assigneeType: z.enum(['user', 'attorney', 'firm']).optional().nullable()
+      .default('user'),
     taskType: z.string().default("internal"), // 'internal' or 'external'
     dealId: z.number().optional(), // Will be filled before submission
     completed: z.boolean().default(false)
@@ -95,6 +98,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       priority: 'medium',
       dueDate: null,
       assigneeId: null,
+      assigneeType: 'user', // Default to 'user' type for internal tasks
       taskType: 'internal',
       completed: false,
       dealId: dealId || undefined
@@ -116,10 +120,16 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     enabled: isDialogOpen && currentTaskType === 'external'
   });
   
-  // Get attorneys associated with law firms
+  // Get attorneys associated with law firms for the current deal
   const { data: dealCounsels = [] } = useQuery<any[]>({
     queryKey: ['/api/deals', dealId, 'counsel'],
     enabled: isDialogOpen && Boolean(dealId) && currentTaskType === 'external'
+  });
+  
+  // Get all attorneys for selection
+  const { data: attorneys = [] } = useQuery<Attorney[]>({
+    queryKey: ['/api/attorneys'],
+    enabled: isDialogOpen && currentTaskType === 'external'
   });
 
   // Complete task mutation
@@ -231,6 +241,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
         dealId,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
         assigneeId: handleAssigneeId(data.assigneeId),
+        assigneeType: data.assigneeType || "user", // Include assignee type (user, attorney, firm)
         taskType: data.taskType || "internal", // Include task type
         completed: false
       };
@@ -262,17 +273,36 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     
     // Case 2: Handle external assignees (firm-123 or attorney-456 format)
     if (typeof assigneeId === 'string') {
-      // For external assignees, store the ID with a prefix that can be used by the backend
+      // Skip the section headers
+      if (assigneeId === 'law-firms-header' || assigneeId === 'attorneys-header') {
+        return null;
+      }
+      
+      // For external assignees, extract the ID part from the prefixed string
       if (assigneeId.startsWith('firm-') || assigneeId.startsWith('attorney-')) {
         const [type, id] = assigneeId.split('-');
+        
+        // Store task assignee with type prefix so backend knows what kind of assignee this is
+        // We'll store the type in a property on the task object in the backend
+        console.log(`Assigning to ${type} with ID ${id}`);
+        
+        // Update the task type in our form data based on the assignee type
+        if (type === 'attorney') {
+          form.setValue('assigneeType', 'attorney');
+        } else if (type === 'firm') {
+          form.setValue('assigneeType', 'firm');
+        }
+        
         return parseInt(id);
       }
       
-      // Regular user ID case
+      // Regular user ID case - internal tasks assigned to users
+      form.setValue('assigneeType', 'user');
       return parseInt(assigneeId);
     }
     
     // Case 3: Already a number
+    form.setValue('assigneeType', 'user'); // Default to user if type not specified
     return assigneeId;
   };
 
@@ -408,6 +438,13 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                           // Update taskType and reset assigneeId when task type changes
                           field.onChange(value);
                           form.setValue("assigneeId", null);
+                          
+                          // Also set the appropriate assigneeType based on task type
+                          if (value === 'external') {
+                            form.setValue("assigneeType", "attorney"); // Default external tasks to attorney assignee type
+                          } else {
+                            form.setValue("assigneeType", "user"); // Default internal tasks to user assignee type
+                          }
                         }}
                         defaultValue={field.value}
                       >
@@ -443,18 +480,46 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="unassigned">Unassigned</SelectItem>
+                          
+                          {/* Internal task assignees (users) */}
                           {currentTaskType === 'internal' && users?.map((user: User) => (
                             <SelectItem key={user.id} value={user.id.toString()}>
                               {user.fullName}
                             </SelectItem>
                           ))}
-                          {currentTaskType === 'external' && Array.isArray(lawFirms) && lawFirms.length > 0 && 
-                            lawFirms.map((lawFirm: any) => (
-                              <SelectItem key={`firm-${lawFirm.id}`} value={`firm-${lawFirm.id}`}>
-                                {lawFirm.name}
-                              </SelectItem>
-                            ))
-                          }
+                          
+                          {/* External task assignees */}
+                          {currentTaskType === 'external' && (
+                            <>
+                              {/* Law firms section */}
+                              {Array.isArray(lawFirms) && lawFirms.length > 0 && (
+                                <>
+                                  <SelectItem value="law-firms-header" disabled className="font-bold text-xs text-neutral-500 py-1 my-1">
+                                    LAW FIRMS
+                                  </SelectItem>
+                                  {lawFirms.map((lawFirm: LawFirm) => (
+                                    <SelectItem key={`firm-${lawFirm.id}`} value={`firm-${lawFirm.id}`}>
+                                      {lawFirm.name}
+                                    </SelectItem>
+                                  ))}
+                                </>
+                              )}
+                              
+                              {/* Attorneys section */}
+                              {Array.isArray(attorneys) && attorneys.length > 0 && (
+                                <>
+                                  <SelectItem value="attorneys-header" disabled className="font-bold text-xs text-neutral-500 py-1 my-1">
+                                    ATTORNEYS
+                                  </SelectItem>
+                                  {attorneys.map((attorney: Attorney) => (
+                                    <SelectItem key={`attorney-${attorney.id}`} value={`attorney-${attorney.id}`}>
+                                      {attorney.name} ({attorney.position})
+                                    </SelectItem>
+                                  ))}
+                                </>
+                              )}
+                            </>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />

@@ -83,6 +83,7 @@ export interface IStorage {
   // Attorneys
   getAttorney(id: number): Promise<Attorney | undefined>;
   getAttorneysByFirm(firmId: number): Promise<Attorney[]>;
+  getAttorneys(): Promise<Attorney[]>;
   createAttorney(attorney: InsertAttorney): Promise<Attorney>;
   updateAttorney(id: number, attorney: Partial<InsertAttorney>): Promise<Attorney | undefined>;
   deleteAttorney(id: number): Promise<boolean>;
@@ -682,6 +683,7 @@ export class MemStorage implements IStorage {
       priority: "high", // Use explicit value
       dueDate: task1.dueDate || null, // Ensure null instead of undefined
       assigneeId: task1.assigneeId || null, // Ensure null instead of undefined
+      assigneeType: "user", // Default to user for internal tasks
       taskType: task1.taskType || "internal", // Add taskType
       completed: false, // Use explicit value
       completedAt: null,
@@ -699,6 +701,7 @@ export class MemStorage implements IStorage {
       priority: "medium", // Use explicit value
       dueDate: task2.dueDate || null, // Ensure null instead of undefined
       assigneeId: task2.assigneeId || null, // Ensure null instead of undefined
+      assigneeType: "user", // Default to user for internal tasks
       taskType: task2.taskType || "internal", // Add taskType
       completed: true, // Use explicit value
       completedAt: new Date(), // Task is completed
@@ -716,6 +719,7 @@ export class MemStorage implements IStorage {
       priority: "medium", // Use explicit value
       dueDate: task3.dueDate || null, // Ensure null instead of undefined
       assigneeId: task3.assigneeId || null, // Ensure null instead of undefined
+      assigneeType: "attorney", // This is an external task assigned to attorney
       taskType: task3.taskType || "external", // Add taskType - this one is external
       completed: false, // Use explicit value
       completedAt: null,
@@ -1042,6 +1046,7 @@ export class MemStorage implements IStorage {
       priority: techTask1.priority,
       dueDate: techTask1.dueDate,
       assigneeId: techTask1.assigneeId,
+      assigneeType: "attorney", // External task assigned to attorney
       taskType: techTask1.taskType || "external", // Add taskType with default
       completed: false, // Adding required field
       createdAt: techTaskDate1,
@@ -1071,6 +1076,7 @@ export class MemStorage implements IStorage {
       priority: techTask2.priority,
       dueDate: techTask2.dueDate,
       assigneeId: techTask2.assigneeId,
+      assigneeType: "user", // Internal task assigned to user
       taskType: techTask2.taskType || "internal", // Add taskType with default
       completed: false, // Adding required field
       createdAt: techTaskDate2,
@@ -1269,6 +1275,7 @@ export class MemStorage implements IStorage {
       priority: healthTask1.priority,
       dueDate: healthTask1.dueDate,
       assigneeId: healthTask1.assigneeId,
+      assigneeType: "user", // Internal task assigned to user
       taskType: healthTask1.taskType || "internal", // Add taskType with default
       completed: false, // Adding required field
       createdAt: healthTaskDate1,
@@ -1298,6 +1305,7 @@ export class MemStorage implements IStorage {
       priority: healthTask2.priority,
       dueDate: healthTask2.dueDate,
       assigneeId: healthTask2.assigneeId,
+      assigneeType: "lawFirm", // External task assigned to law firm
       taskType: healthTask2.taskType || "external", // Add taskType with default
       completed: false, // Adding required field
       createdAt: healthTaskDate2,
@@ -1809,6 +1817,7 @@ export class MemStorage implements IStorage {
       priority: insertTask.priority || 'medium',
       dueDate: insertTask.dueDate || null,
       assigneeId: insertTask.assigneeId || null,
+      assigneeType: insertTask.assigneeType || 'user', // Handle assignee type (user, attorney, firm)
       taskType: insertTask.taskType || 'internal', // Handle task type (internal or external)
       completed: insertTask.completed || false,
       completedAt: null,
@@ -1836,11 +1845,47 @@ export class MemStorage implements IStorage {
       return undefined;
     }
     
+    // Ensure assigneeType is set appropriately based on taskType
+    if (taskUpdate.taskType && !taskUpdate.assigneeType) {
+      if (taskUpdate.taskType === 'external') {
+        // Default to 'attorney' if external task with no assigneeType specified
+        taskUpdate.assigneeType = 'attorney';
+      } else {
+        // Default to 'user' if internal task with no assigneeType specified
+        taskUpdate.assigneeType = 'user';
+      }
+    }
+    
     const updatedTask: Task = { 
       ...existingTask, 
       ...taskUpdate
     };
     this.tasks.set(id, updatedTask);
+    
+    // Create timeline event if task type changed
+    if (taskUpdate.taskType && taskUpdate.taskType !== existingTask.taskType) {
+      this.createTimelineEvent({
+        dealId: updatedTask.dealId,
+        title: "Task Type Changed",
+        description: `Task "${updatedTask.title}" changed from ${existingTask.taskType} to ${updatedTask.taskType}`,
+        eventType: "task",
+        referenceId: id,
+        referenceType: "task"
+      });
+    }
+    
+    // Create timeline event if assignee type changed
+    if (taskUpdate.assigneeType && taskUpdate.assigneeType !== existingTask.assigneeType) {
+      this.createTimelineEvent({
+        dealId: updatedTask.dealId,
+        title: "Assignee Type Changed",
+        description: `Task "${updatedTask.title}" assignee type changed from ${existingTask.assigneeType} to ${updatedTask.assigneeType}`,
+        eventType: "task",
+        referenceId: id,
+        referenceType: "task"
+      });
+    }
+    
     return updatedTask;
   }
 
@@ -2015,6 +2060,10 @@ export class MemStorage implements IStorage {
   async getAttorneysByFirm(firmId: number): Promise<Attorney[]> {
     return Array.from(this.attorneys.values())
       .filter((attorney) => attorney.lawFirmId === firmId);
+  }
+  
+  async getAttorneys(): Promise<Attorney[]> {
+    return Array.from(this.attorneys.values());
   }
 
   async createAttorney(insertAttorney: InsertAttorney): Promise<Attorney> {
