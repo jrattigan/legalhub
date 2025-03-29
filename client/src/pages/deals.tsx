@@ -13,8 +13,10 @@ export default function Deals() {
   const [, navigate] = useLocation();
   
   // Get deals data
-  const { data: deals, isLoading: dealsLoading } = useQuery<Deal[]>({ 
-    queryKey: ['/api/deals']
+  const { data: deals, isLoading: dealsLoading, refetch: refetchDeals } = useQuery<Deal[]>({ 
+    queryKey: ['/api/deals'],
+    staleTime: 5000, // Refetch after 5 seconds to ensure we get updated data
+    refetchOnWindowFocus: true // Refetch when window regains focus
   });
   
   // Get companies data

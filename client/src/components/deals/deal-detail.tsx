@@ -153,7 +153,12 @@ export default function DealDetail({
       return await apiRequest(`/api/deals/${deal.id}`, 'PATCH', apiPayload);
     },
     onSuccess: () => {
+      // Invalidate both combined data and the main deals list to ensure all views are updated
       queryClient.invalidateQueries({ queryKey: ['/api/combined-data'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+      // Also invalidate the specific deal
+      queryClient.invalidateQueries({ queryKey: [`/api/deals/${deal.id}`] });
+      
       toast({
         title: 'Deal Updated',
         description: 'The deal has been successfully updated.',
@@ -177,7 +182,10 @@ export default function DealDetail({
       return await apiRequest(`/api/deals/${deal.id}`, 'DELETE');
     },
     onSuccess: () => {
+      // Invalidate all relevant queries
       queryClient.invalidateQueries({ queryKey: ['/api/combined-data'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+      
       toast({
         title: 'Deal Deleted',
         description: 'The deal has been successfully deleted.',
@@ -257,7 +265,11 @@ export default function DealDetail({
     })
     .then(data => {
       console.log('API response:', data);
+      // Invalidate all relevant queries to ensure data is refreshed everywhere
       queryClient.invalidateQueries({ queryKey: ['/api/combined-data'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/deals/${deal.id}`] });
+      
       toast({
         title: 'Deal Updated',
         description: 'The deal has been successfully updated.',
