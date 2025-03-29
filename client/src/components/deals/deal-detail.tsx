@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Calendar, Edit, MoreHorizontal, Eye, Filter, Download, Share2, 
   Trash2, Clock, Plus, File, CheckSquare, AlertCircle as Alert, Users,
-  Building, FileText, Upload
+  Building, FileText, Upload, ExternalLink
 } from 'lucide-react';
 import { FileUpload } from '@/components/ui/file-upload';
 import { format } from 'date-fns';
@@ -120,6 +120,7 @@ export default function DealDetail({
     leadInvestor: deal.leadInvestor || '',
     leadInvestorCounsel: deal.leadInvestorCounsel || '',
     leadInvestorAttorneys: [],
+    dataRoomUrl: deal.dataRoomUrl || '',
   });
   
   // State for team members
@@ -414,7 +415,8 @@ export default function DealDetail({
       isCommitted: editDealForm.isCommitted,
       leadInvestor: editDealForm.leadInvestor,
       leadInvestorCounsel: editDealForm.leadInvestorCounsel,
-      leadInvestorAttorneys: attorneyNames
+      leadInvestorAttorneys: attorneyNames,
+      dataRoomUrl: editDealForm.dataRoomUrl || null
     };
     
     console.log('Submitting update with companyId:', companyId, 'type:', typeof companyId);
@@ -603,6 +605,22 @@ export default function DealDetail({
                   .map(c => `${c.lawFirm.name}${c.attorney ? ` (${c.attorney.name})` : ''}`)
                   .join(", ")
               }
+            </span>
+          </div>
+        )}
+        {/* Data Room Link */}
+        {deal.dataRoomUrl && (
+          <div className="flex items-center mt-1">
+            <ExternalLink className="h-4 w-4 mr-1" />
+            <span>
+              <a 
+                href={deal.dataRoomUrl} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-primary hover:underline"
+              >
+                Data Room
+              </a>
             </span>
           </div>
         )}
@@ -876,6 +894,20 @@ export default function DealDetail({
                   onChange={handleFormChange}
                   className="col-span-3"
                   placeholder="$0.00"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="dataRoomUrl" className="text-right">
+                  Data Room URL
+                </Label>
+                <Input
+                  id="dataRoomUrl"
+                  name="dataRoomUrl"
+                  value={editDealForm.dataRoomUrl}
+                  onChange={handleFormChange}
+                  className="col-span-3"
+                  placeholder="https://dataroom.example.com"
                 />
               </div>
               

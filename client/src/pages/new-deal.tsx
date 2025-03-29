@@ -48,6 +48,7 @@ export default function NewDeal() {
       typeof val === 'string' && val ? new Date(val) : val
     ),
     amount: z.string().nullable().optional(),
+    dataRoomUrl: z.string().nullable().optional(),
     isCommitted: z.boolean().default(false),
   });
 
@@ -74,7 +75,8 @@ export default function NewDeal() {
       status: 'draft',
       dueDate: null,
       dealId: generateDealId(),
-      isCommitted: false
+      isCommitted: false,
+      dataRoomUrl: null
     }
   });
 
@@ -129,6 +131,7 @@ export default function NewDeal() {
       // Use the selected company ID from the CompanySelect component, or default to the company name
       companyId: selectedCompanyId || 0,
       amount: data.amount || null,
+      dataRoomUrl: data.dataRoomUrl || null,
       isCommitted: data.isCommitted
     };
     
@@ -303,6 +306,24 @@ export default function NewDeal() {
                       />
                     </div>
                     
+                    <FormField
+                      control={form.control}
+                      name="dataRoomUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data Room URL</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="https://dataroom.example.com" 
+                              {...field} 
+                              value={nullToEmpty(field.value)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <FormField
                       control={form.control}
                       name="description"
