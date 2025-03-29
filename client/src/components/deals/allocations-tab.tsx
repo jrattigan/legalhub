@@ -142,8 +142,7 @@ export default function AllocationsTab({ dealId, onRefreshData }: AllocationsTab
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'allocations'] });
-      setIsEditingAllocation(null);
-      form.reset();
+      handleCancelAllocation(); // Use the cancel handler to properly reset all state
       if (onRefreshData) onRefreshData();
       toast({
         title: 'Allocation updated',
