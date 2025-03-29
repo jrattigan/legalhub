@@ -290,8 +290,10 @@ export default function NewDeal() {
                                 <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                   Committed?
                                 </label>
-                                {field.value && (
+                                {field.value ? (
                                   <div className="text-lg" title="Committed Closing Date">🤝</div>
+                                ) : (
+                                  <div className="text-lg" title="Not Committed Closing Date">🤷</div>
                                 )}
                               </div>
                             </FormControl>

@@ -422,8 +422,10 @@ export default function DealDetail({
                     onChange={(e) => setEditDealForm({...editDealForm, isCommitted: e.target.checked})}
                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                   />
-                  {editDealForm.isCommitted && (
+                  {editDealForm.isCommitted ? (
                     <div className="text-lg" title="Committed Closing Date">🤝</div>
+                  ) : (
+                    <div className="text-lg" title="Not Committed Closing Date">🤷</div>
                   )}
                 </div>
               </div>
@@ -531,8 +533,10 @@ export default function DealDetail({
                 {deal.dueDate ? (
                   <span className="flex items-center space-x-1">
                     <span>Closing Date: {format(new Date(deal.dueDate), 'MMM dd, yyyy')}</span>
-                    {deal.isCommitted && (
+                    {deal.isCommitted ? (
                       <span className="text-lg ml-1" title="Committed Closing Date">🤝</span>
+                    ) : (
+                      <span className="text-lg ml-1" title="Not Committed Closing Date">🤷</span>
                     )}
                   </span>
                 ) : (
