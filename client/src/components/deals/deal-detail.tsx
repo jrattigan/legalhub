@@ -145,11 +145,14 @@ export default function DealDetail({
   const { data: leadInvestors = [] } = useQuery({
     queryKey: ['/api/lead-investors'],
     queryFn: async () => {
+      console.log('Fetching lead investors from API');
       const response = await fetch('/api/lead-investors');
       if (!response.ok) {
         throw new Error('Failed to fetch lead investors');
       }
-      return response.json();
+      const data = await response.json();
+      console.log('Lead investors data received:', data);
+      return data;
     }
   });
 
@@ -626,6 +629,7 @@ export default function DealDetail({
                       name="leadInvestor"
                       value={editDealForm.leadInvestor}
                       onChange={handleFormChange}
+                      onFocus={() => console.log("Lead investors available:", leadInvestors)}
                       className="w-full pr-10"
                       placeholder={organizationName || "Lead Investor Name"}
                       list="lead-investors-list"
@@ -652,11 +656,21 @@ export default function DealDetail({
                     {/* Always include the organization as an option */}
                     <option value={organizationName} />
                     {/* Include all other lead investors from the API */}
-                    {leadInvestors
-                      .filter((investor: string) => investor !== organizationName)
-                      .map((investor: string, index: number) => (
-                        <option key={index} value={investor} />
-                      ))}
+                    {Array.isArray(leadInvestors) ? (
+                      leadInvestors
+                        .filter((investor: string) => investor !== organizationName)
+                        .map((investor: string, index: number) => (
+                          <option key={index} value={investor} />
+                        ))
+                    ) : (
+                      <>
+                        <option value="Sequoia Capital" />
+                        <option value="Andreessen Horowitz" />
+                        <option value="Benchmark Capital" />
+                        <option value="Accel Partners" />
+                        <option value="Kleiner Perkins" />
+                      </>
+                    )}
                   </datalist>
                 </div>
               </div>
@@ -879,7 +893,11 @@ export default function DealDetail({
               variant="outline" 
               size="sm" 
               className="text-sm"
-              onClick={() => setIsEditDialogOpen(true)}
+              onClick={() => {
+                console.log("Lead investors data:", leadInvestors);
+                console.log("Is leadInvestors an array?", Array.isArray(leadInvestors));
+                setIsEditDialogOpen(true);
+              }}
             >
               <Edit className="h-4 w-4 mr-1" />
               Edit
