@@ -56,6 +56,7 @@ import TaskCard from './task-card';
 import IssueCard from './issue-card';
 import CounselCard from './counsel-card';
 import TimelineCard from './timeline-card';
+import AllocationsTab from './allocations-tab';
 
 type DealDetailProps = {
   deal: Deal;
@@ -2041,6 +2042,16 @@ export default function DealDetail({
             </div>
             
             <CounselCard counsel={counsel} onRefreshData={onRefreshData} preview={false} dealId={deal.id} />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="allocations" className="m-0 overflow-y-auto flex-1" hidden={activeTab !== 'allocations'}>
+          <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="font-medium text-neutral-800">Fund Allocations</h2>
+            </div>
+            {/* Import and use the AllocationsTab component */}
+            <AllocationsTab dealId={deal.id} onRefreshData={onRefreshData} />
           </div>
         </TabsContent>
         
