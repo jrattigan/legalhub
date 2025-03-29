@@ -643,6 +643,7 @@ export class MemStorage implements IStorage {
       priority: "high",
       dueDate: new Date("2023-10-10"),
       assigneeId: createdUser1.id,
+      taskType: "internal", // Internal task
       completed: false
     };
     
@@ -654,6 +655,7 @@ export class MemStorage implements IStorage {
       priority: "medium",
       dueDate: new Date("2023-10-02"),
       assigneeId: createdUser2.id,
+      taskType: "internal", // Internal task
       completed: true
     };
     
@@ -665,6 +667,7 @@ export class MemStorage implements IStorage {
       priority: "medium",
       dueDate: new Date("2023-10-12"),
       assigneeId: createdUser3.id,
+      taskType: "external", // External task
       completed: false
     };
 
@@ -679,6 +682,7 @@ export class MemStorage implements IStorage {
       priority: "high", // Use explicit value
       dueDate: task1.dueDate || null, // Ensure null instead of undefined
       assigneeId: task1.assigneeId || null, // Ensure null instead of undefined
+      taskType: task1.taskType || "internal", // Add taskType
       completed: false, // Use explicit value
       completedAt: null,
       createdAt: new Date()
@@ -695,6 +699,7 @@ export class MemStorage implements IStorage {
       priority: "medium", // Use explicit value
       dueDate: task2.dueDate || null, // Ensure null instead of undefined
       assigneeId: task2.assigneeId || null, // Ensure null instead of undefined
+      taskType: task2.taskType || "internal", // Add taskType
       completed: true, // Use explicit value
       completedAt: new Date(), // Task is completed
       createdAt: new Date()
@@ -711,6 +716,7 @@ export class MemStorage implements IStorage {
       priority: "medium", // Use explicit value
       dueDate: task3.dueDate || null, // Ensure null instead of undefined
       assigneeId: task3.assigneeId || null, // Ensure null instead of undefined
+      taskType: task3.taskType || "external", // Add taskType - this one is external
       completed: false, // Use explicit value
       completedAt: null,
       createdAt: new Date()
@@ -1022,7 +1028,8 @@ export class MemStorage implements IStorage {
       status: "in-progress",
       priority: "high",
       dueDate: new Date(new Date().setDate(new Date().getDate() + 14)),
-      assigneeId: 3
+      assigneeId: 3,
+      taskType: "external"  // External task
     };
     const techTaskId1 = this.currentTaskId++;
     const techTaskDate1 = new Date();
@@ -1035,6 +1042,8 @@ export class MemStorage implements IStorage {
       priority: techTask1.priority,
       dueDate: techTask1.dueDate,
       assigneeId: techTask1.assigneeId,
+      taskType: techTask1.taskType || "external", // Add taskType with default
+      completed: false, // Adding required field
       createdAt: techTaskDate1,
       updatedAt: techTaskDate1,
       completedAt: null
@@ -1048,7 +1057,8 @@ export class MemStorage implements IStorage {
       status: "open",
       priority: "medium",
       dueDate: new Date(new Date().setDate(new Date().getDate() + 21)),
-      assigneeId: 2
+      assigneeId: 2,
+      taskType: "internal" // Internal task
     };
     const techTaskId2 = this.currentTaskId++;
     const techTaskDate2 = new Date();
@@ -1061,6 +1071,8 @@ export class MemStorage implements IStorage {
       priority: techTask2.priority,
       dueDate: techTask2.dueDate,
       assigneeId: techTask2.assigneeId,
+      taskType: techTask2.taskType || "internal", // Add taskType with default
+      completed: false, // Adding required field
       createdAt: techTaskDate2,
       updatedAt: techTaskDate2,
       completedAt: null
@@ -1243,7 +1255,8 @@ export class MemStorage implements IStorage {
       status: "in-progress",
       priority: "high",
       dueDate: new Date(new Date().setDate(new Date().getDate() + 5)),
-      assigneeId: 1
+      assigneeId: 1,
+      taskType: "internal" // Internal task
     };
     const healthTaskId1 = this.currentTaskId++;
     const healthTaskDate1 = new Date();
@@ -1256,6 +1269,8 @@ export class MemStorage implements IStorage {
       priority: healthTask1.priority,
       dueDate: healthTask1.dueDate,
       assigneeId: healthTask1.assigneeId,
+      taskType: healthTask1.taskType || "internal", // Add taskType with default
+      completed: false, // Adding required field
       createdAt: healthTaskDate1,
       updatedAt: healthTaskDate1,
       completedAt: null
@@ -1269,7 +1284,8 @@ export class MemStorage implements IStorage {
       status: "open",
       priority: "urgent",
       dueDate: new Date(new Date().setDate(new Date().getDate() + 3)),
-      assigneeId: 1
+      assigneeId: 1,
+      taskType: "external" // External task
     };
     const healthTaskId2 = this.currentTaskId++;
     const healthTaskDate2 = new Date();
@@ -1282,6 +1298,8 @@ export class MemStorage implements IStorage {
       priority: healthTask2.priority,
       dueDate: healthTask2.dueDate,
       assigneeId: healthTask2.assigneeId,
+      taskType: healthTask2.taskType || "external", // Add taskType with default
+      completed: false, // Adding required field
       createdAt: healthTaskDate2,
       updatedAt: healthTaskDate2,
       completedAt: null
@@ -1791,6 +1809,7 @@ export class MemStorage implements IStorage {
       priority: insertTask.priority || 'medium',
       dueDate: insertTask.dueDate || null,
       assigneeId: insertTask.assigneeId || null,
+      taskType: insertTask.taskType || 'internal', // Handle task type (internal or external)
       completed: insertTask.completed || false,
       completedAt: null,
       createdAt: new Date()
