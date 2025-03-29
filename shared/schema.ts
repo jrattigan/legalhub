@@ -136,6 +136,9 @@ export const documents = pgTable("documents", {
   assigneeId: integer("assignee_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // While this isn't a physical column in the database, we include it to type the object
+  // when it's joined with version count data from the document_versions table
+  versions: integer("versions"),
 });
 
 export const insertDocumentSchema = createInsertSchema(documents).pick({

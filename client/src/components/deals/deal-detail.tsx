@@ -45,7 +45,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CompanySelect } from '@/components/ui/company-select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Deal, User, Document, Task, Issue, LawFirm, Attorney, TimelineEvent } from '@shared/schema';
+import { Deal, User, Document, Task, Issue, LawFirm, Attorney, TimelineEvent, Company } from '@shared/schema';
+import { formatDealTitle } from '@/lib/deal-title-formatter';
 import DocumentCard from './document-card';
 import TaskCard from './task-card';
 import IssueCard from './issue-card';
@@ -430,7 +431,7 @@ export default function DealDetail({
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the deal
-              "{deal.title}" and all of its associated data.
+              "{formatDealTitle(deal)}" and all of its associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -497,7 +498,7 @@ export default function DealDetail({
       <div className="border-b border-neutral-200 bg-white px-6 py-4">
         <div className="flex justify-between items-start md:items-center">
           <div>
-            <h1 className="font-semibold text-xl text-neutral-800">{deal.title}</h1>
+            <h1 className="font-semibold text-xl text-neutral-800">{formatDealTitle(deal)}</h1>
             <div className={`${isMobile ? 'flex flex-col' : 'flex items-center'} mt-1 text-sm text-neutral-500`}>
               <span className={isMobile ? 'mb-1' : 'mr-4'}>
                 <a href={`/companies/${deal.companyId}`} className="text-primary hover:underline">{deal.companyName}</a>
