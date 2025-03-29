@@ -260,8 +260,15 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       return null;
     }
     
-    // Case 2: Convert string ID to number
+    // Case 2: Handle external assignees (firm-123 or attorney-456 format)
     if (typeof assigneeId === 'string') {
+      // For external assignees, store the ID with a prefix that can be used by the backend
+      if (assigneeId.startsWith('firm-') || assigneeId.startsWith('attorney-')) {
+        const [type, id] = assigneeId.split('-');
+        return parseInt(id);
+      }
+      
+      // Regular user ID case
       return parseInt(assigneeId);
     }
     
@@ -282,39 +289,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     }
   };
 
-  // Get all available assignees based on task type
-  const getAssigneeOptions = () => {
-    if (currentTaskType === 'internal') {
-      return users?.map((user: User) => (
-        <SelectItem key={user.id} value={user.id.toString()}>
-          {user.fullName}
-        </SelectItem>
-      ));
-    } else {
-      // External task - show attorneys and law firms
-      // Combine law firm representatives from deal counsels
-      const externalAssignees = dealCounsels?.map((counsel: any) => {
-        const lawFirm = counsel.lawFirm;
-        const attorney = counsel.attorney;
-        
-        if (attorney) {
-          return (
-            <SelectItem key={`attorney-${attorney.id}`} value={`attorney-${attorney.id}`}>
-              {attorney.name} ({lawFirm.name})
-            </SelectItem>
-          );
-        } else {
-          return (
-            <SelectItem key={`firm-${lawFirm.id}`} value={`firm-${lawFirm.id}`}>
-              {lawFirm.name}
-            </SelectItem>
-          );
-        }
-      });
-      
-      return externalAssignees || [];
-    }
-  };
+  // Note: We've fully implemented the assignee options directly in the form component
 
   return (
     <div className={`bg-white rounded-lg border border-neutral-200 shadow-sm p-4 ${preview ? 'col-span-1' : 'col-span-full'}`}>
@@ -474,22 +449,30 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                             </SelectItem>
                           ))}
                           {currentTaskType === 'external' && dealCounsels?.map((counsel: any) => {
-                            const lawFirm = counsel.lawFirm;
-                            const attorney = counsel.attorney;
+                            // Check if the counsel object has the expected structure before using it
+                            if (!counsel || typeof counsel !== 'object') {
+                              console.warn("Invalid counsel object:", counsel);
+                              return null;
+                            }
+
+                            // Get the law firm and attorney from the counsel object, using optional chaining
+                            const lawFirmId = counsel.lawFirmId;
+                            const attorneyId = counsel.attorneyId;
+                            const role = counsel.role || 'Unknown';
                             
-                            if (attorney) {
+                            // Find actual law firm and attorney objects from their IDs
+                            const lawFirm = lawFirms.find(firm => firm.id === lawFirmId);
+                            
+                            // Only render if we have valid objects
+                            if (lawFirm) {
                               return (
-                                <SelectItem key={`attorney-${attorney.id}`} value={`attorney-${attorney.id}`}>
-                                  {attorney.name} ({lawFirm.name})
-                                </SelectItem>
-                              );
-                            } else {
-                              return (
-                                <SelectItem key={`firm-${lawFirm.id}`} value={`firm-${lawFirm.id}`}>
-                                  {lawFirm.name}
+                                <SelectItem key={`firm-${lawFirmId}`} value={`firm-${lawFirmId}`}>
+                                  {lawFirm.name} ({role})
                                 </SelectItem>
                               );
                             }
+                            
+                            return null;
                           })}
                         </SelectContent>
                       </Select>
