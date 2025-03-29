@@ -65,9 +65,10 @@ interface Allocation {
 
 interface AllocationsTabProps {
   dealId: number;
+  onRefreshData?: () => void;
 }
 
-export default function AllocationsTab({ dealId }: AllocationsTabProps) {
+export default function AllocationsTab({ dealId, onRefreshData }: AllocationsTabProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAddingAllocation, setIsAddingAllocation] = useState(false);
@@ -117,6 +118,7 @@ export default function AllocationsTab({ dealId }: AllocationsTabProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'allocations'] });
       setIsAddingAllocation(false);
       form.reset();
+      if (onRefreshData) onRefreshData();
       toast({
         title: 'Allocation added',
         description: 'The allocation has been successfully added.',
@@ -142,6 +144,7 @@ export default function AllocationsTab({ dealId }: AllocationsTabProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'allocations'] });
       setIsEditingAllocation(null);
       form.reset();
+      if (onRefreshData) onRefreshData();
       toast({
         title: 'Allocation updated',
         description: 'The allocation has been successfully updated.',
@@ -165,6 +168,7 @@ export default function AllocationsTab({ dealId }: AllocationsTabProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'allocations'] });
+      if (onRefreshData) onRefreshData();
       toast({
         title: 'Allocation deleted',
         description: 'The allocation has been successfully deleted.',
@@ -220,9 +224,14 @@ export default function AllocationsTab({ dealId }: AllocationsTabProps) {
   };
 
   // Calculate total investment amount
-  const totalInvestment = allocations.reduce((sum, allocation) => {
-    // Strip non-numeric characters from investment amount
-    const amount = parseFloat(allocation.investmentAmount.replace(/[^0-9.]/g, '')) || 0;
+  const totalInvestment = allocations.reduce((sum: number, allocation: any) => {
+    // Strip non-numeric characters from investment amount if it's a string
+    let amount = 0;
+    if (typeof allocation.investmentAmount === 'string') {
+      amount = parseFloat(allocation.investmentAmount.replace(/[^0-9.]/g, '')) || 0;
+    } else if (typeof allocation.investmentAmount === 'number') {
+      amount = allocation.investmentAmount;
+    }
     return sum + amount;
   }, 0);
 
