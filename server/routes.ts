@@ -984,14 +984,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { key, value } = req.body;
-      if (!key && value === undefined) {
-        return res.status(400).json({ message: "At least one of key or value must be provided" });
+      
+      // When updating a setting, we only need the value
+      // Don't require key to be provided since we're updating by ID
+      if (value === undefined) {
+        return res.status(400).json({ message: "Value must be provided" });
       }
       
-      const setting = await storage.updateAppSetting(id, { key, value });
+      // Create update object with only the fields that are defined
+      const update: Partial<{ key: string, value: string }> = {};
+      if (key !== undefined) update.key = key;
+      if (value !== undefined) update.value = value;
+      
+      const setting = await storage.updateAppSetting(id, update);
       
       if (!setting) {
         return res.status(404).json({ message: "Setting not found" });
+      }
+      
+      // If this is the organization name setting, update lead investors in deals
+      if (setting.key === "organizationName") {
+        console.log(`Organization name updated to "${setting.value}", updating cached references`);
       }
       
       res.json(setting);

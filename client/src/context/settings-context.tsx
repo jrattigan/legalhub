@@ -8,8 +8,10 @@ interface SettingsContextType {
   refreshSettings: () => void;
 }
 
+const DEFAULT_ORG_NAME = 'Rogue Capital Ventures';
+
 const defaultSettings: SettingsContextType = {
-  organizationName: 'My Organization', // Default value
+  organizationName: DEFAULT_ORG_NAME, // Default value
   isLoading: true,
   error: null,
   refreshSettings: () => {},
@@ -28,6 +30,9 @@ interface SettingsProviderProps {
 export function SettingsProvider({ children }: SettingsProviderProps) {
   const queryClient = useQueryClient();
   
+  // Keep a local state backup for organization name to ensure it's always available
+  const [localOrgName, setLocalOrgName] = useState<string>(DEFAULT_ORG_NAME);
+  
   // Fetch organization name setting from API
   const {
     data: organizationSetting,
@@ -40,8 +45,30 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         const response = await fetch('/api/settings/organizationName');
         if (!response.ok) {
           if (response.status === 404) {
-            // Return default value if setting doesn't exist yet
-            return { value: 'Rogue Capital Ventures' };
+            // Create organization name setting if it doesn't exist
+            console.log("Organization name setting not found, creating default...");
+            
+            try {
+              const createResponse = await fetch('/api/settings', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  key: 'organizationName',
+                  value: DEFAULT_ORG_NAME
+                }),
+              });
+              
+              if (createResponse.ok) {
+                return await createResponse.json();
+              }
+            } catch (createError) {
+              console.error('Error creating organization name setting:', createError);
+            }
+            
+            // Still return default if create failed
+            return { value: DEFAULT_ORG_NAME };
           }
           throw new Error('Failed to fetch organization name');
         }
@@ -52,16 +79,28 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2, // Retry failed requests twice
   });
+  
+  // Update local backup when organization name changes
+  useEffect(() => {
+    if (organizationSetting?.value) {
+      setLocalOrgName(organizationSetting.value);
+    }
+  }, [organizationSetting]);
 
   // Function to refresh settings
   const refreshSettings = () => {
+    console.log("Refreshing settings...");
     queryClient.invalidateQueries({ queryKey: ['/api/settings/organizationName'] });
   };
 
+  // Get the organization name from settings or local backup
+  const currentOrgName = organizationSetting?.value || localOrgName || DEFAULT_ORG_NAME;
+
   // Combine settings data
   const settingsValue: SettingsContextType = {
-    organizationName: organizationSetting?.value || defaultSettings.organizationName,
+    organizationName: currentOrgName,
     isLoading,
     error: error as Error | null,
     refreshSettings,
