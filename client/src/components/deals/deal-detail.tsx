@@ -573,17 +573,24 @@ export default function DealDetail({
     }
   };
   
+  // Query to fetch the company details to get legal name
+  const { data: companyDetails } = useQuery<Company>({
+    queryKey: [`/api/companies/${deal.companyId}`],
+    enabled: !!deal.companyId,
+  });
+  
   // Render company information with its counsel
   const renderCompanyInfo = () => {
     // Debug: Print deal object to console to see available properties
     console.log("Deal object in renderCompanyInfo:", deal);
+    console.log("Company details:", companyDetails);
     
     return (
       <div className="flex flex-col text-sm text-neutral-500">
         <div className="flex items-center">
           <Building className="h-4 w-4 mr-1" />
           <span>
-            Company: {deal.companyName}
+            Company: {companyDetails?.legalName || deal.companyName}
           </span>
         </div>
         {/* Find company counsel from the counsel array */}
