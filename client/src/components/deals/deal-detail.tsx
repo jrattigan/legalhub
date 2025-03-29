@@ -602,6 +602,13 @@ export default function DealDetail({
 
   // Render the investment team section below lead investor
   const renderInvestmentTeam = () => {
+    // Sort users so that the lead is displayed first
+    const sortedUsers = [...dealUsers].sort((a, b) => {
+      if (a.role === 'Lead') return -1;
+      if (b.role === 'Lead') return 1;
+      return 0;
+    });
+
     return (
       <div className="flex flex-col text-sm mt-3">
         <div className="flex items-center mb-2">
@@ -610,8 +617,8 @@ export default function DealDetail({
         </div>
         
         <div className="flex flex-wrap gap-2 mt-1">
-          {dealUsers.length > 0 ? (
-            dealUsers.map(user => {
+          {sortedUsers.length > 0 ? (
+            sortedUsers.map(user => {
               const isLead = user.role === 'Lead';
               return (
                 <div 
@@ -726,7 +733,11 @@ export default function DealDetail({
                 <div className="col-span-3 space-y-3">
                   {teamMembers.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
-                      {teamMembers.map((member, index) => {
+                      {[...teamMembers].sort((a, b) => {
+                        if (a.role === 'Lead') return -1;
+                        if (b.role === 'Lead') return 1;
+                        return 0;
+                      }).map((member, index) => {
                         const user = member.user;
                         const isLead = member.role === 'Lead';
                         return (
