@@ -291,6 +291,17 @@ export default function DealDetail({
       return;
     }
       
+    // Format the selected attorney data
+    let attorneyNames = "";
+    if (selectedAttorneys.length > 0 && editDealForm.leadInvestorCounsel) {
+      // Get attorney names from the selected firm
+      const selectedFirm = lawFirmOptions.find(f => f.name === editDealForm.leadInvestorCounsel);
+      if (selectedFirm) {
+        const selectedAttorneyObjects = selectedFirm.attorneys.filter(a => selectedAttorneys.includes(a.id));
+        attorneyNames = selectedAttorneyObjects.map(a => a.name).join(", ");
+      }
+    }
+    
     const formattedData = {
       title: editDealForm.title,
       description: editDealForm.description,
@@ -302,6 +313,7 @@ export default function DealDetail({
       isCommitted: editDealForm.isCommitted,
       leadInvestor: editDealForm.leadInvestor,
       leadInvestorCounsel: editDealForm.leadInvestorCounsel,
+      leadInvestorAttorneys: attorneyNames
     };
     
     console.log('Submitting update with companyId:', companyId, 'type:', typeof companyId);
@@ -421,6 +433,7 @@ export default function DealDetail({
             <span>
               Lead Investor: {deal.leadInvestor}
               {deal.leadInvestorCounsel && ` / Counsel: ${deal.leadInvestorCounsel}`}
+              {deal.leadInvestorAttorneys && ` (${deal.leadInvestorAttorneys})`}
             </span>
           </div>
           {orgCounsel && (
