@@ -534,14 +534,28 @@ export default function DealDetail({
                 <Label htmlFor="leadInvestorCounsel" className="text-right">
                   Lead Investor Counsel
                 </Label>
-                <Input
-                  id="leadInvestorCounsel"
-                  name="leadInvestorCounsel"
-                  value={editDealForm.leadInvestorCounsel}
-                  onChange={handleFormChange}
-                  className="col-span-3"
-                  placeholder="Law Firm Name"
-                />
+                <div className="col-span-3">
+                  {/* Law Firm Selector */}
+                  <Select 
+                    name="leadInvestorCounsel" 
+                    value={editDealForm.leadInvestorCounsel}
+                    onValueChange={(value) => setEditDealForm({...editDealForm, leadInvestorCounsel: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a law firm" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Cooley">Cooley LLP</SelectItem>
+                      <SelectItem value="Wilson Sonsini">Wilson Sonsini</SelectItem>
+                      <SelectItem value="Gunderson Dettmer">Gunderson Dettmer</SelectItem>
+                      <SelectItem value="Smith & Wilson LLP">Smith & Wilson LLP</SelectItem>
+                      <SelectItem value="Blackstone & Roberts">Blackstone & Roberts</SelectItem>
+                      <SelectItem value="Fenwick & West">Fenwick & West</SelectItem>
+                      <SelectItem value="Goodwin Procter">Goodwin Procter</SelectItem>
+                      <SelectItem value="Orrick">Orrick</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
             <DialogFooter>
