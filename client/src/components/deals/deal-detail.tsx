@@ -581,10 +581,16 @@ export default function DealDetail({
           <Building className="h-4 w-4 mr-1" />
           <span>
             Company: {deal.companyName}
-            {deal.companyCounsel && ` / Counsel: ${deal.companyCounsel}`}
-            {deal.companyAttorneys && ` (${deal.companyAttorneys})`}
           </span>
         </div>
+        {deal.companyCounsel && (
+          <div className="flex items-center ml-5 mt-0.5">
+            <span>
+              Company Counsel: {deal.companyCounsel}
+              {deal.companyAttorneys && ` (${deal.companyAttorneys})`}
+            </span>
+          </div>
+        )}
       </div>
     );
   };
@@ -606,10 +612,16 @@ export default function DealDetail({
             <Building className="h-4 w-4 mr-1" />
             <span>
               Lead Investor: {organizationName}
-              {orgCounsel && ` / Counsel: ${orgCounsel.lawFirm.name}`}
-              {orgCounsel && orgCounsel.attorney && ` (${orgCounsel.attorney.name})`}
             </span>
           </div>
+          {orgCounsel && (
+            <div className="flex items-center ml-5 mt-0.5">
+              <span>
+                Lead Investor Counsel: {orgCounsel.lawFirm.name}
+                {orgCounsel.attorney && ` (${orgCounsel.attorney.name})`}
+              </span>
+            </div>
+          )}
         </div>
       );
     } else {
@@ -620,10 +632,16 @@ export default function DealDetail({
             <Building className="h-4 w-4 mr-1" />
             <span>
               Lead Investor: {deal.leadInvestor}
-              {deal.leadInvestorCounsel && ` / Counsel: ${deal.leadInvestorCounsel}`}
-              {deal.leadInvestorAttorneys && ` (${deal.leadInvestorAttorneys})`}
             </span>
           </div>
+          {deal.leadInvestorCounsel && (
+            <div className="flex items-center ml-5 mt-0.5">
+              <span>
+                Lead Investor Counsel: {deal.leadInvestorCounsel}
+                {deal.leadInvestorAttorneys && ` (${deal.leadInvestorAttorneys})`}
+              </span>
+            </div>
+          )}
           {orgCounsel && (
             <div className="flex items-center ml-5 mt-0.5">
               <span>
