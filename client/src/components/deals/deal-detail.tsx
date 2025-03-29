@@ -178,6 +178,7 @@ export default function DealDetail({
       isCommitted: boolean;
       leadInvestor: string;
       leadInvestorCounsel: string;
+      leadInvestorAttorneys: string;
     }) => {
       // Create a clean version of the payload with proper date formatting
       const apiPayload = {
@@ -190,7 +191,8 @@ export default function DealDetail({
         dueDate: updatedDeal.dueDate ? new Date(updatedDeal.dueDate) : null,
         isCommitted: updatedDeal.isCommitted,
         leadInvestor: updatedDeal.leadInvestor,
-        leadInvestorCounsel: updatedDeal.leadInvestorCounsel
+        leadInvestorCounsel: updatedDeal.leadInvestorCounsel,
+        leadInvestorAttorneys: updatedDeal.leadInvestorAttorneys
       };
       
       console.log('API Payload:', apiPayload);
