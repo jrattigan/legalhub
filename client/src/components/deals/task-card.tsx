@@ -790,11 +790,6 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                   // Create a new custom assignee ID
                   const customAssigneeId = `custom-${newAssigneeName}`;
                   
-                  // Update form values
-                  form.setValue("assigneeId", customAssigneeId as any);
-                  form.setValue("assigneeType", "custom");
-                  form.setValue("assigneeName", newAssigneeName);
-                  
                   // Add to our custom assignees list for UI display
                   setCustomAssignees(prev => {
                     // Check if this assignee already exists to avoid duplicates
@@ -805,10 +800,27 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                     return prev;
                   });
                   
+                  // Explicitly update the form value fields
+                  form.setValue("assigneeId", customAssigneeId);
+                  form.setValue("assigneeType", "custom");
+                  form.setValue("assigneeName", newAssigneeName);
+                  
+                  // Force the form to update immediately
+                  setTimeout(() => {
+                    // This will trigger the form to re-render with the new value selected
+                    const event = new Event('change', { bubbles: true });
+                    const selectElement = document.querySelector('[name="assigneeId"]');
+                    if (selectElement) {
+                      Object.defineProperty(event, 'target', { writable: false, value: { value: customAssigneeId, name: 'assigneeId' } });
+                      selectElement.dispatchEvent(event);
+                    }
+                  }, 0);
+                  
                   toast({
                     title: "New assignee added",
-                    description: `"${newAssigneeName}" has been added as an assignee.`,
+                    description: `"${newAssigneeName}" has been added as an assignee and selected.`,
                   });
+                  
                   setIsNewAssigneeDialogOpen(false);
                   setNewAssigneeName('');
                 }}
