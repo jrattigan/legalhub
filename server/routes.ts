@@ -1026,7 +1026,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const deals = await storage.getDeals();
       
-      // Extract unique lead investor names
+      // Extract unique lead investor names from existing deals
       const leadInvestors = new Set<string>();
       
       deals.forEach((deal: any) => {
@@ -1035,7 +1035,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      res.json(Array.from(leadInvestors));
+      // Add common VC firms to the options
+      const vcFirms = [
+        "8VC",
+        "Accel Partners",
+        "Andreessen Horowitz",
+        "Balderton Capital",
+        "Battery Ventures",
+        "Benchmark Capital",
+        "Bessemer Venture Partners",
+        "Draper Fisher Jurvetson (DFJ)",
+        "Elevation Capital Partners",
+        "Felicis Ventures",
+        "Fifth Wall Asset Management",
+        "Firstmark Capital",
+        "FJ Labs",
+        "Founders Fund",
+        "Foundry Group",
+        "General Atlantic",
+        "General Catalyst Partners",
+        "GGV Capital",
+        "Greylock Partners",
+        "Greycroft Partners",
+        "Iconiq Capital",
+        "Insight Venture Partners",
+        "Institutional Venture Partners (IVP)",
+        "Khosla Ventures",
+        "Kleiner Perkins Caufield Byers",
+        "Lightspeed Venture Partners",
+        "Lux Capital",
+        "Madrona Venture Group",
+        "Menlo Ventures",
+        "New Enterprise Associates (NEA)",
+        "Norwest Venture Partners",
+        "QED Investors",
+        "Redpoint Ventures",
+        "Ribbit Capital",
+        "Sapphire Ventures",
+        "Scale Venture Partners",
+        "Sequoia Capital",
+        "Signalfire",
+        "Thrive Capital",
+        "Tiger Global Management",
+        "True Ventures",
+        "Union Square Ventures"
+      ];
+      
+      // Combine existing lead investors with the VC firms list
+      vcFirms.forEach(firm => leadInvestors.add(firm));
+      
+      // Sort alphabetically and return as array
+      res.json(Array.from(leadInvestors).sort());
     } catch (error) {
       console.error("Error fetching lead investors:", error);
       res.status(500).json({ message: "Failed to fetch lead investors" });

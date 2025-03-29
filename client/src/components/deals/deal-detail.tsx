@@ -653,8 +653,8 @@ export default function DealDetail({
                     <option value={organizationName} />
                     {/* Include all other lead investors from the API */}
                     {leadInvestors
-                      .filter(investor => investor !== organizationName)
-                      .map((investor, index) => (
+                      .filter((investor: string) => investor !== organizationName)
+                      .map((investor: string, index: number) => (
                         <option key={index} value={investor} />
                       ))}
                   </datalist>
