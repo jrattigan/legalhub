@@ -1534,24 +1534,693 @@ export default function DealDetail({
             </div>
           </div>
         )}
-        <Tabs 
-          value={activeTab} 
-          onValueChange={(value) => {
-            console.log('Tab changed: ' + value + ' (desktop)');
-            // Set active tab directly with no delay
-            setActiveTab(value);
-            // Immediately clear any loading state
-            setIsTabLoading(false);
-            // Scroll to top when changing tabs
-            if (typeof window !== 'undefined') {
-              const mainContent = document.querySelector('.overflow-y-auto');
-              if (mainContent) {
-                mainContent.scrollTop = 0;
+        
+        {/* Mobile content - show content directly based on activeTab */}
+        {isMobile && (
+          <>
+            {activeTab === 'overview' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Term Sheet Card */}
+                <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-1">
+                  <div className="flex justify-between items-center mb-3">
+                    <h2 className="font-medium text-neutral-800">Term Sheet</h2>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setIsTermSheetDialogOpen(true)}
+                    >
+                      <Upload className="h-4 w-4 mr-1" />
+                      Upload
+                    </Button>
+                  </div>
+                  
+                  {deal.termSheetUrl ? (
+                    <div className="flex items-center justify-between border rounded p-2 mt-2">
+                      <div className="flex items-center">
+                        <FileText className="h-5 w-5 text-primary mr-2" />
+                        <span className="text-sm font-medium">Term Sheet</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsTermSheetViewerOpen(true)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-neutral-500 italic p-2 text-center border border-dashed rounded">
+                      No term sheet uploaded yet
+                    </div>
+                  )}
+                </div>
+                
+                {/* Deal Status Overview Card */}
+                <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-1">
+                  <h2 className="font-medium text-neutral-800 mb-3">Deal Status</h2>
+                  
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center">
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white ${
+                        deal.status === 'completed' ? 'bg-secondary' :
+                        deal.status === 'urgent' ? 'bg-destructive' :
+                        'bg-warning'
+                      }`}>
+                        <Calendar className="h-5 w-5" />
+                      </div>
+                      <div className="ml-3">
+                        <div className="font-medium text-neutral-800">
+                          {deal.status === 'completed' ? 'Completed' :
+                          deal.status === 'in-progress' ? 'In Progress' :
+                          deal.status === 'urgent' ? 'Urgent' :
+                          deal.status === 'draft' ? 'Draft' :
+                          deal.status.charAt(0).toUpperCase() + deal.status.slice(1)}
+                        </div>
+                        <div className="text-xs text-neutral-500">Updated 2 days ago</div>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="icon" className="text-neutral-400 hover:text-neutral-600">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between text-xs text-neutral-500 mb-1">
+                        <span>Overall Progress</span>
+                        <span>{overallProgress}%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-neutral-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-primary rounded-full" 
+                          style={{ width: `${overallProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center py-2 border-t border-neutral-100">
+                      <div className="text-sm">
+                        <div className="font-medium">Due Diligence</div>
+                        <div className="text-xs text-neutral-500">
+                          {completedDueDiligenceItems}/{dueDiligenceItems} items completed
+                        </div>
+                      </div>
+                      <span className={`text-xs py-0.5 px-2 rounded-full ${
+                        dueDiligenceProgress >= 75 ? 'bg-secondary-light text-secondary' :
+                        dueDiligenceProgress >= 50 ? 'bg-warning-light text-warning' :
+                        'bg-neutral-200 text-neutral-500'
+                      }`}>
+                        {dueDiligenceProgress}%
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center py-2 border-t border-neutral-100">
+                      <div className="text-sm">
+                        <div className="font-medium">Document Drafting</div>
+                        <div className="text-xs text-neutral-500">
+                          {documentsCompleted}/{documentsTotal} documents completed
+                        </div>
+                      </div>
+                      <span className={`text-xs py-0.5 px-2 rounded-full ${
+                        documentsProgress >= 75 ? 'bg-secondary-light text-secondary' :
+                        documentsProgress >= 50 ? 'bg-warning-light text-warning' :
+                        'bg-neutral-200 text-neutral-500'
+                      }`}>
+                        {documentsProgress}%
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center py-2 border-t border-neutral-100">
+                      <div className="text-sm">
+                        <div className="font-medium">Signatures</div>
+                        <div className="text-xs text-neutral-500">
+                          {signaturesCompleted}/{signaturesTotal} signatures collected
+                        </div>
+                      </div>
+                      <span className="text-xs py-0.5 px-2 bg-neutral-200 text-neutral-500 rounded-full">
+                        {signaturesProgress}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Issues Summary Card */}
+                <IssueCard issues={issues} onRefreshData={onRefreshData} preview={true} dealId={deal.id} />
+                
+                {/* Documents Card */}
+                <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-1 md:col-span-2">
+                  <div className="flex justify-between items-center mb-3">
+                    <h2 className="font-medium text-neutral-800">Key Documents</h2>
+                    <div className="flex space-x-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="text-xs text-primary border-primary">
+                            <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M7 10L12 15L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            Upload
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                          <DialogHeader>
+                            <DialogTitle>Upload Document</DialogTitle>
+                            <DialogDescription>
+                              Upload a document for this deal
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="grid gap-4 py-4">
+                            <FileUpload 
+                              onUpload={async (fileData) => {
+                                try {
+                                  // First create the document
+                                  const docResponse = await apiRequest('POST', '/api/documents', {
+                                    title: fileData.fileName,
+                                    dealId: deal.id,
+                                    description: "Uploaded document",
+                                    category: "Primary",
+                                    status: "Draft",
+                                    fileType: fileData.fileType,
+                                    assigneeId: null
+                                  });
+                                  
+                                  const newDoc = await docResponse.json();
+                                  
+                                  // Then create the initial version using the new document's ID
+                                  if (newDoc && newDoc.id) {
+                                    await apiRequest('POST', `/api/documents/${newDoc.id}/versions`, {
+                                      ...fileData,
+                                      uploadedById: 1 // For demo purposes, use first user
+                                    });
+                                    
+                                    toast({
+                                      title: "Document uploaded",
+                                      description: "Your document has been uploaded successfully."
+                                    });
+                                    onRefreshData();
+                                  } else {
+                                    throw new Error("Failed to get new document ID");
+                                  }
+                                } catch (error) {
+                                  console.error("Error uploading document:", error);
+                                  toast({
+                                    title: "Upload failed",
+                                    description: "There was an error uploading your document.",
+                                    variant: "destructive"
+                                  });
+                                }
+                              }}
+                              isUploading={false}
+                            />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                      <Button variant="outline" size="sm" className="text-xs text-neutral-600 border-neutral-300">
+                        <Filter className="w-3 h-3 mr-1" />
+                        Filter
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="flex space-x-4 border-b border-neutral-200 mb-3">
+                    <Button 
+                      variant="ghost" 
+                      className="px-3 py-2 text-sm font-medium text-primary border-b-2 border-primary"
+                    >
+                      All
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="px-3 py-2 text-sm font-medium text-neutral-500 hover:text-neutral-800"
+                    >
+                      Primary
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="px-3 py-2 text-sm font-medium text-neutral-500 hover:text-neutral-800"
+                    >
+                      Ancillary
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="px-3 py-2 text-sm font-medium text-neutral-500 hover:text-neutral-800"
+                    >
+                      Other
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {documents.slice(0, 3).map(document => (
+                      <DocumentCard 
+                        key={document.id} 
+                        document={document} 
+                        onRefreshData={onRefreshData} 
+                        preview={true}
+                        dealId={deal.id}
+                      />
+                    ))}
+                  </div>
+                  
+                  <Button 
+                    variant="link" 
+                    className="w-full text-center text-xs text-primary mt-3 hover:text-primary-dark"
+                    onClick={() => setActiveTab('documents')}
+                  >
+                    View all documents ({documents.length})
+                  </Button>
+                </div>
+                
+                {/* Outside Counsel Card */}
+                <CounselCard counsel={counsel} onRefreshData={onRefreshData} preview={true} dealId={deal.id} />
+                
+                {/* Timeline Card */}
+                <TimelineCard events={timelineEvents} onRefreshData={onRefreshData} preview={true} />
+              </div>
+            )}
+            
+            {activeTab === 'documents' && (
+              <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
+                <div className="flex justify-between items-center mb-3">
+                  <h2 className="font-medium text-neutral-800">Documents</h2>
+                  <div className="flex space-x-2">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="text-xs text-primary border-primary">
+                          <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M7 10L12 15L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          Upload New Document
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>Upload Document</DialogTitle>
+                          <DialogDescription>
+                            Upload a document for this deal
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <FileUpload 
+                            onUpload={async (fileData) => {
+                              try {
+                                // First create the document
+                                const docResponse = await apiRequest('POST', '/api/documents', {
+                                  title: fileData.fileName,
+                                  dealId: deal.id,
+                                  description: "Uploaded document",
+                                  category: "Primary",
+                                  status: "Draft",
+                                  fileType: fileData.fileType,
+                                  assigneeId: null
+                                });
+                                
+                                const newDoc = await docResponse.json();
+                                
+                                // Then create the initial version using the new document's ID
+                                if (newDoc && newDoc.id) {
+                                  await apiRequest('POST', `/api/documents/${newDoc.id}/versions`, {
+                                    ...fileData,
+                                    uploadedById: 1 // For demo purposes, use first user
+                                  });
+                                  
+                                  toast({
+                                    title: "Document uploaded",
+                                    description: "Your document has been uploaded successfully."
+                                  });
+                                  onRefreshData();
+                                } else {
+                                  throw new Error("Failed to get new document ID");
+                                }
+                              } catch (error) {
+                                console.error("Error uploading document:", error);
+                                toast({
+                                  title: "Upload failed",
+                                  description: "There was an error uploading your document.",
+                                  variant: "destructive"
+                                });
+                              }
+                            }}
+                            isUploading={false}
+                          />
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    <Button variant="outline" size="sm" className="text-xs text-neutral-600 border-neutral-300">
+                      <Filter className="w-3 h-3 mr-1" />
+                      Filter
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-4 border-b border-neutral-200 mb-3">
+                  <Button 
+                    variant="ghost" 
+                    className="px-3 py-2 text-sm font-medium text-primary border-b-2 border-primary"
+                  >
+                    All
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="px-3 py-2 text-sm font-medium text-neutral-500 hover:text-neutral-800"
+                  >
+                    Primary
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="px-3 py-2 text-sm font-medium text-neutral-500 hover:text-neutral-800"
+                  >
+                    Ancillary
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="px-3 py-2 text-sm font-medium text-neutral-500 hover:text-neutral-800"
+                  >
+                    Other
+                  </Button>
+                </div>
+                
+                <div className="space-y-2">
+                  {documents.map(document => (
+                    <DocumentCard 
+                      key={document.id} 
+                      document={document} 
+                      onRefreshData={onRefreshData} 
+                      preview={false}
+                      dealId={deal.id}
+                    />
+                  ))}
+                  
+                  {documents.length === 0 && (
+                    <div className="text-center py-8 text-neutral-500">
+                      <div className="mb-2">No documents found for this deal</div>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            Upload First Document
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                          <DialogHeader>
+                            <DialogTitle>Upload Document</DialogTitle>
+                            <DialogDescription>
+                              Upload a document for this deal
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="grid gap-4 py-4">
+                            <FileUpload 
+                              onUpload={async (fileData) => {
+                                try {
+                                  // First create the document
+                                  const docResponse = await apiRequest('POST', '/api/documents', {
+                                    title: fileData.fileName,
+                                    dealId: deal.id,
+                                    description: "Uploaded document",
+                                    category: "Primary",
+                                    status: "Draft",
+                                    fileType: fileData.fileType,
+                                    assigneeId: null
+                                  });
+                                  
+                                  const newDoc = await docResponse.json();
+                                  
+                                  // Then create the initial version using the new document's ID
+                                  if (newDoc && newDoc.id) {
+                                    await apiRequest('POST', `/api/documents/${newDoc.id}/versions`, {
+                                      ...fileData,
+                                      uploadedById: 1 // For demo purposes, use first user
+                                    });
+                                    
+                                    toast({
+                                      title: "Document uploaded",
+                                      description: "Your document has been uploaded successfully."
+                                    });
+                                    onRefreshData();
+                                  } else {
+                                    throw new Error("Failed to get new document ID");
+                                  }
+                                } catch (error) {
+                                  console.error("Error uploading document:", error);
+                                  toast({
+                                    title: "Upload failed",
+                                    description: "There was an error uploading your document.",
+                                    variant: "destructive"
+                                  });
+                                }
+                              }}
+                              isUploading={false}
+                            />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {activeTab === 'issues' && (
+              <IssueCard issues={issues} onRefreshData={onRefreshData} preview={false} dealId={deal.id} />
+            )}
+            
+            {activeTab === 'team' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <h2 className="font-medium text-neutral-800">Deal Team</h2>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="text-xs text-primary border-primary">
+                          + Add Team Member
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Add Team Member</DialogTitle>
+                          <DialogDescription>
+                            Add someone to the deal team
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="user">Select User</Label>
+                            <Select>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select team member" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">John Doe (Legal Counsel)</SelectItem>
+                                <SelectItem value="2">Jane Smith (Deal Lead)</SelectItem>
+                                <SelectItem value="3">Michael Johnson (Analyst)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="role">Role</Label>
+                            <Select defaultValue="member">
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select role" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="lead">Deal Lead</SelectItem>
+                                <SelectItem value="counsel">Legal Counsel</SelectItem>
+                                <SelectItem value="member">Team Member</SelectItem>
+                                <SelectItem value="observer">Observer</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button onClick={() => {
+                            toast({
+                              title: "Team member added",
+                              description: "The user has been added to the deal team."
+                            });
+                            onRefreshData();
+                          }}>Add to Team</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {dealUsers.length === 0 ? (
+                      <div className="text-center py-8 text-neutral-500">
+                        <div className="mb-2">No team members assigned to this deal</div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                        >
+                          <Plus className="h-4 w-4 mr-1" /> 
+                          Add First Team Member
+                        </Button>
+                      </div>
+                    ) : (
+                      dealUsers.map(user => (
+                        <div key={user.id} className="p-3 rounded-md border border-neutral-200 hover:bg-neutral-50">
+                          <div className="flex items-center">
+                            <Avatar className="h-10 w-10" style={{ backgroundColor: user.avatarColor }}>
+                              <AvatarFallback>{user.initials}</AvatarFallback>
+                            </Avatar>
+                            <div className="ml-3">
+                              <div className="font-medium">{user.fullName}</div>
+                              <div className="text-xs text-neutral-500">{user.email}</div>
+                            </div>
+                            <div className="ml-auto bg-neutral-100 text-neutral-600 text-xs px-2 py-0.5 rounded-full">
+                              {user.role}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+                
+                <CounselCard counsel={counsel} onRefreshData={onRefreshData} preview={false} dealId={deal.id} />
+              </div>
+            )}
+            
+            {activeTab === 'allocations' && (
+              <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
+                <div className="flex justify-between items-center mb-3">
+                  <h2 className="font-medium text-neutral-800">Fund Allocations</h2>
+                </div>
+                {/* Import and use the AllocationsTab component */}
+                <AllocationsTab dealId={deal.id} onRefreshData={onRefreshData} />
+              </div>
+            )}
+            
+            {activeTab === 'timeline' && (
+              <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
+                <div className="flex justify-between items-center mb-3">
+                  <h2 className="font-medium text-neutral-800">Deal Timeline</h2>
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-xs text-primary border-primary"
+                      onClick={() => {
+                        toast({
+                          title: "Note Added",
+                          description: "Your note has been added to the timeline."
+                        });
+                      }}
+                    >
+                      + Add Note
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-xs text-neutral-600 border-neutral-300">
+                      <Filter className="w-3 h-3 mr-1" />
+                      Filter
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="relative">
+                  {/* Vertical line */}
+                  <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-neutral-200"></div>
+                  
+                  <div className="space-y-6 pl-12">
+                    {timelineEvents.length > 0 ? (
+                      timelineEvents.map((event, index) => (
+                        <div key={event.id} className="relative">
+                          {/* Event dot */}
+                          <div className="absolute -left-12 mt-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                          </div>
+                          
+                          <div className="bg-white rounded-md border border-neutral-200 p-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="font-medium text-neutral-800">{event.title}</h3>
+                                <div className="text-sm text-neutral-500 flex items-center mt-1">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  {format(new Date(event.createdAt), 'MMM dd, yyyy - h:mm a')}
+                                </div>
+                              </div>
+                              <div className="bg-primary-light text-primary text-xs px-2 py-0.5 rounded-full">
+                                {event.eventType}
+                              </div>
+                            </div>
+                            <p className="mt-3 text-sm text-neutral-600">
+                              {event.description}
+                            </p>
+                            
+                            {event.referenceType && (
+                              <div className="mt-3 p-3 bg-neutral-50 rounded border border-neutral-200 text-sm">
+                                <div className="font-medium">
+                                  {event.referenceType === 'document' ? 'Document Reference' : 
+                                   event.referenceType === 'issue' ? 'Issue Reference' : 
+                                   'Reference'}
+                                </div>
+                                <div className="text-neutral-600 mt-1">
+                                  ID: {event.referenceId}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-12 px-4">
+                        <div className="h-16 w-16 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-4">
+                          <Clock className="h-8 w-8 text-neutral-400" />
+                        </div>
+                        <h3 className="font-medium text-lg text-neutral-800 mb-2">No Timeline Events Yet</h3>
+                        <p className="text-neutral-500 max-w-md mx-auto mb-4">
+                          This deal doesn't have any timeline events yet. Events are automatically added 
+                          when documents are uploaded or other important actions occur.
+                        </p>
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            toast({
+                              title: "Note Added",
+                              description: "Your note has been added to the timeline."
+                            });
+                          }}
+                        >
+                          Add First Event
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {timelineEvents.length > 5 && (
+                  <div className="mt-4 text-center">
+                    <Button variant="outline" size="sm">
+                      Load More Events
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+        
+        {/* Desktop content - use Tabs component */}
+        {!isMobile && (
+          <Tabs 
+            value={activeTab} 
+            onValueChange={(value) => {
+              console.log('Tab changed: ' + value + ' (desktop)');
+              // Set active tab directly with no delay
+              setActiveTab(value);
+              // Immediately clear any loading state
+              setIsTabLoading(false);
+              // Scroll to top when changing tabs
+              if (typeof window !== 'undefined') {
+                const mainContent = document.querySelector('.overflow-y-auto');
+                if (mainContent) {
+                  mainContent.scrollTop = 0;
+                }
               }
-            }
-          }}
-          className="flex flex-col h-full"
-        >
+            }}
+            className="flex flex-col h-full"
+          >
           <TabsList className="hidden">
             {tabItems.map((tab) => (
               <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
@@ -2218,7 +2887,9 @@ export default function DealDetail({
             )}
           </div>
         </TabsContent>
-        </Tabs>
+          </Tabs>
+        )}
+        {/* End of conditional content rendering */}
       </div>
       
       {/* Mobile Tab Navigation - Enhanced with visual cues */}
