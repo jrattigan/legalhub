@@ -83,6 +83,8 @@ export default function DealDetail({
   onRefreshData
 }: DealDetailProps) {
   const [activeTab, setActiveTab] = useState('overview');
+  // Track loading state for tab content
+  const [isTabLoading, setIsTabLoading] = useState(false);
   
   // Calculate progress metrics
   const dueDiligenceItems = 12;
@@ -1513,7 +1515,15 @@ export default function DealDetail({
       </div>
       
       <div className={`p-6 flex-1 overflow-y-auto ${isMobile ? 'pb-24' : ''}`}>
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} value={activeTab} className="flex flex-col h-full">
+        {isTabLoading && (
+          <div className="absolute inset-0 bg-white/70 z-50 flex items-center justify-center">
+            <div className="flex flex-col items-center">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <div className="mt-2 text-sm font-medium text-neutral-600">Loading content...</div>
+            </div>
+          </div>
+        )}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
           <TabsList className="hidden">
             {tabItems.map((tab) => (
               <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
@@ -2194,7 +2204,27 @@ export default function DealDetail({
                   ? 'text-primary' 
                   : 'text-neutral-500 hover:text-neutral-600'
               }`}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                // Show loading indicator
+                setIsTabLoading(true);
+                
+                // Set active tab
+                setActiveTab(tab.id);
+                
+                // Update UI to reflect tab change - forces a rerender of the Tabs component
+                setTimeout(() => {
+                  // Allow the tab change to propagate
+                  setIsTabLoading(false);
+                }, 50);
+                
+                // Scroll to top when changing tabs
+                if (typeof window !== 'undefined') {
+                  const mainContent = document.querySelector('.overflow-y-auto');
+                  if (mainContent) {
+                    mainContent.scrollTop = 0;
+                  }
+                }
+              }}
             >
               <div className={`p-1.5 rounded-full ${activeTab === tab.id ? 'bg-primary/10' : ''}`}>
                 {tab.icon}
