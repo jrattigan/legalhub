@@ -100,7 +100,7 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <div className="overflow-y-auto bg-neutral-50 p-6">
+      <div className="overflow-y-auto bg-neutral-50 p-6 h-[calc(100vh-4rem)]">
         {/* Loading state */}
         {isLoading && (
           <div className="h-full flex flex-col items-center justify-center text-center p-6">
