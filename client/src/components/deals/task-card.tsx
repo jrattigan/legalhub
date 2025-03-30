@@ -109,7 +109,6 @@ function AssigneeAvatar({ task }: { task: Task & { assignee?: any } }) {
     </Avatar>
   );
 }
-}
 
 interface TaskCardProps {
   tasks: (Task & { assignee?: User | Attorney | LawFirm | { name: string, type: 'custom', initials: string, avatarColor: string } })[];
