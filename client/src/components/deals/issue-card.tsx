@@ -223,7 +223,7 @@ export default function IssueCard({ issues, onRefreshData, preview = false, deal
   };
 
   return (
-    <div className={`bg-white rounded-lg border border-neutral-200 shadow-sm p-4 ${preview ? 'col-span-1' : 'col-span-full'}`}>
+    <div className={`bg-white rounded-lg border border-neutral-200 shadow-sm p-4 ${preview ? 'col-span-1' : 'col-span-full h-[calc(100vh-160px)] overflow-y-auto'}`}>
       <div className="flex justify-between items-center mb-3">
         <h2 className="font-medium text-neutral-800">Issues</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

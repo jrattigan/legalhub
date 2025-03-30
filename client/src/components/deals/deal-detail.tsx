@@ -1525,7 +1525,7 @@ export default function DealDetail({
         )}
       </div>
       
-      <div className={`p-6 flex-1 overflow-y-auto ${isMobile ? 'pb-24' : ''}`} style={{ height: isMobile ? 'calc(100vh - 160px)' : 'auto' }}>
+      <div className={`p-6 flex-1 ${!isMobile ? 'overflow-y-auto' : ''} ${isMobile ? 'pb-24' : ''}`}>
         {isTabLoading && (
           <div className="absolute inset-0 bg-white/70 z-50 flex items-center justify-center">
             <div className="flex flex-col items-center">
@@ -1539,7 +1539,7 @@ export default function DealDetail({
         {isMobile && (
           <>
             {activeTab === 'overview' && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-160px)] overflow-y-auto pb-4">
                 {/* Term Sheet Card */}
                 <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-1">
                   <div className="flex justify-between items-center mb-3">
@@ -1800,7 +1800,7 @@ export default function DealDetail({
             )}
             
             {activeTab === 'documents' && (
-              <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
+              <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 h-[calc(100vh-160px)] overflow-y-auto">
                 <div className="flex justify-between items-center mb-3">
                   <h2 className="font-medium text-neutral-800">Documents</h2>
                   <div className="flex space-x-2">
@@ -1986,7 +1986,7 @@ export default function DealDetail({
             )}
             
             {activeTab === 'team' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-[calc(100vh-160px)] overflow-y-auto pb-4">
                 <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
                   <div className="flex justify-between items-center mb-3">
                     <h2 className="font-medium text-neutral-800">Deal Team</h2>
@@ -2084,7 +2084,7 @@ export default function DealDetail({
             )}
             
             {activeTab === 'allocations' && (
-              <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
+              <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 h-[calc(100vh-160px)] overflow-y-auto">
                 <div className="flex justify-between items-center mb-3">
                   <h2 className="font-medium text-neutral-800">Fund Allocations</h2>
                 </div>
@@ -2094,7 +2094,7 @@ export default function DealDetail({
             )}
             
             {activeTab === 'timeline' && (
-              <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
+              <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 h-[calc(100vh-160px)] overflow-y-auto">
                 <div className="flex justify-between items-center mb-3">
                   <h2 className="font-medium text-neutral-800">Deal Timeline</h2>
                   <div className="flex space-x-2">
