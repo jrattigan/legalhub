@@ -109,9 +109,6 @@ function AssigneeAvatar({ task }: { task: Task & { assignee?: any } }) {
     </Avatar>
   );
 }
-  
-  // Return null if no assignee
-  return null;
 }
 
 interface TaskCardProps {
