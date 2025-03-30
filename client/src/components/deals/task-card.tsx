@@ -42,6 +42,24 @@ import { useToast } from '@/hooks/use-toast';
 function AssigneeAvatar({ task }: { task: Task & { assignee?: any } }) {
   // If the task has an assignee object (populated by getTasksByDeal)
   if (task.assignee) {
+    // Handle attorneys and law firms with proper styling even when populated
+    if (task.assigneeType === 'attorney') {
+      return (
+        <Avatar className="h-6 w-6" style={{ backgroundColor: "#8B5CF6" }}>
+          <AvatarFallback>AT</AvatarFallback>
+        </Avatar>
+      );
+    }
+
+    if (task.assigneeType === 'firm') {
+      return (
+        <Avatar className="h-6 w-6" style={{ backgroundColor: "#8B5CF6" }}>
+          <AvatarFallback>LF</AvatarFallback>
+        </Avatar>
+      );
+    }
+
+    // Regular user assignee
     return (
       <Avatar className="h-6 w-6" style={{ backgroundColor: task.assignee.avatarColor }}>
         <AvatarFallback>{task.assignee.initials}</AvatarFallback>
@@ -83,6 +101,14 @@ function AssigneeAvatar({ task }: { task: Task & { assignee?: any } }) {
       </Avatar>
     );
   }
+
+  // Return default avatar if no assignee
+  return (
+    <Avatar className="h-6 w-6" style={{ backgroundColor: "#94A3B8" }}>
+      <AvatarFallback>NA</AvatarFallback>
+    </Avatar>
+  );
+}
   
   // Return null if no assignee
   return null;
