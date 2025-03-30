@@ -24,8 +24,10 @@ interface LawFirmDetailViewProps {
 export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps) {
   const [isAddAttorneyOpen, setIsAddAttorneyOpen] = useState(false);
   const [isEditAttorneyOpen, setIsEditAttorneyOpen] = useState(false);
+  const [isEditLawFirmOpen, setIsEditLawFirmOpen] = useState(false);
   const [newAttorney, setNewAttorney] = useState<Partial<InsertAttorney>>({});
   const [editingAttorney, setEditingAttorney] = useState<Attorney | null>(null);
+  const [editingLawFirm, setEditingLawFirm] = useState<LawFirm | null>(null);
   const { toast } = useToast();
   
   // Create attorney mutation
@@ -33,8 +35,22 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
     mutationFn: async (attorney: Partial<InsertAttorney>) => {
       if (!lawFirmId) throw new Error("Law firm ID is required");
       
+      // Format phone numbers before saving to ensure consistency in the database
+      let formattedPhone = attorney.phone;
+      let formattedMobile = attorney.mobile;
+      
+      if (attorney.phone) {
+        formattedPhone = formatPhoneNumber(attorney.phone);
+      }
+      
+      if (attorney.mobile) {
+        formattedMobile = formatPhoneNumber(attorney.mobile);
+      }
+      
       const payload = {
         ...attorney,
+        phone: formattedPhone,
+        mobile: formattedMobile,
         lawFirmId,
         // Generate random color for avatar if not provided
         avatarColor: attorney.avatarColor || `#${Math.floor(Math.random()*16777215).toString(16)}`,
@@ -81,6 +97,18 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
   // Update attorney mutation
   const updateAttorneyMutation = useMutation({
     mutationFn: async (attorney: Attorney) => {
+      // Format phone numbers before saving to ensure consistency in the database
+      let formattedPhone = attorney.phone;
+      let formattedMobile = attorney.mobile;
+      
+      if (attorney.phone) {
+        formattedPhone = formatPhoneNumber(attorney.phone);
+      }
+      
+      if (attorney.mobile) {
+        formattedMobile = formatPhoneNumber(attorney.mobile);
+      }
+      
       const response = await fetch(`/api/attorneys/${attorney.id}`, {
         method: 'PATCH',
         headers: {
@@ -90,8 +118,9 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
           name: attorney.name,
           position: attorney.position,
           email: attorney.email,
-          phone: attorney.phone,
-          mobile: attorney.mobile
+          phone: formattedPhone,
+          mobile: formattedMobile,
+          photoUrl: attorney.photoUrl
         }),
       });
       
@@ -322,6 +351,75 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
     // Return the original if not 10 digits
     return phone;
   };
+  
+  // Handle law firm input change
+  const handleLawFirmInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditingLawFirm(prev => {
+      if (!prev) return null;
+      return { ...prev, [name]: value };
+    });
+  };
+  
+  // Update law firm mutation
+  const updateLawFirmMutation = useMutation({
+    mutationFn: async (lawFirm: LawFirm) => {
+      const response = await fetch(`/api/law-firms/${lawFirm.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: lawFirm.name,
+          specialty: lawFirm.specialty
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update law firm');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      // Reset form and close dialog
+      setEditingLawFirm(null);
+      setIsEditLawFirmOpen(false);
+      
+      // Invalidate law firms query to refetch
+      queryClient.invalidateQueries({ queryKey: ['/api/law-firms'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/law-firms', lawFirmId] });
+      
+      toast({
+        title: "Law firm updated",
+        description: "The law firm information has been successfully updated.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to update law firm",
+        description: error.message || "An error occurred while updating the law firm. Please try again.",
+      });
+    }
+  });
+  
+  // Submit edit law firm form
+  const handleEditLawFirm = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingLawFirm) return;
+    
+    if (!editingLawFirm.name) {
+      toast({
+        variant: "destructive",
+        title: "Missing information",
+        description: "Law firm name is required.",
+      });
+      return;
+    }
+    
+    updateLawFirmMutation.mutate(editingLawFirm);
+  };
 
   return (
     <div className="p-6">
@@ -336,9 +434,65 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
             </span>
           </p>
         </div>
-        <Button variant="outline" size="icon" className="h-9 w-9">
-          <Edit className="h-4 w-4" />
-        </Button>
+        <Dialog open={isEditLawFirmOpen} onOpenChange={setIsEditLawFirmOpen}>
+          <DialogTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-9 w-9"
+              onClick={() => setEditingLawFirm(lawFirm)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit Law Firm</DialogTitle>
+              <DialogDescription>
+                Update information for {editingLawFirm?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEditLawFirm} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-lawfirm-name">Name</Label>
+                <Input 
+                  id="edit-lawfirm-name" 
+                  name="name" 
+                  value={editingLawFirm?.name || ''} 
+                  onChange={handleLawFirmInputChange} 
+                  placeholder="Smith & Partners LLP" 
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-lawfirm-specialty">Specialty</Label>
+                <Input 
+                  id="edit-lawfirm-specialty" 
+                  name="specialty" 
+                  value={editingLawFirm?.specialty || ''} 
+                  onChange={handleLawFirmInputChange} 
+                  placeholder="Corporate Securities" 
+                />
+              </div>
+              <DialogFooter className="mt-6">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsEditLawFirmOpen(false)}
+                  disabled={updateLawFirmMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={updateLawFirmMutation.isPending || !editingLawFirm?.name}
+                >
+                  {updateLawFirmMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid grid-cols-1 gap-6 mb-6">
