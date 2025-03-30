@@ -56,6 +56,8 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   const [customAssignees, setCustomAssignees] = useState<{id: string, name: string}[]>([]);
   // Track task assignees to identify which ones are being used
   const [usedAssigneeIds, setUsedAssigneeIds] = useState<Set<string>>(new Set());
+  // Used to force re-render of select when adding a new assignee
+  const [selectKey, setSelectKey] = useState(0);
   // Track the current task being edited
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
   const queryClient = useQueryClient();
@@ -646,6 +648,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                     <FormItem>
                       <FormLabel>Assignee</FormLabel>
                       <Select 
+                        key={`assignee-select-${selectKey}`} 
                         onValueChange={(value) => {
                           if (value === 'new-assignee') {
                             // Handle "Add New Assignee" option
@@ -799,6 +802,9 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                     }
                     return prev;
                   });
+                  
+                  // Increment the select key to force a re-render of the select component
+                  setSelectKey(prevKey => prevKey + 1);
                   
                   // Close the dialog first
                   setIsNewAssigneeDialogOpen(false);
@@ -1190,6 +1196,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                   <FormItem>
                     <FormLabel>Assignee</FormLabel>
                     <Select 
+                      key={`edit-assignee-select-${selectKey}`}
                       onValueChange={(value) => {
                         if (value === 'new-assignee') {
                           setIsNewAssigneeDialogOpen(true);
