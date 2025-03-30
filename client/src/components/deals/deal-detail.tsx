@@ -1557,7 +1557,7 @@ export default function DealDetail({
               <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
             ))}
           </TabsList>
-          <TabsContent value="overview" className="m-0 overflow-y-auto flex-1">
+          <TabsContent value="overview" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'overview' ? 'block' : 'none'}}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Term Sheet Card */}
             <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-1">
@@ -1818,7 +1818,7 @@ export default function DealDetail({
           </div>
         </TabsContent>
         
-        <TabsContent value="documents" className="m-0 overflow-y-auto flex-1">
+        <TabsContent value="documents" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'documents' ? 'block' : 'none'}}>
           <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
             <div className="flex justify-between items-center mb-3">
               <h2 className="font-medium text-neutral-800">Documents</h2>
@@ -2001,11 +2001,11 @@ export default function DealDetail({
         </TabsContent>
         
 
-        <TabsContent value="issues" className="m-0 overflow-y-auto flex-1">
+        <TabsContent value="issues" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'issues' ? 'block' : 'none'}}>
           <IssueCard issues={issues} onRefreshData={onRefreshData} preview={false} dealId={deal.id} />
         </TabsContent>
         
-        <TabsContent value="team" className="m-0 overflow-y-auto flex-1">
+        <TabsContent value="team" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'team' ? 'block' : 'none'}}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
               <div className="flex justify-between items-center mb-3">
@@ -2103,7 +2103,7 @@ export default function DealDetail({
           </div>
         </TabsContent>
         
-        <TabsContent value="allocations" className="m-0 overflow-y-auto flex-1">
+        <TabsContent value="allocations" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'allocations' ? 'block' : 'none'}}>
           <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
             <div className="flex justify-between items-center mb-3">
               <h2 className="font-medium text-neutral-800">Fund Allocations</h2>
@@ -2113,7 +2113,7 @@ export default function DealDetail({
           </div>
         </TabsContent>
         
-        <TabsContent value="timeline" className="m-0 overflow-y-auto flex-1">
+        <TabsContent value="timeline" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'timeline' ? 'block' : 'none'}}>
           <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
             <div className="flex justify-between items-center mb-3">
               <h2 className="font-medium text-neutral-800">Deal Timeline</h2>
