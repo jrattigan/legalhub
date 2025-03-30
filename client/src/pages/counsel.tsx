@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams } from 'wouter';
 import LawFirmsLayout from '@/components/counsel/law-firms-layout';
-import LawFirmDetailView from '@/components/counsel/law-firm-detail-view';
+import LawFirmDetailView from '@/components/counsel/law-firm-detail-view-new';
 
 export default function Counsel() {
   const params = useParams();

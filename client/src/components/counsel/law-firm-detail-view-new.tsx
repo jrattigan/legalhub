@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { AlertCircle, Building, Mail, Phone, User, Briefcase, FileText, Calendar, ArrowRight, UserPlus, Edit, Upload } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { AlertCircle, Building, Mail, Phone, User, Briefcase, FileText, Calendar, UserPlus, Edit } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +39,41 @@ interface LawFirmDetailViewProps {
   lawFirmId: number | null; // Allow null for initial state
 }
 
+// Loading component to avoid conditional returns
+const LoadingView = () => (
+  <div className="p-6">
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+    </div>
+  </div>
+);
+
+// Error component to avoid conditional returns
+const ErrorView = () => (
+  <div className="p-6">
+    <Alert variant="destructive">
+      <AlertCircle className="h-4 w-4" />
+      <AlertTitle>Error</AlertTitle>
+      <AlertDescription>
+        Failed to load law firm details. Please try again later.
+      </AlertDescription>
+    </Alert>
+  </div>
+);
+
+// Empty state component to avoid conditional returns
+const EmptyStateView = () => (
+  <div className="p-6 flex flex-col items-center justify-center h-full text-center">
+    <Building className="h-16 w-16 text-neutral-300 mb-4" />
+    <h2 className="text-xl font-medium mb-2">No Law Firm Selected</h2>
+    <p className="text-neutral-500 max-w-md">
+      Please select a law firm from the list to view its details, associated attorneys, and deals.
+    </p>
+  </div>
+);
+
 export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps) {
+  // All hooks at the top level - no conditionals
   const [isAddAttorneyOpen, setIsAddAttorneyOpen] = useState(false);
   const [isEditAttorneyOpen, setIsEditAttorneyOpen] = useState(false);
   const [isEditLawFirmOpen, setIsEditLawFirmOpen] = useState(false);
@@ -49,7 +83,62 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
-  // Create attorney mutation
+  // Query hooks
+  const { 
+    data: lawFirm, 
+    isLoading: lawFirmLoading, 
+    error: lawFirmError 
+  } = useQuery<LawFirm>({
+    queryKey: ['/api/law-firms', lawFirmId],
+    queryFn: async () => {
+      if (!lawFirmId) return null;
+      const response = await fetch(`/api/law-firms/${lawFirmId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch law firm details');
+      }
+      return response.json();
+    },
+    enabled: !!lawFirmId,
+    retry: 1,
+  });
+
+  const { 
+    data: attorneys = [], 
+    isLoading: attorneysLoading, 
+    error: attorneysError 
+  } = useQuery<Attorney[]>({
+    queryKey: ['/api/attorneys'],
+    queryFn: async () => {
+      if (!lawFirmId) return [];
+      const response = await fetch(`/api/law-firms/${lawFirmId}/attorneys`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch attorneys');
+      }
+      return response.json();
+    },
+    enabled: !!lawFirmId,
+    retry: 1,
+  });
+  
+  const { 
+    data: deals = [], 
+    isLoading: dealsLoading, 
+    error: dealsError 
+  } = useQuery<Deal[]>({
+    queryKey: ['/api/deals/law-firm', lawFirmId],
+    queryFn: async () => {
+      if (!lawFirmId) return [];
+      const response = await fetch(`/api/law-firms/${lawFirmId}/deals`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch deals');
+      }
+      return response.json();
+    },
+    enabled: !!lawFirmId,
+    retry: 1,
+  });
+
+  // Mutation hooks
   const addAttorneyMutation = useMutation({
     mutationFn: async (attorney: Partial<InsertAttorney>) => {
       if (!lawFirmId) throw new Error("Law firm ID is required");
@@ -113,7 +202,6 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
     }
   });
   
-  // Update attorney mutation
   const updateAttorneyMutation = useMutation({
     mutationFn: async (attorney: Attorney) => {
       // Format phone numbers before saving to ensure consistency in the database
@@ -170,202 +258,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
       });
     }
   });
-  
-  // Handle edit input change
-  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditingAttorney(prev => {
-      if (!prev) return null;
-      return { ...prev, [name]: value };
-    });
-  };
-  
-  // Submit edit attorney form
-  const handleEditAttorney = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingAttorney) return;
-    
-    if (!editingAttorney.name || !editingAttorney.email) {
-      toast({
-        variant: "destructive",
-        title: "Missing information",
-        description: "Attorney name and email are required.",
-      });
-      return;
-    }
-    
-    updateAttorneyMutation.mutate(editingAttorney);
-  };
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setNewAttorney(prev => ({ ...prev, [name]: value }));
-  };
-  
-  // Handle photo upload for new attorney
-  const handlePhotoUpload = async (file: File) => {
-    try {
-      const base64 = await convertFileToBase64(file);
-      setNewAttorney(prev => ({ ...prev, photoUrl: base64 }));
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to upload photo",
-        description: "There was an error processing the image. Please try again.",
-      });
-    }
-  };
-  
-  // Handle photo upload for edit attorney
-  const handleEditPhotoUpload = async (file: File) => {
-    try {
-      const base64 = await convertFileToBase64(file);
-      setEditingAttorney(prev => {
-        if (!prev) return null;
-        return { ...prev, photoUrl: base64 };
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to upload photo",
-        description: "There was an error processing the image. Please try again.",
-      });
-    }
-  };
-  
-  const handleAddAttorney = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newAttorney.name || !newAttorney.email) {
-      toast({
-        variant: "destructive",
-        title: "Missing information",
-        description: "Attorney name and email are required.",
-      });
-      return;
-    }
-    
-    addAttorneyMutation.mutate(newAttorney);
-  };
-  
-  // Fetch law firm details
-  const { data: lawFirm, isLoading: lawFirmLoading, error: lawFirmError } = useQuery<LawFirm>({
-    queryKey: ['/api/law-firms', lawFirmId],
-    queryFn: async () => {
-      if (!lawFirmId) return null;
-      const response = await fetch(`/api/law-firms/${lawFirmId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch law firm details');
-      }
-      return response.json();
-    },
-    enabled: !!lawFirmId,
-    retry: 1,
-  });
 
-  // Fetch attorneys for this law firm
-  const { data: attorneys, isLoading: attorneysLoading, error: attorneysError } = useQuery<Attorney[]>({
-    queryKey: ['/api/attorneys'],
-    queryFn: async () => {
-      if (!lawFirmId) return [];
-      const response = await fetch(`/api/law-firms/${lawFirmId}/attorneys`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch attorneys');
-      }
-      return response.json();
-    },
-    enabled: !!lawFirmId,
-    retry: 1,
-  });
-  
-  // Fetch deals for this law firm
-  const { data: deals, isLoading: dealsLoading, error: dealsError } = useQuery<Deal[]>({
-    queryKey: ['/api/deals/law-firm', lawFirmId],
-    queryFn: async () => {
-      if (!lawFirmId) return [];
-      const response = await fetch(`/api/law-firms/${lawFirmId}/deals`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch deals');
-      }
-      return response.json();
-    },
-    enabled: !!lawFirmId,
-    retry: 1,
-  });
-
-  // Handle loading state
-  if (lawFirmLoading || attorneysLoading || dealsLoading) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-        </div>
-      </div>
-    );
-  }
-
-  // Handle error state
-  if (lawFirmError || attorneysError || dealsError) {
-    return (
-      <div className="p-6">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
-            Failed to load law firm details. Please try again later.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  // Handle no law firm selected
-  if (!lawFirm) {
-    return (
-      <div className="p-6 flex flex-col items-center justify-center h-full text-center">
-        <Building className="h-16 w-16 text-neutral-300 mb-4" />
-        <h2 className="text-xl font-medium mb-2">No Law Firm Selected</h2>
-        <p className="text-neutral-500 max-w-md">
-          Please select a law firm from the list to view its details, associated attorneys, and deals.
-        </p>
-      </div>
-    );
-  }
-
-  // Helper function to format deal title
-  const formatDealTitle = (deal: Deal) => {
-    const companyName = deal.companyName || 'Unnamed Company';
-    const title = deal.title || 'Untitled Deal';
-    return `${companyName} - ${title}`;
-  };
-
-  // Get status badge color based on deal status
-  const getStatusColor = (status: string | null | undefined) => {
-    if (!status) return 'bg-neutral-100 text-neutral-800';
-    
-    switch (status.toLowerCase()) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'closed':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-neutral-100 text-neutral-800';
-    }
-  };
-  
-  // Using the formatPhoneNumber utility function defined at the top of the file
-  
-  // Handle law firm input change
-  const handleLawFirmInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditingLawFirm(prev => {
-      if (!prev) return null;
-      return { ...prev, [name]: value };
-    });
-  };
-  
-  // Update law firm mutation
   const updateLawFirmMutation = useMutation({
     mutationFn: async (lawFirm: LawFirm) => {
       const response = await fetch(`/api/law-firms/${lawFirm.id}`, {
@@ -407,8 +300,88 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
       });
     }
   });
+
+  // Event handlers
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditingAttorney(prev => {
+      if (!prev) return null;
+      return { ...prev, [name]: value };
+    });
+  };
   
-  // Submit edit law firm form
+  const handleEditAttorney = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAttorney) return;
+    
+    if (!editingAttorney.name || !editingAttorney.email) {
+      toast({
+        variant: "destructive",
+        title: "Missing information",
+        description: "Attorney name and email are required.",
+      });
+      return;
+    }
+    
+    updateAttorneyMutation.mutate(editingAttorney);
+  };
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setNewAttorney(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handlePhotoUpload = async (file: File) => {
+    try {
+      const base64 = await convertFileToBase64(file);
+      setNewAttorney(prev => ({ ...prev, photoUrl: base64 }));
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to upload photo",
+        description: "There was an error processing the image. Please try again.",
+      });
+    }
+  };
+  
+  const handleEditPhotoUpload = async (file: File) => {
+    try {
+      const base64 = await convertFileToBase64(file);
+      setEditingAttorney(prev => {
+        if (!prev) return null;
+        return { ...prev, photoUrl: base64 };
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to upload photo",
+        description: "There was an error processing the image. Please try again.",
+      });
+    }
+  };
+  
+  const handleAddAttorney = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAttorney.name || !newAttorney.email) {
+      toast({
+        variant: "destructive",
+        title: "Missing information",
+        description: "Attorney name and email are required.",
+      });
+      return;
+    }
+    
+    addAttorneyMutation.mutate(newAttorney);
+  };
+
+  const handleLawFirmInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditingLawFirm(prev => {
+      if (!prev) return null;
+      return { ...prev, [name]: value };
+    });
+  };
+  
   const handleEditLawFirm = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingLawFirm) return;
@@ -425,6 +398,42 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
     updateLawFirmMutation.mutate(editingLawFirm);
   };
 
+  // Helper functions
+  const formatDealTitle = (deal: Deal) => {
+    const companyName = deal.companyName || 'Unnamed Company';
+    const title = deal.title || 'Untitled Deal';
+    return `${companyName} - ${title}`;
+  };
+
+  const getStatusColor = (status: string | null | undefined) => {
+    if (!status) return 'bg-neutral-100 text-neutral-800';
+    
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'closed':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-neutral-100 text-neutral-800';
+    }
+  };
+
+  // Early return conditions - use pre-made components
+  if (lawFirmLoading || attorneysLoading || dealsLoading) {
+    return <LoadingView />;
+  }
+
+  if (lawFirmError || attorneysError || dealsError) {
+    return <ErrorView />;
+  }
+
+  if (!lawFirm) {
+    return <EmptyStateView />;
+  }
+
+  // Main render
   return (
     <div className="p-6">
       {/* Law firm header with edit button */}
@@ -453,7 +462,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
             <DialogHeader>
               <DialogTitle>Edit Law Firm</DialogTitle>
               <DialogDescription>
-                Update information for {editingLawFirm?.name}
+                Update information for {editingLawFirm?.name || 'the law firm'}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleEditLawFirm} className="space-y-4">
@@ -555,7 +564,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Work</Label>
+                    <Label htmlFor="phone">Work Phone</Label>
                     <Input 
                       id="phone" 
                       name="phone" 
@@ -566,7 +575,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="mobile">Mobile</Label>
+                    <Label htmlFor="mobile">Mobile Phone</Label>
                     <Input 
                       id="mobile" 
                       name="mobile" 
@@ -616,8 +625,8 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
             </Dialog>
           </CardHeader>
           <CardContent>
-            {attorneys && attorneys.length > 0 ? (
-              <div className="space-y-4">
+            {attorneys?.length > 0 ? (
+              <div className="space-y-3">
                 {attorneys.map((attorney) => (
                   <div key={attorney.id} className="flex items-start p-3 rounded-md border border-neutral-200">
                     <Avatar className="h-10 w-10 mr-4">
@@ -692,8 +701,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
         </Card>
       </div>
       
-      {/* Related deals card */}
-      {/* Edit Attorney Dialog - Always defined with consistent hooks */}
+      {/* Edit Attorney Dialog - Always defined, never conditionally rendered */}
       <Dialog open={isEditAttorneyOpen} onOpenChange={setIsEditAttorneyOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -829,8 +837,6 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                       </div>
                     )}
                   </div>
-                  
-                  {/* Removed button as deal title is now a link */}
                 </div>
               ))}
             </div>
