@@ -31,7 +31,6 @@ export default function AppHeader({ title, user, notifications = 0 }: AppHeaderP
     { name: 'Companies', path: '/companies' },
     { name: 'Deals', path: '/deals' },
     { name: 'Documents', path: '/documents' },
-    { name: 'Tasks', path: '/tasks' },
     { name: 'Outside Counsel', path: '/counsel' },
     { name: 'Reports', path: '/reports' },
   ];
@@ -76,7 +75,7 @@ export default function AppHeader({ title, user, notifications = 0 }: AppHeaderP
           <div className="absolute inset-0 h-16 bg-white flex items-center p-3 z-20 shadow-md">
             <Input 
               className="flex-1 h-10 bg-gray-50 border-neutral-300" 
-              placeholder="Search deals, documents, tasks..." 
+              placeholder="Search deals, documents, issues..." 
               autoFocus 
             />
             <Button 

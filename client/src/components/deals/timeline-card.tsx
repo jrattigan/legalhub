@@ -18,8 +18,7 @@ export default function TimelineCard({ events, onRefreshData, preview = false }:
         return <FileText className="text-white" />;
       case 'issue':
         return <AlertTriangle className="text-white" />;
-      case 'task':
-        return <CheckSquare className="text-white" />;
+
       case 'counsel':
         return <Link className="text-white" />;
       default:
@@ -33,8 +32,7 @@ export default function TimelineCard({ events, onRefreshData, preview = false }:
         return 'bg-primary';
       case 'issue':
         return 'bg-warning';
-      case 'task':
-        return 'bg-secondary';
+
       case 'counsel':
         return 'bg-neutral-600';
       default:

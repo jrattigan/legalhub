@@ -295,7 +295,7 @@ export const timelineEvents = pgTable("timeline_events", {
   dealId: integer("deal_id").notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
-  eventType: text("event_type").notNull(), // document, issue, task, etc.
+  eventType: text("event_type").notNull(), // document, issue, general, milestone, etc.
   referenceId: integer("reference_id"), // ID of the related item (document, issue, etc.)
   referenceType: text("reference_type"), // Type of the reference (document, issue, etc.)
   createdAt: timestamp("created_at").defaultNow().notNull(),

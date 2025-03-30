@@ -631,97 +631,7 @@ export class MemStorage implements IStorage {
     };
     this.documentVersions.set(versionId4, createdVersion4);
 
-    // Create tasks for Deal 1
-    const task1: InsertTask = {
-      dealId: createdDeal1.id,
-      title: "Review Term Sheet",
-      description: "Review all terms and provide feedback",
-      status: "active",
-      priority: "high",
-      dueDate: new Date("2023-10-10"),
-      assigneeId: createdUser1.id,
-      taskType: "internal", // Internal task
-      completed: false
-    };
-    
-    const task2: InsertTask = {
-      dealId: createdDeal1.id,
-      title: "Prepare cap table",
-      description: "Update cap table with new investment",
-      status: "completed",
-      priority: "medium",
-      dueDate: new Date("2023-10-02"),
-      assigneeId: createdUser2.id,
-      taskType: "internal", // Internal task
-      completed: true
-    };
-    
-    const task3: InsertTask = {
-      dealId: createdDeal1.id,
-      title: "Finalize investor rights",
-      description: "Complete investor rights agreement",
-      status: "active",
-      priority: "medium",
-      dueDate: new Date("2023-10-12"),
-      assigneeId: createdUser3.id,
-      taskType: "external", // External task
-      completed: false
-    };
 
-    // Create tasks directly for sample data with fully specified objects
-    const taskId1 = this.currentTaskId++;
-    const createdTask1: Task = { 
-      id: taskId1,
-      dealId: task1.dealId,
-      title: task1.title,
-      description: task1.description || null, // Ensure null instead of undefined
-      status: "active", // Use explicit value
-      priority: "high", // Use explicit value
-      dueDate: task1.dueDate || null, // Ensure null instead of undefined
-      assigneeId: task1.assigneeId || null, // Ensure null instead of undefined
-      assigneeType: "user", // Default to user for internal tasks
-      taskType: task1.taskType || "internal", // Add taskType
-      completed: false, // Use explicit value
-      completedAt: null,
-      createdAt: new Date()
-    };
-    this.tasks.set(taskId1, createdTask1);
-
-    const taskId2 = this.currentTaskId++;
-    const createdTask2: Task = { 
-      id: taskId2,
-      dealId: task2.dealId,
-      title: task2.title,
-      description: task2.description || null, // Ensure null instead of undefined
-      status: "completed", // Use explicit value
-      priority: "medium", // Use explicit value
-      dueDate: task2.dueDate || null, // Ensure null instead of undefined
-      assigneeId: task2.assigneeId || null, // Ensure null instead of undefined
-      assigneeType: "user", // Default to user for internal tasks
-      taskType: task2.taskType || "internal", // Add taskType
-      completed: true, // Use explicit value
-      completedAt: new Date(), // Task is completed
-      createdAt: new Date()
-    };
-    this.tasks.set(taskId2, createdTask2);
-
-    const taskId3 = this.currentTaskId++;
-    const createdTask3: Task = { 
-      id: taskId3,
-      dealId: task3.dealId,
-      title: task3.title,
-      description: task3.description || null, // Ensure null instead of undefined
-      status: "active", // Use explicit value
-      priority: "medium", // Use explicit value
-      dueDate: task3.dueDate || null, // Ensure null instead of undefined
-      assigneeId: task3.assigneeId || null, // Ensure null instead of undefined
-      assigneeType: "attorney", // This is an external task assigned to attorney
-      taskType: task3.taskType || "external", // Add taskType - this one is external
-      completed: false, // Use explicit value
-      completedAt: null,
-      createdAt: new Date()
-    };
-    this.tasks.set(taskId3, createdTask3);
 
     // Create issues for Deal 1 with explicit values for all required fields
     const issue1: InsertIssue = {
@@ -925,9 +835,9 @@ export class MemStorage implements IStorage {
       dealId: createdDeal1.id,
       title: "Cap Table Completed",
       description: "Financial team completed and verified the capitalization table for the Series C round.",
-      eventType: "task",
-      referenceId: createdTask2.id,
-      referenceType: "task"
+      eventType: "general",
+      referenceId: null,
+      referenceType: null
     };
     const eventId3 = this.currentTimelineEventId++;
     const eventDate3 = new Date();
@@ -1020,66 +930,7 @@ export class MemStorage implements IStorage {
     };
     this.documentVersions.set(techVersionId1, createdTechVersion1);
     
-    // Tasks for TechStart deal
-    const techTask1: InsertTask = {
-      dealId: createdDeal2.id,
-      title: "Complete regulatory filings",
-      description: "File all required regulatory paperwork for the acquisition",
-      status: "in-progress",
-      priority: "high",
-      dueDate: new Date(new Date().setDate(new Date().getDate() + 14)),
-      assigneeId: 3,
-      taskType: "external"  // External task
-    };
-    const techTaskId1 = this.currentTaskId++;
-    const techTaskDate1 = new Date();
-    const createdTechTask1: Task = {
-      id: techTaskId1,
-      dealId: techTask1.dealId,
-      title: techTask1.title,
-      description: techTask1.description,
-      status: techTask1.status,
-      priority: techTask1.priority,
-      dueDate: techTask1.dueDate,
-      assigneeId: techTask1.assigneeId,
-      assigneeType: "attorney", // External task assigned to attorney
-      taskType: techTask1.taskType || "external", // Add taskType with default
-      completed: false, // Adding required field
-      createdAt: techTaskDate1,
-      updatedAt: techTaskDate1,
-      completedAt: null
-    };
-    this.tasks.set(techTaskId1, createdTechTask1);
-    
-    const techTask2: InsertTask = {
-      dealId: createdDeal2.id,
-      title: "Finalize asset transfer plan",
-      description: "Complete the detailed plan for transferring all TechStart assets",
-      status: "open",
-      priority: "medium",
-      dueDate: new Date(new Date().setDate(new Date().getDate() + 21)),
-      assigneeId: 2,
-      taskType: "internal" // Internal task
-    };
-    const techTaskId2 = this.currentTaskId++;
-    const techTaskDate2 = new Date();
-    const createdTechTask2: Task = {
-      id: techTaskId2,
-      dealId: techTask2.dealId,
-      title: techTask2.title,
-      description: techTask2.description,
-      status: techTask2.status,
-      priority: techTask2.priority,
-      dueDate: techTask2.dueDate,
-      assigneeId: techTask2.assigneeId,
-      assigneeType: "user", // Internal task assigned to user
-      taskType: techTask2.taskType || "internal", // Add taskType with default
-      completed: false, // Adding required field
-      createdAt: techTaskDate2,
-      updatedAt: techTaskDate2,
-      completedAt: null
-    };
-    this.tasks.set(techTaskId2, createdTechTask2);
+
     
     // Issues for TechStart deal
     const techIssue1: InsertIssue = {
@@ -1249,66 +1100,7 @@ export class MemStorage implements IStorage {
     };
     this.documentVersions.set(healthVersionId1, createdHealthVersion1);
     
-    // Tasks for HealthTech deal
-    const healthTask1: InsertTask = {
-      dealId: createdDeal3.id,
-      title: "Complete investors list",
-      description: "Finalize the list of participating investors",
-      status: "in-progress",
-      priority: "high",
-      dueDate: new Date(new Date().setDate(new Date().getDate() + 5)),
-      assigneeId: 1,
-      taskType: "internal" // Internal task
-    };
-    const healthTaskId1 = this.currentTaskId++;
-    const healthTaskDate1 = new Date();
-    const createdHealthTask1: Task = {
-      id: healthTaskId1,
-      dealId: healthTask1.dealId,
-      title: healthTask1.title,
-      description: healthTask1.description,
-      status: healthTask1.status,
-      priority: healthTask1.priority,
-      dueDate: healthTask1.dueDate,
-      assigneeId: healthTask1.assigneeId,
-      assigneeType: "user", // Internal task assigned to user
-      taskType: healthTask1.taskType || "internal", // Add taskType with default
-      completed: false, // Adding required field
-      createdAt: healthTaskDate1,
-      updatedAt: healthTaskDate1,
-      completedAt: null
-    };
-    this.tasks.set(healthTaskId1, createdHealthTask1);
-    
-    const healthTask2: InsertTask = {
-      dealId: createdDeal3.id,
-      title: "Negotiate valuation cap",
-      description: "Finalize terms for the valuation cap with lead investor",
-      status: "open",
-      priority: "urgent",
-      dueDate: new Date(new Date().setDate(new Date().getDate() + 3)),
-      assigneeId: 1,
-      taskType: "external" // External task
-    };
-    const healthTaskId2 = this.currentTaskId++;
-    const healthTaskDate2 = new Date();
-    const createdHealthTask2: Task = {
-      id: healthTaskId2,
-      dealId: healthTask2.dealId,
-      title: healthTask2.title,
-      description: healthTask2.description,
-      status: healthTask2.status,
-      priority: healthTask2.priority,
-      dueDate: healthTask2.dueDate,
-      assigneeId: healthTask2.assigneeId,
-      assigneeType: "lawFirm", // External task assigned to law firm
-      taskType: healthTask2.taskType || "external", // Add taskType with default
-      completed: false, // Adding required field
-      createdAt: healthTaskDate2,
-      updatedAt: healthTaskDate2,
-      completedAt: null
-    };
-    this.tasks.set(healthTaskId2, createdHealthTask2);
+
     
     // Issues for HealthTech deal
     const healthIssue1: InsertIssue = {

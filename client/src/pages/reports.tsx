@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Download, BarChart3, PieChart, LineChart } from 'lucide-react';
-import { Deal, Document, Task } from '@shared/schema';
+import { Deal, Document } from '@shared/schema';
 
 export default function Reports() {
   // Get deals for reporting
@@ -30,25 +30,15 @@ export default function Reports() {
   // Type-safe documents array
   const documents = Array.isArray(documentsData) ? documentsData : [];
   
-  // Get tasks for reporting
-  const { data: tasksData, isLoading: tasksLoading } = useQuery({
-    queryKey: ['/api/deals/1/tasks']
-    // In a real app, we would have an endpoint to get all tasks across deals
-  });
-  // Type-safe tasks array
-  const tasks = Array.isArray(tasksData) ? tasksData : [];
-  
   // Calculate summary statistics
   const stats = {
     totalDeals: deals.length || 0,
     activeDeals: deals.filter((deal: any) => deal.status === 'in-progress').length || 0,
     completedDeals: deals.filter((deal: any) => deal.status === 'completed').length || 0,
     documentsCount: documents.length || 0,
-    tasksCount: tasks.length || 0,
-    completedTasks: tasks.filter((task: any) => task.completed).length || 0,
   };
   
-  const isLoading = dealsLoading || documentsLoading || tasksLoading;
+  const isLoading = dealsLoading || documentsLoading;
 
   return (
     <AppLayout>
@@ -117,23 +107,27 @@ export default function Reports() {
               
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-medium text-neutral-600">Task Completion</CardTitle>
+                  <CardTitle className="text-base font-medium text-neutral-600">Deal Activity</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center mb-2">
                     <LineChart className="h-5 w-5 text-warning mr-1" />
-                    <span className="text-2xl font-bold">{stats.tasksCount}</span>
+                    <span className="text-2xl font-bold">{stats.activeDeals + stats.completedDeals}</span>
                   </div>
                   <div className="text-sm text-neutral-500">
                     <div className="flex justify-between">
-                      <span>Completed Tasks:</span>
-                      <span className="font-medium">{stats.completedTasks}</span>
+                      <span>Documents Per Deal:</span>
+                      <span className="font-medium">
+                        {stats.totalDeals > 0 ? 
+                          (stats.documentsCount / stats.totalDeals).toFixed(1) : 
+                          "0"}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Completion Rate:</span>
                       <span className="font-medium">
-                        {stats.tasksCount ? 
-                          `${Math.round((stats.completedTasks / stats.tasksCount) * 100)}%` : 
+                        {stats.totalDeals > 0 ? 
+                          `${Math.round((stats.completedDeals / stats.totalDeals) * 100)}%` : 
                           "0%"}
                       </span>
                     </div>

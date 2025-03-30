@@ -90,12 +90,12 @@ export default function Dashboard() {
   ].filter(item => item.value > 0);
   
   const barData = [
-    { name: 'Jan', tasks: 4, documents: 8 },
-    { name: 'Feb', tasks: 6, documents: 12 },
-    { name: 'Mar', tasks: 8, documents: 15 },
-    { name: 'Apr', tasks: 10, documents: 20 },
-    { name: 'May', tasks: 12, documents: 18 },
-    { name: 'Jun', tasks: 8, documents: 14 }
+    { name: 'Jan', documents: 8 },
+    { name: 'Feb', documents: 12 },
+    { name: 'Mar', documents: 15 },
+    { name: 'Apr', documents: 20 },
+    { name: 'May', documents: 18 },
+    { name: 'Jun', documents: 14 }
   ];
 
   return (
@@ -244,7 +244,7 @@ export default function Dashboard() {
               <Card className="col-span-1">
                 <CardHeader>
                   <CardTitle>Activity Overview</CardTitle>
-                  <CardDescription>Tasks and documents created over time</CardDescription>
+                  <CardDescription>Documents created over time</CardDescription>
                 </CardHeader>
                 <CardContent className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
@@ -262,7 +262,6 @@ export default function Dashboard() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="tasks" fill="#0F62FE" />
                       <Bar dataKey="documents" fill="#42BE65" />
                     </BarChart>
                   </ResponsiveContainer>

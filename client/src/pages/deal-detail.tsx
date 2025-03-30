@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import DealDetail from '@/components/deals/deal-detail';
 import { ChevronLeft } from 'lucide-react';
 import AppLayout from '@/components/layout/app-layout';
-import { Deal, Document, Task, Issue, User, DealCounsel, TimelineEvent } from '@shared/schema';
+import { Deal, Document, Issue, User, DealCounsel, TimelineEvent } from '@shared/schema';
 
 export default function DealDetailPage() {
   const [, params] = useRoute('/deals/:id');
@@ -31,11 +31,7 @@ export default function DealDetailPage() {
     enabled: !!dealId
   });
   
-  // Get tasks
-  const { data: tasks, isLoading: tasksLoading } = useQuery<(Task & { assignee?: User })[]>({
-    queryKey: [`/api/deals/${dealId}/tasks`],
-    enabled: !!dealId
-  });
+  // Task functionality has been removed
   
   // Get issues
   const { data: issues, isLoading: issuesLoading } = useQuery<(Issue & { assignee?: User })[]>({
@@ -69,7 +65,6 @@ export default function DealDetailPage() {
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/users`] });
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/documents`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/tasks`] });
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/issues`] });
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/counsel`] });
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/timeline`] });
@@ -99,7 +94,7 @@ export default function DealDetailPage() {
   
   // Loading state
   const isLoading = dealLoading || usersLoading || documentsLoading || 
-                    tasksLoading || issuesLoading || counselLoading || timelineLoading;
+                    issuesLoading || counselLoading || timelineLoading;
 
   return (
     <AppLayout>
@@ -128,7 +123,6 @@ export default function DealDetailPage() {
               deal={deal}
               dealUsers={formattedDealUsers}
               documents={documents || []}
-              tasks={tasks || []}
               issues={issues || []}
               counsel={counsel || []}
               timelineEvents={timelineEvents || []}

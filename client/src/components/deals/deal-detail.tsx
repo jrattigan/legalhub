@@ -85,9 +85,6 @@ export default function DealDetail({
   const [activeTab, setActiveTab] = useState('overview');
   
   // Calculate progress metrics
-  // Task functionality has been removed
-  const taskProgress = 0;
-  
   const dueDiligenceItems = 12;
   const completedDueDiligenceItems = 9;
   const dueDiligenceProgress = Math.round((completedDueDiligenceItems / dueDiligenceItems) * 100);
