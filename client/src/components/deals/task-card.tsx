@@ -1051,7 +1051,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                   assigneeType: formData.assigneeType || "user",
                   taskType: formData.taskType || "internal",
                   completed: currentTask.completed || false,
-                  assigneeName: null
+                  assigneeName: formData.assigneeName || currentTask.assigneeName || null
                 };
                 
                 // Special handling for custom assignees
@@ -1059,9 +1059,12 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                   formattedData.assigneeName = processedAssigneeId.replace('custom-', '');
                   formattedData.assigneeId = null;
                   formattedData.assigneeType = 'custom';
-                } else {
+                } else if (processedAssigneeId !== null) {
                   formattedData.assigneeId = processedAssigneeId;
                   formattedData.assigneeName = null;
+                } else {
+                  // For unassigned, keep the assigneeId as null but preserve any existing assigneeName
+                  formattedData.assigneeId = null;
                 }
                 
                 // Submit the data using the edit mutation
