@@ -38,6 +38,39 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 
+// AssigneeAvatar component to handle different assignee types
+function AssigneeAvatar({ task }: { task: Task & { assignee?: User } }) {
+  // Internal assignee with user data
+  if (task.assignee) {
+    return (
+      <Avatar className="h-6 w-6" style={{ backgroundColor: task.assignee.avatarColor }}>
+        <AvatarFallback>{task.assignee.initials}</AvatarFallback>
+      </Avatar>
+    );
+  }
+  
+  // Custom assignee
+  if (task.assigneeType === 'custom' && task.assigneeName) {
+    return (
+      <Avatar className="h-6 w-6" style={{ backgroundColor: "#9CA3AF" }}>
+        <AvatarFallback>{task.assigneeName.substring(0, 2).toUpperCase()}</AvatarFallback>
+      </Avatar>
+    );
+  }
+  
+  // Attorney or law firm assignee
+  if ((task.assigneeType === 'attorney' || task.assigneeType === 'firm') && task.assigneeId) {
+    return (
+      <Avatar className="h-6 w-6" style={{ backgroundColor: "#6366F1" }}>
+        <AvatarFallback>{task.assigneeType === 'attorney' ? 'AT' : 'LF'}</AvatarFallback>
+      </Avatar>
+    );
+  }
+  
+  // Return null if no assignee
+  return null;
+}
+
 interface TaskCardProps {
   tasks: (Task & { assignee?: User })[];
   onRefreshData: () => void;
@@ -326,7 +359,11 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
         assigneeId: currentTask.assigneeId ? 
           (currentTask.assigneeType === 'custom' && currentTask.assigneeName ? 
             `custom-${currentTask.assigneeName}` : 
-            currentTask.assigneeId.toString()) : 
+            (currentTask.assigneeType === 'attorney' ? 
+              `attorney-${currentTask.assigneeId.toString()}` : 
+              (currentTask.assigneeType === 'firm' ? 
+                `firm-${currentTask.assigneeId.toString()}` : 
+                currentTask.assigneeId.toString()))) : 
           'unassigned',
         assigneeType: (currentTask.assigneeType === 'attorney' || currentTask.assigneeType === 'firm' || 
                       currentTask.assigneeType === 'custom' || currentTask.assigneeType === 'user') ? 
@@ -1070,12 +1107,15 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                   
                   console.log("Edit with custom assignee:", customName);
                 } else if (processedAssigneeId !== null) {
-                  // Regular assignee with ID
+                  // Regular assignee with ID (including attorney or firm)
                   formattedData.assigneeId = processedAssigneeId;
                   formattedData.assigneeName = null;
+                  
+                  // Set the assignee type based on the form data
+                  // This was set in handleAssigneeId function when processing the ID
                   formattedData.assigneeType = formData.assigneeType || 'user';
                   
-                  console.log("Edit with regular assignee ID:", processedAssigneeId);
+                  console.log(`Edit with ${formData.assigneeType} assignee ID:`, processedAssigneeId);
                 } else {
                   // Unassigned
                   formattedData.assigneeId = null;
