@@ -12,8 +12,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { queryClient } from "@/lib/queryClient";
-import { Building2, Search, PlusCircle } from "lucide-react";
+import { Building2, Search, PlusCircle, Menu, ArrowLeft } from "lucide-react";
 import AppLayout from "@/components/layout/app-layout";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 // Define the schema for company creation form
 const companyFormSchema = z.object({
@@ -48,12 +50,21 @@ export default function CompaniesLayout({ children }: CompaniesLayoutProps) {
   const companyId = params.id ? parseInt(params.id) : null;
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isMobile = useIsMobile();
   
   // Fetch companies data
   const { data: companies, isLoading: companiesLoading } = useQuery<Company[]>({
     queryKey: ['/api/companies'],
     retry: 1,
   });
+
+  // Close sidebar on navigation for mobile
+  useEffect(() => {
+    if (isMobile && companyId) {
+      setSidebarOpen(false);
+    }
+  }, [companyId, isMobile]);
 
   // Form setup for creating a new company
   const form = useForm<CompanyFormValues>({
@@ -132,147 +143,197 @@ export default function CompaniesLayout({ children }: CompaniesLayoutProps) {
     );
   }
 
-  return (
-    <AppLayout>
-      <div className="flex h-[calc(100vh-4rem)]">
-        {/* Left sidebar with companies list */}
-        <div className="w-80 border-r border-neutral-200 flex flex-col h-full">
-          <div className="p-4 border-b border-neutral-200">
-            <h2 className="text-lg font-semibold mb-4">Companies</h2>
-            
-            {/* Search input */}
-            <div className="relative mb-4">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
-              <Input
-                placeholder="Search companies..."
-                className="pl-9 bg-neutral-50"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            
-            {/* Add company button */}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full flex items-center gap-2">
-                  <PlusCircle className="h-4 w-4" />
-                  <span>Add New Company</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Add New Company</DialogTitle>
-                  <DialogDescription>
-                    Enter the company information below to add a new company.
-                  </DialogDescription>
-                </DialogHeader>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="legalName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Legal Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter legal name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="displayName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Display Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter display name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="url"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Website URL</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://company.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="bcvTeam"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>BCV Team (comma-separated)</FormLabel>
-                          <FormControl>
-                            <Textarea placeholder="John Doe, Jane Smith" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button variant="outline" className="dialog-close-button">Cancel</Button>
-                      </DialogClose>
-                      <Button type="submit">Create Company</Button>
-                    </DialogFooter>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          </div>
-          
-          {/* Scrollable companies list */}
-          <ScrollArea className="flex-1">
-            <div className="space-y-0.5 p-2">
-              {filteredCompanies?.map((company) => (
-                <div
-                  key={company.id}
-                  className={`flex items-center p-3 rounded-md cursor-pointer transition-colors ${
-                    companyId === company.id
-                      ? 'bg-primary/10 text-primary font-medium'
-                      : 'text-neutral-600 hover:bg-neutral-100'
-                  }`}
-                  onClick={() => navigate(`/companies/${company.id}`)}
-                >
-                  <Building2 className={`h-4 w-4 mr-3 ${companyId === company.id ? 'text-primary' : 'text-neutral-400'}`} />
-                  <div className="truncate">
-                    <div className="font-medium">{company.displayName}</div>
-                    <div className="text-xs text-neutral-500 truncate">{company.legalName}</div>
-                  </div>
-                </div>
-              ))}
-              
-              {filteredCompanies?.length === 0 && (
-                <div className="text-center p-6 text-neutral-500">
-                  No companies found matching your search.
-                </div>
-              )}
-
-              {companies?.length === 0 && (
-                <div className="text-center p-6 text-neutral-500">
-                  No companies found. Add your first company.
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+  // Sidebar content component to reuse in both desktop and mobile
+  const SidebarContent = () => (
+    <>
+      <div className="p-4 border-b border-neutral-200">
+        <h2 className="text-lg font-semibold mb-4">Companies</h2>
+        
+        {/* Search input */}
+        <div className="relative mb-4">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
+          <Input
+            placeholder="Search companies..."
+            className="pl-9 bg-neutral-50"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
         
-        {/* Right content area */}
-        <div className="flex-1 overflow-auto">
-          {children}
-        </div>
+        {/* Add company button */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="w-full flex items-center gap-2">
+              <PlusCircle className="h-4 w-4" />
+              <span>Add New Company</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Add New Company</DialogTitle>
+              <DialogDescription>
+                Enter the company information below to add a new company.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="legalName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Legal Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter legal name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="displayName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Display Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter display name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Website URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://company.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="bcvTeam"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>BCV Team (comma-separated)</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="John Doe, Jane Smith" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline" className="dialog-close-button">Cancel</Button>
+                  </DialogClose>
+                  <Button type="submit">Create Company</Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
+      
+      {/* Scrollable companies list */}
+      <ScrollArea className="flex-1">
+        <div className="space-y-0.5 p-2">
+          {filteredCompanies?.map((company) => (
+            <div
+              key={company.id}
+              className={`flex items-center p-3 rounded-md cursor-pointer transition-colors ${
+                companyId === company.id
+                  ? 'bg-primary/10 text-primary font-medium'
+                  : 'text-neutral-600 hover:bg-neutral-100'
+              }`}
+              onClick={() => {
+                navigate(`/companies/${company.id}`);
+                if (isMobile) {
+                  setSidebarOpen(false);
+                }
+              }}
+            >
+              <Building2 className={`h-4 w-4 mr-3 ${companyId === company.id ? 'text-primary' : 'text-neutral-400'}`} />
+              <div className="truncate">
+                <div className="font-medium">{company.displayName}</div>
+                <div className="text-xs text-neutral-500 truncate">{company.legalName}</div>
+              </div>
+            </div>
+          ))}
+          
+          {filteredCompanies?.length === 0 && (
+            <div className="text-center p-6 text-neutral-500">
+              No companies found matching your search.
+            </div>
+          )}
+
+          {companies?.length === 0 && (
+            <div className="text-center p-6 text-neutral-500">
+              No companies found. Add your first company.
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </>
+  );
+
+  return (
+    <AppLayout>
+      {isMobile ? (
+        // Mobile layout
+        <div className="flex flex-col h-[calc(100vh-4rem)]">
+          {/* Mobile header with menu button and back button if on detail view */}
+          <div className="flex items-center justify-between border-b border-neutral-200 p-4">
+            {companyId ? (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="mr-2" 
+                onClick={() => navigate('/companies')}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            ) : (
+              <h1 className="text-xl font-semibold">Companies</h1>
+            )}
+            
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] p-0 flex flex-col">
+                <SidebarContent />
+              </SheetContent>
+            </Sheet>
+          </div>
+          
+          {/* Main content area */}
+          <div className="flex-1 overflow-auto">
+            {children}
+          </div>
+        </div>
+      ) : (
+        // Desktop layout
+        <div className="flex h-[calc(100vh-4rem)]">
+          {/* Left sidebar with companies list */}
+          <div className="w-80 border-r border-neutral-200 flex flex-col h-full">
+            <SidebarContent />
+          </div>
+          
+          {/* Right content area */}
+          <div className="flex-1 overflow-auto">
+            {children}
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }
