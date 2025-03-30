@@ -26,6 +26,7 @@ function Router() {
       <Route path="/deals/:id" component={DealDetailPage} />
       <Route path="/documents" component={Documents} />
       <Route path="/counsel" component={Counsel} />
+      <Route path="/counsel/:id" component={Counsel} />
       <Route path="/reports" component={Reports} />
       <Route path="/settings" component={Settings} />
       {/* Fallback to 404 */}

@@ -832,6 +832,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get a specific law firm by ID
+  app.get("/api/law-firms/:id", async (req, res) => {
+    const firmId = parseInt(req.params.id);
+    if (isNaN(firmId)) {
+      return res.status(400).json({ message: "Invalid law firm ID" });
+    }
+
+    const firm = await storage.getLawFirm(firmId);
+    if (!firm) {
+      return res.status(404).json({ message: "Law firm not found" });
+    }
+    
+    res.json(firm);
+  });
+
   // Attorneys API
   app.get("/api/law-firms/:id/attorneys", async (req, res) => {
     const firmId = parseInt(req.params.id);

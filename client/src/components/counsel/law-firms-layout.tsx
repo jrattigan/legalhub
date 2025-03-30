@@ -180,7 +180,11 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="Contact email" {...field} />
+                            <Input 
+                              placeholder="Contact email" 
+                              {...field} 
+                              value={field.value || ""} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -193,7 +197,11 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
                         <FormItem>
                           <FormLabel>Phone</FormLabel>
                           <FormControl>
-                            <Input placeholder="Phone number" {...field} />
+                            <Input 
+                              placeholder="Phone number" 
+                              {...field} 
+                              value={field.value || ""} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
