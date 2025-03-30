@@ -256,7 +256,8 @@ export const attorneys = pgTable("attorneys", {
   name: text("name").notNull(),
   position: text("position").notNull(),
   email: text("email").notNull(),
-  phone: text("phone"),
+  phone: text("phone"), // Renamed to "Work" in UI
+  mobile: text("mobile"), // New field for mobile number
   initials: text("initials").notNull(),
   avatarColor: text("avatar_color").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -268,6 +269,7 @@ export const insertAttorneySchema = createInsertSchema(attorneys).pick({
   position: true,
   email: true,
   phone: true,
+  mobile: true,
   initials: true,
   avatarColor: true,
 });

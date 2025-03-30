@@ -231,22 +231,6 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                   <div className="text-neutral-600">{lawFirm.specialty}</div>
                 </div>
               </div>
-              
-              <div className="flex items-start">
-                <Mail className="w-5 h-5 text-neutral-500 mt-0.5 mr-3" />
-                <div>
-                  <div className="font-medium">Email</div>
-                  <div className="text-neutral-600">{lawFirm.email}</div>
-                </div>
-              </div>
-              
-              <div className="flex items-start">
-                <Phone className="w-5 h-5 text-neutral-500 mt-0.5 mr-3" />
-                <div>
-                  <div className="font-medium">Phone</div>
-                  <div className="text-neutral-600">{lawFirm.phone || 'Not provided'}</div>
-                </div>
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -255,8 +239,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-lg">Attorneys at {lawFirm.name}</CardTitle>
-              <CardDescription>Manage attorneys associated with this law firm</CardDescription>
+              <CardTitle className="text-lg">Attorneys</CardTitle>
             </div>
             <Dialog open={isAddAttorneyOpen} onOpenChange={setIsAddAttorneyOpen}>
               <DialogTrigger asChild>
@@ -307,12 +290,23 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
+                    <Label htmlFor="phone">Work</Label>
                     <Input 
                       id="phone" 
                       name="phone" 
                       type="tel" 
                       value={newAttorney.phone || ''} 
+                      onChange={handleInputChange} 
+                      placeholder="(555) 123-4567" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mobile">Mobile</Label>
+                    <Input 
+                      id="mobile" 
+                      name="mobile" 
+                      type="tel" 
+                      value={newAttorney.mobile || ''} 
                       onChange={handleInputChange} 
                       placeholder="(555) 123-4567" 
                     />
@@ -357,7 +351,13 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                         {attorney.phone && (
                           <div className="flex items-center">
                             <Phone className="w-4 h-4 text-neutral-500 mr-2" />
-                            <span>{attorney.phone}</span>
+                            <span>Work: {attorney.phone}</span>
+                          </div>
+                        )}
+                        {attorney.mobile && (
+                          <div className="flex items-center">
+                            <Phone className="w-4 h-4 text-neutral-500 mr-2" />
+                            <span>Mobile: {attorney.mobile}</span>
                           </div>
                         )}
                       </div>
@@ -381,7 +381,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
       {/* Related deals card */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Deals with {lawFirm.name}</CardTitle>
+          <CardTitle className="text-lg">Deals</CardTitle>
         </CardHeader>
         <CardContent>
           {deals && deals.length > 0 ? (
@@ -401,14 +401,10 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                   </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 text-sm">
-                    <div className="flex items-center">
-                      <FileText className="w-4 h-4 text-neutral-500 mr-2" />
-                      <span>Deal ID: {deal.dealId}</span>
-                    </div>
                     {deal.dueDate && (
                       <div className="flex items-center">
                         <Calendar className="w-4 h-4 text-neutral-500 mr-2" />
-                        <span>Due: {format(new Date(deal.dueDate), 'MMM d, yyyy')}</span>
+                        <span>Closing Date: {format(new Date(deal.dueDate), 'MMM d, yyyy')}</span>
                       </div>
                     )}
                   </div>
