@@ -24,14 +24,30 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
 
   // Fetch attorneys for this law firm
   const { data: attorneys, isLoading: attorneysLoading, error: attorneysError } = useQuery<Attorney[]>({
-    queryKey: ['/api/law-firms', lawFirmId, 'attorneys'],
+    queryKey: ['/api/attorneys'],
+    queryFn: async () => {
+      if (!lawFirmId) return [];
+      const response = await fetch(`/api/law-firms/${lawFirmId}/attorneys`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch attorneys');
+      }
+      return response.json();
+    },
     enabled: !!lawFirmId,
     retry: 1,
   });
   
   // Fetch deals for this law firm
   const { data: deals, isLoading: dealsLoading, error: dealsError } = useQuery<Deal[]>({
-    queryKey: ['/api/law-firms', lawFirmId, 'deals'],
+    queryKey: ['/api/deals/law-firm', lawFirmId],
+    queryFn: async () => {
+      if (!lawFirmId) return [];
+      const response = await fetch(`/api/law-firms/${lawFirmId}/deals`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch deals');
+      }
+      return response.json();
+    },
     enabled: !!lawFirmId,
     retry: 1,
   });

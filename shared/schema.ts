@@ -279,7 +279,9 @@ export const dealCounsels = pgTable("deal_counsels", {
   lawFirmId: integer("law_firm_id").notNull(),
   role: text("role").notNull(), // lead, supporting, etc.
   attorneyId: integer("attorney_id"),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const insertDealCounselSchema = createInsertSchema(dealCounsels).pick({
@@ -287,6 +289,7 @@ export const insertDealCounselSchema = createInsertSchema(dealCounsels).pick({
   lawFirmId: true,
   role: true,
   attorneyId: true,
+  notes: true,
 });
 
 // Timeline events
