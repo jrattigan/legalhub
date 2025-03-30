@@ -272,40 +272,46 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
         return 'bg-neutral-100 text-neutral-800';
     }
   };
+  
+  // Format phone number consistently
+  const formatPhoneNumber = (phone: string) => {
+    // If no phone number, return empty string
+    if (!phone) return '';
+    
+    // Remove any non-digit characters
+    const digitsOnly = phone.replace(/\D/g, '');
+    
+    // Format consistently as (XXX) XXX-XXXX for 10-digit numbers
+    if (digitsOnly.length === 10) {
+      return `(${digitsOnly.substring(0, 3)}) ${digitsOnly.substring(3, 6)}-${digitsOnly.substring(6)}`;
+    }
+    
+    // Return the original if not 10 digits
+    return phone;
+  };
 
   return (
     <div className="p-6">
-      {/* Law firm header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">{lawFirm.name}</h1>
-        <p className="text-neutral-500 text-sm">{lawFirm.specialty}</p>
+      {/* Law firm header with edit button */}
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">{lawFirm.name}</h1>
+          <p className="text-neutral-500 text-sm">
+            <span className="inline-flex items-center">
+              <Briefcase className="w-4 h-4 mr-2" />
+              {lawFirm.specialty}
+            </span>
+          </p>
+        </div>
+        <Button variant="outline" size="sm" className="h-9">
+          <Edit className="h-4 w-4 mr-2" />
+          Edit Law Firm
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Law firm details card */}
-        <Card className="lg:col-span-1">
-          <CardContent className="pt-6">
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <Building className="w-5 h-5 text-neutral-500 mt-0.5 mr-3" />
-                <div>
-                  <div className="text-xl font-medium text-neutral-600">{lawFirm.name}</div>
-                </div>
-              </div>
-              
-              <div className="flex items-start">
-                <Briefcase className="w-5 h-5 text-neutral-500 mt-0.5 mr-3" />
-                <div>
-                  <div className="font-medium">Specialty</div>
-                  <div className="text-neutral-600">{lawFirm.specialty}</div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-1 gap-6 mb-6">
         {/* Associated attorneys card */}
-        <Card className="lg:col-span-2">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle className="text-lg">Attorneys</CardTitle>
@@ -428,7 +434,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                         </Button>
                       </div>
                       
-                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                      <div className="mt-3 grid grid-cols-1 gap-2 text-sm">
                         <div className="flex items-center">
                           <Mail className="w-4 h-4 text-neutral-500 mr-2" />
                           <span>{attorney.email}</span>
@@ -436,13 +442,13 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                         {attorney.phone && (
                           <div className="flex items-center">
                             <Phone className="w-4 h-4 text-neutral-500 mr-2" />
-                            <span>Work: {attorney.phone}</span>
+                            <span><strong>Work:</strong> {formatPhoneNumber(attorney.phone)}</span>
                           </div>
                         )}
                         {attorney.mobile && (
                           <div className="flex items-center">
                             <Phone className="w-4 h-4 text-neutral-500 mr-2" />
-                            <span>Mobile: {attorney.mobile}</span>
+                            <span><strong>Mobile:</strong> {formatPhoneNumber(attorney.mobile)}</span>
                           </div>
                         )}
                       </div>
@@ -573,7 +579,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                     </Badge>
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 text-sm">
+                  <div className="grid grid-cols-1 gap-3 mb-4 text-sm">
                     {deal.dueDate && (
                       <div className="flex items-center">
                         <Calendar className="w-4 h-4 text-neutral-500 mr-2" />
