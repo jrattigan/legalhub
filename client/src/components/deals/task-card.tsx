@@ -342,13 +342,44 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   // Make sure form gets reset when dialog closes
   useEffect(() => {
     if (!isDialogOpen) {
-      form.reset();
+      // Reset the form with clean default values when add dialog closes
+      form.reset({
+        title: '',
+        description: '', 
+        status: 'active',
+        priority: '',
+        dueDate: null,
+        assigneeId: null,
+        assigneeType: 'user',
+        taskType: '',
+        completed: false,
+        dealId: dealId || undefined
+      });
     }
-  }, [isDialogOpen, form]);
+  }, [isDialogOpen, form, dealId]);
   
   // Set form values when editing a task
   useEffect(() => {
     if (currentTask && isEditDialogOpen) {
+      // Create the right assigneeId format based on assignee type
+      let formattedAssigneeId = 'unassigned';
+      
+      if (currentTask.assigneeId) {
+        if (currentTask.assigneeType === 'attorney') {
+          formattedAssigneeId = `attorney-${currentTask.assigneeId}`;
+        } else if (currentTask.assigneeType === 'firm') {
+          formattedAssigneeId = `firm-${currentTask.assigneeId}`;
+        } else if (currentTask.assigneeType === 'user') {
+          formattedAssigneeId = currentTask.assigneeId.toString();
+        }
+      }
+      
+      // For custom assignees, use the name
+      if (currentTask.assigneeType === 'custom' && currentTask.assigneeName) {
+        formattedAssigneeId = `custom-${currentTask.assigneeName}`;
+      }
+      
+      // Reset form with this task's values
       form.reset({
         title: currentTask.title,
         description: currentTask.description,
@@ -356,15 +387,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
         priority: currentTask.priority,
         dueDate: currentTask.dueDate,
         taskType: currentTask.taskType || 'internal',
-        assigneeId: currentTask.assigneeId ? 
-          (currentTask.assigneeType === 'custom' && currentTask.assigneeName ? 
-            `custom-${currentTask.assigneeName}` : 
-            (currentTask.assigneeType === 'attorney' ? 
-              `attorney-${currentTask.assigneeId.toString()}` : 
-              (currentTask.assigneeType === 'firm' ? 
-                `firm-${currentTask.assigneeId.toString()}` : 
-                currentTask.assigneeId.toString()))) : 
-          'unassigned',
+        assigneeId: formattedAssigneeId,
         assigneeType: (currentTask.assigneeType === 'attorney' || currentTask.assigneeType === 'firm' || 
                       currentTask.assigneeType === 'custom' || currentTask.assigneeType === 'user') ? 
                       (currentTask.assigneeType as "attorney" | "firm" | "custom" | "user") : 'user',
@@ -379,6 +402,14 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       }
     }
   }, [currentTask, isEditDialogOpen, form]);
+  
+  // Reset newAssigneeName when edit dialog closes
+  useEffect(() => {
+    if (!isEditDialogOpen && newAssigneeName.trim()) {
+      // Edit dialog was closed, reset the new assignee name
+      setNewAssigneeName('');
+    }
+  }, [isEditDialogOpen, newAssigneeName]);
   
   // Initialize and track custom assignees from existing tasks
   useEffect(() => {
