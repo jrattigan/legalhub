@@ -699,9 +699,9 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                                           <SelectItem 
                                             key={`attorney-${attorney.id}`} 
                                             value={`attorney-${attorney.id}`}
-                                            className="pl-6 text-sm" // Indentation for attorneys under their firms (to the right)
+                                            className="pl-8 text-sm" // Increased indentation for attorneys under their firms
                                           >
-                                            {attorney.name} ({attorney.position})
+                                            → {attorney.name} ({attorney.position})
                                           </SelectItem>
                                         ))
                                       }
@@ -1248,9 +1248,9 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                                         <SelectItem 
                                           key={`attorney-${attorney.id}`} 
                                           value={`attorney-${attorney.id}`}
-                                          className="pl-6 text-sm" // Indent to show nesting
+                                          className="pl-8 text-sm" // Increased indentation for attorneys under their firms
                                         >
-                                          {attorney.name} ({attorney.position})
+                                          → {attorney.name} ({attorney.position})
                                         </SelectItem>
                                       ))}
                                   </React.Fragment>
