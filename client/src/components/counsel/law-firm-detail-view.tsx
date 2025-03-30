@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { AlertCircle, Building, Mail, Phone, User, Briefcase, FileText, Calendar, ArrowRight, UserPlus, Edit, Upload } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { convertFileToBase64 } from "@/lib/file-helpers";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Format phone number consistently - keep outside component to avoid re-definition on each render
 const formatPhoneNumber = (phone: string): string => {
@@ -46,6 +47,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
   const [editingAttorney, setEditingAttorney] = useState<Attorney | null>(null);
   const [editingLawFirm, setEditingLawFirm] = useState<LawFirm | null>(null);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   // Create attorney mutation
   const addAttorneyMutation = useMutation({
@@ -649,21 +651,27 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                         </Button>
                       </div>
                       
-                      <div className="mt-3 grid grid-cols-1 gap-2 text-sm">
+                      <div className={`mt-3 grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-2 text-sm`}>
                         <div className="flex items-center">
                           <Mail className="w-4 h-4 text-neutral-500 mr-2" />
-                          <span>{attorney.email}</span>
+                          <a href={`mailto:${attorney.email}`} className="text-primary hover:underline truncate">
+                            {attorney.email}
+                          </a>
                         </div>
                         {attorney.phone && (
                           <div className="flex items-center">
                             <Phone className="w-4 h-4 text-neutral-500 mr-2" />
-                            <span><strong>Work:</strong> {formatPhoneNumber(attorney.phone)}</span>
+                            <a href={`tel:${attorney.phone}`} className="hover:underline">
+                              <strong>Work:</strong> {formatPhoneNumber(attorney.phone)}
+                            </a>
                           </div>
                         )}
                         {attorney.mobile && (
-                          <div className="flex items-center">
+                          <div className={`flex items-center ${isMobile ? '' : 'col-span-2'}`}>
                             <Phone className="w-4 h-4 text-neutral-500 mr-2" />
-                            <span><strong>Mobile:</strong> {formatPhoneNumber(attorney.mobile)}</span>
+                            <a href={`tel:${attorney.mobile}`} className="hover:underline">
+                              <strong>Mobile:</strong> {formatPhoneNumber(attorney.mobile)}
+                            </a>
                           </div>
                         )}
                       </div>
@@ -685,13 +693,13 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
       </div>
       
       {/* Related deals card */}
-      {/* Edit Attorney Dialog */}
+      {/* Edit Attorney Dialog - Always defined with consistent hooks */}
       <Dialog open={isEditAttorneyOpen} onOpenChange={setIsEditAttorneyOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Attorney</DialogTitle>
             <DialogDescription>
-              Update attorney information for {editingAttorney?.name}
+              Update attorney information for {editingAttorney?.name || 'this attorney'}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditAttorney} className="space-y-4">
