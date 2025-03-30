@@ -102,6 +102,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
   const [isNewAssigneeDialogOpen, setIsNewAssigneeDialogOpen] = useState(false);
   const [newAssigneeName, setNewAssigneeName] = useState('');
   const [currentAssigneeType, setCurrentAssigneeType] = useState<'attorney' | 'lawFirm'>('attorney');
+  const [showAllTasks, setShowAllTasks] = useState(false);
   // Track custom assignees that have been added during this session
   const [customAssignees, setCustomAssignees] = useState<{id: string, name: string}[]>([]);
   // Track task assignees to identify which ones are being used
@@ -935,7 +936,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
         {formattedTasks.internalPending.length > 0 && (
           <div className="mb-4">
             <h3 className="text-xs font-medium text-neutral-800 mb-2">Internal Tasks</h3>
-            {formattedTasks.internalPending.slice(0, preview ? 2 : undefined).map((task) => (
+            {formattedTasks.internalPending.slice(0, preview && !showAllTasks ? 2 : undefined).map((task) => (
               <div key={task.id} className="flex items-start p-2 rounded hover:bg-neutral-50">
                 <Checkbox 
                   id={`task-${task.id}`}
@@ -990,7 +991,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
         {formattedTasks.externalPending.length > 0 && (
           <div className="mb-4">
             <h3 className="text-xs font-medium text-neutral-800 mb-2">External Tasks</h3>
-            {formattedTasks.externalPending.slice(0, preview ? 2 : undefined).map((task) => (
+            {formattedTasks.externalPending.slice(0, preview && !showAllTasks ? 2 : undefined).map((task) => (
               <div key={task.id} className="flex items-start p-2 rounded hover:bg-neutral-50">
                 <Checkbox 
                   id={`task-${task.id}`}
@@ -1046,7 +1047,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
           <div className="border-t border-neutral-100 pt-2 mt-3">
             <h3 className="text-xs font-medium text-neutral-500 mb-2">Completed Tasks</h3>
             
-            {formattedTasks.completed.slice(0, preview ? 1 : undefined).map((task) => (
+            {formattedTasks.completed.slice(0, preview && !showAllTasks ? 1 : undefined).map((task) => (
               <div key={task.id} className="flex items-start p-2 rounded hover:bg-neutral-50">
                 <Checkbox 
                   id={`task-${task.id}`}
@@ -1106,8 +1107,9 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
           <Button 
             variant="link" 
             className="w-full text-center text-xs text-primary border-t border-neutral-100 pt-2 mt-2 hover:text-primary-dark"
+            onClick={() => setShowAllTasks(!showAllTasks)}
           >
-            View all tasks ({tasks.length})
+            {showAllTasks ? "Show less" : `View all tasks (${tasks.length})`}
           </Button>
         )}
       </div>
