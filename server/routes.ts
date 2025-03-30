@@ -790,6 +790,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         priority: z.string().optional(),
         dueDate: z.union([z.date(), z.null()]).optional(),
         assigneeId: z.union([z.number(), z.null()]).optional(),
+        assigneeName: z.union([z.string(), z.null()]).optional(),
+        assigneeType: z.string().optional(),
+        taskType: z.string().optional(),
         completed: z.boolean().optional()
       });
       
