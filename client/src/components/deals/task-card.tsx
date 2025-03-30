@@ -39,8 +39,8 @@ import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 
 // AssigneeAvatar component to handle different assignee types
-function AssigneeAvatar({ task }: { task: Task & { assignee?: User } }) {
-  // Internal assignee with user data
+function AssigneeAvatar({ task }: { task: Task & { assignee?: any } }) {
+  // If the task has an assignee object (populated by getTasksByDeal)
   if (task.assignee) {
     return (
       <Avatar className="h-6 w-6" style={{ backgroundColor: task.assignee.avatarColor }}>
@@ -49,20 +49,37 @@ function AssigneeAvatar({ task }: { task: Task & { assignee?: User } }) {
     );
   }
   
-  // Custom assignee
+  // Handle by assignee type if no assignee object is available
+  
+  // Custom assignee without assignee object
   if (task.assigneeType === 'custom' && task.assigneeName) {
+    // Create initials from name
+    const nameParts = task.assigneeName.split(' ');
+    const initials = nameParts.length > 1 
+      ? `${nameParts[0][0] || ''}${nameParts[1][0] || ''}`.toUpperCase() 
+      : `${task.assigneeName.substring(0, 2)}`.toUpperCase();
+      
     return (
-      <Avatar className="h-6 w-6" style={{ backgroundColor: "#9CA3AF" }}>
-        <AvatarFallback>{task.assigneeName.substring(0, 2).toUpperCase()}</AvatarFallback>
+      <Avatar className="h-6 w-6" style={{ backgroundColor: "#94A3B8" }}>
+        <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
     );
   }
   
-  // Attorney or law firm assignee
-  if ((task.assigneeType === 'attorney' || task.assigneeType === 'firm') && task.assigneeId) {
+  // Attorney assignee without assignee object
+  if (task.assigneeType === 'attorney' && task.assigneeId) {
     return (
-      <Avatar className="h-6 w-6" style={{ backgroundColor: "#6366F1" }}>
-        <AvatarFallback>{task.assigneeType === 'attorney' ? 'AT' : 'LF'}</AvatarFallback>
+      <Avatar className="h-6 w-6" style={{ backgroundColor: "#8B5CF6" }}>
+        <AvatarFallback>AT</AvatarFallback>
+      </Avatar>
+    );
+  }
+  
+  // Law firm assignee without assignee object
+  if (task.assigneeType === 'firm' && task.assigneeId) {
+    return (
+      <Avatar className="h-6 w-6" style={{ backgroundColor: "#8B5CF6" }}>
+        <AvatarFallback>LF</AvatarFallback>
       </Avatar>
     );
   }
@@ -72,7 +89,7 @@ function AssigneeAvatar({ task }: { task: Task & { assignee?: User } }) {
 }
 
 interface TaskCardProps {
-  tasks: (Task & { assignee?: User })[];
+  tasks: (Task & { assignee?: User | Attorney | LawFirm | { name: string, type: 'custom', initials: string, avatarColor: string } })[];
   onRefreshData: () => void;
   preview?: boolean;
   dealId?: number;

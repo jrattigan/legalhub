@@ -1786,21 +1786,83 @@ export class MemStorage implements IStorage {
     return this.tasks.get(id);
   }
 
-  async getTasksByDeal(dealId: number): Promise<(Task & { assignee?: User })[]> {
+  async getTasksByDeal(dealId: number): Promise<(Task & { assignee?: User | Attorney | LawFirm | { name: string, type: 'custom', initials: string, avatarColor: string } })[]> {
     const dealTasks = Array.from(this.tasks.values())
       .filter((task) => task.dealId === dealId);
     
     return dealTasks.map(task => {
-      if (!task.assigneeId) {
+      // For tasks without an assignee
+      if (!task.assigneeId && !task.assigneeName) {
         return { ...task, assignee: undefined };
       }
       
-      const assignee = this.users.get(task.assigneeId);
-      if (!assignee) {
-        return { ...task, assignee: undefined };
+      // Custom assignee (just a name string, not linked to a DB entity)
+      if (task.assigneeType === 'custom' && task.assigneeName) {
+        // Create a virtual assignee object with name and initials for display
+        const nameParts = task.assigneeName.split(' ');
+        const initials = nameParts.length > 1 
+          ? `${nameParts[0][0] || ''}${nameParts[1][0] || ''}`.toUpperCase() 
+          : `${nameParts[0][0] || ''}${nameParts[0][1] || ''}`.toUpperCase();
+        
+        return { 
+          ...task, 
+          assignee: {
+            name: task.assigneeName,
+            type: 'custom',
+            initials,
+            avatarColor: '#94A3B8' // Slate-400 color for custom assignees
+          }
+        };
       }
       
-      return { ...task, assignee };
+      // User assignee
+      if (task.assigneeType === 'user' && task.assigneeId) {
+        const assignee = this.users.get(task.assigneeId);
+        if (!assignee) {
+          return { ...task, assignee: undefined };
+        }
+        
+        return { ...task, assignee };
+      }
+      
+      // Attorney assignee
+      if (task.assigneeType === 'attorney' && task.assigneeId) {
+        const assignee = this.attorneys.get(task.assigneeId);
+        if (!assignee) {
+          return { ...task, assignee: undefined };
+        }
+        
+        // Return attorney with custom initials and avatar color
+        return { 
+          ...task, 
+          assignee: {
+            ...assignee,
+            initials: 'AT', // Attorney
+            avatarColor: '#8B5CF6' // Purple-500 for external assignees
+          }
+        };
+      }
+      
+      // Law firm assignee
+      if (task.assigneeType === 'firm' && task.assigneeId) {
+        const assignee = this.lawFirms.get(task.assigneeId);
+        if (!assignee) {
+          return { ...task, assignee: undefined };
+        }
+        
+        // Return law firm with custom initials and avatar color
+        return { 
+          ...task, 
+          assignee: {
+            ...assignee,
+            initials: 'LF', // Law Firm
+            avatarColor: '#8B5CF6' // Purple-500 for external assignees
+          }
+        };
+      }
+      
+      // Fallback for any other case
+      return { ...task, assignee: undefined };
     });
   }
 
