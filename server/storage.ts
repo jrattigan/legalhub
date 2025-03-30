@@ -76,7 +76,7 @@ export interface IStorage {
   getAttorneysByFirm(firmId: number): Promise<Attorney[]>;
   getAttorneys(): Promise<Attorney[]>;
   createAttorney(attorney: InsertAttorney): Promise<Attorney>;
-  updateAttorney(id: number, attorney: Partial<InsertAttorney>): Promise<Attorney | undefined>;
+  updateAttorney(id: number, attorney: Partial<Attorney>): Promise<Attorney | undefined>;
   deleteAttorney(id: number): Promise<boolean>;
 
   // Deal Counsels
@@ -310,7 +310,8 @@ export class MemStorage implements IStorage {
       ...attorney1, 
       id: attorneyId1, 
       createdAt: new Date(),
-      phone: attorney1.phone || null
+      phone: attorney1.phone || null,
+      mobile: attorney1.mobile || null
     };
     this.attorneys.set(attorneyId1, createdAttorney1);
     
@@ -319,7 +320,8 @@ export class MemStorage implements IStorage {
       ...attorney2, 
       id: attorneyId2, 
       createdAt: new Date(),
-      phone: attorney2.phone || null
+      phone: attorney2.phone || null,
+      mobile: attorney2.mobile || null
     };
     this.attorneys.set(attorneyId2, createdAttorney2);
 
@@ -1717,6 +1719,10 @@ export class MemStorage implements IStorage {
   async getAttorneys(): Promise<Attorney[]> {
     return Array.from(this.attorneys.values());
   }
+  
+  async getAttorney(id: number): Promise<Attorney | undefined> {
+    return this.attorneys.get(id);
+  }
 
   async createAttorney(insertAttorney: InsertAttorney): Promise<Attorney> {
     const id = this.currentAttorneyId++;
@@ -1724,22 +1730,27 @@ export class MemStorage implements IStorage {
       ...insertAttorney, 
       id,
       phone: insertAttorney.phone || null,
+      mobile: insertAttorney.mobile || null,
       createdAt: new Date() 
     };
     this.attorneys.set(id, attorney);
     return attorney;
   }
-
-  async updateAttorney(id: number, attorneyUpdate: Partial<InsertAttorney>): Promise<Attorney | undefined> {
-    const existingAttorney = this.attorneys.get(id);
-    if (!existingAttorney) {
+  
+  async updateAttorney(id: number, data: Partial<Attorney>): Promise<Attorney | undefined> {
+    const attorney = this.attorneys.get(id);
+    if (!attorney) {
       return undefined;
     }
     
-    const updatedAttorney: Attorney = { 
-      ...existingAttorney, 
-      ...attorneyUpdate
+    const updatedAttorney: Attorney = {
+      ...attorney,
+      ...data,
+      // Ensure these fields are properly typed
+      phone: data.phone !== undefined ? data.phone : attorney.phone,
+      mobile: data.mobile !== undefined ? data.mobile : attorney.mobile
     };
+    
     this.attorneys.set(id, updatedAttorney);
     return updatedAttorney;
   }

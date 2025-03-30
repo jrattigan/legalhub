@@ -898,6 +898,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create attorney" });
     }
   });
+  
+  // Update an attorney
+  app.patch("/api/attorneys/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      
+      // Get the current attorney to make sure it exists
+      const existingAttorney = await storage.getAttorney(id);
+      if (!existingAttorney) {
+        return res.status(404).json({ message: "Attorney not found" });
+      }
+      
+      // Update the attorney
+      const updatedAttorney = await storage.updateAttorney(id, req.body);
+      res.json(updatedAttorney);
+    } catch (error) {
+      console.error("Error updating attorney:", error);
+      res.status(500).json({ message: "Failed to update attorney" });
+    }
+  });
 
   // Deal Counsels API
   app.get("/api/deals/:id/counsel", async (req, res) => {

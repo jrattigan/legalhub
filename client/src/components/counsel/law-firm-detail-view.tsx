@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { AlertCircle, Building, Mail, Phone, User, Briefcase, FileText, Calendar, ArrowRight, UserPlus } from "lucide-react";
+import { AlertCircle, Building, Mail, Phone, User, Briefcase, FileText, Calendar, ArrowRight, UserPlus, Edit } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -21,7 +21,9 @@ interface LawFirmDetailViewProps {
 
 export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps) {
   const [isAddAttorneyOpen, setIsAddAttorneyOpen] = useState(false);
+  const [isEditAttorneyOpen, setIsEditAttorneyOpen] = useState(false);
   const [newAttorney, setNewAttorney] = useState<Partial<InsertAttorney>>({});
+  const [editingAttorney, setEditingAttorney] = useState<Attorney | null>(null);
   const { toast } = useToast();
   
   // Create attorney mutation
@@ -73,6 +75,77 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
       });
     }
   });
+  
+  // Update attorney mutation
+  const updateAttorneyMutation = useMutation({
+    mutationFn: async (attorney: Attorney) => {
+      const response = await fetch(`/api/attorneys/${attorney.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: attorney.name,
+          position: attorney.position,
+          email: attorney.email,
+          phone: attorney.phone,
+          mobile: attorney.mobile
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update attorney');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      // Reset form and close dialog
+      setEditingAttorney(null);
+      setIsEditAttorneyOpen(false);
+      
+      // Invalidate attorneys query to refetch
+      queryClient.invalidateQueries({ queryKey: ['/api/attorneys'] });
+      
+      toast({
+        title: "Attorney updated",
+        description: "The attorney information has been successfully updated.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to update attorney",
+        description: error.message || "An error occurred while updating the attorney. Please try again.",
+      });
+    }
+  });
+  
+  // Handle edit input change
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditingAttorney(prev => {
+      if (!prev) return null;
+      return { ...prev, [name]: value };
+    });
+  };
+  
+  // Submit edit attorney form
+  const handleEditAttorney = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAttorney) return;
+    
+    if (!editingAttorney.name || !editingAttorney.email) {
+      toast({
+        variant: "destructive",
+        title: "Missing information",
+        description: "Attorney name and email are required.",
+      });
+      return;
+    }
+    
+    updateAttorneyMutation.mutate(editingAttorney);
+  };
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -211,16 +284,12 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Law firm details card */}
         <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="text-lg">Law Firm Information</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="space-y-4">
               <div className="flex items-start">
                 <Building className="w-5 h-5 text-neutral-500 mt-0.5 mr-3" />
                 <div>
-                  <div className="font-medium">Name</div>
-                  <div className="text-neutral-600">{lawFirm.name}</div>
+                  <div className="text-xl font-medium text-neutral-600">{lawFirm.name}</div>
                 </div>
               </div>
               
@@ -340,8 +409,24 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                       <AvatarFallback>{attorney.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <div className="font-medium">{attorney.name}</div>
-                      <div className="text-sm text-neutral-500">{attorney.position}</div>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium">{attorney.name}</div>
+                          <div className="text-sm text-neutral-500">{attorney.position}</div>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0"
+                          title="Edit attorney"
+                          onClick={() => {
+                            setEditingAttorney(attorney);
+                            setIsEditAttorneyOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
                       
                       <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                         <div className="flex items-center">
@@ -379,6 +464,92 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
       </div>
       
       {/* Related deals card */}
+      {/* Edit Attorney Dialog */}
+      <Dialog open={isEditAttorneyOpen} onOpenChange={setIsEditAttorneyOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Attorney</DialogTitle>
+            <DialogDescription>
+              Update attorney information for {editingAttorney?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditAttorney} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Name</Label>
+              <Input 
+                id="edit-name" 
+                name="name" 
+                value={editingAttorney?.name || ''} 
+                onChange={handleEditInputChange} 
+                placeholder="John Smith" 
+                required 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-position">Position</Label>
+              <Input 
+                id="edit-position" 
+                name="position" 
+                value={editingAttorney?.position || ''} 
+                onChange={handleEditInputChange} 
+                placeholder="Partner" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input 
+                id="edit-email" 
+                name="email" 
+                type="email" 
+                value={editingAttorney?.email || ''} 
+                onChange={handleEditInputChange} 
+                placeholder="john.smith@example.com" 
+                required 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone">Work</Label>
+              <Input 
+                id="edit-phone" 
+                name="phone" 
+                type="tel" 
+                value={editingAttorney?.phone || ''} 
+                onChange={handleEditInputChange} 
+                placeholder="(555) 123-4567" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-mobile">Mobile</Label>
+              <Input 
+                id="edit-mobile" 
+                name="mobile" 
+                type="tel" 
+                value={editingAttorney?.mobile || ''} 
+                onChange={handleEditInputChange} 
+                placeholder="(555) 123-4567" 
+              />
+            </div>
+            <DialogFooter className="mt-6">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsEditAttorneyOpen(false)}
+                disabled={updateAttorneyMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={updateAttorneyMutation.isPending || !editingAttorney?.name || !editingAttorney?.email}
+              >
+                {updateAttorneyMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Related deals card */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Deals</CardTitle>
@@ -390,7 +561,9 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                 <div key={deal.id} className="p-4 border rounded-lg hover:border-primary transition-colors">
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h3 className="font-medium text-lg">{formatDealTitle(deal)}</h3>
+                      <Link href={`/deals/${deal.id}`}>
+                        <h3 className="font-medium text-lg hover:text-primary transition-colors">{formatDealTitle(deal)}</h3>
+                      </Link>
                       <div className="text-sm text-neutral-500">
                         {deal.description || 'No description provided'}
                       </div>
@@ -409,12 +582,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                     )}
                   </div>
                   
-                  <Link href={`/deals/${deal.id}`}>
-                    <Button variant="outline" className="w-full sm:w-auto">
-                      View Deal Details
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </Link>
+                  {/* Removed button as deal title is now a link */}
                 </div>
               ))}
             </div>
