@@ -512,12 +512,12 @@ export default function DealDetail({
   
   // Mobile tab items with icons for easier navigation
   const tabItems = [
-    { id: 'overview', label: 'Overview', icon: <Eye className="h-4 w-4" /> },
-    { id: 'documents', label: 'Docs', icon: <File className="h-4 w-4" /> },
-    { id: 'issues', label: 'Issues', icon: <Alert className="h-4 w-4" /> },
-    { id: 'team', label: 'Team', icon: <Users className="h-4 w-4" /> },
-    { id: 'allocations', label: 'Allocations', icon: <DollarSign className="h-4 w-4" /> },
-    { id: 'timeline', label: 'Timeline', icon: <Clock className="h-4 w-4" /> },
+    { id: 'overview', label: 'Overview', icon: <Eye className="h-5 w-5" />, description: 'Deal summary and progress' },
+    { id: 'documents', label: 'Documents', icon: <File className="h-5 w-5" />, description: 'All deal documents' },
+    { id: 'issues', label: 'Issues', icon: <Alert className="h-5 w-5" />, description: 'Outstanding issues' },
+    { id: 'team', label: 'Team', icon: <Users className="h-5 w-5" />, description: 'Deal team members' },
+    { id: 'allocations', label: 'Financials', icon: <DollarSign className="h-5 w-5" />, description: 'Financial details' },
+    { id: 'timeline', label: 'Timeline', icon: <Clock className="h-5 w-5" />, description: 'Deal history and events' },
   ];
 
   const isMobile = useIsMobile();
@@ -1368,29 +1368,62 @@ export default function DealDetail({
         </DialogContent>
       </Dialog>
       
-      <div className="border-b border-neutral-200 bg-white px-6 py-4">
+      <div className={`border-b border-neutral-200 px-6 py-5 ${
+          deal.status === 'urgent' ? 'bg-red-50' : 
+          deal.status === 'in-progress' ? 'bg-blue-50' : 
+          deal.status === 'completed' ? 'bg-green-50' : 
+          'bg-white'
+        }`}>
         <div className="flex justify-between items-start md:items-center">
-          <div>
-            <h1 className="font-semibold text-xl text-neutral-800">{formatDealTitle(deal)}</h1>
-            <div className={`${isMobile ? 'flex flex-col' : 'flex items-center'} mt-1 text-sm text-neutral-500`}>
-              <span className={isMobile ? 'mb-1' : 'mr-4'}>
-                <a href={`/companies/${deal.companyId}`} className="text-primary hover:underline">{deal.companyName}</a>
-              </span>
-              <span className="flex items-center">
-                <Calendar className="h-4 w-4 mr-1" />
-                {deal.dueDate ? (
-                  <span className="flex items-center space-x-1">
-                    <span>Closing Date: {format(new Date(deal.dueDate), 'MMM dd, yyyy')}</span>
+          <div className="flex-1">
+            <div className="flex items-center">
+              <h1 className="font-semibold text-xl md:text-2xl text-neutral-800 mr-3">{formatDealTitle(deal)}</h1>
+              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                deal.status === 'urgent' ? 'bg-red-100 text-red-800' : 
+                deal.status === 'in-progress' ? 'bg-blue-100 text-blue-800' : 
+                deal.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                'bg-neutral-100 text-neutral-800'
+              }`}>
+                {deal.status === 'completed' ? 'Completed' :
+                deal.status === 'in-progress' ? 'In Progress' :
+                deal.status === 'urgent' ? 'Urgent' :
+                deal.status === 'draft' ? 'Draft' :
+                deal.status.charAt(0).toUpperCase() + deal.status.slice(1)}
+              </div>
+            </div>
+            
+            <div className="mt-3 flex flex-col md:flex-row md:items-center">
+              <div className="flex items-center mb-2 md:mb-0 md:mr-6">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-2">
+                  <Building className="h-4 w-4 text-primary" />
+                </div>
+                <a href={`/companies/${deal.companyId}`} className="text-primary hover:underline font-medium">{deal.companyName}</a>
+              </div>
+              
+              {deal.dueDate && (
+                <div className="flex items-center mb-2 md:mb-0 md:mr-6">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-2">
+                    <Calendar className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="flex items-center">
+                    <span className="font-medium">Closing: {format(new Date(deal.dueDate), 'MMM dd, yyyy')}</span>
                     {deal.isCommitted ? (
-                      <span className="text-lg ml-1" title="Committed Closing Date">🤝</span>
+                      <span className="ml-1 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full" title="Committed Date">Committed</span>
                     ) : (
-                      <span className="text-lg ml-1" title="Closing Date is uncertain">🤷</span>
+                      <span className="ml-1 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full" title="Target Date">Target</span>
                     )}
                   </span>
-                ) : (
-                  'No closing date'
-                )}
-              </span>
+                </div>
+              )}
+              
+              {deal.amount && (
+                <div className="flex items-center">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-2">
+                    <DollarSign className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="font-medium">{deal.amount}</span>
+                </div>
+              )}
             </div>
             {/* Company Information */}
             {renderCompanyInfo()}
@@ -1456,19 +1489,22 @@ export default function DealDetail({
         
         {!isMobile && (
           <div className="flex items-center mt-4 border-t border-neutral-200 pt-4">
-            <div className="flex space-x-4">
+            <div className="flex space-x-2">
               {tabItems.map((tab) => (
                 <Button 
                   key={tab.id}
-                  variant="ghost" 
-                  className={`px-4 py-1.5 text-sm font-medium ${
+                  variant={activeTab === tab.id ? "secondary" : "ghost"}
+                  className={`px-4 py-2 text-sm font-medium rounded-md ${
                     activeTab === tab.id ? 
-                    'text-neutral-800 border-b-2 border-primary' : 
-                    'text-neutral-500 hover:text-neutral-800'
+                    'bg-primary/10 text-primary border border-primary/20' : 
+                    'text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100'
                   }`}
                   onClick={() => setActiveTab(tab.id)}
                 >
-                  {tab.label}
+                  <div className="flex items-center">
+                    <div className="mr-2">{tab.icon}</div>
+                    <span>{tab.label}</span>
+                  </div>
                 </Button>
               ))}
             </div>
@@ -2149,21 +2185,26 @@ export default function DealDetail({
         </Tabs>
       </div>
       
-      {/* Mobile Tab Navigation */}
+      {/* Mobile Tab Navigation - Enhanced with visual cues */}
       {isMobile && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 flex justify-between items-center p-2 z-10">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 shadow-lg flex justify-between items-center px-1 py-2 z-10">
           {tabItems.map((tab) => (
             <button
               key={tab.id}
-              className={`flex-1 flex flex-col items-center justify-center py-2 ${
+              className={`flex-1 flex flex-col items-center justify-center py-2 relative ${
                 activeTab === tab.id 
                   ? 'text-primary' 
-                  : 'text-neutral-500'
+                  : 'text-neutral-500 hover:text-neutral-600'
               }`}
               onClick={() => setActiveTab(tab.id)}
             >
-              {tab.icon}
-              <span className="text-xs mt-1">{tab.label}</span>
+              <div className={`p-1.5 rounded-full ${activeTab === tab.id ? 'bg-primary/10' : ''}`}>
+                {tab.icon}
+              </div>
+              <span className="text-xs mt-1 font-medium">{tab.label}</span>
+              {activeTab === tab.id && (
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary" />
+              )}
             </button>
           ))}
         </div>
