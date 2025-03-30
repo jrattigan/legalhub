@@ -1,12 +1,17 @@
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, Building, Mail, Phone, User, Briefcase, FileText, Calendar, ArrowRight } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { AlertCircle, Building, Mail, Phone, User, Briefcase, FileText, Calendar, ArrowRight, UserPlus } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { LawFirm, Attorney, Deal } from "@shared/schema";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { LawFirm, Attorney, Deal, InsertAttorney } from "@shared/schema";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { format } from "date-fns";
 
@@ -15,9 +20,90 @@ interface LawFirmDetailViewProps {
 }
 
 export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps) {
+  const [isAddAttorneyOpen, setIsAddAttorneyOpen] = useState(false);
+  const [newAttorney, setNewAttorney] = useState<Partial<InsertAttorney>>({});
+  const { toast } = useToast();
+  
+  // Create attorney mutation
+  const addAttorneyMutation = useMutation({
+    mutationFn: async (attorney: Partial<InsertAttorney>) => {
+      if (!lawFirmId) throw new Error("Law firm ID is required");
+      
+      const payload = {
+        ...attorney,
+        lawFirmId,
+        // Generate random color for avatar if not provided
+        avatarColor: attorney.avatarColor || `#${Math.floor(Math.random()*16777215).toString(16)}`,
+        // Generate initials if not provided
+        initials: attorney.initials || attorney.name?.split(' ').map(n => n[0]).join('') || 'XX'
+      };
+      
+      const response = await fetch(`/api/attorneys`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create attorney');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      // Reset form
+      setNewAttorney({});
+      setIsAddAttorneyOpen(false);
+      
+      // Invalidate attorneys query to refetch
+      queryClient.invalidateQueries({ queryKey: ['/api/attorneys'] });
+      
+      toast({
+        title: "Attorney added",
+        description: "The attorney has been successfully added to this law firm.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to add attorney",
+        description: error.message || "An error occurred while adding the attorney. Please try again.",
+      });
+    }
+  });
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setNewAttorney(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleAddAttorney = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAttorney.name || !newAttorney.email) {
+      toast({
+        variant: "destructive",
+        title: "Missing information",
+        description: "Attorney name and email are required.",
+      });
+      return;
+    }
+    
+    addAttorneyMutation.mutate(newAttorney);
+  };
+  
   // Fetch law firm details
   const { data: lawFirm, isLoading: lawFirmLoading, error: lawFirmError } = useQuery<LawFirm>({
     queryKey: ['/api/law-firms', lawFirmId],
+    queryFn: async () => {
+      if (!lawFirmId) return null;
+      const response = await fetch(`/api/law-firms/${lawFirmId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch law firm details');
+      }
+      return response.json();
+    },
     enabled: !!lawFirmId,
     retry: 1,
   });
@@ -167,8 +253,89 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
 
         {/* Associated attorneys card */}
         <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-lg">Attorneys at {lawFirm.name}</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">Attorneys at {lawFirm.name}</CardTitle>
+              <CardDescription>Manage attorneys associated with this law firm</CardDescription>
+            </div>
+            <Dialog open={isAddAttorneyOpen} onOpenChange={setIsAddAttorneyOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="ml-auto">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add New
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add New Attorney</DialogTitle>
+                  <DialogDescription>
+                    Add a new attorney to {lawFirm.name}. Fill in the information below.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleAddAttorney} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input 
+                      id="name" 
+                      name="name" 
+                      value={newAttorney.name || ''} 
+                      onChange={handleInputChange} 
+                      placeholder="John Smith" 
+                      required 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="position">Position</Label>
+                    <Input 
+                      id="position" 
+                      name="position" 
+                      value={newAttorney.position || ''} 
+                      onChange={handleInputChange} 
+                      placeholder="Partner" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input 
+                      id="email" 
+                      name="email" 
+                      type="email" 
+                      value={newAttorney.email || ''} 
+                      onChange={handleInputChange} 
+                      placeholder="john.smith@example.com" 
+                      required 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input 
+                      id="phone" 
+                      name="phone" 
+                      type="tel" 
+                      value={newAttorney.phone || ''} 
+                      onChange={handleInputChange} 
+                      placeholder="(555) 123-4567" 
+                    />
+                  </div>
+                  <DialogFooter className="mt-6">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setIsAddAttorneyOpen(false)}
+                      disabled={addAttorneyMutation.isPending}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      disabled={addAttorneyMutation.isPending || !newAttorney.name || !newAttorney.email}
+                    >
+                      {addAttorneyMutation.isPending ? 'Adding...' : 'Add Attorney'}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </CardHeader>
           <CardContent>
             {attorneys && attorneys.length > 0 ? (
