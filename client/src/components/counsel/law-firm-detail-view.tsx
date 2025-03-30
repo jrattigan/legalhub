@@ -1,11 +1,14 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, Building, Mail, Phone, User, Briefcase } from "lucide-react";
+import { AlertCircle, Building, Mail, Phone, User, Briefcase, FileText, Calendar, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LawFirm, Attorney } from "@shared/schema";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { LawFirm, Attorney, Deal } from "@shared/schema";
+import { Link } from "wouter";
+import { format } from "date-fns";
 
 interface LawFirmDetailViewProps {
   lawFirmId: number | null; // Allow null for initial state
@@ -21,13 +24,20 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
 
   // Fetch attorneys for this law firm
   const { data: attorneys, isLoading: attorneysLoading, error: attorneysError } = useQuery<Attorney[]>({
-    queryKey: ['/api/attorneys', { lawFirmId }],
+    queryKey: ['/api/law-firms', lawFirmId, 'attorneys'],
+    enabled: !!lawFirmId,
+    retry: 1,
+  });
+  
+  // Fetch deals for this law firm
+  const { data: deals, isLoading: dealsLoading, error: dealsError } = useQuery<Deal[]>({
+    queryKey: ['/api/law-firms', lawFirmId, 'deals'],
     enabled: !!lawFirmId,
     retry: 1,
   });
 
   // Handle loading state
-  if (lawFirmLoading || attorneysLoading) {
+  if (lawFirmLoading || attorneysLoading || dealsLoading) {
     return (
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
@@ -38,7 +48,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
   }
 
   // Handle error state
-  if (lawFirmError || attorneysError) {
+  if (lawFirmError || attorneysError || dealsError) {
     return (
       <div className="p-6">
         <Alert variant="destructive">
@@ -59,11 +69,34 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
         <Building className="h-16 w-16 text-neutral-300 mb-4" />
         <h2 className="text-xl font-medium mb-2">No Law Firm Selected</h2>
         <p className="text-neutral-500 max-w-md">
-          Please select a law firm from the list to view its details and associated attorneys.
+          Please select a law firm from the list to view its details, associated attorneys, and deals.
         </p>
       </div>
     );
   }
+
+  // Helper function to format deal title
+  const formatDealTitle = (deal: Deal) => {
+    const companyName = deal.companyName || 'Unnamed Company';
+    const title = deal.title || 'Untitled Deal';
+    return `${companyName} - ${title}`;
+  };
+
+  // Get status badge color based on deal status
+  const getStatusColor = (status: string | null | undefined) => {
+    if (!status) return 'bg-neutral-100 text-neutral-800';
+    
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'closed':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-neutral-100 text-neutral-800';
+    }
+  };
 
   return (
     <div className="p-6">
@@ -73,7 +106,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
         <p className="text-neutral-500 text-sm">{lawFirm.specialty}</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Law firm details card */}
         <Card className="lg:col-span-1">
           <CardHeader>
@@ -161,6 +194,62 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
           </CardContent>
         </Card>
       </div>
+      
+      {/* Related deals card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Deals with {lawFirm.name}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {deals && deals.length > 0 ? (
+            <div className="space-y-4">
+              {deals.map((deal) => (
+                <div key={deal.id} className="p-4 border rounded-lg hover:border-primary transition-colors">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="font-medium text-lg">{formatDealTitle(deal)}</h3>
+                      <div className="text-sm text-neutral-500">
+                        {deal.description || 'No description provided'}
+                      </div>
+                    </div>
+                    <Badge className={getStatusColor(deal.status)}>
+                      {deal.status}
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 text-sm">
+                    <div className="flex items-center">
+                      <FileText className="w-4 h-4 text-neutral-500 mr-2" />
+                      <span>Deal ID: {deal.dealId}</span>
+                    </div>
+                    {deal.dueDate && (
+                      <div className="flex items-center">
+                        <Calendar className="w-4 h-4 text-neutral-500 mr-2" />
+                        <span>Due: {format(new Date(deal.dueDate), 'MMM d, yyyy')}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <Link href={`/deals/${deal.id}`}>
+                    <Button variant="outline" className="w-full sm:w-auto">
+                      View Deal Details
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <FileText className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
+              <h3 className="font-medium text-lg mb-2">No deals found</h3>
+              <p className="text-neutral-500 mb-4 max-w-md mx-auto">
+                This law firm is not currently assigned to any deals.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

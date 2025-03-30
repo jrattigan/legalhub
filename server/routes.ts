@@ -857,6 +857,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const attorneys = await storage.getAttorneysByFirm(firmId);
     res.json(attorneys);
   });
+  
+  // Get deals associated with a law firm
+  app.get("/api/law-firms/:id/deals", async (req, res) => {
+    const firmId = parseInt(req.params.id);
+    if (isNaN(firmId)) {
+      return res.status(400).json({ message: "Invalid law firm ID" });
+    }
+    
+    try {
+      // Check if the law firm exists
+      const firm = await storage.getLawFirm(firmId);
+      if (!firm) {
+        return res.status(404).json({ message: "Law firm not found" });
+      }
+      
+      const deals = await storage.getDealsByLawFirm(firmId);
+      res.json(deals);
+    } catch (error) {
+      console.error("Error fetching deals by law firm:", error);
+      res.status(500).json({ message: "Failed to fetch deals for law firm" });
+    }
+  });
 
   // Get all attorneys
   app.get("/api/attorneys", async (req, res) => {

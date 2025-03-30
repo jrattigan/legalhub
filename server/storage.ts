@@ -82,6 +82,7 @@ export interface IStorage {
   // Deal Counsels
   getDealCounsel(id: number): Promise<DealCounsel | undefined>;
   getDealCounsels(dealId: number): Promise<(DealCounsel & { lawFirm: LawFirm, attorney?: Attorney })[]>;
+  getDealsByLawFirm(lawFirmId: number): Promise<Deal[]>;
   createDealCounsel(counsel: InsertDealCounsel): Promise<DealCounsel>;
   updateDealCounsel(id: number, counsel: Partial<InsertDealCounsel>): Promise<DealCounsel | undefined>;
   deleteDealCounsel(id: number): Promise<boolean>;
@@ -1769,6 +1770,21 @@ export class MemStorage implements IStorage {
       const attorney = this.attorneys.get(counsel.attorneyId);
       return { ...counsel, lawFirm, attorney };
     });
+  }
+  
+  async getDealsByLawFirm(lawFirmId: number): Promise<Deal[]> {
+    // Find all deal counsels that reference this law firm
+    const counselsWithFirm = Array.from(this.dealCounsels.values())
+      .filter(counsel => counsel.lawFirmId === lawFirmId);
+    
+    // Extract unique deal IDs
+    const dealIds = [...new Set(counselsWithFirm.map(counsel => counsel.dealId))];
+    
+    // Get the deals by these IDs
+    const deals = Array.from(this.deals.values())
+      .filter(deal => dealIds.includes(deal.id));
+    
+    return deals;
   }
 
   async createDealCounsel(insertCounsel: InsertDealCounsel): Promise<DealCounsel> {
