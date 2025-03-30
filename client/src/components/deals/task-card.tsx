@@ -112,11 +112,11 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
       title: '',
       description: '', 
       status: 'active',
-      priority: 'medium',
+      priority: '',
       dueDate: null,
       assigneeId: null,
       assigneeType: 'user', // Default to 'user' type for internal tasks
-      taskType: 'internal',
+      taskType: '',
       completed: false,
       dealId: dealId || undefined
     }
@@ -595,8 +595,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                       <FormItem>
                         <FormLabel>Priority</FormLabel>
                         <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
+                          onValueChange={field.onChange}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -634,7 +633,6 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                             form.setValue("assigneeType", "user"); // Default internal tasks to user assignee type
                           }
                         }}
-                        defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -667,7 +665,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                             field.onChange(value);
                           }
                         }} 
-                        defaultValue={field.value?.toString() || "unassigned"}
+
                       >
                         <FormControl>
                           <SelectTrigger>
