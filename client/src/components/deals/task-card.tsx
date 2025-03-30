@@ -803,26 +803,28 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                     return prev;
                   });
                   
+                  // Store the assignee info for setting after dialog closes
+                  const assigneeToSet = {
+                    id: customAssigneeId,
+                    name: newAssigneeName
+                  };
+                  
                   // Increment the select key to force a re-render of the select component
                   setSelectKey(prevKey => prevKey + 1);
                   
-                  // Close the dialog first
+                  // Update the form immediately
+                  form.setValue("assigneeId", customAssigneeId);
+                  form.setValue("assigneeType", "custom");
+                  form.setValue("assigneeName", newAssigneeName);
+                  
+                  // Close the dialog after applying the changes
                   setIsNewAssigneeDialogOpen(false);
                   
-                  // Then update the form values after a short delay to ensure the UI has updated
-                  setTimeout(() => {
-                    form.setValue("assigneeId", customAssigneeId);
-                    form.setValue("assigneeType", "custom");
-                    form.setValue("assigneeName", newAssigneeName);
-                    
-                    // Explicitly trigger form change to ensure the UI updates
-                    form.trigger("assigneeId");
-                    
-                    toast({
-                      title: "New assignee added",
-                      description: `"${newAssigneeName}" has been added as an assignee and selected.`,
-                    });
-                  }, 100);
+                  // Show toast notification
+                  toast({
+                    title: "New assignee added",
+                    description: `"${newAssigneeName}" has been added as an assignee and selected.`,
+                  });
                   
                   // Reset the input field
                   setNewAssigneeName('');
