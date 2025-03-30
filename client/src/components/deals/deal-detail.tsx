@@ -1523,7 +1523,18 @@ export default function DealDetail({
             </div>
           </div>
         )}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={(value) => {
+            setIsTabLoading(true);
+            setActiveTab(value);
+            // Short delay to allow for the loading indicator to show
+            setTimeout(() => {
+              setIsTabLoading(false);
+            }, 300);
+          }}
+          className="flex flex-col h-full"
+        >
           <TabsList className="hidden">
             {tabItems.map((tab) => (
               <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
@@ -2205,17 +2216,11 @@ export default function DealDetail({
                   : 'text-neutral-500 hover:text-neutral-600'
               }`}
               onClick={() => {
-                // Show loading indicator
+                // Show loading indicator before changing tabs to indicate activity
                 setIsTabLoading(true);
-                
-                // Set active tab
+
+                // Set active tab - this will trigger the onValueChange in the Tabs component
                 setActiveTab(tab.id);
-                
-                // Update UI to reflect tab change - forces a rerender of the Tabs component
-                setTimeout(() => {
-                  // Allow the tab change to propagate
-                  setIsTabLoading(false);
-                }, 50);
                 
                 // Scroll to top when changing tabs
                 if (typeof window !== 'undefined') {
