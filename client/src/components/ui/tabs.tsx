@@ -45,8 +45,7 @@ const TabsContent = React.forwardRef<
       "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       className
     )}
-    // Force the content to always display when active
-    forceMount
+    // Don't use forceMount as it causes rendering issues
     {...props}
   />
 ))

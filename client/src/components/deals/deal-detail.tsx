@@ -127,6 +127,17 @@ export default function DealDetail({
     user?: any; // For display purposes
   }>>([]);
   
+  // Effect to ensure loading indicator is cleared if it gets stuck
+  useEffect(() => {
+    // Safety measure: if loading indicator is active, clear it after 1 second
+    if (isTabLoading) {
+      const timer = setTimeout(() => {
+        setIsTabLoading(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isTabLoading]);
+  
   // Initialize team members from dealUsers when dialog opens
   useEffect(() => {
     if (isEditDialogOpen) {
@@ -1526,12 +1537,8 @@ export default function DealDetail({
         <Tabs 
           value={activeTab} 
           onValueChange={(value) => {
-            setIsTabLoading(true);
+            // No need for loading indicator on tab change - it causes more issues
             setActiveTab(value);
-            // Short delay to allow for the loading indicator to show
-            setTimeout(() => {
-              setIsTabLoading(false);
-            }, 300);
           }}
           className="flex flex-col h-full"
         >
@@ -2216,10 +2223,7 @@ export default function DealDetail({
                   : 'text-neutral-500 hover:text-neutral-600'
               }`}
               onClick={() => {
-                // Show loading indicator before changing tabs to indicate activity
-                setIsTabLoading(true);
-
-                // Set active tab - this will trigger the onValueChange in the Tabs component
+                // Set active tab without loading indicator
                 setActiveTab(tab.id);
                 
                 // Scroll to top when changing tabs
@@ -2228,6 +2232,11 @@ export default function DealDetail({
                   if (mainContent) {
                     mainContent.scrollTop = 0;
                   }
+                }
+
+                // Make sure any stuck loading indicator is cleared
+                if (isTabLoading) {
+                  setIsTabLoading(false);
                 }
               }}
             >
