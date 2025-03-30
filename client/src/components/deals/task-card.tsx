@@ -790,7 +790,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                   // Create a new custom assignee ID
                   const customAssigneeId = `custom-${newAssigneeName}`;
                   
-                  // Add to our custom assignees list for UI display
+                  // Add to our custom assignees list for UI display first
                   setCustomAssignees(prev => {
                     // Check if this assignee already exists to avoid duplicates
                     const exists = prev.some(a => a.id === customAssigneeId);
@@ -800,28 +800,25 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                     return prev;
                   });
                   
-                  // Explicitly update the form value fields
-                  form.setValue("assigneeId", customAssigneeId);
-                  form.setValue("assigneeType", "custom");
-                  form.setValue("assigneeName", newAssigneeName);
-                  
-                  // Force the form to update immediately
-                  setTimeout(() => {
-                    // This will trigger the form to re-render with the new value selected
-                    const event = new Event('change', { bubbles: true });
-                    const selectElement = document.querySelector('[name="assigneeId"]');
-                    if (selectElement) {
-                      Object.defineProperty(event, 'target', { writable: false, value: { value: customAssigneeId, name: 'assigneeId' } });
-                      selectElement.dispatchEvent(event);
-                    }
-                  }, 0);
-                  
-                  toast({
-                    title: "New assignee added",
-                    description: `"${newAssigneeName}" has been added as an assignee and selected.`,
-                  });
-                  
+                  // Close the dialog first
                   setIsNewAssigneeDialogOpen(false);
+                  
+                  // Then update the form values after a short delay to ensure the UI has updated
+                  setTimeout(() => {
+                    form.setValue("assigneeId", customAssigneeId);
+                    form.setValue("assigneeType", "custom");
+                    form.setValue("assigneeName", newAssigneeName);
+                    
+                    // Explicitly trigger form change to ensure the UI updates
+                    form.trigger("assigneeId");
+                    
+                    toast({
+                      title: "New assignee added",
+                      description: `"${newAssigneeName}" has been added as an assignee and selected.`,
+                    });
+                  }, 100);
+                  
+                  // Reset the input field
                   setNewAssigneeName('');
                 }}
               >
