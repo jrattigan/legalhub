@@ -484,189 +484,225 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
         priority: data.priority || "medium",
         dealId,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
-        taskType: data.taskType || "internal", // Include task type
+        taskType: data.taskType || "internal",
         completed: false
       };
       
-      // Special handling for custom assignees
-      if (typeof processedAssigneeId === 'string' && processedAssigneeId.startsWith('custom-')) {
-        // Extract the actual name from the custom ID
-        const customName = processedAssigneeId.replace('custom-', '');
-        formattedData.assigneeName = customName;
-        formattedData.assigneeId = null;
-        formattedData.assigneeType = 'custom';
-        
-        console.log("Creating with custom assignee:", customName);
-      } else if (processedAssigneeId !== null) {
-        // Regular assignee with ID
-        formattedData.assigneeId = processedAssigneeId;
-        formattedData.assigneeName = null;
-        formattedData.assigneeType = data.assigneeType || 'user';
-        
-        console.log("Creating with regular assignee ID:", processedAssigneeId);
+      // Handle different assignee types
+      if (processedAssigneeId && typeof processedAssigneeId === 'object') {
+        formattedData.assigneeId = processedAssigneeId.id;
+        formattedData.assigneeType = processedAssigneeId.type;
+        formattedData.assigneeName = processedAssigneeId.name || null;
       } else {
-        // Unassigned
-        formattedData.assigneeId = null;
+        formattedData.assigneeId = processedAssigneeId;
+        formattedData.assigneeType = processedAssigneeId ? data.assigneeType : null;
         formattedData.assigneeName = null;
-        formattedData.assigneeType = 'user';
-        
-        console.log("Creating with no assignee");
       }
       
-      console.log("Submitting task with data:", formattedData);
-      
-      // Validate the data before submission
-      if (!formattedData.title || formattedData.title.trim() === '') {
-        throw new Error("Task title is required");
-      }
-      
+      // Create the task
       createTaskMutation.mutate(formattedData);
     } catch (error: any) {
-      console.error("Error preparing task data:", error);
       toast({
         variant: "destructive",
-        title: "Form Error",
-        description: error.message || "Failed to prepare task data. Please check your inputs.",
+        title: "Error",
+        description: error.message || "Invalid form data. Please check your entries."
       });
     }
   };
-
-  // Helper function to handle assignee ID processing
-  const handleAssigneeId = (assigneeId: any): number | string | null => {
-    // Case 1: No assignee selected
-    if (assigneeId === "unassigned" || assigneeId === undefined || assigneeId === null || assigneeId === '') {
+  
+  // Handle form submission for task editing
+  const onEditSubmit = (data: z.infer<typeof taskSchema>) => {
+    if (!currentTask) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No task selected for editing. Please try again.",
+      });
+      return;
+    }
+    
+    try {
+      // Get the processed assignee ID (could be a number, string, or null)
+      const processedAssigneeId = handleAssigneeId(data.assigneeId);
+      
+      // Format the data for submission (ensure dates are properly formatted)
+      const formattedData: any = {
+        id: currentTask.id,
+        title: data.title,
+        description: data.description || "",
+        status: data.status || "active",
+        priority: data.priority || "medium",
+        dealId: currentTask.dealId,
+        dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        taskType: data.taskType || "internal",
+        completed: Boolean(currentTask.completed)
+      };
+      
+      // Handle different assignee types
+      if (processedAssigneeId && typeof processedAssigneeId === 'object') {
+        formattedData.assigneeId = processedAssigneeId.id;
+        formattedData.assigneeType = processedAssigneeId.type;
+        formattedData.assigneeName = processedAssigneeId.name || null;
+      } else {
+        formattedData.assigneeId = processedAssigneeId;
+        formattedData.assigneeType = processedAssigneeId ? data.assigneeType : null;
+        formattedData.assigneeName = null;
+      }
+      
+      // Update the task
+      editTaskMutation.mutate(formattedData);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Invalid form data. Please check your entries."
+      });
+    }
+  };
+  
+  // Process assigneeId based on its format:
+  // - If it's null/''/undefined, return null (no assignee)
+  // - If it's a number or can be converted to one, return as-is (user assignee)
+  // - If it starts with "attorney-", extract the ID and set type to 'attorney'
+  // - If it starts with "firm-", extract the ID and set type to 'firm'
+  // - If it starts with "custom-", extract the name and set type to 'custom'
+  const handleAssigneeId = (assigneeId: string | number | null | undefined): any => {
+    // No assignee case
+    if (assigneeId === null || assigneeId === undefined || assigneeId === '') {
       return null;
     }
     
-    // Case 2: Handle string assignee values
-    if (typeof assigneeId === 'string') {
-      // Skip the section headers
-      if (assigneeId === 'law-firms-header' || assigneeId === 'attorneys-header' || assigneeId === 'custom-header') {
-        return null;
-      }
-      
-      // Case 2a: Handle custom assignee (custom-Name format)
-      if (assigneeId.startsWith('custom-')) {
-        form.setValue('assigneeType', 'custom');
-        // For custom assignees, return the full string to extract name later
-        return assigneeId;
-      }
-      
-      // Case 2b: For external assignees, extract the ID part from the prefixed string
-      if (assigneeId.startsWith('firm-') || assigneeId.startsWith('attorney-')) {
-        const [type, id] = assigneeId.split('-');
-        
-        // Store task assignee with type prefix so backend knows what kind of assignee this is
-        // We'll store the type in a property on the task object in the backend
-        console.log(`Assigning to ${type} with ID ${id}`);
-        
-        // Update the task type in our form data based on the assignee type
-        if (type === 'attorney') {
-          form.setValue('assigneeType', 'attorney');
-        } else if (type === 'firm') {
-          form.setValue('assigneeType', 'firm');
-        }
-        
-        return parseInt(id);
-      }
-      
-      // Regular user ID case - internal tasks assigned to users
-      form.setValue('assigneeType', 'user');
-      return parseInt(assigneeId);
+    // For numeric assigneeId, assume it's a user (internal team member)
+    if (typeof assigneeId === 'number') {
+      return assigneeId;
     }
     
-    // Case 3: Already a number (usually a user ID)
-    form.setValue('assigneeType', 'user'); // Default to user if type not specified
-    return assigneeId;
-  };
-
-  const getTaskPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-destructive-light text-destructive';
-      case 'medium':
-        return 'bg-warning-light text-warning';
-      case 'low':
-        return 'bg-neutral-100 text-neutral-600';
-      default:
-        return 'bg-neutral-100 text-neutral-600';
+    // Handle string assigneeId with type prefixes
+    if (typeof assigneeId === 'string') {
+      // Attorney
+      if (assigneeId.startsWith('attorney-')) {
+        const id = parseInt(assigneeId.replace('attorney-', ''));
+        return { id, type: 'attorney' };
+      }
+      
+      // Law firm
+      if (assigneeId.startsWith('firm-')) {
+        const id = parseInt(assigneeId.replace('firm-', ''));
+        return { id, type: 'firm' };
+      }
+      
+      // Custom assignee (external person not in our system)
+      if (assigneeId.startsWith('custom-')) {
+        const name = assigneeId.replace('custom-', '');
+        return { id: null, type: 'custom', name };
+      }
+      
+      // Try to convert to number as a fallback (for user IDs)
+      const parsedId = parseInt(assigneeId);
+      if (!isNaN(parsedId)) {
+        return parsedId;
+      }
     }
+    
+    // Return null for any other unhandled cases
+    return null;
   };
-
-  // Note: We've fully implemented the assignee options directly in the form component
-
+  
+  // Add a custom assignee and update the form selection
+  const addCustomAssignee = () => {
+    if (!newAssigneeName.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter a name for the custom assignee.",
+      });
+      return;
+    }
+    
+    // Create the custom assignee format
+    const customId = `custom-${newAssigneeName}`;
+    
+    // Check if this custom assignee is already in the list
+    if (customAssignees.some(a => a.id === customId)) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "This custom assignee already exists.",
+      });
+      return;
+    }
+    
+    // Add to list and update state
+    const updatedAssignees = [
+      ...customAssignees,
+      { id: customId, name: newAssigneeName }
+    ];
+    
+    setCustomAssignees(updatedAssignees);
+    
+    // Update the form to select this new assignee
+    form.setValue('assigneeId', customId);
+    form.setValue('assigneeType', 'custom');
+    form.setValue('assigneeName', newAssigneeName);
+    
+    // Reset input and close dialog
+    setNewAssigneeName('');
+    setIsNewAssigneeDialogOpen(false);
+    
+    // Force re-render of select by updating key
+    setSelectKey(prevKey => prevKey + 1);
+  };
+  
   return (
-    <div className={`bg-white rounded-lg border border-neutral-200 shadow-sm p-4 ${preview ? 'col-span-1' : 'col-span-full'}`}>
-      <div className="flex justify-between items-center mb-3">
-        <h2 className="font-medium text-neutral-800">Tasks</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              variant="link" 
-              className="text-xs text-primary hover:text-primary-dark" 
-              disabled={!dealId}
-            >
-              + Add Task
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Task</DialogTitle>
-              <DialogDescription>
-                Create a new task for this deal
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Task Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter task title" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Enter task description" 
-                          className="resize-none" 
-                          {...field} 
-                          value={field.value || ''}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-4">
+      {/* Task Management Header */}
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">
+          {preview ? "Recent Tasks" : "Tasks"}
+        </h3>
+        {!preview && dealId && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-1" />
+                Add Task
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Task</DialogTitle>
+                <DialogDescription>
+                  Add a new task for this deal.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="dueDate"
+                    name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Due Date</FormLabel>
+                        <FormLabel>Title</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="date" 
-                            onChange={(e) => {
-                              // Handle date input change - convert to Date object if not empty
-                              const value = e.target.value;
-                              field.onChange(value ? new Date(value) : null);
-                            }}
-                            value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                          <Input placeholder="Task title" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Enter task details..." 
+                            {...field}
+                            value={field.value || ''}
                           />
                         </FormControl>
                         <FormMessage />
@@ -674,445 +710,470 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                     )}
                   />
                   
+                  <div className="flex space-x-4">
+                    <FormField
+                      control={form.control}
+                      name="priority"
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormLabel>Priority</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value || 'medium'}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select priority" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="low">Low</SelectItem>
+                              <SelectItem value="medium">Medium</SelectItem>
+                              <SelectItem value="high">High</SelectItem>
+                              <SelectItem value="urgent">Urgent</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormLabel>Status</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value || 'active'}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="waiting">Waiting</SelectItem>
+                              <SelectItem value="deferred">Deferred</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="flex space-x-4">
+                    <FormField
+                      control={form.control}
+                      name="taskType"
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormLabel>Task Type</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value || 'internal'}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Internal or External" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="internal">Internal</SelectItem>
+                              <SelectItem value="external">External</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="dueDate"
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormLabel>Due Date</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="date" 
+                              {...field}
+                              value={field.value ? 
+                                (typeof field.value === 'string' ? 
+                                  field.value : 
+                                  format(new Date(field.value), 'yyyy-MM-dd')) : 
+                                ''}
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  field.onChange(new Date(e.target.value));
+                                } else {
+                                  field.onChange(null);
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
                   <FormField
                     control={form.control}
-                    name="priority"
+                    name="assigneeId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Priority</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select priority" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormLabel>Assignee</FormLabel>
+                        <div className="flex space-x-2">
+                          <Select 
+                            key={selectKey}
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value?.toString() || 'unassigned'}
+                          >
+                            <FormControl className="flex-1">
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select assignee" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="unassigned">Unassigned</SelectItem>
+                              
+                              {/* Divider and heading for internal team members */}
+                              {users.length > 0 && currentTaskType !== 'external' && (
+                                <>
+                                  <div className="px-2 pt-2 pb-1 text-xs font-medium text-muted-foreground">
+                                    Internal Team
+                                  </div>
+                                  {users.map((user) => (
+                                    <SelectItem key={user.id} value={user.id.toString()}>
+                                      {user.fullName}
+                                    </SelectItem>
+                                  ))}
+                                </>
+                              )}
+                              
+                              {/* Divider and heading for law firms */}
+                              {lawFirms.length > 0 && currentTaskType === 'external' && (
+                                <>
+                                  <div className="px-2 pt-2 pb-1 text-xs font-medium text-muted-foreground">
+                                    Law Firms
+                                  </div>
+                                  {lawFirms.map((firm) => (
+                                    <SelectItem key={`firm-${firm.id}`} value={`firm-${firm.id}`}>
+                                      {firm.name}
+                                    </SelectItem>
+                                  ))}
+                                </>
+                              )}
+                              
+                              {/* Divider and heading for attorneys */}
+                              {attorneys.length > 0 && currentTaskType === 'external' && (
+                                <>
+                                  <div className="px-2 pt-2 pb-1 text-xs font-medium text-muted-foreground">
+                                    Attorneys
+                                  </div>
+                                  {attorneys.map((attorney) => (
+                                    <SelectItem key={`attorney-${attorney.id}`} value={`attorney-${attorney.id}`}>
+                                      {attorney.name}
+                                    </SelectItem>
+                                  ))}
+                                </>
+                              )}
+                              
+                              {/* Divider and heading for custom assignees */}
+                              {customAssignees.length > 0 && (
+                                <>
+                                  <div className="px-2 pt-2 pb-1 text-xs font-medium text-muted-foreground">
+                                    Custom Assignees
+                                  </div>
+                                  {customAssignees.map((custom) => (
+                                    <SelectItem key={custom.id} value={custom.id}>
+                                      {custom.name}
+                                    </SelectItem>
+                                  ))}
+                                </>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          
+                          <Dialog open={isNewAssigneeDialogOpen} onOpenChange={setIsNewAssigneeDialogOpen}>
+                            <DialogTrigger asChild>
+                              <Button type="button" variant="outline" size="icon">
+                                <UserPlus className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px]">
+                              <DialogHeader>
+                                <DialogTitle>Add Custom Assignee</DialogTitle>
+                                <DialogDescription>
+                                  Add a custom external assignee not in the system.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4 py-4">
+                                <div className="space-y-2">
+                                  <FormLabel>Name</FormLabel>
+                                  <Input 
+                                    placeholder="External assignee name" 
+                                    value={newAssigneeName}
+                                    onChange={(e) => setNewAssigneeName(e.target.value)}
+                                  />
+                                </div>
+                              </div>
+                              <DialogFooter>
+                                <Button type="button" onClick={addCustomAssignee}>
+                                  Add Assignee
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="taskType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Task Type</FormLabel>
-                      <Select 
-                        onValueChange={(value) => {
-                          // Update taskType and reset assigneeId when task type changes
-                          field.onChange(value);
-                          form.setValue("assigneeId", null);
-                          
-                          // Also set the appropriate assigneeType based on task type
-                          if (value === 'external') {
-                            form.setValue("assigneeType", "attorney"); // Default external tasks to attorney assignee type
-                          } else {
-                            form.setValue("assigneeType", "user"); // Default internal tasks to user assignee type
-                          }
-                        }}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select task type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="internal">Internal Task</SelectItem>
-                          <SelectItem value="external">External Task</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="assigneeId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Assignee</FormLabel>
-                      <Select 
-                        key={`assignee-select-${selectKey}`} 
-                        onValueChange={(value) => {
-                          if (value === 'new-assignee') {
-                            // Handle "Add New Assignee" option
-                            setIsNewAssigneeDialogOpen(true);
-                          } else {
-                            field.onChange(value);
-                          }
-                        }} 
-
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select assignee" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="unassigned">Unassigned</SelectItem>
-                          
-                          {/* Internal task assignees (users) */}
-                          {currentTaskType === 'internal' && users?.map((user: User) => (
-                            <SelectItem key={user.id} value={user.id.toString()}>
-                              {user.fullName}
-                            </SelectItem>
-                          ))}
-                          
-                          {/* External task assignees */}
-                          {currentTaskType === 'external' && (
-                            <>
-                              {/* Law firms with their attorneys */}
-                              {Array.isArray(lawFirms) && lawFirms.length > 0 && (
-                                <>
-                                  <SelectItem value="law-firms-header" disabled className="font-bold text-xs text-neutral-500 py-1 my-1">
-                                    LAW FIRMS & ATTORNEYS
-                                  </SelectItem>
-                                  
-                                  {/* Loop through each law firm */}
-                                  {lawFirms.map((lawFirm: LawFirm) => (
-                                    <React.Fragment key={`firm-group-${lawFirm.id}`}>
-                                      {/* Law firm option */}
-                                      <SelectItem key={`firm-${lawFirm.id}`} value={`firm-${lawFirm.id}`}>
-                                        {lawFirm.name}
-                                      </SelectItem>
-                                      
-                                      {/* Attorneys belonging to this law firm (indented) */}
-                                      {Array.isArray(attorneys) && attorneys
-                                        .filter(attorney => attorney.lawFirmId === lawFirm.id)
-                                        .map((attorney: Attorney) => (
-                                          <SelectItem 
-                                            key={`attorney-${attorney.id}`} 
-                                            value={`attorney-${attorney.id}`}
-                                            className="pl-8 text-sm" // Increased indentation for attorneys under their firms
-                                          >
-                                            → {attorney.name} ({attorney.position})
-                                          </SelectItem>
-                                        ))
-                                      }
-                                    </React.Fragment>
-                                  ))}
-                                  
-                                  {/* Display custom assignees if available */}
-                                  {customAssignees.length > 0 && (
-                                    <>
-                                      <SelectItem value="custom-assignees-header" disabled className="font-bold text-xs text-neutral-500 py-1 my-1">
-                                        OTHER
-                                      </SelectItem>
-                                      
-                                      {customAssignees.map(assignee => (
-                                        <SelectItem key={assignee.id} value={assignee.id}>
-                                          {assignee.name}
-                                        </SelectItem>
-                                      ))}
-                                    </>
-                                  )}
-                                  
-                                  {/* Add option to create new assignee */}
-                                  <SelectItem value="new-assignee" className="text-primary border-t border-neutral-100 mt-1 pt-1">
-                                    + Add New Assignee
-                                  </SelectItem>
-                                </>
-                              )}
-                            </>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <DialogFooter>
-                  <Button 
-                    type="submit" 
-                    disabled={createTaskMutation.isPending}
-                  >
-                    {createTaskMutation.isPending ? 'Creating...' : 'Create Task'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-
-        {/* New Assignee Dialog */}
-        <Dialog open={isNewAssigneeDialogOpen} onOpenChange={setIsNewAssigneeDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Assignee</DialogTitle>
-              <DialogDescription>
-                Create a new assignee for this task
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="py-4">
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="newAssigneeName" className="text-sm font-medium">Assignee Name</label>
-                  <Input 
-                    id="newAssigneeName"
-                    placeholder="Enter assignee name" 
-                    className="mt-1" 
-                    value={newAssigneeName}
-                    onChange={(e) => setNewAssigneeName(e.target.value)}
-                  />
-                  <p className="text-xs text-neutral-500 mt-1">
-                    This could be an individual, law firm, or any external party
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsNewAssigneeDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="button"
-                disabled={!newAssigneeName.trim()}
-                onClick={() => {
-                  // Create a new custom assignee ID
-                  const customAssigneeId = `custom-${newAssigneeName}`;
                   
-                  // Add to our custom assignees list for UI display first
-                  setCustomAssignees(prev => {
-                    // Check if this assignee already exists to avoid duplicates
-                    const exists = prev.some(a => a.id === customAssigneeId);
-                    if (!exists) {
-                      return [...prev, { id: customAssigneeId, name: newAssigneeName }];
-                    }
-                    return prev;
-                  });
-                  
-                  // Store the assignee info for setting after dialog closes
-                  const assigneeToSet = {
-                    id: customAssigneeId,
-                    name: newAssigneeName
-                  };
-                  
-                  // Increment the select key to force a re-render of the select component
-                  setSelectKey(prevKey => prevKey + 1);
-                  
-                  // Update the form immediately
-                  form.setValue("assigneeId", customAssigneeId);
-                  form.setValue("assigneeType", "custom");
-                  form.setValue("assigneeName", newAssigneeName);
-                  
-                  // Close the dialog after applying the changes
-                  setIsNewAssigneeDialogOpen(false);
-                  
-                  // Show toast notification
-                  toast({
-                    title: "New assignee added",
-                    description: `"${newAssigneeName}" has been added as an assignee and selected.`,
-                  });
-                  
-                  // Reset the input field
-                  setNewAssigneeName('');
-                }}
-              >
-                Add Assignee
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+                  <DialogFooter>
+                    <Button 
+                      type="submit" 
+                      disabled={createTaskMutation.isPending}
+                    >
+                      {createTaskMutation.isPending ? "Creating..." : "Create Task"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
       
-      <div className="space-y-3">
-        {/* Internal Pending Tasks Section */}
-        {formattedTasks.internalPending.length > 0 && (
-          <div className="mb-4">
-            <h3 className="text-xs font-medium text-neutral-800 mb-2">Internal Tasks</h3>
-            {formattedTasks.internalPending.slice(0, preview && !showAllTasks ? 2 : undefined).map((task) => (
-              <div key={task.id} className="flex items-start p-2 rounded hover:bg-neutral-50">
-                <Checkbox 
-                  id={`task-${task.id}`}
-                  className="mt-1 h-4 w-4 rounded" 
-                  checked={task.completed}
-                  onCheckedChange={() => completeMutation.mutate(task.id)}
-                  disabled={completeMutation.isPending}
-                />
-                <div className="ml-2 flex-1">
-                  <div className={`font-medium text-sm text-neutral-800 ${task.completed ? 'line-through text-neutral-400' : ''}`}>
-                    {task.title}
-                  </div>
-                  <div className="text-xs text-neutral-500 mt-0.5 flex items-center flex-wrap">
-                    <span className="mr-2">
-                      {task.dueDate && `Due Date: ${format(new Date(task.dueDate), 'MMM d')}`}
-                    </span>
-                    {task.priority === 'high' && (
-                      <span className="bg-destructive-light text-destructive px-1.5 py-0.5 rounded text-xs">
-                        Urgent
-                      </span>
+      {/* Pending Internal Tasks */}
+      {formattedTasks.internalPending.length > 0 && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-muted-foreground">Internal Tasks</h4>
+          <div className="space-y-2">
+            {formattedTasks.internalPending
+              .slice(0, showAllTasks ? formattedTasks.internalPending.length : 3)
+              .map((task) => (
+                <div key={task.id} className="bg-card rounded-md p-3 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`task-${task.id}`}
+                        checked={false}
+                        onCheckedChange={() => completeMutation.mutate(task.id)}
+                      />
+                      <label 
+                        htmlFor={`task-${task.id}`} 
+                        className="text-sm font-medium cursor-pointer"
+                      >
+                        {task.title}
+                      </label>
+                      {task.priority === 'high' && (
+                        <span className="px-2 py-0.5 bg-red-100 text-red-800 rounded-full text-xs">High</span>
+                      )}
+                      {task.priority === 'urgent' && (
+                        <span className="px-2 py-0.5 bg-red-200 text-red-800 rounded-full text-xs">Urgent</span>
+                      )}
+                    </div>
+                    
+                    {!preview && dealId && (
+                      <div className="flex items-center space-x-1">
+                        <button
+                          onClick={() => {
+                            setCurrentTask(task);
+                            setIsEditDialogOpen(true);
+                          }}
+                          className="text-muted-foreground hover:text-primary p-1 rounded-sm"
+                        >
+                          <Edit size={14} />
+                        </button>
+                        <AssigneeAvatar task={task} />
+                      </div>
                     )}
                   </div>
+                  
                   {task.description && (
-                    <div className="text-xs text-neutral-600 mt-1">{task.description}</div>
+                    <p className="text-xs pl-6 text-muted-foreground">
+                      {task.description.length > 100 
+                        ? `${task.description.substring(0, 100)}...` 
+                        : task.description}
+                    </p>
+                  )}
+                  
+                  {task.dueDate && (
+                    <div className="flex items-center mt-2 pl-6">
+                      <p className="text-xs text-muted-foreground">
+                        Due: {format(new Date(task.dueDate), 'MMM d, yyyy')}
+                      </p>
+                    </div>
                   )}
                 </div>
-                <div className="flex-shrink-0 flex items-center space-x-2">
-                  <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setCurrentTask(task);
-                      setIsEditDialogOpen(true);
-                    }} 
-                    className="text-neutral-400 hover:text-primary p-1"
-                    title="Edit task"
-                  >
-                    <Edit size={14} />
-                  </button>
-                  {task.assignee && (
-                    <Avatar className="h-6 w-6" style={{ backgroundColor: task.assignee.avatarColor }}>
-                      <AvatarFallback>{task.assignee.initials}</AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* External Pending Tasks Section */}
-        {formattedTasks.externalPending.length > 0 && (
-          <div className="mb-4">
-            <h3 className="text-xs font-medium text-neutral-800 mb-2">External Tasks</h3>
-            {formattedTasks.externalPending.slice(0, preview && !showAllTasks ? 2 : undefined).map((task) => (
-              <div key={task.id} className="flex items-start p-2 rounded hover:bg-neutral-50">
-                <Checkbox 
-                  id={`task-${task.id}`}
-                  className="mt-1 h-4 w-4 rounded" 
-                  checked={task.completed}
-                  onCheckedChange={() => completeMutation.mutate(task.id)}
-                  disabled={completeMutation.isPending}
-                />
-                <div className="ml-2 flex-1">
-                  <div className={`font-medium text-sm text-neutral-800 ${task.completed ? 'line-through text-neutral-400' : ''}`}>
-                    {task.title}
-                  </div>
-                  <div className="text-xs text-neutral-500 mt-0.5 flex items-center flex-wrap">
-                    <span className="mr-2">
-                      {task.dueDate && `Due Date: ${format(new Date(task.dueDate), 'MMM d')}`}
-                    </span>
-                    {task.priority === 'high' && (
-                      <span className="bg-destructive-light text-destructive px-1.5 py-0.5 rounded text-xs">
-                        Urgent
-                      </span>
-                    )}
-                  </div>
-                  {task.description && (
-                    <div className="text-xs text-neutral-600 mt-1">{task.description}</div>
-                  )}
-                </div>
-                <div className="flex-shrink-0 flex items-center space-x-2">
-                  <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setCurrentTask(task);
-                      setIsEditDialogOpen(true);
-                    }} 
-                    className="text-neutral-400 hover:text-primary p-1"
-                    title="Edit task"
-                  >
-                    <Edit size={14} />
-                  </button>
-                  {task.assignee && (
-                    <Avatar className="h-6 w-6" style={{ backgroundColor: task.assignee.avatarColor }}>
-                      <AvatarFallback>{task.assignee.initials}</AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        {/* Completed Tasks Section */}
-        {formattedTasks.completed.length > 0 && (
-          <div className="border-t border-neutral-100 pt-2 mt-3">
-            <h3 className="text-xs font-medium text-neutral-500 mb-2">Completed Tasks</h3>
+              ))}
             
-            {formattedTasks.completed.slice(0, preview && !showAllTasks ? 1 : undefined).map((task) => (
-              <div key={task.id} className="flex items-start p-2 rounded hover:bg-neutral-50">
-                <Checkbox 
-                  id={`task-${task.id}`}
-                  className="mt-1 h-4 w-4 rounded" 
-                  checked={task.completed}
-                  disabled
-                />
-                <div className="ml-2 flex-1">
-                  <div className="font-medium text-sm text-neutral-800 line-through text-neutral-400">
-                    {task.title}
-                  </div>
-                  <div className="text-xs text-neutral-500 mt-0.5">
-                    <span>Completed on: {task.completedAt ? format(new Date(task.completedAt), 'MMM d') : 'Unknown'}</span>
-                  </div>
-                </div>
-                <div className="flex-shrink-0 flex items-center space-x-2">
-                  <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setCurrentTask(task);
-                      setIsEditDialogOpen(true);
-                    }} 
-                    className="text-neutral-400 hover:text-primary p-1"
-                    title="Edit task"
-                  >
-                    <Edit size={14} />
-                  </button>
-                  {task.assignee && (
-                    <Avatar className="h-6 w-6" style={{ backgroundColor: task.assignee.avatarColor }}>
-                      <AvatarFallback>{task.assignee.initials}</AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        {(!preview && tasks.length === 0) && (
-          <div className="text-center py-8 text-neutral-500">
-            <div className="mb-2">No tasks found for this deal</div>
-            {dealId && (
+            {formattedTasks.internalPending.length > 3 && (
               <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setIsDialogOpen(true)}
+                variant="ghost" 
+                size="sm" 
+                className="w-full text-xs"
+                onClick={() => setShowAllTasks(!showAllTasks)}
               >
-                <Plus className="h-4 w-4 mr-1" /> 
-                Create First Task
+                {showAllTasks ? "Show Less" : `View All Tasks (${formattedTasks.internalPending.length})`}
               </Button>
             )}
           </div>
-        )}
-        
-        {preview && tasks.length > 3 && (
-          <Button 
-            variant="link" 
-            className="w-full text-center text-xs text-primary border-t border-neutral-100 pt-2 mt-2 hover:text-primary-dark"
-            onClick={() => setShowAllTasks(!showAllTasks)}
-          >
-            {showAllTasks ? "Show less" : `View all tasks (${tasks.length})`}
-          </Button>
-        )}
-      </div>
+        </div>
+      )}
+      
+      {/* Pending External Tasks */}
+      {formattedTasks.externalPending.length > 0 && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-muted-foreground">External Tasks</h4>
+          <div className="space-y-2">
+            {formattedTasks.externalPending
+              .slice(0, showAllTasks ? formattedTasks.externalPending.length : 3)
+              .map((task) => (
+                <div key={task.id} className="bg-card rounded-md p-3 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`task-${task.id}`}
+                        checked={false}
+                        onCheckedChange={() => completeMutation.mutate(task.id)}
+                      />
+                      <label 
+                        htmlFor={`task-${task.id}`} 
+                        className="text-sm font-medium cursor-pointer"
+                      >
+                        {task.title}
+                      </label>
+                      {task.priority === 'high' && (
+                        <span className="px-2 py-0.5 bg-red-100 text-red-800 rounded-full text-xs">High</span>
+                      )}
+                      {task.priority === 'urgent' && (
+                        <span className="px-2 py-0.5 bg-red-200 text-red-800 rounded-full text-xs">Urgent</span>
+                      )}
+                    </div>
+                    
+                    {!preview && dealId && (
+                      <div className="flex items-center space-x-1">
+                        <button
+                          onClick={() => {
+                            setCurrentTask(task);
+                            setIsEditDialogOpen(true);
+                          }}
+                          className="text-muted-foreground hover:text-primary p-1 rounded-sm"
+                        >
+                          <Edit size={14} />
+                        </button>
+                        <AssigneeAvatar task={task} />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {task.description && (
+                    <p className="text-xs pl-6 text-muted-foreground">
+                      {task.description.length > 100 
+                        ? `${task.description.substring(0, 100)}...` 
+                        : task.description}
+                    </p>
+                  )}
+                  
+                  {task.dueDate && (
+                    <div className="flex items-center mt-2 pl-6">
+                      <p className="text-xs text-muted-foreground">
+                        Due: {format(new Date(task.dueDate), 'MMM d, yyyy')}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            
+            {formattedTasks.externalPending.length > 3 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="w-full text-xs"
+                onClick={() => setShowAllTasks(!showAllTasks)}
+              >
+                {showAllTasks ? "Show Less" : `View All Tasks (${formattedTasks.externalPending.length})`}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Completed Tasks */}
+      {formattedTasks.completed.length > 0 && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-muted-foreground">Completed Tasks</h4>
+          <div className="space-y-2">
+            {formattedTasks.completed
+              .slice(0, showAllTasks ? formattedTasks.completed.length : 3)
+              .map((task) => (
+                <div key={task.id} className="bg-card rounded-md p-3 shadow-sm opacity-70">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`task-${task.id}`}
+                        checked={true}
+                        disabled
+                      />
+                      <label 
+                        htmlFor={`task-${task.id}`} 
+                        className="text-sm font-medium line-through cursor-pointer"
+                      >
+                        {task.title}
+                      </label>
+                    </div>
+                    
+                    {!preview && dealId && (
+                      <div className="flex items-center space-x-1">
+                        <button
+                          onClick={() => {
+                            setCurrentTask(task);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                          className="text-muted-foreground hover:text-destructive p-1 rounded-sm"
+                        >
+                          <Trash size={14} />
+                        </button>
+                        <AssigneeAvatar task={task} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            
+            {formattedTasks.completed.length > 3 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="w-full text-xs"
+                onClick={() => setShowAllTasks(!showAllTasks)}
+              >
+                {showAllTasks ? "Show Less" : `View All Tasks (${formattedTasks.completed.length})`}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* No Tasks Message */}
+      {tasks.length === 0 && (
+        <div className="p-4 text-center border border-dashed rounded-md">
+          <p className="text-sm text-muted-foreground">No tasks available for this deal.</p>
+          {!preview && dealId && (
+            <p className="text-xs mt-1 text-muted-foreground">
+              Click the "Add Task" button to create a new task.
+            </p>
+          )}
+        </div>
+      )}
       
       {/* Edit Task Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -1120,80 +1181,20 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
           <DialogHeader>
             <DialogTitle>Edit Task</DialogTitle>
             <DialogDescription>
-              Update the task details
+              Update the task details.
             </DialogDescription>
           </DialogHeader>
+          
           <Form {...form}>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              if (!currentTask) return;
-              
-              const formData = form.getValues();
-              
-              // Process the form data for submission
-              try {
-                // Get the processed assignee ID
-                const processedAssigneeId = handleAssigneeId(formData.assigneeId);
-                
-                // Format the data for submission
-                const formattedData: any = {
-                  id: currentTask.id,
-                  title: formData.title,
-                  description: formData.description || "",
-                  status: formData.status || "active",
-                  priority: formData.priority || "medium",
-                  dueDate: formData.dueDate ? new Date(formData.dueDate) : null,
-                  taskType: formData.taskType || "internal",
-                  completed: currentTask.completed || false
-                };
-                
-                // Special handling for custom assignees
-                if (typeof processedAssigneeId === 'string' && processedAssigneeId.startsWith('custom-')) {
-                  // Extract the actual name from the custom ID
-                  const customName = processedAssigneeId.replace('custom-', '');
-                  formattedData.assigneeName = customName;
-                  formattedData.assigneeId = null; // Important: must be null, not a number for custom assignees
-                  formattedData.assigneeType = 'custom';
-                  
-                  console.log("Edit with custom assignee:", customName);
-                } else if (processedAssigneeId !== null) {
-                  // Regular assignee with ID (including attorney or firm)
-                  formattedData.assigneeId = processedAssigneeId;
-                  formattedData.assigneeName = null;
-                  
-                  // Set the assignee type based on the form data
-                  // This was set in handleAssigneeId function when processing the ID
-                  formattedData.assigneeType = formData.assigneeType || 'user';
-                  
-                  console.log(`Edit with ${formData.assigneeType} assignee ID:`, processedAssigneeId);
-                } else {
-                  // Unassigned
-                  formattedData.assigneeId = null;
-                  formattedData.assigneeName = null;
-                  formattedData.assigneeType = 'user';
-                  
-                  console.log("Edit with no assignee");
-                }
-                
-                // Submit the data using the edit mutation
-                editTaskMutation.mutate(formattedData);
-              } catch (error: any) {
-                console.error("Error preparing task data:", error);
-                toast({
-                  variant: "destructive",
-                  title: "Form Error",
-                  description: error.message || "Failed to prepare task data. Please check your inputs.",
-                });
-              }
-            }} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Task Title</FormLabel>
+                    <FormLabel>Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter task title" {...field} />
+                      <Input placeholder="Task title" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1208,9 +1209,8 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                     <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Enter task description" 
-                        className="resize-none" 
-                        {...field} 
+                        placeholder="Enter task details..." 
+                        {...field}
                         value={field.value || ''}
                       />
                     </FormControl>
@@ -1219,37 +1219,17 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                 )}
               />
               
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="dueDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Due Date</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="date" 
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            field.onChange(value ? new Date(value) : null);
-                          }}
-                          value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
+              <div className="flex space-x-4">
                 <FormField
                   control={form.control}
                   name="priority"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex-1">
                       <FormLabel>Priority</FormLabel>
                       <Select 
                         onValueChange={field.onChange} 
-                        defaultValue={field.value}
+                        defaultValue={field.value || 'medium'}
+                        value={field.value || 'medium'}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -1260,6 +1240,35 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                           <SelectItem value="low">Low</SelectItem>
                           <SelectItem value="medium">Medium</SelectItem>
                           <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="urgent">Urgent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Status</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value || 'active'}
+                        value={field.value || 'active'}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="waiting">Waiting</SelectItem>
+                          <SelectItem value="deferred">Deferred</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -1268,39 +1277,62 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                 />
               </div>
               
-              <FormField
-                control={form.control}
-                name="taskType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Task Type</FormLabel>
-                    <Select 
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        form.setValue("assigneeId", null);
-                        
-                        if (value === 'external') {
-                          form.setValue("assigneeType", "attorney");
-                        } else {
-                          form.setValue("assigneeType", "user");
-                        }
-                      }} 
-                      defaultValue={field.value}
-                    >
+              <div className="flex space-x-4">
+                <FormField
+                  control={form.control}
+                  name="taskType"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Task Type</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value || 'internal'}
+                        value={field.value || 'internal'}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Internal or External" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="internal">Internal</SelectItem>
+                          <SelectItem value="external">External</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="dueDate"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Due Date</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select task type" />
-                        </SelectTrigger>
+                        <Input 
+                          type="date" 
+                          {...field}
+                          value={field.value ? 
+                            (typeof field.value === 'string' ? 
+                              field.value : 
+                              format(new Date(field.value), 'yyyy-MM-dd')) : 
+                            ''}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              field.onChange(new Date(e.target.value));
+                            } else {
+                              field.onChange(null);
+                            }
+                          }}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="internal">Internal Task</SelectItem>
-                        <SelectItem value="external">External Task</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               
               <FormField
                 control={form.control}
@@ -1308,128 +1340,128 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assignee</FormLabel>
-                    <Select 
-                      key={`edit-assignee-select-${selectKey}`}
-                      onValueChange={(value) => {
-                        if (value === 'new-assignee') {
-                          setIsNewAssigneeDialogOpen(true);
-                        } else {
-                          field.onChange(value);
-                        }
-                      }} 
-                      defaultValue={field.value?.toString() || "unassigned"}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select assignee" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="unassigned">Unassigned</SelectItem>
-                        
-                        {/* Internal task assignees (users) */}
-                        {currentTaskType === 'internal' && users?.map((user: User) => (
-                          <SelectItem key={user.id} value={user.id.toString()}>
-                            {user.fullName}
-                          </SelectItem>
-                        ))}
-                        
-                        {/* External task assignees */}
-                        {currentTaskType === 'external' && (
-                          <>
-                            {/* Law firms with their attorneys */}
-                            {Array.isArray(lawFirms) && lawFirms.length > 0 && (
-                              <>
-                                <SelectItem value="law-firms-header" disabled className="font-bold text-xs text-neutral-500 py-1 my-1">
-                                  LAW FIRMS & ATTORNEYS
+                    <div className="flex space-x-2">
+                      <Select 
+                        key={selectKey}
+                        onValueChange={field.onChange}
+                        value={field.value?.toString() || 'unassigned'}
+                      >
+                        <FormControl className="flex-1">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select assignee" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
+                          
+                          {/* Divider and heading for internal team members */}
+                          {users.length > 0 && currentTaskType !== 'external' && (
+                            <>
+                              <div className="px-2 pt-2 pb-1 text-xs font-medium text-muted-foreground">
+                                Internal Team
+                              </div>
+                              {users.map((user) => (
+                                <SelectItem key={user.id} value={user.id.toString()}>
+                                  {user.fullName}
                                 </SelectItem>
-                                
-                                {/* Loop through each law firm */}
-                                {lawFirms.map((lawFirm: LawFirm) => (
-                                  <React.Fragment key={`firm-group-${lawFirm.id}`}>
-                                    {/* Law firm option */}
-                                    <SelectItem key={`firm-${lawFirm.id}`} value={`firm-${lawFirm.id}`}>
-                                      {lawFirm.name}
-                                    </SelectItem>
-                                    
-                                    {/* Attorney options nested under their law firm */}
-                                    {attorneys
-                                      .filter((attorney: Attorney) => attorney.lawFirmId === lawFirm.id)
-                                      .map((attorney: Attorney) => (
-                                        <SelectItem 
-                                          key={`attorney-${attorney.id}`} 
-                                          value={`attorney-${attorney.id}`}
-                                          className="pl-8 text-sm" // Increased indentation for attorneys under their firms
-                                        >
-                                          → {attorney.name} ({attorney.position})
-                                        </SelectItem>
-                                      ))}
-                                  </React.Fragment>
-                                ))}
-                              </>
-                            )}
-                            
-                            {/* Custom assignees section */}
-                            {customAssignees.length > 0 && (
-                              <>
-                                <SelectItem value="custom-header" disabled className="font-bold text-xs text-neutral-500 py-1 my-1">
-                                  OTHER
+                              ))}
+                            </>
+                          )}
+                          
+                          {/* Divider and heading for law firms */}
+                          {lawFirms.length > 0 && currentTaskType === 'external' && (
+                            <>
+                              <div className="px-2 pt-2 pb-1 text-xs font-medium text-muted-foreground">
+                                Law Firms
+                              </div>
+                              {lawFirms.map((firm) => (
+                                <SelectItem key={`firm-${firm.id}`} value={`firm-${firm.id}`}>
+                                  {firm.name}
                                 </SelectItem>
-                                
-                                {customAssignees.map((custom) => (
-                                  <SelectItem key={custom.id} value={custom.id}>
-                                    {custom.name}
-                                  </SelectItem>
-                                ))}
-                              </>
-                            )}
-                            
-                            {/* Option to add new assignee */}
-                            <SelectItem value="new-assignee" className="text-primary border-t border-neutral-100 mt-1 pt-1">
-                              + Add New Assignee
-                            </SelectItem>
-                          </>
-                        )}
-                      </SelectContent>
-                    </Select>
+                              ))}
+                            </>
+                          )}
+                          
+                          {/* Divider and heading for attorneys */}
+                          {attorneys.length > 0 && currentTaskType === 'external' && (
+                            <>
+                              <div className="px-2 pt-2 pb-1 text-xs font-medium text-muted-foreground">
+                                Attorneys
+                              </div>
+                              {attorneys.map((attorney) => (
+                                <SelectItem key={`attorney-${attorney.id}`} value={`attorney-${attorney.id}`}>
+                                  {attorney.name}
+                                </SelectItem>
+                              ))}
+                            </>
+                          )}
+                          
+                          {/* Divider and heading for custom assignees */}
+                          {customAssignees.length > 0 && (
+                            <>
+                              <div className="px-2 pt-2 pb-1 text-xs font-medium text-muted-foreground">
+                                Custom Assignees
+                              </div>
+                              {customAssignees.map((custom) => (
+                                <SelectItem key={custom.id} value={custom.id}>
+                                  {custom.name}
+                                </SelectItem>
+                              ))}
+                            </>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      
+                      <Dialog open={isNewAssigneeDialogOpen} onOpenChange={setIsNewAssigneeDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button type="button" variant="outline" size="icon">
+                            <UserPlus className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                          <DialogHeader>
+                            <DialogTitle>Add Custom Assignee</DialogTitle>
+                            <DialogDescription>
+                              Add a custom external assignee not in the system.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                              <FormLabel>Name</FormLabel>
+                              <Input 
+                                placeholder="External assignee name" 
+                                value={newAssigneeName}
+                                onChange={(e) => setNewAssigneeName(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button type="button" onClick={addCustomAssignee}>
+                              Add Assignee
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
-              <div className="flex justify-between mt-4">
-                {currentTask && (
-                  <Button 
-                    type="button"
-                    variant="destructive"
-                    onClick={() => {
-                      setIsEditDialogOpen(false);
-                      setIsDeleteDialogOpen(true);
-                    }}
-                  >
-                    <Trash className="h-4 w-4 mr-1" />
-                    Delete
-                  </Button>
-                )}
-                <div className="flex space-x-2 ml-auto">
-                  <Button 
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsEditDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={editTaskMutation.isPending}>
-                    {editTaskMutation.isPending ? 'Updating...' : 'Update Task'}
-                  </Button>
-                </div>
-              </div>
+              <DialogFooter>
+                <Button 
+                  type="submit" 
+                  disabled={editTaskMutation.isPending}
+                >
+                  {editTaskMutation.isPending ? "Updating..." : "Update Task"}
+                </Button>
+              </DialogFooter>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
       
-      {/* Delete Task Dialog */}
+      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -1438,10 +1470,14 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
               Are you sure you want to delete this task? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-end space-x-2 mt-4">
-            <Button 
+          
+          <DialogFooter>
+            <Button
               variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
+              onClick={() => {
+                setIsDeleteDialogOpen(false);
+                setCurrentTask(null);
+              }}
             >
               Cancel
             </Button>
@@ -1452,11 +1488,11 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                   deleteTaskMutation.mutate(currentTask.id);
                 }
               }}
-              disabled={deleteTaskMutation.isPending}
+              disabled={deleteTaskMutation.isPending || !currentTask}
             >
-              {deleteTaskMutation.isPending ? 'Deleting...' : 'Delete Task'}
+              {deleteTaskMutation.isPending ? "Deleting..." : "Delete Task"}
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
