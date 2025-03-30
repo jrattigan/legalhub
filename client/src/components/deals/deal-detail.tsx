@@ -770,7 +770,7 @@ export default function DealDetail({
   };
       
   return (
-    <div className="flex flex-col bg-neutral-50 h-full">
+    <div className="flex flex-col bg-neutral-50 h-full" style={{ minHeight: '100vh' }}>
       {/* Edit Deal Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px] max-h-[90vh]">
@@ -1525,7 +1525,7 @@ export default function DealDetail({
         )}
       </div>
       
-      <div className={`p-6 flex-1 overflow-y-auto ${isMobile ? 'pb-24' : ''}`}>
+      <div className={`p-6 flex-1 overflow-y-auto ${isMobile ? 'pb-24' : ''}`} style={{ height: isMobile ? 'calc(100vh - 160px)' : 'auto' }}>
         {isTabLoading && (
           <div className="absolute inset-0 bg-white/70 z-50 flex items-center justify-center">
             <div className="flex flex-col items-center">
