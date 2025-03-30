@@ -5,7 +5,6 @@ import {
   dealUsers, DealUser, InsertDealUser,
   documents, Document, InsertDocument,
   documentVersions, DocumentVersion, InsertDocumentVersion,
-  tasks, Task, InsertTask,
   issues, Issue, InsertIssue,
   lawFirms, LawFirm, InsertLawFirm,
   attorneys, Attorney, InsertAttorney, 
@@ -58,13 +57,7 @@ export interface IStorage {
   getLatestVersionNumber(documentId: number): Promise<number>;
   compareDocumentVersions(versionId1: number, versionId2: number, customContent1?: string, customContent2?: string): Promise<string>;
 
-  // Tasks
-  getTask(id: number): Promise<Task | undefined>;
-  getTasksByDeal(dealId: number): Promise<(Task & { assignee?: User })[]>;
-  createTask(task: InsertTask): Promise<Task>;
-  updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined>;
-  completeTask(id: number): Promise<Task | undefined>;
-  deleteTask(id: number): Promise<boolean>;
+
 
   // Issues
   getIssue(id: number): Promise<Issue | undefined>;
@@ -128,7 +121,7 @@ export class MemStorage implements IStorage {
   private dealUsers: Map<number, DealUser>;
   private documents: Map<number, Document>;
   private documentVersions: Map<number, DocumentVersion>;
-  private tasks: Map<number, Task>;
+
   private issues: Map<number, Issue>;
   private lawFirms: Map<number, LawFirm>;
   private attorneys: Map<number, Attorney>;
@@ -144,7 +137,6 @@ export class MemStorage implements IStorage {
   currentDealUserId: number;
   currentDocumentId: number;
   currentVersionId: number;
-  currentTaskId: number;
   currentIssueId: number;
   currentLawFirmId: number;
   currentAttorneyId: number;
@@ -161,7 +153,6 @@ export class MemStorage implements IStorage {
     this.dealUsers = new Map();
     this.documents = new Map();
     this.documentVersions = new Map();
-    this.tasks = new Map();
     this.issues = new Map();
     this.lawFirms = new Map();
     this.attorneys = new Map();
@@ -177,7 +168,6 @@ export class MemStorage implements IStorage {
     this.currentDealUserId = 1;
     this.currentDocumentId = 1;
     this.currentVersionId = 1;
-    this.currentTaskId = 1;
     this.currentIssueId = 1;
     this.currentLawFirmId = 1;
     this.currentAttorneyId = 1;

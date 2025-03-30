@@ -199,68 +199,7 @@ export const insertDocumentVersionSchema = createInsertSchema(documentVersions).
   return transformedData;
 });
 
-// Tasks schema
-export const tasks = pgTable("tasks", {
-  id: serial("id").primaryKey(),
-  dealId: integer("deal_id").notNull(),
-  title: text("title").notNull(),
-  description: text("description"),
-  status: text("status").notNull().default("pending"),
-  priority: text("priority").notNull().default("medium"),
-  dueDate: timestamp("due_date"),
-  assigneeId: integer("assignee_id"),
-  assigneeType: text("assignee_type").default("user"), // 'user', 'attorney', 'firm', or 'custom'
-  assigneeName: text("assignee_name"),  // For custom assignees (name string)
-  taskType: text("task_type").notNull().default("internal"), // 'internal' or 'external'
-  completed: boolean("completed").default(false).notNull(),
-  completedAt: timestamp("completed_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
 
-export const insertTaskSchema = createInsertSchema(tasks).pick({
-  dealId: true,
-  title: true,
-  description: true,
-  status: true,
-  priority: true,
-  dueDate: true,
-  assigneeId: true,
-  assigneeType: true,
-  assigneeName: true, // Added for custom assignees
-  taskType: true,
-  completed: true,
-}).transform((data) => {
-  // Handle date conversion from string to Date
-  const transformedData = { ...data };
-  
-  // Ensure assigneeId is null and not undefined when empty
-  if (transformedData.assigneeId === undefined) {
-    transformedData.assigneeId = null;
-  }
-  
-  // Ensure assigneeType has a default if not provided
-  if (transformedData.assigneeType === undefined) {
-    transformedData.assigneeType = "user";
-  }
-  
-  // Ensure assigneeName is null and not undefined when empty
-  if (transformedData.assigneeName === undefined) {
-    transformedData.assigneeName = null;
-  }
-  
-  // Ensure taskType has a default if not provided
-  if (transformedData.taskType === undefined) {
-    transformedData.taskType = "internal";
-  }
-  
-  // Parse date strings into Date objects
-  if (transformedData.dueDate && typeof transformedData.dueDate === 'string') {
-    transformedData.dueDate = new Date(transformedData.dueDate);
-  }
-  
-  return transformedData;
-});
 
 // Issues schema
 export const issues = pgTable("issues", {
@@ -438,8 +377,7 @@ export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type DocumentVersion = typeof documentVersions.$inferSelect;
 export type InsertDocumentVersion = z.infer<typeof insertDocumentVersionSchema>;
 
-export type Task = typeof tasks.$inferSelect;
-export type InsertTask = z.infer<typeof insertTaskSchema>;
+// Task type and schema removed
 
 export type Issue = typeof issues.$inferSelect;
 export type InsertIssue = z.infer<typeof insertIssueSchema>;

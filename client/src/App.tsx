@@ -9,7 +9,6 @@ import Deals from "@/pages/deals";
 import NewDeal from "@/pages/new-deal";
 import DealDetailPage from "@/pages/deal-detail";
 import Documents from "@/pages/documents";
-import Tasks from "@/pages/tasks";
 import Counsel from "@/pages/counsel";
 import Reports from "@/pages/reports";
 import Companies from "@/pages/companies";
@@ -26,7 +25,6 @@ function Router() {
       <Route path="/deals/new" component={NewDeal} />
       <Route path="/deals/:id" component={DealDetailPage} />
       <Route path="/documents" component={Documents} />
-      <Route path="/tasks" component={Tasks} />
       <Route path="/counsel" component={Counsel} />
       <Route path="/reports" component={Reports} />
       <Route path="/settings" component={Settings} />

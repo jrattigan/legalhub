@@ -47,12 +47,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CompanySelect } from '@/components/ui/company-select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Deal, User, Document, Task, Issue, LawFirm, Attorney, TimelineEvent, Company } from '@shared/schema';
+import { Deal, User, Document, Issue, LawFirm, Attorney, TimelineEvent, Company } from '@shared/schema';
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatDealTitle } from '@/lib/deal-title-formatter';
 import { convertFileToBase64, getFileExtension } from '@/lib/file-helpers';
 import DocumentCard from './document-card';
-import TaskCard from './task-card';
+// TaskCard removed
 import IssueCard from './issue-card';
 import CounselCard from './counsel-card';
 import TimelineCard from './timeline-card';
@@ -62,7 +62,6 @@ type DealDetailProps = {
   deal: Deal;
   dealUsers: (User & { role: string })[];
   documents: (Document & { versions: number })[];
-  tasks: (Task & { assignee?: User })[];
   issues: (Issue & { assignee?: User })[];
   counsel: {
     id: number;
@@ -78,7 +77,6 @@ export default function DealDetail({
   deal, 
   dealUsers, 
   documents, 
-  tasks, 
   issues, 
   counsel,
   timelineEvents,
@@ -87,9 +85,8 @@ export default function DealDetail({
   const [activeTab, setActiveTab] = useState('overview');
   
   // Calculate progress metrics
-  const completedTasks = tasks.filter(task => task.completed).length;
-  const totalTasks = tasks.length;
-  const taskProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  // Task functionality has been removed
+  const taskProgress = 0;
   
   const dueDiligenceItems = 12;
   const completedDueDiligenceItems = 9;
@@ -103,7 +100,7 @@ export default function DealDetail({
   const signaturesCompleted = 0;
   const signaturesProgress = Math.round((signaturesCompleted / signaturesTotal) * 100);
   
-  const overallProgress = Math.round((taskProgress + dueDiligenceProgress + documentsProgress + signaturesProgress) / 4);
+  const overallProgress = Math.round((dueDiligenceProgress + documentsProgress + signaturesProgress) / 3);
 
   // State for edit dialog
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -520,7 +517,6 @@ export default function DealDetail({
   const tabItems = [
     { id: 'overview', label: 'Overview', icon: <Eye className="h-4 w-4" /> },
     { id: 'documents', label: 'Docs', icon: <File className="h-4 w-4" /> },
-    { id: 'tasks', label: 'Tasks', icon: <CheckSquare className="h-4 w-4" /> },
     { id: 'issues', label: 'Issues', icon: <Alert className="h-4 w-4" /> },
     { id: 'team', label: 'Team', icon: <Users className="h-4 w-4" /> },
     { id: 'allocations', label: 'Allocations', icon: <DollarSign className="h-4 w-4" /> },
@@ -1488,7 +1484,6 @@ export default function DealDetail({
           <TabsList className="hidden">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="tasks">Tasks</TabsTrigger>
             <TabsTrigger value="issues">Issues</TabsTrigger>
             <TabsTrigger value="team">Team</TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
@@ -1618,9 +1613,6 @@ export default function DealDetail({
                 </div>
               </div>
             </div>
-            
-            {/* Tasks Summary Card */}
-            <TaskCard tasks={tasks} onRefreshData={onRefreshData} preview={true} dealId={deal.id} />
             
             {/* Issues Summary Card */}
             <IssueCard issues={issues} onRefreshData={onRefreshData} preview={true} dealId={deal.id} />
@@ -1939,10 +1931,7 @@ export default function DealDetail({
           </div>
         </TabsContent>
         
-        <TabsContent value="tasks" className="m-0 overflow-y-auto flex-1" hidden={activeTab !== 'tasks'}>
-          <TaskCard tasks={tasks} onRefreshData={onRefreshData} preview={false} dealId={deal.id} />
-        </TabsContent>
-        
+
         <TabsContent value="issues" className="m-0 overflow-y-auto flex-1" hidden={activeTab !== 'issues'}>
           <IssueCard issues={issues} onRefreshData={onRefreshData} preview={false} dealId={deal.id} />
         </TabsContent>
@@ -2114,7 +2103,6 @@ export default function DealDetail({
                           <div className="mt-3 p-3 bg-neutral-50 rounded border border-neutral-200 text-sm">
                             <div className="font-medium">
                               {event.referenceType === 'document' ? 'Document Reference' : 
-                               event.referenceType === 'task' ? 'Task Reference' : 
                                event.referenceType === 'issue' ? 'Issue Reference' : 
                                'Reference'}
                             </div>
@@ -2134,7 +2122,7 @@ export default function DealDetail({
                     <h3 className="font-medium text-lg text-neutral-800 mb-2">No Timeline Events Yet</h3>
                     <p className="text-neutral-500 max-w-md mx-auto mb-4">
                       This deal doesn't have any timeline events yet. Events are automatically added 
-                      when documents are uploaded, tasks are completed, or other important actions occur.
+                      when documents are uploaded or other important actions occur.
                     </p>
                     <Button 
                       variant="outline"

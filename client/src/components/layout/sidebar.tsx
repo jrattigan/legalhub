@@ -3,7 +3,6 @@ import { Link, useLocation } from 'wouter';
 import { 
   LayoutDashboard, 
   FileText, 
-  CheckSquare, 
   File, 
   Users,
   Building2
@@ -35,11 +34,6 @@ export default function Sidebar({ recentDeals = [] }: SidebarProps) {
       name: 'My Deals', 
       path: '/deals', 
       icon: <FileText className="h-5 w-5" />
-    },
-    { 
-      name: 'My Tasks', 
-      path: '/tasks', 
-      icon: <CheckSquare className="h-5 w-5" />
     },
     { 
       name: 'Documents', 
