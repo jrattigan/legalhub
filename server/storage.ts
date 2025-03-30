@@ -57,8 +57,6 @@ export interface IStorage {
   getLatestVersionNumber(documentId: number): Promise<number>;
   compareDocumentVersions(versionId1: number, versionId2: number, customContent1?: string, customContent2?: string): Promise<string>;
 
-
-
   // Issues
   getIssue(id: number): Promise<Issue | undefined>;
   getIssuesByDeal(dealId: number): Promise<(Issue & { assignee?: User })[]>;
@@ -130,6 +128,8 @@ export class MemStorage implements IStorage {
   private appSettings: Map<number, AppSetting>;
   private funds: Map<number, Fund>;
   private allocations: Map<number, Allocation>;
+  
+
 
   currentUserId: number;
   currentCompanyId: number;
@@ -145,6 +145,8 @@ export class MemStorage implements IStorage {
   currentAppSettingId: number;
   currentFundId: number;
   currentAllocationId: number;
+  
+
 
   constructor() {
     this.users = new Map();
@@ -161,6 +163,8 @@ export class MemStorage implements IStorage {
     this.appSettings = new Map();
     this.funds = new Map();
     this.allocations = new Map();
+    
+
 
     this.currentUserId = 1;
     this.currentCompanyId = 1;
@@ -176,6 +180,8 @@ export class MemStorage implements IStorage {
     this.currentAppSettingId = 1;
     this.currentFundId = 1;
     this.currentAllocationId = 1;
+    
+
 
     // Initialize with sample data
     this.initializeSampleData();
@@ -1771,263 +1777,6 @@ export class MemStorage implements IStorage {
     return generateDocumentComparison(olderVersion, newerVersion, customContent1, customContent2);
   }
 
-  // Task methods
-  async getTask(id: number): Promise<Task | undefined> {
-    return this.tasks.get(id);
-  }
-
-  async getTasksByDeal(dealId: number): Promise<(Task & { assignee?: User | Attorney | LawFirm | { name: string, type: 'custom', initials: string, avatarColor: string } })[]> {
-    const dealTasks = Array.from(this.tasks.values())
-      .filter((task) => task.dealId === dealId);
-    
-    return dealTasks.map(task => {
-      // For tasks without an assignee
-      if (!task.assigneeId && !task.assigneeName) {
-        return { ...task, assignee: undefined };
-      }
-      
-      // Custom assignee (just a name string, not linked to a DB entity)
-      if (task.assigneeType === 'custom' && task.assigneeName) {
-        // Create a virtual assignee object with name and initials for display
-        const nameParts = task.assigneeName.split(' ');
-        const initials = nameParts.length > 1 
-          ? `${nameParts[0][0] || ''}${nameParts[1][0] || ''}`.toUpperCase() 
-          : `${nameParts[0][0] || ''}${nameParts[0][1] || ''}`.toUpperCase();
-        
-        return { 
-          ...task, 
-          assignee: {
-            name: task.assigneeName,
-            type: 'custom',
-            initials,
-            avatarColor: '#94A3B8' // Slate-400 color for custom assignees
-          }
-        };
-      }
-      
-      // User assignee
-      if (task.assigneeType === 'user' && task.assigneeId) {
-        const assignee = this.users.get(task.assigneeId);
-        if (!assignee) {
-          return { ...task, assignee: undefined };
-        }
-        
-        return { ...task, assignee };
-      }
-      
-      // Attorney assignee
-      if (task.assigneeType === 'attorney' && task.assigneeId) {
-        const assignee = this.attorneys.get(task.assigneeId);
-        if (!assignee) {
-          return { ...task, assignee: undefined };
-        }
-        
-        // Return attorney with custom initials and avatar color
-        return { 
-          ...task, 
-          assignee: {
-            ...assignee,
-            initials: 'AT', // Attorney
-            avatarColor: '#8B5CF6' // Purple-500 for external assignees
-          }
-        };
-      }
-      
-      // Law firm assignee
-      if (task.assigneeType === 'firm' && task.assigneeId) {
-        const assignee = this.lawFirms.get(task.assigneeId);
-        if (!assignee) {
-          return { ...task, assignee: undefined };
-        }
-        
-        // Return law firm with custom initials and avatar color
-        return { 
-          ...task, 
-          assignee: {
-            ...assignee,
-            initials: 'LF', // Law Firm
-            avatarColor: '#8B5CF6' // Purple-500 for external assignees
-          }
-        };
-      }
-      
-      // Fallback for any other case
-      return { ...task, assignee: undefined };
-    });
-  }
-
-  async createTask(insertTask: InsertTask): Promise<Task> {
-    console.log(`[Storage] Creating new task with data:`, JSON.stringify(insertTask, null, 2));
-    
-    const id = this.currentTaskId++;
-    
-    // Create a complete Task object ensuring all required fields are present
-    const task: Task = {
-      id,
-      dealId: insertTask.dealId,
-      title: insertTask.title,
-      description: insertTask.description || null,
-      status: insertTask.status || 'pending',
-      priority: insertTask.priority || 'medium',
-      dueDate: insertTask.dueDate || null,
-      assigneeId: insertTask.assigneeId || null,
-      assigneeType: insertTask.assigneeType || 'user', // Handle assignee type (user, attorney, firm, custom)
-      assigneeName: insertTask.assigneeName || null, // Store name for custom assignees
-      taskType: insertTask.taskType || 'internal', // Handle task type (internal or external)
-      completed: insertTask.completed || false,
-      completedAt: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    
-    // Check for custom assignee values and log them
-    if (task.assigneeType === 'custom') {
-      console.log(`[Storage] Custom assignee detected with name: "${task.assigneeName}"`);
-      if (!task.assigneeName) {
-        console.warn(`[Storage] Warning: Custom assignee has no name specified!`);
-      }
-    }
-    
-    console.log(`[Storage] Saving new task:`, JSON.stringify(task, null, 2));
-    this.tasks.set(id, task);
-    console.log(`[Storage] Task saved successfully with ID: ${id}`);
-    
-    // Create timeline event
-    this.createTimelineEvent({
-      dealId: task.dealId,
-      title: "Task Created",
-      description: `New task created: ${task.title}`,
-      eventType: "task",
-      referenceId: id,
-      referenceType: "task"
-    });
-    
-    return task;
-  }
-
-  async updateTask(id: number, taskUpdate: Partial<InsertTask>): Promise<Task | undefined> {
-    console.log(`[Storage] Updating task with ID: ${id}`);
-    console.log(`[Storage] Update data:`, JSON.stringify(taskUpdate, null, 2));
-    
-    const existingTask = this.tasks.get(id);
-    if (!existingTask) {
-      console.log(`[Storage] Task with ID ${id} not found`);
-      return undefined;
-    }
-    
-    console.log(`[Storage] Found existing task:`, JSON.stringify(existingTask, null, 2));
-    
-    // Ensure assigneeType is set appropriately based on taskType
-    if (taskUpdate.taskType && !taskUpdate.assigneeType) {
-      if (taskUpdate.taskType === 'external') {
-        // Default to 'attorney' if external task with no assigneeType specified
-        taskUpdate.assigneeType = 'attorney';
-        console.log(`[Storage] Setting assigneeType to 'attorney' for external task`);
-      } else {
-        // Default to 'user' if internal task with no assigneeType specified
-        taskUpdate.assigneeType = 'user';
-        console.log(`[Storage] Setting assigneeType to 'user' for internal task`);
-      }
-    }
-    
-    // Special handling for custom assignees
-    if (taskUpdate.assigneeType === 'custom' && !taskUpdate.assigneeName) {
-      // For custom assignee type, we need to ensure a name is provided
-      if (existingTask.assigneeType === 'custom' && existingTask.assigneeName) {
-        // Keep existing custom assignee name if not provided in update
-        taskUpdate.assigneeName = existingTask.assigneeName;
-        console.log(`[Storage] Keeping existing custom assignee name: ${taskUpdate.assigneeName}`);
-      }
-    }
-    
-    // For non-custom assignees, clear assigneeName
-    if (taskUpdate.assigneeType && taskUpdate.assigneeType !== 'custom') {
-      taskUpdate.assigneeName = null;
-      console.log(`[Storage] Clearing assigneeName for non-custom assignee type: ${taskUpdate.assigneeType}`);
-    }
-    
-    const updatedTask: Task = { 
-      ...existingTask, 
-      ...taskUpdate,
-      updatedAt: new Date() // Always update the updatedAt timestamp
-    };
-    
-    console.log(`[Storage] Updated task object before saving:`, JSON.stringify(updatedTask, null, 2));
-    
-    // Verify assignee information is properly set
-    if (updatedTask.assigneeType === 'custom') {
-      console.log(`[Storage] Custom assignee detected. Name: ${updatedTask.assigneeName}`);
-      if (!updatedTask.assigneeName) {
-        console.warn(`[Storage] Warning: Custom assignee type but no assigneeName set!`);
-      }
-    } else {
-      console.log(`[Storage] Non-custom assignee type: ${updatedTask.assigneeType}, ID: ${updatedTask.assigneeId}`);
-    }
-    
-    this.tasks.set(id, updatedTask);
-    console.log(`[Storage] Task saved successfully with ID: ${id}`);
-    
-    // Create timeline event if task type changed
-    if (taskUpdate.taskType && taskUpdate.taskType !== existingTask.taskType) {
-      console.log(`[Storage] Creating timeline event for task type change: ${existingTask.taskType} -> ${updatedTask.taskType}`);
-      this.createTimelineEvent({
-        dealId: updatedTask.dealId,
-        title: "Task Type Changed",
-        description: `Task "${updatedTask.title}" changed from ${existingTask.taskType} to ${updatedTask.taskType}`,
-        eventType: "task",
-        referenceId: id,
-        referenceType: "task"
-      });
-    }
-    
-    // Create timeline event if assignee type changed
-    if (taskUpdate.assigneeType && taskUpdate.assigneeType !== existingTask.assigneeType) {
-      console.log(`[Storage] Creating timeline event for assignee type change: ${existingTask.assigneeType} -> ${updatedTask.assigneeType}`);
-      this.createTimelineEvent({
-        dealId: updatedTask.dealId,
-        title: "Assignee Type Changed",
-        description: `Task "${updatedTask.title}" assignee type changed from ${existingTask.assigneeType} to ${updatedTask.assigneeType}`,
-        eventType: "task",
-        referenceId: id,
-        referenceType: "task"
-      });
-    }
-    
-    console.log(`[Storage] Task update completed. Returning updated task.`);
-    return updatedTask;
-  }
-
-  async completeTask(id: number): Promise<Task | undefined> {
-    const task = this.tasks.get(id);
-    if (!task) {
-      return undefined;
-    }
-    
-    const now = new Date();
-    const completedTask: Task = { 
-      ...task, 
-      completed: true, 
-      completedAt: now,
-      updatedAt: now 
-    };
-    this.tasks.set(id, completedTask);
-    
-    // Create timeline event
-    this.createTimelineEvent({
-      dealId: task.dealId,
-      title: "Task Completed",
-      description: `Task completed: ${task.title}`,
-      eventType: "task",
-      referenceId: id,
-      referenceType: "task"
-    });
-    
-    return completedTask;
-  }
-
-  async deleteTask(id: number): Promise<boolean> {
-    return this.tasks.delete(id);
-  }
 
   // Issue methods
   async getIssue(id: number): Promise<Issue | undefined> {
