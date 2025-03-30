@@ -260,6 +260,7 @@ export const attorneys = pgTable("attorneys", {
   mobile: text("mobile"), // New field for mobile number
   initials: text("initials").notNull(),
   avatarColor: text("avatar_color").notNull(),
+  photoUrl: text("photo_url"), // New field for attorney photo
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -272,6 +273,7 @@ export const insertAttorneySchema = createInsertSchema(attorneys).pick({
   mobile: true,
   initials: true,
   avatarColor: true,
+  photoUrl: true,
 });
 
 // Deal counsel assignments

@@ -311,7 +311,8 @@ export class MemStorage implements IStorage {
       id: attorneyId1, 
       createdAt: new Date(),
       phone: attorney1.phone || null,
-      mobile: attorney1.mobile || null
+      mobile: attorney1.mobile || null,
+      photoUrl: "https://randomuser.me/api/portraits/women/44.jpg" // Sample photo URL
     };
     this.attorneys.set(attorneyId1, createdAttorney1);
     
@@ -321,7 +322,8 @@ export class MemStorage implements IStorage {
       id: attorneyId2, 
       createdAt: new Date(),
       phone: attorney2.phone || null,
-      mobile: attorney2.mobile || null
+      mobile: attorney2.mobile || null,
+      photoUrl: "https://randomuser.me/api/portraits/men/32.jpg" // Sample photo URL
     };
     this.attorneys.set(attorneyId2, createdAttorney2);
 
@@ -1731,6 +1733,7 @@ export class MemStorage implements IStorage {
       id,
       phone: insertAttorney.phone || null,
       mobile: insertAttorney.mobile || null,
+      photoUrl: insertAttorney.photoUrl || null,
       createdAt: new Date() 
     };
     this.attorneys.set(id, attorney);
@@ -1748,7 +1751,8 @@ export class MemStorage implements IStorage {
       ...data,
       // Ensure these fields are properly typed
       phone: data.phone !== undefined ? data.phone : attorney.phone,
-      mobile: data.mobile !== undefined ? data.mobile : attorney.mobile
+      mobile: data.mobile !== undefined ? data.mobile : attorney.mobile,
+      photoUrl: data.photoUrl !== undefined ? data.photoUrl : attorney.photoUrl
     };
     
     this.attorneys.set(id, updatedAttorney);

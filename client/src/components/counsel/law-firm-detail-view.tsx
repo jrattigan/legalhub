@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { AlertCircle, Building, Mail, Phone, User, Briefcase, FileText, Calendar, ArrowRight, UserPlus, Edit } from "lucide-react";
+import { AlertCircle, Building, Mail, Phone, User, Briefcase, FileText, Calendar, ArrowRight, UserPlus, Edit, Upload } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { PhotoUpload } from "@/components/ui/photo-upload";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { LawFirm, Attorney, Deal, InsertAttorney } from "@shared/schema";
@@ -14,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { format } from "date-fns";
+import { convertFileToBase64 } from "@/lib/file-helpers";
 
 interface LawFirmDetailViewProps {
   lawFirmId: number | null; // Allow null for initial state
@@ -150,6 +152,37 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setNewAttorney(prev => ({ ...prev, [name]: value }));
+  };
+  
+  // Handle photo upload for new attorney
+  const handlePhotoUpload = async (file: File) => {
+    try {
+      const base64 = await convertFileToBase64(file);
+      setNewAttorney(prev => ({ ...prev, photoUrl: base64 }));
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to upload photo",
+        description: "There was an error processing the image. Please try again.",
+      });
+    }
+  };
+  
+  // Handle photo upload for edit attorney
+  const handleEditPhotoUpload = async (file: File) => {
+    try {
+      const base64 = await convertFileToBase64(file);
+      setEditingAttorney(prev => {
+        if (!prev) return null;
+        return { ...prev, photoUrl: base64 };
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to upload photo",
+        description: "There was an error processing the image. Please try again.",
+      });
+    }
   };
   
   const handleAddAttorney = (e: React.FormEvent) => {
@@ -303,9 +336,8 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
             </span>
           </p>
         </div>
-        <Button variant="outline" size="sm" className="h-9">
-          <Edit className="h-4 w-4 mr-2" />
-          Edit Law Firm
+        <Button variant="outline" size="icon" className="h-9 w-9">
+          <Edit className="h-4 w-4" />
         </Button>
       </div>
 
@@ -386,6 +418,25 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                       placeholder="(555) 123-4567" 
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="photo">Photo</Label>
+                    <PhotoUpload 
+                      onUpload={handlePhotoUpload}
+                      accept="image/*"
+                      maxSizeInMB={2}
+                    />
+                    {newAttorney.photoUrl && (
+                      <div className="mt-2 flex items-center space-x-2">
+                        <Avatar>
+                          <AvatarImage src={newAttorney.photoUrl} alt="Preview" />
+                          <AvatarFallback>
+                            {newAttorney.name ? newAttorney.name.charAt(0) : 'A'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-green-600">Photo uploaded</span>
+                      </div>
+                    )}
+                  </div>
                   <DialogFooter className="mt-6">
                     <Button 
                       type="button" 
@@ -412,7 +463,15 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                 {attorneys.map((attorney) => (
                   <div key={attorney.id} className="flex items-start p-3 rounded-md border border-neutral-200">
                     <Avatar className="h-10 w-10 mr-4">
-                      <AvatarFallback>{attorney.name.charAt(0)}</AvatarFallback>
+                      {attorney.photoUrl ? (
+                        <AvatarImage src={attorney.photoUrl} alt={attorney.name} />
+                      ) : (
+                        <AvatarFallback 
+                          style={{ backgroundColor: attorney.avatarColor || '#cbd5e1' }}
+                        >
+                          {attorney.initials || attorney.name.charAt(0)}
+                        </AvatarFallback>
+                      )}
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
@@ -534,6 +593,25 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                 onChange={handleEditInputChange} 
                 placeholder="(555) 123-4567" 
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-photo">Photo</Label>
+              <PhotoUpload 
+                onUpload={handleEditPhotoUpload}
+                accept="image/*"
+                maxSizeInMB={2}
+              />
+              {editingAttorney?.photoUrl && (
+                <div className="mt-2 flex items-center space-x-2">
+                  <Avatar>
+                    <AvatarImage src={editingAttorney.photoUrl} alt="Preview" />
+                    <AvatarFallback>
+                      {editingAttorney.name ? editingAttorney.name.charAt(0) : 'A'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm text-green-600">Photo uploaded</span>
+                </div>
+              )}
             </div>
             <DialogFooter className="mt-6">
               <Button 
