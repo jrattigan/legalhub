@@ -47,6 +47,7 @@ const TabsContent = React.forwardRef<
     )}
     // Use forceMount to ensure tab content is always in the DOM and accessible
     forceMount
+    style={{ display: "block" }} // Always display the content, we'll control visibility through CSS
     {...props}
   />
 ))

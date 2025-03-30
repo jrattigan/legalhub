@@ -1537,8 +1537,18 @@ export default function DealDetail({
         <Tabs 
           value={activeTab} 
           onValueChange={(value) => {
-            // No need for loading indicator on tab change - it causes more issues
+            console.log('Tab changed: ' + value + ' (desktop)');
+            // Set active tab directly with no delay
             setActiveTab(value);
+            // Immediately clear any loading state
+            setIsTabLoading(false);
+            // Scroll to top when changing tabs
+            if (typeof window !== 'undefined') {
+              const mainContent = document.querySelector('.overflow-y-auto');
+              if (mainContent) {
+                mainContent.scrollTop = 0;
+              }
+            }
           }}
           className="flex flex-col h-full"
         >
@@ -2223,8 +2233,13 @@ export default function DealDetail({
                   : 'text-neutral-500 hover:text-neutral-600'
               }`}
               onClick={() => {
-                // Set active tab without loading indicator
+                console.log('Tab clicked: ' + tab.id + ' (mobile)');
+                
+                // Set active tab directly
                 setActiveTab(tab.id);
+                
+                // Instantly clear any loading state
+                setIsTabLoading(false);
                 
                 // Scroll to top when changing tabs
                 if (typeof window !== 'undefined') {
@@ -2232,11 +2247,6 @@ export default function DealDetail({
                   if (mainContent) {
                     mainContent.scrollTop = 0;
                   }
-                }
-
-                // Make sure any stuck loading indicator is cleared
-                if (isTabLoading) {
-                  setIsTabLoading(false);
                 }
               }}
             >
