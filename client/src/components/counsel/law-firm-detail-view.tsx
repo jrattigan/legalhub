@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { AlertCircle, Building, Mail, Phone, User, Briefcase, FileText, Calendar, ArrowRight, UserPlus, Edit, Upload } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,6 +16,23 @@ import { queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { convertFileToBase64 } from "@/lib/file-helpers";
+
+// Format phone number consistently - keep outside component to avoid re-definition on each render
+const formatPhoneNumber = (phone: string): string => {
+  // If no phone number, return empty string
+  if (!phone) return '';
+  
+  // Remove any non-digit characters
+  const digitsOnly = phone.replace(/\D/g, '');
+  
+  // Format consistently as (XXX) XXX-XXXX for 10-digit numbers
+  if (digitsOnly.length === 10) {
+    return `(${digitsOnly.substring(0, 3)}) ${digitsOnly.substring(3, 6)}-${digitsOnly.substring(6)}`;
+  }
+  
+  // Return the original if not 10 digits
+  return phone;
+};
 
 interface LawFirmDetailViewProps {
   lawFirmId: number | null; // Allow null for initial state
@@ -335,22 +352,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
     }
   };
   
-  // Format phone number consistently
-  const formatPhoneNumber = (phone: string) => {
-    // If no phone number, return empty string
-    if (!phone) return '';
-    
-    // Remove any non-digit characters
-    const digitsOnly = phone.replace(/\D/g, '');
-    
-    // Format consistently as (XXX) XXX-XXXX for 10-digit numbers
-    if (digitsOnly.length === 10) {
-      return `(${digitsOnly.substring(0, 3)}) ${digitsOnly.substring(3, 6)}-${digitsOnly.substring(6)}`;
-    }
-    
-    // Return the original if not 10 digits
-    return phone;
-  };
+  // Using the formatPhoneNumber utility function defined at the top of the file
   
   // Handle law firm input change
   const handleLawFirmInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
