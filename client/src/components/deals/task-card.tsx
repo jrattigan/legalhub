@@ -492,14 +492,14 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
     // Case 2: Handle string assignee values
     if (typeof assigneeId === 'string') {
       // Skip the section headers
-      if (assigneeId === 'law-firms-header' || assigneeId === 'attorneys-header') {
+      if (assigneeId === 'law-firms-header' || assigneeId === 'attorneys-header' || assigneeId === 'custom-header') {
         return null;
       }
       
       // Case 2a: Handle custom assignee (custom-Name format)
       if (assigneeId.startsWith('custom-')) {
         form.setValue('assigneeType', 'custom');
-        // For custom assignees, just return the whole string which will be handled by the backend
+        // For custom assignees, return the full string to extract name later
         return assigneeId;
       }
       
@@ -1102,7 +1102,7 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                   // Extract the actual name from the custom ID
                   const customName = processedAssigneeId.replace('custom-', '');
                   formattedData.assigneeName = customName;
-                  formattedData.assigneeId = null;
+                  formattedData.assigneeId = null; // Important: must be null, not a number for custom assignees
                   formattedData.assigneeType = 'custom';
                   
                   console.log("Edit with custom assignee:", customName);
