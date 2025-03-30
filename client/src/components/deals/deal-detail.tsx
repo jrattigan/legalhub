@@ -1512,14 +1512,12 @@ export default function DealDetail({
         )}
       </div>
       
-      <div className={`p-6 flex-1 overflow-auto ${isMobile ? 'pb-24' : ''}`}>
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} value={activeTab} className="flex flex-col min-h-full">
+      <div className={`p-6 flex-1 overflow-y-auto ${isMobile ? 'pb-24' : ''}`}>
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} value={activeTab} className="flex flex-col h-full">
           <TabsList className="hidden">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="issues">Issues</TabsTrigger>
-            <TabsTrigger value="team">Team</TabsTrigger>
-            <TabsTrigger value="timeline">Timeline</TabsTrigger>
+            {tabItems.map((tab) => (
+              <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
+            ))}
           </TabsList>
           <TabsContent value="overview" className="m-0 overflow-y-auto flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1782,7 +1780,7 @@ export default function DealDetail({
           </div>
         </TabsContent>
         
-        <TabsContent value="documents" className="m-0 overflow-y-auto flex-1" hidden={activeTab !== 'documents'}>
+        <TabsContent value="documents" className="m-0 overflow-y-auto flex-1">
           <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
             <div className="flex justify-between items-center mb-3">
               <h2 className="font-medium text-neutral-800">Documents</h2>
@@ -1965,11 +1963,11 @@ export default function DealDetail({
         </TabsContent>
         
 
-        <TabsContent value="issues" className="m-0 overflow-y-auto flex-1" hidden={activeTab !== 'issues'}>
+        <TabsContent value="issues" className="m-0 overflow-y-auto flex-1">
           <IssueCard issues={issues} onRefreshData={onRefreshData} preview={false} dealId={deal.id} />
         </TabsContent>
         
-        <TabsContent value="team" className="m-0 overflow-y-auto flex-1" hidden={activeTab !== 'team'}>
+        <TabsContent value="team" className="m-0 overflow-y-auto flex-1">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
               <div className="flex justify-between items-center mb-3">
@@ -2067,7 +2065,7 @@ export default function DealDetail({
           </div>
         </TabsContent>
         
-        <TabsContent value="allocations" className="m-0 overflow-y-auto flex-1" hidden={activeTab !== 'allocations'}>
+        <TabsContent value="allocations" className="m-0 overflow-y-auto flex-1">
           <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
             <div className="flex justify-between items-center mb-3">
               <h2 className="font-medium text-neutral-800">Fund Allocations</h2>
@@ -2077,7 +2075,7 @@ export default function DealDetail({
           </div>
         </TabsContent>
         
-        <TabsContent value="timeline" className="m-0 overflow-y-auto flex-1" hidden={activeTab !== 'timeline'}>
+        <TabsContent value="timeline" className="m-0 overflow-y-auto flex-1">
           <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
             <div className="flex justify-between items-center mb-3">
               <h2 className="font-medium text-neutral-800">Deal Timeline</h2>
