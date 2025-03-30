@@ -398,23 +398,33 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
         priority: data.priority || "medium",
         dealId,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
-        assigneeType: data.assigneeType || "user", // Include assignee type (user, attorney, firm, custom)
         taskType: data.taskType || "internal", // Include task type
-        completed: false,
-        assigneeName: null // Default to null, will be set below for custom assignees
+        completed: false
       };
       
       // Special handling for custom assignees
       if (typeof processedAssigneeId === 'string' && processedAssigneeId.startsWith('custom-')) {
-        // For custom assignees, store the name directly (strip the 'custom-' prefix)
-        formattedData.assigneeName = processedAssigneeId.replace('custom-', '');
-        formattedData.assigneeId = null; // No numeric ID for custom assignees
-        formattedData.assigneeType = 'custom'; // Ensure assigneeType is set correctly
-      } else {
-        // For regular assignees (users, attorneys, firms), store the numeric ID
+        // Extract the actual name from the custom ID
+        const customName = processedAssigneeId.replace('custom-', '');
+        formattedData.assigneeName = customName;
+        formattedData.assigneeId = null;
+        formattedData.assigneeType = 'custom';
+        
+        console.log("Creating with custom assignee:", customName);
+      } else if (processedAssigneeId !== null) {
+        // Regular assignee with ID
         formattedData.assigneeId = processedAssigneeId;
-        // Make sure assigneeName is null for non-custom assignees
         formattedData.assigneeName = null;
+        formattedData.assigneeType = data.assigneeType || 'user';
+        
+        console.log("Creating with regular assignee ID:", processedAssigneeId);
+      } else {
+        // Unassigned
+        formattedData.assigneeId = null;
+        formattedData.assigneeName = null;
+        formattedData.assigneeType = 'user';
+        
+        console.log("Creating with no assignee");
       }
       
       console.log("Submitting task with data:", formattedData);
@@ -1048,23 +1058,33 @@ export default function TaskCard({ tasks, onRefreshData, preview = false, dealId
                   status: formData.status || "active",
                   priority: formData.priority || "medium",
                   dueDate: formData.dueDate ? new Date(formData.dueDate) : null,
-                  assigneeType: formData.assigneeType || "user",
                   taskType: formData.taskType || "internal",
-                  completed: currentTask.completed || false,
-                  assigneeName: formData.assigneeName || currentTask.assigneeName || null
+                  completed: currentTask.completed || false
                 };
                 
                 // Special handling for custom assignees
                 if (typeof processedAssigneeId === 'string' && processedAssigneeId.startsWith('custom-')) {
-                  formattedData.assigneeName = processedAssigneeId.replace('custom-', '');
+                  // Extract the actual name from the custom ID
+                  const customName = processedAssigneeId.replace('custom-', '');
+                  formattedData.assigneeName = customName;
                   formattedData.assigneeId = null;
                   formattedData.assigneeType = 'custom';
+                  
+                  console.log("Edit with custom assignee:", customName);
                 } else if (processedAssigneeId !== null) {
+                  // Regular assignee with ID
                   formattedData.assigneeId = processedAssigneeId;
                   formattedData.assigneeName = null;
+                  formattedData.assigneeType = formData.assigneeType || 'user';
+                  
+                  console.log("Edit with regular assignee ID:", processedAssigneeId);
                 } else {
-                  // For unassigned, keep the assigneeId as null but preserve any existing assigneeName
+                  // Unassigned
                   formattedData.assigneeId = null;
+                  formattedData.assigneeName = null;
+                  formattedData.assigneeType = 'user';
+                  
+                  console.log("Edit with no assignee");
                 }
                 
                 // Submit the data using the edit mutation

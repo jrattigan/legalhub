@@ -1805,6 +1805,8 @@ export class MemStorage implements IStorage {
   }
 
   async createTask(insertTask: InsertTask): Promise<Task> {
+    console.log(`[Storage] Creating new task with data:`, JSON.stringify(insertTask, null, 2));
+    
     const id = this.currentTaskId++;
     
     // Create a complete Task object ensuring all required fields are present
@@ -1826,7 +1828,17 @@ export class MemStorage implements IStorage {
       updatedAt: new Date()
     };
     
+    // Check for custom assignee values and log them
+    if (task.assigneeType === 'custom') {
+      console.log(`[Storage] Custom assignee detected with name: "${task.assigneeName}"`);
+      if (!task.assigneeName) {
+        console.warn(`[Storage] Warning: Custom assignee has no name specified!`);
+      }
+    }
+    
+    console.log(`[Storage] Saving new task:`, JSON.stringify(task, null, 2));
     this.tasks.set(id, task);
+    console.log(`[Storage] Task saved successfully with ID: ${id}`);
     
     // Create timeline event
     this.createTimelineEvent({
@@ -1842,19 +1854,27 @@ export class MemStorage implements IStorage {
   }
 
   async updateTask(id: number, taskUpdate: Partial<InsertTask>): Promise<Task | undefined> {
+    console.log(`[Storage] Updating task with ID: ${id}`);
+    console.log(`[Storage] Update data:`, JSON.stringify(taskUpdate, null, 2));
+    
     const existingTask = this.tasks.get(id);
     if (!existingTask) {
+      console.log(`[Storage] Task with ID ${id} not found`);
       return undefined;
     }
+    
+    console.log(`[Storage] Found existing task:`, JSON.stringify(existingTask, null, 2));
     
     // Ensure assigneeType is set appropriately based on taskType
     if (taskUpdate.taskType && !taskUpdate.assigneeType) {
       if (taskUpdate.taskType === 'external') {
         // Default to 'attorney' if external task with no assigneeType specified
         taskUpdate.assigneeType = 'attorney';
+        console.log(`[Storage] Setting assigneeType to 'attorney' for external task`);
       } else {
         // Default to 'user' if internal task with no assigneeType specified
         taskUpdate.assigneeType = 'user';
+        console.log(`[Storage] Setting assigneeType to 'user' for internal task`);
       }
     }
     
@@ -1864,12 +1884,14 @@ export class MemStorage implements IStorage {
       if (existingTask.assigneeType === 'custom' && existingTask.assigneeName) {
         // Keep existing custom assignee name if not provided in update
         taskUpdate.assigneeName = existingTask.assigneeName;
+        console.log(`[Storage] Keeping existing custom assignee name: ${taskUpdate.assigneeName}`);
       }
     }
     
     // For non-custom assignees, clear assigneeName
     if (taskUpdate.assigneeType && taskUpdate.assigneeType !== 'custom') {
       taskUpdate.assigneeName = null;
+      console.log(`[Storage] Clearing assigneeName for non-custom assignee type: ${taskUpdate.assigneeType}`);
     }
     
     const updatedTask: Task = { 
@@ -1877,10 +1899,25 @@ export class MemStorage implements IStorage {
       ...taskUpdate,
       updatedAt: new Date() // Always update the updatedAt timestamp
     };
+    
+    console.log(`[Storage] Updated task object before saving:`, JSON.stringify(updatedTask, null, 2));
+    
+    // Verify assignee information is properly set
+    if (updatedTask.assigneeType === 'custom') {
+      console.log(`[Storage] Custom assignee detected. Name: ${updatedTask.assigneeName}`);
+      if (!updatedTask.assigneeName) {
+        console.warn(`[Storage] Warning: Custom assignee type but no assigneeName set!`);
+      }
+    } else {
+      console.log(`[Storage] Non-custom assignee type: ${updatedTask.assigneeType}, ID: ${updatedTask.assigneeId}`);
+    }
+    
     this.tasks.set(id, updatedTask);
+    console.log(`[Storage] Task saved successfully with ID: ${id}`);
     
     // Create timeline event if task type changed
     if (taskUpdate.taskType && taskUpdate.taskType !== existingTask.taskType) {
+      console.log(`[Storage] Creating timeline event for task type change: ${existingTask.taskType} -> ${updatedTask.taskType}`);
       this.createTimelineEvent({
         dealId: updatedTask.dealId,
         title: "Task Type Changed",
@@ -1893,6 +1930,7 @@ export class MemStorage implements IStorage {
     
     // Create timeline event if assignee type changed
     if (taskUpdate.assigneeType && taskUpdate.assigneeType !== existingTask.assigneeType) {
+      console.log(`[Storage] Creating timeline event for assignee type change: ${existingTask.assigneeType} -> ${updatedTask.assigneeType}`);
       this.createTimelineEvent({
         dealId: updatedTask.dealId,
         title: "Assignee Type Changed",
@@ -1903,6 +1941,7 @@ export class MemStorage implements IStorage {
       });
     }
     
+    console.log(`[Storage] Task update completed. Returning updated task.`);
     return updatedTask;
   }
 

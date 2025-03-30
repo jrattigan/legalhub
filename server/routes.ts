@@ -732,7 +732,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/tasks", async (req, res) => {
     try {
-      console.log("Received task creation request with body:", JSON.stringify(req.body));
+      console.log("Received task creation request with body:", JSON.stringify(req.body, null, 2));
       
       // Pre-process the request body to handle the date
       const processedBody = { ...req.body };
@@ -741,9 +741,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const validatedData = insertTaskSchema.parse(processedBody);
-      console.log("Validated data:", JSON.stringify(validatedData));
+      console.log("Validated data:", JSON.stringify(validatedData, null, 2));
       const task = await storage.createTask(validatedData);
-      console.log("Task created successfully:", JSON.stringify(task));
+      console.log("Task created successfully:", JSON.stringify(task, null, 2));
       res.status(201).json(task);
     } catch (error) {
       console.error("Error creating task:", error);
@@ -776,6 +776,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      console.log("Received task update request with body:", JSON.stringify(req.body, null, 2));
+      
       // Pre-process the request body to handle the date
       const processedBody = { ...req.body };
       if (processedBody.dueDate && typeof processedBody.dueDate === 'string') {
@@ -797,12 +799,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const validatedData = partialSchema.parse(processedBody);
+      console.log("Validated task update data:", JSON.stringify(validatedData, null, 2));
       
       const updatedTask = await storage.updateTask(id, validatedData);
       if (!updatedTask) {
         return res.status(404).json({ message: "Task not found" });
       }
       
+      console.log("Task updated successfully:", JSON.stringify(updatedTask, null, 2));
       res.json(updatedTask);
     } catch (error) {
       console.error("Error updating task:", error);
