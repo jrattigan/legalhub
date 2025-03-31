@@ -67,9 +67,17 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
   const { data: checklistItems = [], isLoading } = useQuery<ClosingChecklistItem[]>({
     queryKey: [`/api/deals/${dealId}/closing-checklist`],
     queryFn: async () => {
-      const response = await apiRequest(`/api/deals/${dealId}/closing-checklist`);
-      console.log("Closing checklist API response:", response);
-      return Array.isArray(response) ? response : [];
+      // Use the built-in queryFn instead of custom apiRequest
+      // This will properly handle the response
+      const result = await fetch(`/api/deals/${dealId}/closing-checklist`, {
+        credentials: "include",
+      });
+      if (!result.ok) {
+        throw new Error(`Failed to fetch checklist: ${result.status}`);
+      }
+      const data = await result.json();
+      console.log("Closing checklist API response data:", data);
+      return Array.isArray(data) ? data : [];
     },
     enabled: !!dealId && dealId > 0,
     // Add refetch interval to ensure we get the latest data
@@ -79,11 +87,20 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
 
   // Mutation to create a new checklist item
   const createItemMutation = useMutation({
-    mutationFn: (values: ChecklistItemFormValues) => 
-      apiRequest(`/api/deals/${dealId}/closing-checklist`, {
+    mutationFn: async (values: ChecklistItemFormValues) => {
+      const result = await fetch(`/api/deals/${dealId}/closing-checklist`, {
         method: 'POST',
-        data: values
-      }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+        credentials: "include"
+      });
+      
+      if (!result.ok) {
+        throw new Error(`Failed to create item: ${result.status}`);
+      }
+      
+      return await result.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/closing-checklist`] });
       toast({
@@ -104,11 +121,20 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
 
   // Mutation to update an existing checklist item
   const updateItemMutation = useMutation({
-    mutationFn: ({ id, values }: { id: number, values: Partial<ChecklistItemFormValues> }) => 
-      apiRequest(`/api/closing-checklist/${id}`, {
+    mutationFn: async ({ id, values }: { id: number, values: Partial<ChecklistItemFormValues> }) => {
+      const result = await fetch(`/api/closing-checklist/${id}`, {
         method: 'PATCH',
-        data: values
-      }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+        credentials: "include"
+      });
+      
+      if (!result.ok) {
+        throw new Error(`Failed to update item: ${result.status}`);
+      }
+      
+      return await result.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/closing-checklist`] });
       toast({
@@ -129,10 +155,18 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
 
   // Mutation to delete a checklist item
   const deleteItemMutation = useMutation({
-    mutationFn: (id: number) => 
-      apiRequest(`/api/closing-checklist/${id}`, {
-        method: 'DELETE'
-      }),
+    mutationFn: async (id: number) => {
+      const result = await fetch(`/api/closing-checklist/${id}`, {
+        method: 'DELETE',
+        credentials: "include"
+      });
+      
+      if (!result.ok) {
+        throw new Error(`Failed to delete item: ${result.status}`);
+      }
+      
+      return true;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/closing-checklist`] });
       toast({
@@ -152,13 +186,26 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
 
   // Mutation to toggle completion status
   const toggleCompletionMutation = useMutation({
-    mutationFn: ({ id, isComplete }: { id: number, isComplete: boolean }) => 
-      apiRequest(`/api/closing-checklist/${id}`, {
+    mutationFn: async ({ id, isComplete }: { id: number, isComplete: boolean }) => {
+      const result = await fetch(`/api/closing-checklist/${id}`, {
         method: 'PATCH',
-        data: { isComplete }
-      }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isComplete }),
+        credentials: "include"
+      });
+      
+      if (!result.ok) {
+        throw new Error(`Failed to update item status: ${result.status}`);
+      }
+      
+      return await result.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/closing-checklist`] });
+      toast({
+        title: "Status Updated",
+        description: "Checklist item status updated successfully."
+      });
     },
     onError: (error) => {
       console.error("Error toggling completion status:", error);
