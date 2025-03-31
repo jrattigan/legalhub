@@ -254,7 +254,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
   // Create Task Mutation
   const createTaskMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log("Submitting task data:", JSON.stringify(data, null, 2));
+      console.log("🔧 MUTATION - Submitting task data:", JSON.stringify(data, null, 2));
       
       // Make a proper copy of the data to avoid modifying the original
       const processedData = { ...data };
@@ -265,7 +265,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
           const parsedValue = parseInt(processedData[key], 10);
           if (!isNaN(parsedValue)) {
             processedData[key] = parsedValue;
-            console.log(`Converted ${key} from string to number:`, parsedValue);
+            console.log(`🔧 MUTATION - Converted ${key} from string to number:`, parsedValue);
           }
         }
       });
@@ -275,16 +275,28 @@ export function TasksTab({ dealId }: TasksTabProps) {
         processedData.dueDate = new Date(processedData.dueDate);
       }
       
-      console.log("Final task data to submit:", JSON.stringify(processedData, null, 2));
+      console.log("🔧 MUTATION - Final task data to submit:", JSON.stringify(processedData, null, 2));
       
       // Use apiRequest from queryClient
-      return apiRequest('/api/tasks', {
+      const response = await apiRequest('/api/tasks', {
         method: 'POST',
         data: processedData
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+        console.error("🔧 MUTATION - Task creation failed:", errorData);
+        throw new Error(errorData.message || `Server responded with ${response.status}: ${response.statusText}`);
+      }
+      
+      console.log("🔧 MUTATION - Task creation response status:", response.status);
+      const responseData = await response.json().catch(() => ({}));
+      console.log("🔧 MUTATION - Task creation response data:", responseData);
+      
+      return responseData;
     },
     onSuccess: (data) => {
-      console.log("Task created successfully:", data);
+      console.log("🔧 MUTATION - Task created successfully:", data);
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       setIsAddTaskOpen(false);
       form.reset();
@@ -294,12 +306,12 @@ export function TasksTab({ dealId }: TasksTabProps) {
       });
     },
     onError: (error: any) => {
+      console.error("🔧 MUTATION - Error creating task:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to create task",
         variant: "destructive"
       });
-      console.error("Error creating task:", error);
     }
   });
 
@@ -402,30 +414,47 @@ export function TasksTab({ dealId }: TasksTabProps) {
 
   // Handle form submission for creating a new task
   const onSubmit = async (values: z.infer<typeof taskFormSchema>) => {
-    console.log("Form submission values:", values);
-    console.log("External assignee type:", externalAssigneeType);
-    console.log("Deal ID (from URL parameter):", dealId, "type:", typeof dealId);
+    console.log("📋 FORM SUBMISSION - Starting form submission");
+    console.log("📋 FORM SUBMISSION - Form values:", JSON.stringify(values, null, 2));
+    console.log("📋 FORM SUBMISSION - External assignee type:", externalAssigneeType);
+    console.log("📋 FORM SUBMISSION - Deal ID (from URL parameter):", dealId, "type:", typeof dealId);
+    
+    // Prevent form submission if required fields are empty
+    if (!values.name) {
+      console.error("Task name is required");
+      toast({
+        title: "Error",
+        description: "Task name is required",
+        variant: "destructive"
+      });
+      return;
+    }
     
     let customAssigneeId = values.customAssigneeId;
     
     // Create a custom assignee if needed
     if (values.taskType === 'external' && externalAssigneeType === 'custom' && values.customAssigneeName && values.customAssigneeEmail) {
       try {
-        console.log("Creating custom assignee:", values.customAssigneeName, values.customAssigneeEmail);
+        console.log("📋 FORM SUBMISSION - Creating custom assignee:", values.customAssigneeName, values.customAssigneeEmail);
         
         // Use apiRequest from queryClient instead of direct fetch
-        const result = await apiRequest('/api/custom-assignees', {
+        const response = await apiRequest('/api/custom-assignees', {
           method: 'POST',
           data: {
             name: values.customAssigneeName,
             email: values.customAssigneeEmail || ""
           }
-        }).then(res => res.json());
+        });
         
+        if (!response.ok) {
+          throw new Error("Failed to create custom assignee");
+        }
+        
+        const result = await response.json();
         customAssigneeId = result.id;
-        console.log("Created custom assignee with ID:", customAssigneeId);
+        console.log("📋 FORM SUBMISSION - Created custom assignee with ID:", customAssigneeId);
       } catch (error) {
-        console.error("Failed to create custom assignee:", error);
+        console.error("📋 FORM SUBMISSION - Failed to create custom assignee:", error);
         toast({
           title: "Error Creating Custom Assignee",
           description: String(error),
@@ -437,10 +466,10 @@ export function TasksTab({ dealId }: TasksTabProps) {
     
     // Make sure dealId is a number, not a string
     const numericDealId = parseInt(dealId.toString(), 10);
-    console.log("Numeric dealId:", numericDealId);
+    console.log("📋 FORM SUBMISSION - Numeric dealId:", numericDealId);
     
     if (isNaN(numericDealId)) {
-      console.error("Invalid dealId:", dealId);
+      console.error("📋 FORM SUBMISSION - Invalid dealId:", dealId);
       toast({
         title: "Error",
         description: "Invalid deal ID",
@@ -466,14 +495,32 @@ export function TasksTab({ dealId }: TasksTabProps) {
         values.attorneyId : null
     };
     
-    console.log("Submitting task data to createTaskMutation:", JSON.stringify(taskData, null, 2));
+    console.log("📋 FORM SUBMISSION - Submitting task data to createTaskMutation:", JSON.stringify(taskData, null, 2));
     
     // Use the mutation to create the task
     try {
-      await createTaskMutation.mutateAsync(taskData);
+      console.log("📋 FORM SUBMISSION - Calling createTaskMutation.mutateAsync");
+      const response = await createTaskMutation.mutateAsync(taskData);
+      console.log("📋 FORM SUBMISSION - Response from mutation:", response);
+      
+      // Manually trigger the successful UI updates in case the onSuccess callback isn't firing
+      if (response) {
+        console.log("📋 FORM SUBMISSION - Task created successfully");
+        setIsAddTaskOpen(false);
+        form.reset();
+        queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+        toast({
+          title: "Success",
+          description: "Task created successfully"
+        });
+      }
     } catch (error) {
-      console.error("Error in createTaskMutation:", error);
-      // Error handling is done in the mutation's onError callback
+      console.error("📋 FORM SUBMISSION - Error in createTaskMutation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create task. See console for details.",
+        variant: "destructive"
+      });
     }
   };
 
