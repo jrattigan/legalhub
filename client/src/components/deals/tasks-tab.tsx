@@ -444,15 +444,34 @@ export function TasksTab({ dealId }: TasksTabProps) {
     if (values.taskType === 'external' && externalAssigneeType === 'custom' && values.customAssigneeName && values.customAssigneeEmail) {
       try {
         console.log("Creating custom assignee:", values.customAssigneeName, values.customAssigneeEmail);
-        const result = await createCustomAssigneeMutation.mutateAsync({
-          name: values.customAssigneeName,
-          email: values.customAssigneeEmail
+        
+        // Use direct fetch for custom assignee creation
+        const customAssigneeResponse = await fetch('/api/custom-assignees', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: values.customAssigneeName,
+            email: values.customAssigneeEmail || ""
+          })
         });
+        
+        if (!customAssigneeResponse.ok) {
+          throw new Error(`Failed to create custom assignee: ${customAssigneeResponse.status}`);
+        }
+        
+        const result = await customAssigneeResponse.json();
         customAssigneeId = result.id;
         console.log("Created custom assignee with ID:", customAssigneeId);
       } catch (error) {
         console.error("Failed to create custom assignee:", error);
-        return; // Early return on error (error toast already shown via mutation)
+        toast({
+          title: "Error Creating Custom Assignee",
+          description: String(error),
+          variant: "destructive"
+        });
+        return; // Early return on error
       }
     }
     
@@ -489,7 +508,71 @@ export function TasksTab({ dealId }: TasksTabProps) {
     
     console.log("Submitting task data to API:", JSON.stringify(taskData, null, 2));
     
-    createTaskMutation.mutate(taskData);
+    // NEW APPROACH: Use direct fetch call that we know works from our test
+    try {
+      // Ensure all IDs are properly converted to numbers
+      Object.keys(taskData).forEach(key => {
+        if (key.toLowerCase().includes('id') && taskData[key] !== null && typeof taskData[key] === 'string') {
+          const parsedValue = parseInt(taskData[key], 10);
+          if (!isNaN(parsedValue)) {
+            taskData[key] = parsedValue;
+            console.log(`Converted ${key} from string to number:`, parsedValue);
+          }
+        }
+      });
+      
+      // Ensure due date is formatted properly
+      if (taskData.dueDate && typeof taskData.dueDate === 'string') {
+        taskData.dueDate = new Date(taskData.dueDate);
+      }
+      
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(taskData)
+      });
+      
+      console.log("Task creation response:", response);
+      
+      if (!response.ok) {
+        let errorMessage = `Error: ${response.status} ${response.statusText}`;
+        
+        try {
+          const errorData = await response.json();
+          console.error("API error response:", errorData);
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          console.error("Failed to parse error response:", parseError);
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      const responseData = await response.json();
+      console.log("Task creation success:", responseData);
+      
+      // Show success message
+      toast({
+        title: "Success",
+        description: "Task created successfully!"
+      });
+      
+      // Reset form and close dialog
+      form.reset();
+      setIsAddTaskOpen(false);
+      
+      // Refresh tasks list
+      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+    } catch (error) {
+      console.error("Error creating task:", error);
+      toast({
+        title: "Error Creating Task",
+        description: String(error),
+        variant: "destructive"
+      });
+    }
   };
 
   // Handle form submission for editing a task
