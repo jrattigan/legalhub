@@ -253,8 +253,21 @@ export function TasksTab({ dealId }: TasksTabProps) {
 
   // Create Task Mutation
   const createTaskMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/tasks', { method: 'POST', data }).then(res => res.json()),
-    onSuccess: () => {
+    mutationFn: (data: any) => {
+      console.log("Submitting task data:", data);
+      return apiRequest('/api/tasks', { method: 'POST', data })
+        .then(res => {
+          if (!res.ok) {
+            return res.json().then(err => {
+              console.error("Task creation failed with status:", res.status, err);
+              throw new Error(err.message || "Failed to create task");
+            });
+          }
+          return res.json();
+        });
+    },
+    onSuccess: (data) => {
+      console.log("Task created successfully:", data);
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       setIsAddTaskOpen(false);
       form.reset();
