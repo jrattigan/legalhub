@@ -385,17 +385,22 @@ export function TasksTab({ dealId }: TasksTabProps) {
 
   // Handle form submission for creating a new task
   const onSubmit = async (values: z.infer<typeof taskFormSchema>) => {
+    console.log("Form submission values:", values);
+    console.log("External assignee type:", externalAssigneeType);
     let customAssigneeId = values.customAssigneeId;
     
     // Create a custom assignee if needed
     if (values.taskType === 'external' && externalAssigneeType === 'custom' && values.customAssigneeName && values.customAssigneeEmail) {
       try {
+        console.log("Creating custom assignee:", values.customAssigneeName, values.customAssigneeEmail);
         const result = await createCustomAssigneeMutation.mutateAsync({
           name: values.customAssigneeName,
           email: values.customAssigneeEmail
         });
         customAssigneeId = result.id;
+        console.log("Created custom assignee with ID:", customAssigneeId);
       } catch (error) {
+        console.error("Failed to create custom assignee:", error);
         return; // Early return on error (error toast already shown via mutation)
       }
     }
@@ -417,7 +422,12 @@ export function TasksTab({ dealId }: TasksTabProps) {
         values.attorneyId : null
     };
     
-    createTaskMutation.mutate(taskData);
+    console.log("Submitting task data to API:", taskData);
+    try {
+      createTaskMutation.mutate(taskData);
+    } catch (error) {
+      console.error("Error in mutation:", error);
+    }
   };
 
   // Handle form submission for editing a task
