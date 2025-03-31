@@ -2068,7 +2068,9 @@ export class MemStorage implements IStorage {
       description: task.description || null,
       dueDate: task.dueDate || null,
       assigneeId: task.assigneeId || null,
-      customAssigneeId: task.customAssigneeId || null
+      customAssigneeId: task.customAssigneeId || null,
+      lawFirmId: task.lawFirmId || null,
+      attorneyId: task.attorneyId || null
     };
     this.tasks.set(id, createdTask);
     return createdTask;
@@ -2087,7 +2089,9 @@ export class MemStorage implements IStorage {
       description: task.description !== undefined ? task.description : existingTask.description,
       dueDate: task.dueDate !== undefined ? task.dueDate : existingTask.dueDate,
       assigneeId: task.assigneeId !== undefined ? task.assigneeId : existingTask.assigneeId,
-      customAssigneeId: task.customAssigneeId !== undefined ? task.customAssigneeId : existingTask.customAssigneeId
+      customAssigneeId: task.customAssigneeId !== undefined ? task.customAssigneeId : existingTask.customAssigneeId,
+      lawFirmId: task.lawFirmId !== undefined ? task.lawFirmId : existingTask.lawFirmId,
+      attorneyId: task.attorneyId !== undefined ? task.attorneyId : existingTask.attorneyId
     };
 
     this.tasks.set(id, updatedTask);

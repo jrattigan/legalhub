@@ -393,6 +393,8 @@ export const tasks = pgTable("tasks", {
   dueDate: timestamp("due_date"),
   assigneeId: integer("assignee_id"), // For internal tasks, this will be a user ID
   customAssigneeId: integer("custom_assignee_id"), // For external tasks with a custom assignee
+  lawFirmId: integer("law_firm_id"), // For external tasks, this will be a law firm ID
+  attorneyId: integer("attorney_id"), // For external tasks, this will be an attorney ID
   taskType: text("task_type").notNull(), // 'internal' or 'external'
   status: text("status").notNull().default("open"), // 'open' or 'completed'
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -406,6 +408,8 @@ export const insertTaskSchema = createInsertSchema(tasks).pick({
   dueDate: true,
   assigneeId: true,
   customAssigneeId: true,
+  lawFirmId: true,
+  attorneyId: true,
   taskType: true,
   status: true,
 }).transform((data) => {
@@ -428,6 +432,14 @@ export const insertTaskSchema = createInsertSchema(tasks).pick({
   
   if (transformedData.customAssigneeId === undefined) {
     transformedData.customAssigneeId = null;
+  }
+  
+  if (transformedData.lawFirmId === undefined) {
+    transformedData.lawFirmId = null;
+  }
+  
+  if (transformedData.attorneyId === undefined) {
+    transformedData.attorneyId = null;
   }
   
   return transformedData;

@@ -1498,6 +1498,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dueDate: z.date().nullable().optional(),
         assigneeId: z.number().nullable().optional(),
         customAssigneeId: z.number().nullable().optional(),
+        lawFirmId: z.number().nullable().optional(),
+        attorneyId: z.number().nullable().optional(),
         taskType: z.string().optional(),
         status: z.string().optional()
       });
