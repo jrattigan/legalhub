@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { CalendarIcon, PlusIcon, TrashIcon, Pencil } from 'lucide-react';
+import { CalendarIcon, PlusIcon, TrashIcon, Pencil, ChevronRight, ChevronDown } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { format } from 'date-fns';
 import {
@@ -67,6 +67,26 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
   const [isAddSubItemDialogOpen, setIsAddSubItemDialogOpen] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({});
+
+  // Load expanded state from localStorage on component mount
+  useEffect(() => {
+    const storedExpandedState = localStorage.getItem(`checklist-expanded-state-${dealId}`);
+    if (storedExpandedState) {
+      try {
+        setExpandedItems(JSON.parse(storedExpandedState));
+      } catch (e) {
+        console.error("Error parsing stored expanded state:", e);
+      }
+    }
+  }, [dealId]);
+  
+  // Store expanded state in localStorage when it changes
+  useEffect(() => {
+    if (Object.keys(expandedItems).length > 0) {
+      localStorage.setItem(`checklist-expanded-state-${dealId}`, JSON.stringify(expandedItems));
+    }
+  }, [expandedItems, dealId]);
   
   // Query to fetch checklist items
   const { data: checklistItems = [], isLoading } = useQuery<ClosingChecklistItem[]>({
@@ -305,6 +325,15 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
       deleteItemMutation.mutate(id);
     }
   };
+  
+  // Function to toggle expanded/collapsed state
+  const toggleExpandItem = (itemId: number) => {
+    setExpandedItems(prev => {
+      const newState = { ...prev };
+      newState[itemId] = !prev[itemId];
+      return newState;
+    });
+  };
 
   if (isLoading) {
     return <div className="p-6">Loading closing checklist...</div>;
@@ -447,9 +476,22 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
                         </div>
                         <div className="flex-1">
                           <div className="flex justify-between">
-                            <h3 className={`text-lg font-medium ${item.isComplete ? 'line-through text-gray-500' : ''}`}>
-                              {item.title}
-                            </h3>
+                            <div className="flex items-center">
+                              {subItems.length > 0 && (
+                                <button 
+                                  onClick={() => toggleExpandItem(item.id)} 
+                                  className="mr-1 text-gray-500 hover:text-gray-800 focus:outline-none"
+                                >
+                                  {expandedItems[item.id] === false ? 
+                                    <ChevronRight className="h-4 w-4" /> : 
+                                    <ChevronDown className="h-4 w-4" />
+                                  }
+                                </button>
+                              )}
+                              <h3 className={`text-lg font-medium ${item.isComplete ? 'line-through text-gray-500' : ''}`}>
+                                {item.title}
+                              </h3>
+                            </div>
                             <div className="flex space-x-2">
                               <Button variant="ghost" size="sm" onClick={() => openAddSubItemDialog(item.id)}>
                                 <PlusIcon className="h-4 w-4" />
@@ -477,7 +519,7 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
                   </Card>
                   
                   {/* Render sub-items with indentation */}
-                  {subItems.length > 0 && (
+                  {subItems.length > 0 && expandedItems[item.id] !== false && (
                     <div className="ml-8 space-y-2">
                       {subItems.map((subItem: ClosingChecklistItem) => (
                         <Card key={subItem.id} className="p-3 border-l-4 border-gray-200">
