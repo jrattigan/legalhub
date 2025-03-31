@@ -91,7 +91,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
   // Fetch Tasks
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
     queryKey: ['/api/deals', dealId, 'tasks'],
-    queryFn: () => apiRequest(`/api/deals/${dealId}/tasks`, { method: 'GET' }),
+    queryFn: () => apiRequest(`/api/deals/${dealId}/tasks`).then(res => res.json()),
   });
 
   // Fetch Users (for internal tasks)
@@ -99,13 +99,15 @@ export function TasksTab({ dealId }: TasksTabProps) {
     queryKey: ['/api/users'],
     queryFn: () => {
       console.log("Fetching users...");
-      return apiRequest('/api/users', { method: 'GET' }).then(data => {
-        console.log("Users data:", data);
-        return data;
-      }).catch(error => {
-        console.error("Error fetching users:", error);
-        return [];
-      });
+      return apiRequest('/api/users').then(res => res.json())
+        .then(data => {
+          console.log("Users data:", data);
+          return data;
+        })
+        .catch(error => {
+          console.error("Error fetching users:", error);
+          return [];
+        });
     },
   });
 
@@ -114,20 +116,24 @@ export function TasksTab({ dealId }: TasksTabProps) {
     queryKey: ['/api/law-firms'],
     queryFn: () => {
       console.log("Fetching law firms...");
-      return apiRequest('/api/law-firms', { method: 'GET' }).then(data => {
-        console.log("Law firms data:", data);
-        return data;
-      }).catch(error => {
-        console.error("Error fetching law firms:", error);
-        return [];
-      });
+      return apiRequest('/api/law-firms').then(res => res.json())
+        .then(data => {
+          console.log("Law firms data:", data);
+          return data;
+        })
+        .catch(error => {
+          console.error("Error fetching law firms:", error);
+          return [];
+        });
     },
   });
 
   // Fetch Attorneys based on selected law firm
   const { data: attorneys, isLoading: attorneysLoading } = useQuery({
     queryKey: ['/api/law-firms', selectedLawFirm, 'attorneys'],
-    queryFn: () => selectedLawFirm ? apiRequest(`/api/law-firms/${selectedLawFirm}/attorneys`, { method: 'GET' }) : Promise.resolve([]),
+    queryFn: () => selectedLawFirm 
+      ? apiRequest(`/api/law-firms/${selectedLawFirm}/attorneys`).then(res => res.json()) 
+      : Promise.resolve([]),
     enabled: !!selectedLawFirm,
   });
 
@@ -199,7 +205,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
   // Create new custom assignee
   const createCustomAssigneeMutation = useMutation({
     mutationFn: (data: { name: string; email: string }) => 
-      apiRequest('/api/custom-assignees', { method: 'POST', data }),
+      apiRequest('/api/custom-assignees', { method: 'POST', data }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/custom-assignees'] });
     },
@@ -214,7 +220,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
 
   // Create Task Mutation
   const createTaskMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/tasks', { method: 'POST', data }),
+    mutationFn: (data: any) => apiRequest('/api/tasks', { method: 'POST', data }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       setIsAddTaskOpen(false);
@@ -237,7 +243,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
   // Update Task Mutation
   const updateTaskMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: any }) => 
-      apiRequest(`/api/tasks/${id}`, { method: 'PATCH', data }),
+      apiRequest(`/api/tasks/${id}`, { method: 'PATCH', data }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       setIsEditTaskOpen(false);
@@ -260,7 +266,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
 
   // Delete Task Mutation
   const deleteTaskMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/tasks/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: number) => apiRequest(`/api/tasks/${id}`, { method: 'DELETE' }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       toast({
@@ -281,7 +287,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
   // Toggle Task Status Mutation
   const toggleTaskStatusMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: { status: string } }) => 
-      apiRequest(`/api/tasks/${id}`, { method: 'PATCH', data }),
+      apiRequest(`/api/tasks/${id}`, { method: 'PATCH', data }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
     },
