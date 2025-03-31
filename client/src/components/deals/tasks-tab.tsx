@@ -694,9 +694,12 @@ export function TasksTab({ dealId }: TasksTabProps) {
           
           <Button 
             onClick={() => {
+              console.log("👉 ADD TASK BUTTON CLICKED");
               form.reset();
               setTaskType("internal");
+              form.setValue("taskType", "internal");
               setIsAddTaskOpen(true);
+              console.log("👉 isAddTaskOpen set to:", true);
             }}
             size="sm"
           >
@@ -838,7 +841,10 @@ export function TasksTab({ dealId }: TasksTabProps) {
       </Tabs>
 
       {/* Add Task Dialog */}
-      <Dialog open={isAddTaskOpen} onOpenChange={setIsAddTaskOpen}>
+      <Dialog open={isAddTaskOpen} onOpenChange={(open) => {
+          console.log("👉 DIALOG onOpenChange called with:", open);
+          setIsAddTaskOpen(open);
+        }}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Add New Task</DialogTitle>
@@ -1193,8 +1199,17 @@ export function TasksTab({ dealId }: TasksTabProps) {
                   Cancel
                 </Button>
                 <Button 
-                  type="submit"
-                  onClick={() => console.log("📋 SUBMIT BUTTON CLICKED")}
+                  type="button"
+                  onClick={() => {
+                    console.log("📋 SUBMIT BUTTON CLICKED DIRECTLY");
+                    
+                    // Get values from form
+                    const values = form.getValues();
+                    console.log("📋 Form values:", values);
+                    
+                    // Directly call onSubmit with form values
+                    onSubmit(values);
+                  }}
                 >
                   Create Task
                 </Button>
