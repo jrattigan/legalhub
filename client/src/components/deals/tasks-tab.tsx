@@ -628,8 +628,21 @@ export function TasksTab({ dealId }: TasksTabProps) {
     return filtered;
   };
 
-  const internalTasks = filterTasks(tasks, 'internal');
-  const externalTasks = filterTasks(tasks, 'external');
+  // Get the tasks to display based on the active tab
+  const getFilteredTasks = () => {
+    const filteredTasks = filterTasks(tasks, activeTab);
+    console.log(`Filtered ${activeTab} tasks:`, filteredTasks.length);
+    return filteredTasks;
+  };
+  
+  // Filter tasks based on the selected tab and status filter
+  const currentTasks = getFilteredTasks();
+  
+  // Log when active tab changes
+  useEffect(() => {
+    console.log("Active tab changed to:", activeTab);
+    console.log("Current tasks count:", currentTasks.length);
+  }, [activeTab, currentTasks.length]);
 
   // Find assignee name based on ID
   const getAssigneeName = (task: Task) => {
@@ -767,17 +780,17 @@ export function TasksTab({ dealId }: TasksTabProps) {
           <TabsTrigger value="external">External</TabsTrigger>
         </TabsList>
         
-        {/* Internal Tasks Tab */}
+        {/* Tasks Tab Content for Internal Tasks */}
         <TabsContent value="internal">
           {tasksLoading ? (
             <p>Loading tasks...</p>
-          ) : internalTasks.length === 0 ? (
+          ) : currentTasks.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
               No internal tasks found. Create a new task to get started.
             </div>
           ) : (
             <div className="grid gap-4">
-              {internalTasks.map((task: Task) => (
+              {currentTasks.map((task: Task) => (
                 <Card key={task.id} className={task.status === 'completed' ? "opacity-70" : ""}>
                   <CardHeader className="py-3 px-4 flex flex-row items-start justify-between space-y-0">
                     <div className="flex items-center space-x-3">
@@ -829,17 +842,17 @@ export function TasksTab({ dealId }: TasksTabProps) {
           )}
         </TabsContent>
         
-        {/* External Tasks Tab */}
+        {/* Tasks Tab Content for External Tasks */}
         <TabsContent value="external">
           {tasksLoading ? (
             <p>Loading tasks...</p>
-          ) : externalTasks.length === 0 ? (
+          ) : currentTasks.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
               No external tasks found. Create a new task to get started.
             </div>
           ) : (
             <div className="grid gap-4">
-              {externalTasks.map((task: Task) => (
+              {currentTasks.map((task: Task) => (
                 <Card key={task.id} className={task.status === 'completed' ? "opacity-70" : ""}>
                   <CardHeader className="py-3 px-4 flex flex-row items-start justify-between space-y-0">
                     <div className="flex items-center space-x-3">
