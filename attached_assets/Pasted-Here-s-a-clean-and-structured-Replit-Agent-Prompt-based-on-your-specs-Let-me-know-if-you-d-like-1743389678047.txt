@@ -1,0 +1,51 @@
+Here’s a clean and structured **Replit Agent Prompt** based on your specs. Let me know if you'd like to tweak terminology, user permissions, or validation rules.
+
+---
+
+**Replit Agent Prompt:**
+
+Implement a new **"Tasks"** section on the Deal Detail page with the following functionality:
+
+### Core Requirements:
+
+1. **Tasks Section**:
+   - Add a “Tasks” section below existing deal content.
+   - Display two categories: **Internal Tasks** and **External Tasks**.
+
+2. **Task Model**:
+   - Fields:
+     - `Name` (string, required)
+     - `Description` (string, optional)
+     - `Due Date` (date, optional)
+     - `Assignee` (varies by task type, required)
+     - `Status` (enum: `Open`, `Completed`)
+
+3. **Internal Tasks**:
+   - Assignable only to users within the organization.
+
+4. **External Tasks**:
+   - Assignee options:
+     - The Outside Counsel law firm (general)
+     - Any attorneys listed under the Outside Counsel record
+     - New ad-hoc assignee (created during task creation or edit)
+   - Provide an option to **create a new assignee** (name + email).
+   - Once created, these assignees appear in the dropdown for future use.
+   - If a custom assignee is no longer attached to any task, **auto-delete** and remove from dropdown list.
+
+5. **Task Creation / Edit UX**:
+   - Accessible via “Add Task” and “Edit” buttons in the Tasks section.
+   - Assignee field must dynamically update based on task type selection (Internal vs. External).
+   - For external tasks, support dropdown with filtering and a “+ New Assignee” option.
+
+6. **Task List Display**:
+   - Group and display tasks under “Internal” and “External” headers.
+   - Include a toggle/filter to show Open vs. Completed tasks.
+
+---
+
+Let me know:
+- Should task visibility be scoped by user role or permissions?
+- Should newly created external assignees be tied to a deal, globally available, or organization-wide?
+- Do you want email notifications triggered on assignment or due dates?
+
+Happy to refine this further based on answers.
