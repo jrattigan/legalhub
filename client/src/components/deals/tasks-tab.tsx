@@ -483,17 +483,17 @@ export function TasksTab({ dealId }: TasksTabProps) {
     const taskData = {
       name: values.name,
       description: values.description || "",
-      dealId: numericDealId,
-      dueDate: values.dueDate,
+      dealId: numericDealId,  // This is already converted to a number above
+      dueDate: values.dueDate ? new Date(values.dueDate) : null, // Ensure Date object
       taskType: values.taskType,
       status: values.status || "open",
-      assigneeId: values.taskType === 'internal' ? values.assigneeId : null,
+      assigneeId: values.taskType === 'internal' ? Number(values.assigneeId) : null,
       customAssigneeId: values.taskType === 'external' && externalAssigneeType === 'existing' ? 
-        values.customAssigneeId : (externalAssigneeType === 'custom' ? customAssigneeId : null),
+        Number(values.customAssigneeId) : (externalAssigneeType === 'custom' ? Number(customAssigneeId) : null),
       lawFirmId: values.taskType === 'external' && externalAssigneeType === 'lawFirm' ? 
-        values.lawFirmId : null,
+        Number(values.lawFirmId) : null,
       attorneyId: values.taskType === 'external' && externalAssigneeType === 'attorney' ? 
-        values.attorneyId : null
+        Number(values.attorneyId) : null
     };
     
     console.log("📋 FORM SUBMISSION - Task data to submit:", JSON.stringify(taskData, null, 2));
@@ -562,17 +562,17 @@ export function TasksTab({ dealId }: TasksTabProps) {
     // Prepare task data based on type and assignee type
     const taskData = {
       name: values.name,
-      description: values.description,
-      dueDate: values.dueDate,
+      description: values.description || "",
+      dueDate: values.dueDate ? new Date(values.dueDate) : null, // Ensure Date object
       taskType: values.taskType,
-      status: values.status,
-      assigneeId: values.taskType === 'internal' ? values.assigneeId : null,
+      status: values.status || "open",
+      assigneeId: values.taskType === 'internal' ? Number(values.assigneeId) : null,
       customAssigneeId: values.taskType === 'external' && externalAssigneeType === 'existing' ? 
-        values.customAssigneeId : (externalAssigneeType === 'custom' ? customAssigneeId : null),
+        Number(values.customAssigneeId) : (externalAssigneeType === 'custom' ? Number(customAssigneeId) : null),
       lawFirmId: values.taskType === 'external' && externalAssigneeType === 'lawFirm' ? 
-        values.lawFirmId : null,
+        Number(values.lawFirmId) : null,
       attorneyId: values.taskType === 'external' && externalAssigneeType === 'attorney' ? 
-        values.attorneyId : null
+        Number(values.attorneyId) : null
     };
     
     updateTaskMutation.mutate({ id: currentTask.id, data: taskData });
