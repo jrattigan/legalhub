@@ -449,22 +449,11 @@ export const insertTaskSchema = createInsertSchema(tasks).pick({
 export const customAssignees = pgTable("custom_assignees", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  email: text("email"), // Made email optional
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertCustomAssigneeSchema = createInsertSchema(customAssignees).pick({
   name: true,
-  email: true,
-}).transform((data) => {
-  // Ensure email is null not undefined when empty
-  const transformedData = { ...data };
-  
-  if (transformedData.email === undefined || transformedData.email === "") {
-    transformedData.email = null;
-  }
-  
-  return transformedData;
 });
 
 export type Task = typeof tasks.$inferSelect;

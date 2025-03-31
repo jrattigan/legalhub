@@ -1632,8 +1632,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const partialCustomAssigneeSchema = z.object({
-        name: z.string().optional(),
-        email: z.string().optional()
+        name: z.string().optional()
       });
 
       const validatedData = partialCustomAssigneeSchema.parse(req.body);

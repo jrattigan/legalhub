@@ -76,7 +76,6 @@ type Attorney = {
 type CustomAssignee = {
   id: number;
   name: string;
-  email: string | null;
   createdAt: string;
 };
 
@@ -188,7 +187,6 @@ export function TasksTab({ dealId }: TasksTabProps) {
     assigneeId: z.number().nullable().optional(),
     customAssigneeId: z.number().nullable().optional(),
     customAssigneeName: z.string().optional(),
-    customAssigneeEmail: z.string().email().optional().nullable(),
     lawFirmId: z.number().nullable().optional(),
     attorneyId: z.number().nullable().optional()
   });
@@ -204,7 +202,6 @@ export function TasksTab({ dealId }: TasksTabProps) {
       assigneeId: null,
       customAssigneeId: null,
       customAssigneeName: "",
-      customAssigneeEmail: "",
       lawFirmId: null,
       attorneyId: null
     }
@@ -221,7 +218,6 @@ export function TasksTab({ dealId }: TasksTabProps) {
       assigneeId: null,
       customAssigneeId: null,
       customAssigneeName: "",
-      customAssigneeEmail: "",
       lawFirmId: null,
       attorneyId: null
     }
@@ -287,7 +283,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
 
   // Create new custom assignee
   const createCustomAssigneeMutation = useMutation({
-    mutationFn: (data: { name: string; email: string }) => 
+    mutationFn: (data: { name: string }) => 
       apiRequest('/api/custom-assignees', { method: 'POST', data }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/custom-assignees'] });
@@ -502,15 +498,14 @@ export function TasksTab({ dealId }: TasksTabProps) {
       // Create a custom assignee if needed
       if (values.taskType === 'external' && externalAssigneeType === 'custom' && values.customAssigneeName) {
         try {
-          console.log("📋 FORM SUBMISSION - Creating custom assignee:", values.customAssigneeName, values.customAssigneeEmail || "No email");
+          console.log("📋 FORM SUBMISSION - Creating custom assignee:", values.customAssigneeName);
           
           // Use fetch directly for debugging
           const customAssigneeResponse = await fetch('/api/custom-assignees', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              name: values.customAssigneeName,
-              email: values.customAssigneeEmail || null
+              name: values.customAssigneeName
             })
           });
           
@@ -642,15 +637,14 @@ export function TasksTab({ dealId }: TasksTabProps) {
     // Create a custom assignee if needed
     if (values.taskType === 'external' && externalAssigneeType === 'custom' && values.customAssigneeName) {
       try {
-        console.log("📝 EDIT FORM SUBMISSION - Creating custom assignee:", values.customAssigneeName, values.customAssigneeEmail || "No email");
+        console.log("📝 EDIT FORM SUBMISSION - Creating custom assignee:", values.customAssigneeName);
         
         // Use fetch directly for debugging and consistency with add task form
         const customAssigneeResponse = await fetch('/api/custom-assignees', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: values.customAssigneeName,
-            email: values.customAssigneeEmail || null
+            name: values.customAssigneeName
           })
         });
         
@@ -1282,23 +1276,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
                         )}
                       />
                       
-                      <FormField
-                        control={form.control}
-                        name="customAssigneeEmail"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Assignee Email (Optional)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="Enter assignee email (optional)" 
-                                {...field} 
-                                value={field.value || ""} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+
                     </>
                   )}
                 </>
@@ -1529,16 +1507,13 @@ export function TasksTab({ dealId }: TasksTabProps) {
                               editForm.setValue("attorneyId", null);
                               editForm.setValue("customAssigneeId", null);
                               editForm.setValue("customAssigneeName", "");
-                              editForm.setValue("customAssigneeEmail", "");
                             } else if (value === "attorney") {
                               editForm.setValue("customAssigneeId", null);
                               editForm.setValue("customAssigneeName", "");
-                              editForm.setValue("customAssigneeEmail", "");
                             } else if (value === "existing") {
                               editForm.setValue("lawFirmId", null);
                               editForm.setValue("attorneyId", null);
                               editForm.setValue("customAssigneeName", "");
-                              editForm.setValue("customAssigneeEmail", "");
                             } else if (value === "custom") {
                               editForm.setValue("lawFirmId", null);
                               editForm.setValue("attorneyId", null);
@@ -1720,23 +1695,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
                         )}
                       />
                       
-                      <FormField
-                        control={editForm.control}
-                        name="customAssigneeEmail"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Assignee Email (Optional)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="Enter assignee email (optional)" 
-                                {...field}
-                                value={field.value || ""} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+
                     </>
                   )}
                 </>
