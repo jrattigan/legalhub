@@ -350,6 +350,9 @@ export function TasksTab({ dealId }: TasksTabProps) {
         title: "Success",
         description: "Task created successfully"
       });
+      
+      // After creating a task, check if any custom assignees were removed during the process
+      cleanupUnusedCustomAssignees();
     },
     onError: (error: any) => {
       console.error("🔧 MUTATION - Error creating task:", error);
@@ -444,6 +447,9 @@ export function TasksTab({ dealId }: TasksTabProps) {
       apiRequest(`/api/tasks/${id}`, { method: 'PATCH', data }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      
+      // After toggling task status (and since this changes task data), check for cleanup
+      cleanupUnusedCustomAssignees();
     },
     onError: (error) => {
       toast({
@@ -464,10 +470,8 @@ export function TasksTab({ dealId }: TasksTabProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/custom-assignees'] });
-      toast({
-        title: "Cleanup Complete",
-        description: "Unused custom assignees have been removed."
-      });
+      // Silently update the custom assignees list without showing a toast
+      // since this happens automatically in the background
     },
     onError: (error) => {
       console.error("Failed to clean up custom assignees:", error);
@@ -802,65 +806,6 @@ export function TasksTab({ dealId }: TasksTabProps) {
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Tasks</h3>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={async () => {
-              console.log("Testing task creation endpoint...");
-              try {
-                const response = await apiRequest('/api/test-create-task', {
-                  method: 'POST',
-                  data: {}
-                });
-                
-                console.log("Test create task response:", response);
-                const data = await response.json();
-                console.log("Test create task data:", data);
-                
-                if (response.ok) {
-                  toast({
-                    title: "Test Task Created",
-                    description: "A test task was created successfully!"
-                  });
-                  
-                  // Refresh tasks list
-                  queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
-                } else {
-                  toast({
-                    title: "Test Failed",
-                    description: data.message || "Failed to create test task",
-                    variant: "destructive"
-                  });
-                }
-              } catch (error) {
-                console.error("Error testing task creation:", error);
-                toast({
-                  title: "Test Error",
-                  description: "Error executing test. See console for details.",
-                  variant: "destructive"
-                });
-              }
-            }}
-          >
-            Run Test
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => cleanupUnusedCustomAssignees()}
-            disabled={cleanupCustomAssigneesMutation.isPending}
-          >
-            {cleanupCustomAssigneesMutation.isPending ? (
-              <>
-                <span className="mr-2">Cleaning up...</span>
-                <span className="animate-spin">⟳</span>
-              </>
-            ) : (
-              "Clean Up Assignees"
-            )}
-          </Button>
-          
           <Select
             value={statusFilter || "all"}
             onValueChange={(value) => setStatusFilter(value === "all" ? null : value)}
