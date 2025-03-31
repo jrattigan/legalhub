@@ -780,75 +780,13 @@ export function TasksTab({ dealId }: TasksTabProps) {
           <TabsTrigger value="external">External</TabsTrigger>
         </TabsList>
         
-        {/* Tasks Tab Content for Internal Tasks */}
-        <TabsContent value="internal">
+        {/* Common Tabs Content for both Internal and External Tasks */}
+        <TabsContent value={activeTab}>
           {tasksLoading ? (
             <p>Loading tasks...</p>
           ) : currentTasks.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
-              No internal tasks found. Create a new task to get started.
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              {currentTasks.map((task: Task) => (
-                <Card key={task.id} className={task.status === 'completed' ? "opacity-70" : ""}>
-                  <CardHeader className="py-3 px-4 flex flex-row items-start justify-between space-y-0">
-                    <div className="flex items-center space-x-3">
-                      <Checkbox 
-                        checked={task.status === 'completed'}
-                        onCheckedChange={(checked) => handleTaskStatusToggle(task, checked as boolean)}
-                      />
-                      <CardTitle className="text-sm font-medium">{task.name}</CardTitle>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => {
-                          setCurrentTask(task);
-                          setTaskType(task.taskType);
-                          setIsEditTaskOpen(true);
-                        }}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => {
-                          if (confirm("Are you sure you want to delete this task?")) {
-                            deleteTaskMutation.mutate(task.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pb-4 px-4">
-                    {task.description && (
-                      <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
-                    )}
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Assignee: {getAssigneeName(task)}</span>
-                      {task.dueDate && (
-                        <span>Due: {format(new Date(task.dueDate), 'PPP')}</span>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-        
-        {/* Tasks Tab Content for External Tasks */}
-        <TabsContent value="external">
-          {tasksLoading ? (
-            <p>Loading tasks...</p>
-          ) : currentTasks.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground">
-              No external tasks found. Create a new task to get started.
+              No {activeTab} tasks found. Create a new task to get started.
             </div>
           ) : (
             <div className="grid gap-4">
