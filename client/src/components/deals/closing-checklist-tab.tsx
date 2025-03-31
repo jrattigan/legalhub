@@ -67,9 +67,12 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   
   // Query to fetch checklist items
-  const { data: checklistItems = [], isLoading } = useQuery({
+  const { data: checklistItems = [], isLoading } = useQuery<ClosingChecklistItem[]>({
     queryKey: [`/api/deals/${dealId}/closing-checklist`],
-    queryFn: () => apiRequest(`/api/deals/${dealId}/closing-checklist`),
+    queryFn: async () => {
+      const response = await apiRequest(`/api/deals/${dealId}/closing-checklist`);
+      return Array.isArray(response) ? response : [];
+    },
     enabled: !!dealId && dealId > 0,
   });
 
@@ -327,13 +330,13 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
         </Dialog>
       </div>
 
-      {checklistItems.length === 0 ? (
+      {Array.isArray(checklistItems) && checklistItems.length === 0 ? (
         <Card className="p-6 text-center text-gray-500">
           No checklist items yet. Click "Add Item" to create one.
         </Card>
       ) : (
         <div className="space-y-4">
-          {checklistItems.map((item: ClosingChecklistItem) => (
+          {Array.isArray(checklistItems) && checklistItems.map((item: ClosingChecklistItem) => (
             <Card key={item.id} className="p-4">
               {editItemId === item.id ? (
                 // Edit form
