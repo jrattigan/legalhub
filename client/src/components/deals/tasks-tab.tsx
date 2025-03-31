@@ -560,6 +560,52 @@ export function TasksTab({ dealId }: TasksTabProps) {
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Tasks</h3>
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={async () => {
+              console.log("Testing task creation endpoint...");
+              try {
+                const response = await fetch('/api/test-create-task', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({})
+                });
+                
+                console.log("Test create task response:", response);
+                const data = await response.json();
+                console.log("Test create task data:", data);
+                
+                if (response.ok) {
+                  toast({
+                    title: "Test Task Created",
+                    description: "A test task was created successfully!"
+                  });
+                  
+                  // Refresh tasks list
+                  queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+                } else {
+                  toast({
+                    title: "Test Failed",
+                    description: data.message || "Failed to create test task",
+                    variant: "destructive"
+                  });
+                }
+              } catch (error) {
+                console.error("Error testing task creation:", error);
+                toast({
+                  title: "Test Error",
+                  description: "Error executing test. See console for details.",
+                  variant: "destructive"
+                });
+              }
+            }}
+          >
+            Run Test
+          </Button>
+          
           <Select
             value={statusFilter || "all"}
             onValueChange={(value) => setStatusFilter(value === "all" ? null : value)}

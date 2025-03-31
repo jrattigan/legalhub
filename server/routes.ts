@@ -1707,5 +1707,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Test endpoint for creating a task - for debugging
+  app.post("/api/test-create-task", async (req, res) => {
+    try {
+      console.log("TEST ROUTE - Creating task with data:", JSON.stringify(req.body, null, 2));
+      
+      // Create a simple test task
+      const testTask = {
+        name: "Test Task " + new Date().toISOString(),
+        description: "This is a test task created via debug endpoint",
+        dealId: 1, // hardcoded for testing
+        taskType: "internal",
+        status: "open",
+        assigneeId: 1 // hardcoded for testing
+      };
+      
+      console.log("TEST ROUTE - Using test task data:", JSON.stringify(testTask, null, 2));
+      
+      try {
+        const validatedData = insertTaskSchema.parse(testTask);
+        console.log("TEST ROUTE - Validated task data:", JSON.stringify(validatedData, null, 2));
+        
+        const task = await storage.createTask(validatedData);
+        console.log("TEST ROUTE - Task created successfully:", JSON.stringify(task, null, 2));
+        return res.status(201).json({
+          success: true,
+          message: "Test task created successfully",
+          task
+        });
+      } catch (validationError) {
+        console.error("TEST ROUTE - Validation error:", validationError);
+        return res.status(400).json({ 
+          success: false,
+          message: "Invalid task data", 
+          error: validationError instanceof z.ZodError ? validationError.format() : String(validationError)
+        });
+      }
+    } catch (error) {
+      console.error("TEST ROUTE - Unexpected error creating task:", error);
+      return res.status(500).json({ 
+        success: false,
+        message: "Failed to create test task", 
+        error: String(error),
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      });
+    }
+  });
+  
   return httpServer;
 }
