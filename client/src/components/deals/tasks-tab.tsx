@@ -1232,72 +1232,10 @@ export function TasksTab({ dealId }: TasksTabProps) {
                   Cancel
                 </Button>
                 <Button 
-                  type="button" 
-                  onClick={async () => {
-                    const values = form.getValues();
-                    console.log("Creating task with form values:", values);
-                    
-                    try {
-                      const numericDealId = parseInt(dealId.toString(), 10);
-                      
-                      // Prepare task data similar to onSubmit function
-                      const taskData = {
-                        name: values.name,
-                        description: values.description || null,
-                        dealId: numericDealId,
-                        dueDate: values.dueDate,
-                        taskType: values.taskType || "internal",
-                        status: values.status || "open",
-                        assigneeId: values.taskType === 'internal' ? 
-                          (values.assigneeId ? parseInt(values.assigneeId.toString(), 10) : null) : null,
-                        customAssigneeId: null,
-                        lawFirmId: null,
-                        attorneyId: null
-                      };
-                      
-                      console.log("Submitting simplified task data:", taskData);
-                      
-                      // Use the approach that works in the test button
-                      const response = await fetch('/api/tasks', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(taskData)
-                      });
-                      
-                      if (!response.ok) {
-                        const errorData = await response.json().catch(() => null);
-                        console.error("API error response:", errorData);
-                        throw new Error(errorData?.message || `Error: ${response.status} ${response.statusText}`);
-                      }
-                      
-                      const data = await response.json();
-                      console.log("Task creation success:", data);
-                      
-                      // Show success message
-                      toast({
-                        title: "Success",
-                        description: "Task created successfully"
-                      });
-                      
-                      // Reset form and close dialog
-                      form.reset();
-                      setIsAddTaskOpen(false);
-                      
-                      // Refresh tasks list
-                      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
-                    } catch (error) {
-                      console.error("Error creating task:", error);
-                      toast({
-                        title: "Error",
-                        description: String(error),
-                        variant: "destructive"
-                      });
-                    }
-                  }}
+                  type="submit" 
+                  disabled={createTaskMutation.isPending}
                 >
-                  Create Task Directly
+                  {createTaskMutation.isPending ? "Creating..." : "Create Task"}
                 </Button>
               </DialogFooter>
             </form>
