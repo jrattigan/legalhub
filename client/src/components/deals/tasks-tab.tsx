@@ -90,6 +90,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
   const [externalAssigneeType, setExternalAssigneeType] = useState("lawFirm");
   const [selectedLawFirm, setSelectedLawFirm] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("internal");
 
   // Fetch Tasks
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
@@ -738,10 +739,12 @@ export function TasksTab({ dealId }: TasksTabProps) {
             onClick={() => {
               console.log("👉 ADD TASK BUTTON CLICKED");
               form.reset();
-              setTaskType("internal");
-              form.setValue("taskType", "internal");
+              // Use the active tab to determine which type of task to create
+              setTaskType(activeTab);
+              form.setValue("taskType", activeTab);
               setIsAddTaskOpen(true);
               console.log("👉 isAddTaskOpen set to:", true);
+              console.log("👉 Setting task type to:", activeTab);
             }}
             size="sm"
           >
@@ -751,7 +754,14 @@ export function TasksTab({ dealId }: TasksTabProps) {
         </div>
       </div>
 
-      <Tabs defaultValue="internal" className="w-full">
+      <Tabs 
+        value={activeTab} 
+        defaultValue="internal" 
+        className="w-full" 
+        onValueChange={(value) => {
+          console.log("Tab value changed to:", value);
+          setActiveTab(value as "internal" | "external");
+        }}>
         <TabsList className="grid w-[200px] grid-cols-2">
           <TabsTrigger value="internal">Internal</TabsTrigger>
           <TabsTrigger value="external">External</TabsTrigger>
