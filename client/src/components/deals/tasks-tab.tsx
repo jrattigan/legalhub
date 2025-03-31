@@ -90,8 +90,8 @@ export function TasksTab({ dealId }: TasksTabProps) {
 
   // Fetch Tasks
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
-    queryKey: ['/api/tasks', dealId],
-    queryFn: () => apiRequest(`/api/tasks/deal/${dealId}`),
+    queryKey: ['/api/deals', dealId, 'tasks'],
+    queryFn: () => apiRequest(`/api/deals/${dealId}/tasks`),
   });
 
   // Fetch Users (for internal tasks)
@@ -198,7 +198,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
   const createTaskMutation = useMutation({
     mutationFn: (data: any) => apiRequest('/api/tasks', { method: 'POST', data }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/tasks', dealId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       setIsAddTaskOpen(false);
       form.reset();
       toast({
@@ -221,7 +221,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
     mutationFn: ({ id, data }: { id: number; data: any }) => 
       apiRequest(`/api/tasks/${id}`, { method: 'PATCH', data }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/tasks', dealId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       setIsEditTaskOpen(false);
       setCurrentTask(null);
       editForm.reset();
@@ -244,7 +244,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
   const deleteTaskMutation = useMutation({
     mutationFn: (id: number) => apiRequest(`/api/tasks/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/tasks', dealId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       toast({
         title: "Success",
         description: "Task deleted successfully"
@@ -265,7 +265,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
     mutationFn: ({ id, data }: { id: number; data: { status: string } }) => 
       apiRequest(`/api/tasks/${id}`, { method: 'PATCH', data }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/tasks', dealId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
     },
     onError: (error) => {
       toast({
