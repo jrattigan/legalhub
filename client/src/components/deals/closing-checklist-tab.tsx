@@ -48,9 +48,6 @@ interface ClosingChecklistItem {
 // Schema for form validation
 const checklistItemSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  description: z.string().optional().nullable(),
-  dueDate: z.date().optional().nullable(),
-  assigneeId: z.number().optional().nullable(),
   isComplete: z.boolean().optional()
 });
 
@@ -174,9 +171,6 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
     resolver: zodResolver(checklistItemSchema),
     defaultValues: {
       title: '',
-      description: '',
-      dueDate: null,
-      assigneeId: null,
       isComplete: false
     }
   });
@@ -186,9 +180,6 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
     resolver: zodResolver(checklistItemSchema),
     defaultValues: {
       title: '',
-      description: '',
-      dueDate: null,
-      assigneeId: null,
       isComplete: false
     }
   });
@@ -212,9 +203,6 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
     setEditItemId(item.id);
     editForm.reset({
       title: item.title,
-      description: item.description,
-      dueDate: item.dueDate ? new Date(item.dueDate) : null,
-      assigneeId: item.assigneeId,
       isComplete: item.isComplete
     });
   };
@@ -266,59 +254,6 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
                   )}
                 />
                 
-                <FormField
-                  control={addForm.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter description" {...field} value={field.value || ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={addForm.control}
-                  name="dueDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Due Date (Optional)</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value || undefined}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
                 <DialogFooter>
                   <Button type="submit" disabled={createItemMutation.isPending}>
                     {createItemMutation.isPending ? "Adding..." : "Add Item"}
@@ -351,59 +286,6 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={editForm.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Input {...field} value={field.value || ''} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={editForm.control}
-                      name="dueDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Due Date</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    "pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(field.value, "PPP")
-                                  ) : (
-                                    <span>Pick a date</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value || undefined}
-                                onSelect={field.onChange}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
                           <FormMessage />
                         </FormItem>
                       )}
