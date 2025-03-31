@@ -1441,21 +1441,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/tasks", async (req, res) => {
     try {
+      console.log("POST /api/tasks request body:", JSON.stringify(req.body, null, 2));
+      
+      // Ensure dealId is a number
+      const data = { ...req.body };
+      
+      if (data.dealId !== undefined) {
+        if (typeof data.dealId === 'string') {
+          data.dealId = parseInt(data.dealId, 10);
+          console.log("Converted dealId from string to number:", data.dealId);
+        }
+        
+        if (isNaN(data.dealId)) {
+          return res.status(400).json({ 
+            message: "Invalid dealId. Must be a valid number.",
+            received: req.body.dealId
+          });
+        }
+      } else {
+        return res.status(400).json({ message: "dealId is required" });
+      }
+      
       // Ensure dueDate is properly converted to a Date object if it exists
-      const data = req.body;
       if (data.dueDate && !(data.dueDate instanceof Date)) {
         data.dueDate = new Date(data.dueDate);
+        if (isNaN(data.dueDate.getTime())) {
+          return res.status(400).json({ 
+            message: "Invalid dueDate format",
+            received: req.body.dueDate
+          });
+        }
       }
 
-      const validatedData = insertTaskSchema.parse(data);
-      const task = await storage.createTask(validatedData);
-      res.status(201).json(task);
-    } catch (error) {
-      console.error("Error creating task:", error);
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid task data", errors: error.errors });
+      try {
+        const validatedData = insertTaskSchema.parse(data);
+        console.log("Validated task data:", JSON.stringify(validatedData, null, 2));
+        const task = await storage.createTask(validatedData);
+        console.log("Task created successfully:", JSON.stringify(task, null, 2));
+        return res.status(201).json(task);
+      } catch (validationError) {
+        console.error("Validation error:", validationError);
+        if (validationError instanceof z.ZodError) {
+          return res.status(400).json({ 
+            message: "Invalid task data", 
+            errors: validationError.errors 
+          });
+        }
+        throw validationError; // Rethrow if it's not a Zod error
       }
-      res.status(500).json({ message: "Failed to create task" });
+    } catch (error) {
+      console.error("Unexpected error creating task:", error);
+      return res.status(500).json({ message: "Failed to create task", error: String(error) });
     }
   });
 

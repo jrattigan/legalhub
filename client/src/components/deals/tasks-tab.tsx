@@ -253,24 +253,23 @@ export function TasksTab({ dealId }: TasksTabProps) {
 
   // Create Task Mutation
   const createTaskMutation = useMutation({
-    mutationFn: (data: any) => {
-      console.log("Submitting task data:", data);
-      return apiRequest('/api/tasks', { 
-        method: 'POST', 
-        data 
-      })
-      .then(async res => {
-        const responseData = await res.json();
-        if (!res.ok) {
-          console.error("Task creation failed with status:", res.status, responseData);
-          throw new Error(responseData.message || "Failed to create task");
-        }
+    mutationFn: async (data: any) => {
+      console.log("Submitting task data:", JSON.stringify(data, null, 2));
+      
+      try {
+        const response = await apiRequest('/api/tasks', { 
+          method: 'POST', 
+          data
+        });
+        
+        console.log("Response received:", response.status, response.statusText);
+        const responseData = await response.json();
+        console.log("Response data:", responseData);
         return responseData;
-      })
-      .catch(err => {
+      } catch (err) {
         console.error("Error in task creation request:", err);
         throw err;
-      });
+      }
     },
     onSuccess: (data) => {
       console.log("Task created successfully:", data);
@@ -393,6 +392,8 @@ export function TasksTab({ dealId }: TasksTabProps) {
   const onSubmit = async (values: z.infer<typeof taskFormSchema>) => {
     console.log("Form submission values:", values);
     console.log("External assignee type:", externalAssigneeType);
+    console.log("Deal ID (from URL parameter):", dealId, "type:", typeof dealId);
+    
     let customAssigneeId = values.customAssigneeId;
     
     // Create a custom assignee if needed
@@ -411,14 +412,28 @@ export function TasksTab({ dealId }: TasksTabProps) {
       }
     }
     
+    // Make sure dealId is a number, not a string
+    const numericDealId = parseInt(dealId.toString(), 10);
+    console.log("Numeric dealId:", numericDealId);
+    
+    if (isNaN(numericDealId)) {
+      console.error("Invalid dealId:", dealId);
+      toast({
+        title: "Error",
+        description: "Invalid deal ID",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Prepare task data based on type and assignee type
     const taskData = {
       name: values.name,
       description: values.description,
-      dealId: Number(dealId), // Make sure dealId is converted to a number
+      dealId: numericDealId,
       dueDate: values.dueDate,
       taskType: values.taskType,
-      status: values.status,
+      status: values.status || "open",
       assigneeId: values.taskType === 'internal' ? values.assigneeId : null,
       customAssigneeId: values.taskType === 'external' && externalAssigneeType === 'existing' ? 
         values.customAssigneeId : (externalAssigneeType === 'custom' ? customAssigneeId : null),
@@ -428,12 +443,9 @@ export function TasksTab({ dealId }: TasksTabProps) {
         values.attorneyId : null
     };
     
-    console.log("Submitting task data to API:", taskData);
-    try {
-      createTaskMutation.mutate(taskData);
-    } catch (error) {
-      console.error("Error in mutation:", error);
-    }
+    console.log("Submitting task data to API:", JSON.stringify(taskData, null, 2));
+    
+    createTaskMutation.mutate(taskData);
   };
 
   // Handle form submission for editing a task

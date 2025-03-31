@@ -2057,23 +2057,39 @@ export class MemStorage implements IStorage {
   }
 
   async createTask(task: InsertTask): Promise<Task> {
+    console.log("Creating task with data:", JSON.stringify(task, null, 2));
+    
+    // Ensure dealId is a number
+    if (typeof task.dealId === 'string') {
+      task.dealId = parseInt(task.dealId, 10);
+      console.log("Converted dealId from string to number:", task.dealId);
+    }
+    
     const id = this.currentTaskId++;
     const now = new Date();
-    const createdTask: Task = {
-      ...task,
-      id,
-      createdAt: now,
-      updatedAt: now,
-      status: task.status || 'open',
-      description: task.description || null,
-      dueDate: task.dueDate || null,
-      assigneeId: task.assigneeId || null,
-      customAssigneeId: task.customAssigneeId || null,
-      lawFirmId: task.lawFirmId || null,
-      attorneyId: task.attorneyId || null
-    };
-    this.tasks.set(id, createdTask);
-    return createdTask;
+    
+    try {
+      const createdTask: Task = {
+        ...task,
+        id,
+        createdAt: now,
+        updatedAt: now,
+        status: task.status || 'open',
+        description: task.description || null,
+        dueDate: task.dueDate || null,
+        assigneeId: task.assigneeId || null,
+        customAssigneeId: task.customAssigneeId || null,
+        lawFirmId: task.lawFirmId || null,
+        attorneyId: task.attorneyId || null
+      };
+      
+      console.log("Task created successfully, storing with ID:", id);
+      this.tasks.set(id, createdTask);
+      return createdTask;
+    } catch (error) {
+      console.error("Error creating task:", error);
+      throw error;
+    }
   }
 
   async updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined> {
