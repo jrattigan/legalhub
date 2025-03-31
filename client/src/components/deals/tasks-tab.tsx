@@ -861,7 +861,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
           console.log("👉 DIALOG onOpenChange called with:", open);
           setIsAddTaskOpen(open);
         }}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Task</DialogTitle>
             <DialogDescription>
@@ -1248,7 +1248,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
 
       {/* Edit Task Dialog */}
       <Dialog open={isEditTaskOpen} onOpenChange={setIsEditTaskOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Task</DialogTitle>
             <DialogDescription>
