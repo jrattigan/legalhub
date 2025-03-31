@@ -277,7 +277,12 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Closing Checklist</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-bold">Closing Checklist</h2>
+          <span className="px-2 py-0.5 bg-gray-100 rounded-md text-sm font-medium text-gray-600">
+            {checklistItems.filter(item => item.isComplete).length}/{checklistItems.length}
+          </span>
+        </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
