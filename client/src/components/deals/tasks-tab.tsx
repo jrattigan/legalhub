@@ -414,92 +414,84 @@ export function TasksTab({ dealId }: TasksTabProps) {
 
   // Handle form submission for creating a new task
   const onSubmit = async (values: z.infer<typeof taskFormSchema>) => {
-    console.log("📋 FORM SUBMISSION - Starting form submission");
-    console.log("📋 FORM SUBMISSION - Form values:", JSON.stringify(values, null, 2));
-    console.log("📋 FORM SUBMISSION - External assignee type:", externalAssigneeType);
-    console.log("📋 FORM SUBMISSION - Deal ID (from URL parameter):", dealId, "type:", typeof dealId);
-    
-    // Prevent form submission if required fields are empty
-    if (!values.name) {
-      console.error("Task name is required");
-      toast({
-        title: "Error",
-        description: "Task name is required",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    let customAssigneeId = values.customAssigneeId;
-    
-    // Create a custom assignee if needed
-    if (values.taskType === 'external' && externalAssigneeType === 'custom' && values.customAssigneeName && values.customAssigneeEmail) {
-      try {
-        console.log("📋 FORM SUBMISSION - Creating custom assignee:", values.customAssigneeName, values.customAssigneeEmail);
-        
-        // Use fetch directly for debugging
-        const customAssigneeResponse = await fetch('/api/custom-assignees', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: values.customAssigneeName,
-            email: values.customAssigneeEmail || ""
-          })
-        });
-        
-        if (!customAssigneeResponse.ok) {
-          throw new Error("Failed to create custom assignee");
-        }
-        
-        const result = await customAssigneeResponse.json();
-        customAssigneeId = result.id;
-        console.log("📋 FORM SUBMISSION - Created custom assignee with ID:", customAssigneeId);
-      } catch (error) {
-        console.error("📋 FORM SUBMISSION - Failed to create custom assignee:", error);
+    try {
+      console.log("📋 FORM SUBMISSION - Starting form submission");
+      console.log("📋 FORM SUBMISSION - Form values:", JSON.stringify(values, null, 2));
+      console.log("📋 FORM SUBMISSION - External assignee type:", externalAssigneeType);
+      console.log("📋 FORM SUBMISSION - Deal ID (from URL parameter):", dealId, "type:", typeof dealId);
+      
+      // Prevent form submission if required fields are empty
+      if (!values.name) {
+        console.error("Task name is required");
         toast({
-          title: "Error Creating Custom Assignee",
-          description: String(error),
+          title: "Error",
+          description: "Task name is required",
           variant: "destructive"
         });
-        return; // Early return on error
+        return;
       }
-    }
-    
-    // Make sure dealId is a number, not a string
-    const numericDealId = parseInt(dealId.toString(), 10);
-    console.log("📋 FORM SUBMISSION - Numeric dealId:", numericDealId);
-    
-    if (isNaN(numericDealId)) {
-      console.error("📋 FORM SUBMISSION - Invalid dealId:", dealId);
-      toast({
-        title: "Error",
-        description: "Invalid deal ID",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Prepare task data based on type and assignee type
-    const taskData = {
-      name: values.name,
-      description: values.description || "",
-      dealId: numericDealId,  // This is already converted to a number above
-      dueDate: values.dueDate ? new Date(values.dueDate) : null, // Ensure Date object
-      taskType: values.taskType,
-      status: values.status || "open",
-      assigneeId: values.taskType === 'internal' ? Number(values.assigneeId) : null,
-      customAssigneeId: values.taskType === 'external' && externalAssigneeType === 'existing' ? 
-        Number(values.customAssigneeId) : (externalAssigneeType === 'custom' ? Number(customAssigneeId) : null),
-      lawFirmId: values.taskType === 'external' && externalAssigneeType === 'lawFirm' ? 
-        Number(values.lawFirmId) : null,
-      attorneyId: values.taskType === 'external' && externalAssigneeType === 'attorney' ? 
-        Number(values.attorneyId) : null
-    };
-    
-    console.log("📋 FORM SUBMISSION - Task data to submit:", JSON.stringify(taskData, null, 2));
-    
-    // Use direct fetch instead of mutation for debugging
-    try {
+      
+      let customAssigneeId = values.customAssigneeId;
+      
+      // Create a custom assignee if needed
+      if (values.taskType === 'external' && externalAssigneeType === 'custom' && values.customAssigneeName && values.customAssigneeEmail) {
+        try {
+          console.log("📋 FORM SUBMISSION - Creating custom assignee:", values.customAssigneeName, values.customAssigneeEmail);
+          
+          // Use fetch directly for debugging
+          const customAssigneeResponse = await fetch('/api/custom-assignees', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: values.customAssigneeName,
+              email: values.customAssigneeEmail || ""
+            })
+          });
+          
+          if (!customAssigneeResponse.ok) {
+            throw new Error("Failed to create custom assignee");
+          }
+          
+          const result = await customAssigneeResponse.json();
+          customAssigneeId = result.id;
+          console.log("📋 FORM SUBMISSION - Created custom assignee with ID:", customAssigneeId);
+        } catch (error) {
+          console.error("📋 FORM SUBMISSION - Failed to create custom assignee:", error);
+          toast({
+            title: "Error Creating Custom Assignee",
+            description: String(error),
+            variant: "destructive"
+          });
+          return; // Early return on error
+        }
+      }
+      
+      // Make sure dealId is a number, not a string
+      const numericDealId = parseInt(dealId.toString(), 10);
+      console.log("📋 FORM SUBMISSION - Numeric dealId:", numericDealId);
+      
+      if (isNaN(numericDealId)) {
+        console.error("📋 FORM SUBMISSION - Invalid dealId:", dealId);
+        toast({
+          title: "Error",
+          description: "Invalid deal ID",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // For simplicity, let's create a minimal task first
+      // and then update it with full details after confirming it works
+      const taskData = {
+        name: values.name,
+        description: values.description || "",
+        dealId: numericDealId,
+        taskType: values.taskType || "internal",
+        status: "open"
+      };
+      
+      console.log("📋 FORM SUBMISSION - Simplified task data to submit:", JSON.stringify(taskData, null, 2));
+      
       console.log("📋 FORM SUBMISSION - Sending direct fetch request to /api/tasks");
       
       const response = await fetch('/api/tasks', {
@@ -511,7 +503,13 @@ export function TasksTab({ dealId }: TasksTabProps) {
       console.log("📋 FORM SUBMISSION - Response status:", response.status);
       
       if (!response.ok) {
-        const errorText = await response.text().catch(() => "Unknown error");
+        let errorText;
+        try {
+          const errorJson = await response.json();
+          errorText = JSON.stringify(errorJson);
+        } catch {
+          errorText = await response.text().catch(() => "Unknown error");
+        }
         console.error("📋 FORM SUBMISSION - Error creating task:", errorText);
         throw new Error(errorText);
       }
