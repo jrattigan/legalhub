@@ -76,9 +76,23 @@ type Attorney = {
 type CustomAssignee = {
   id: number;
   name: string;
-  email: string;
+  email: string | null;
   createdAt: string;
 };
+
+// Interface for task data to ensure proper typing throughout the component
+interface TaskData {
+  name: string;
+  description: string;
+  dealId: number;
+  taskType: string;
+  status: string;
+  dueDate: Date | null;
+  assigneeId?: number | null;
+  customAssigneeId?: number | null;
+  lawFirmId?: number | null;
+  attorneyId?: number | null;
+}
 
 export function TasksTab({ dealId }: TasksTabProps) {
   const { toast } = useToast();
@@ -174,7 +188,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
     assigneeId: z.number().nullable().optional(),
     customAssigneeId: z.number().nullable().optional(),
     customAssigneeName: z.string().optional(),
-    customAssigneeEmail: z.string().email().optional(),
+    customAssigneeEmail: z.string().email().optional().nullable(),
     lawFirmId: z.number().nullable().optional(),
     attorneyId: z.number().nullable().optional()
   });
@@ -486,9 +500,9 @@ export function TasksTab({ dealId }: TasksTabProps) {
       let customAssigneeId = values.customAssigneeId;
       
       // Create a custom assignee if needed
-      if (values.taskType === 'external' && externalAssigneeType === 'custom' && values.customAssigneeName && values.customAssigneeEmail) {
+      if (values.taskType === 'external' && externalAssigneeType === 'custom' && values.customAssigneeName) {
         try {
-          console.log("📋 FORM SUBMISSION - Creating custom assignee:", values.customAssigneeName, values.customAssigneeEmail);
+          console.log("📋 FORM SUBMISSION - Creating custom assignee:", values.customAssigneeName, values.customAssigneeEmail || "No email");
           
           // Use fetch directly for debugging
           const customAssigneeResponse = await fetch('/api/custom-assignees', {
@@ -496,7 +510,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               name: values.customAssigneeName,
-              email: values.customAssigneeEmail || ""
+              email: values.customAssigneeEmail || null
             })
           });
           
@@ -536,30 +550,39 @@ export function TasksTab({ dealId }: TasksTabProps) {
       }
       
       // Create a complete task object with all needed fields
-      const taskData = {
+      
+      const taskData: TaskData = {
         name: values.name,
         description: values.description || "",
         dealId: numericDealId,
         taskType: values.taskType || "internal",
         status: "open",
-        dueDate: values.dueDate || null,
-        
-        // Include the correct assignee info based on task type
-        assigneeId: values.taskType === 'internal' ? values.assigneeId : null,
-        
-        // For external tasks, include the correct external assignee type
-        lawFirmId: values.taskType === 'external' && 
-                  (externalAssigneeType === 'lawFirm' || externalAssigneeType === 'attorney') ? 
-                  values.lawFirmId : null,
-        
-        attorneyId: values.taskType === 'external' && 
-                   externalAssigneeType === 'attorney' ? 
-                   values.attorneyId : null,
-        
-        customAssigneeId: values.taskType === 'external' && 
-                        (externalAssigneeType === 'existing' || externalAssigneeType === 'custom') ? 
-                        customAssigneeId : null
+        dueDate: values.dueDate || null
       };
+      
+      // Set the appropriate assignee field based on task type
+      if (values.taskType === 'internal') {
+        // For internal tasks, set the internal user assignee
+        if (values.assigneeId) {
+          taskData.assigneeId = Number(values.assigneeId);
+        }
+      } else if (values.taskType === 'external') {
+        // For external tasks, set the appropriate external assignee
+        if (externalAssigneeType === 'lawFirm' && values.lawFirmId) {
+          taskData.lawFirmId = Number(values.lawFirmId);
+        } else if (externalAssigneeType === 'attorney') {
+          if (values.attorneyId) {
+            taskData.attorneyId = Number(values.attorneyId);
+          }
+          if (values.lawFirmId) {
+            taskData.lawFirmId = Number(values.lawFirmId);
+          }
+        } else if (externalAssigneeType === 'existing' && values.customAssigneeId) {
+          taskData.customAssigneeId = Number(values.customAssigneeId);
+        } else if (externalAssigneeType === 'custom' && customAssigneeId) {
+          taskData.customAssigneeId = Number(customAssigneeId);
+        }
+      }
       
       console.log("📋 FORM SUBMISSION - Simplified task data to submit:", JSON.stringify(taskData, null, 2));
       
@@ -617,9 +640,9 @@ export function TasksTab({ dealId }: TasksTabProps) {
     let customAssigneeId = values.customAssigneeId;
     
     // Create a custom assignee if needed
-    if (values.taskType === 'external' && externalAssigneeType === 'custom' && values.customAssigneeName && values.customAssigneeEmail) {
+    if (values.taskType === 'external' && externalAssigneeType === 'custom' && values.customAssigneeName) {
       try {
-        console.log("📝 EDIT FORM SUBMISSION - Creating custom assignee:", values.customAssigneeName, values.customAssigneeEmail);
+        console.log("📝 EDIT FORM SUBMISSION - Creating custom assignee:", values.customAssigneeName, values.customAssigneeEmail || "No email");
         
         // Use fetch directly for debugging and consistency with add task form
         const customAssigneeResponse = await fetch('/api/custom-assignees', {
@@ -627,7 +650,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: values.customAssigneeName,
-            email: values.customAssigneeEmail || ""
+            email: values.customAssigneeEmail || null
           })
         });
         
@@ -653,32 +676,37 @@ export function TasksTab({ dealId }: TasksTabProps) {
     }
     
     // Prepare task data based on type and assignee type
-    const taskData = {
+    const taskData: TaskData = {
       name: values.name,
       description: values.description || "",
+      dealId: currentTask.dealId, // Include the deal ID from the current task
       dueDate: values.dueDate ? new Date(values.dueDate) : null, // Ensure Date object
       taskType: values.taskType,
-      status: values.status || "open",
+      status: values.status || "open"
       
-      // Clear all assignee fields first to avoid conflicts
-      assigneeId: null,
-      customAssigneeId: null,
-      lawFirmId: null,
-      attorneyId: null
+      // No need to initialize assignee fields since they're optional in the interface
     };
     
     // Set the appropriate assignee field based on task type and external assignee type
     if (values.taskType === 'internal') {
-      taskData.assigneeId = Number(values.assigneeId);
+      // For internal tasks, set the internal user assignee
+      if (values.assigneeId) {
+        taskData.assigneeId = Number(values.assigneeId);
+      }
     } else if (values.taskType === 'external') {
-      if (externalAssigneeType === 'lawFirm') {
+      // For external tasks, set the appropriate external assignee
+      if (externalAssigneeType === 'lawFirm' && values.lawFirmId) {
         taskData.lawFirmId = Number(values.lawFirmId);
       } else if (externalAssigneeType === 'attorney') {
-        taskData.attorneyId = Number(values.attorneyId);
-        taskData.lawFirmId = Number(values.lawFirmId);
-      } else if (externalAssigneeType === 'existing') {
+        if (values.attorneyId) {
+          taskData.attorneyId = Number(values.attorneyId);
+        }
+        if (values.lawFirmId) {
+          taskData.lawFirmId = Number(values.lawFirmId);
+        }
+      } else if (externalAssigneeType === 'existing' && values.customAssigneeId) {
         taskData.customAssigneeId = Number(values.customAssigneeId);
-      } else if (externalAssigneeType === 'custom') {
+      } else if (externalAssigneeType === 'custom' && customAssigneeId) {
         taskData.customAssigneeId = Number(customAssigneeId);
       }
     }
@@ -1259,9 +1287,13 @@ export function TasksTab({ dealId }: TasksTabProps) {
                         name="customAssigneeEmail"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Assignee Email</FormLabel>
+                            <FormLabel>Assignee Email (Optional)</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter assignee email" {...field} />
+                              <Input 
+                                placeholder="Enter assignee email (optional)" 
+                                {...field} 
+                                value={field.value || ""} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1693,9 +1725,13 @@ export function TasksTab({ dealId }: TasksTabProps) {
                         name="customAssigneeEmail"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Assignee Email</FormLabel>
+                            <FormLabel>Assignee Email (Optional)</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter assignee email" {...field} />
+                              <Input 
+                                placeholder="Enter assignee email (optional)" 
+                                {...field}
+                                value={field.value || ""} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

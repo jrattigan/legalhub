@@ -3,10 +3,16 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {}
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value'> {
+    // Add support for null as a value
+    value?: string | number | readonly string[] | null;
+  }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, value, ...props }, ref) => {
+    // Convert null value to empty string to avoid controlled component warning
+    const displayValue = value === null ? "" : value;
+    
     return (
       <input
         type={type}
@@ -15,6 +21,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           className
         )}
         ref={ref}
+        value={displayValue}
         {...props}
       />
     )
