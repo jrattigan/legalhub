@@ -203,9 +203,43 @@ export function TasksTab({ dealId }: TasksTabProps) {
   // Effect to update form when currentTask changes (for editing)
   useEffect(() => {
     if (currentTask) {
+      console.log("Current task for editing:", currentTask);
+      
+      // First, set the task type
+      setTaskType(currentTask.taskType);
+      
+      // Set the appropriate assignee type for external tasks
+      if (currentTask.taskType === "external") {
+        console.log("External task detected. Determining assignee type...");
+        
+        if (currentTask.customAssigneeId) {
+          console.log("Custom assignee found with ID:", currentTask.customAssigneeId);
+          setExternalAssigneeType("existing");
+        } else if (currentTask.attorneyId) {
+          console.log("Attorney assignee found with ID:", currentTask.attorneyId);
+          setExternalAssigneeType("attorney");
+          
+          // Find the law firm for this attorney
+          const attorney = attorneys?.find((a: Attorney) => a.id === currentTask.attorneyId);
+          if (attorney) {
+            console.log("Setting selected law firm to:", attorney.lawFirmId);
+            setSelectedLawFirm(attorney.lawFirmId);
+          }
+        } else if (currentTask.lawFirmId) {
+          console.log("Law firm assignee found with ID:", currentTask.lawFirmId);
+          setExternalAssigneeType("lawFirm");
+          setSelectedLawFirm(currentTask.lawFirmId);
+        } else {
+          // Default to law firm if no assignee is specified
+          console.log("No assignee found, defaulting to law firm");
+          setExternalAssigneeType("lawFirm");
+        }
+      }
+      
+      // After setting the external assignee type, reset the form with the current task values
       editForm.reset({
         name: currentTask.name,
-        description: currentTask.description,
+        description: currentTask.description || "",
         dueDate: currentTask.dueDate ? new Date(currentTask.dueDate) : null,
         taskType: currentTask.taskType,
         status: currentTask.status,
@@ -214,25 +248,13 @@ export function TasksTab({ dealId }: TasksTabProps) {
         lawFirmId: currentTask.lawFirmId,
         attorneyId: currentTask.attorneyId
       });
-      setTaskType(currentTask.taskType);
       
-      // Set the appropriate assignee type for external tasks
-      if (currentTask.taskType === "external") {
-        if (currentTask.lawFirmId) {
-          setExternalAssigneeType("lawFirm");
-          setSelectedLawFirm(currentTask.lawFirmId);
-        } else if (currentTask.attorneyId) {
-          setExternalAssigneeType("attorney");
-          
-          // Find the law firm for this attorney
-          const attorney = attorneys?.find((a: Attorney) => a.id === currentTask.attorneyId);
-          if (attorney) {
-            setSelectedLawFirm(attorney.lawFirmId);
-          }
-        } else if (currentTask.customAssigneeId) {
-          setExternalAssigneeType("existing");
-        }
-      }
+      console.log("Form reset with values:", {
+        taskType: currentTask.taskType,
+        customAssigneeId: currentTask.customAssigneeId,
+        lawFirmId: currentTask.lawFirmId,
+        attorneyId: currentTask.attorneyId
+      });
     }
   }, [currentTask, editForm, attorneys]);
 
@@ -472,6 +494,9 @@ export function TasksTab({ dealId }: TasksTabProps) {
           const result = await customAssigneeResponse.json();
           customAssigneeId = result.id;
           console.log("📋 FORM SUBMISSION - Created custom assignee with ID:", customAssigneeId);
+          
+          // Make sure to invalidate the custom assignees query to refresh the list
+          queryClient.invalidateQueries({ queryKey: ['/api/custom-assignees'] });
         } catch (error) {
           console.error("📋 FORM SUBMISSION - Failed to create custom assignee:", error);
           toast({
@@ -578,15 +603,35 @@ export function TasksTab({ dealId }: TasksTabProps) {
     if (values.taskType === 'external' && externalAssigneeType === 'custom' && values.customAssigneeName && values.customAssigneeEmail) {
       try {
         console.log("Creating custom assignee on edit:", values.customAssigneeName, values.customAssigneeEmail);
-        const result = await createCustomAssigneeMutation.mutateAsync({
-          name: values.customAssigneeName,
-          email: values.customAssigneeEmail
+        
+        // Use fetch directly for debugging and consistency with add task form
+        const customAssigneeResponse = await fetch('/api/custom-assignees', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: values.customAssigneeName,
+            email: values.customAssigneeEmail || ""
+          })
         });
+        
+        if (!customAssigneeResponse.ok) {
+          throw new Error("Failed to create custom assignee");
+        }
+        
+        const result = await customAssigneeResponse.json();
         customAssigneeId = result.id;
         console.log("Created custom assignee with ID:", customAssigneeId);
+        
+        // Make sure to invalidate the custom assignees query to refresh the list
+        queryClient.invalidateQueries({ queryKey: ['/api/custom-assignees'] });
       } catch (error) {
         console.error("Failed to create custom assignee:", error);
-        return; // Early return on error (error toast already shown via mutation)
+        toast({
+          title: "Error Creating Custom Assignee",
+          description: String(error),
+          variant: "destructive"
+        });
+        return; // Early return on error
       }
     }
     
