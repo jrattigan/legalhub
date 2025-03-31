@@ -384,8 +384,9 @@ export function TasksTab({ dealId }: TasksTabProps) {
       const user = users.find((u: User) => u.id === task.assigneeId);
       return user ? user.fullName : "Unassigned";
     }
-    if (task.customAssigneeId) {
-      return "Custom Assignee"; // This would need to query the custom assignee details
+    if (task.customAssigneeId && customAssignees) {
+      const customAssignee = customAssignees.find((ca) => ca.id === task.customAssigneeId);
+      return customAssignee ? customAssignee.name : "Unassigned";
     }
     return "Unassigned";
   };
