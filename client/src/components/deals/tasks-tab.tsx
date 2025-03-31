@@ -624,10 +624,20 @@ export function TasksTab({ dealId }: TasksTabProps) {
       const customAssignee = customAssignees.find((ca: CustomAssignee) => ca.id === task.customAssigneeId);
       return customAssignee ? customAssignee.name : "Unassigned";
     }
+    // If both law firm and attorney are specified, show "Law Firm (Attorney)"
+    if (task.lawFirmId && task.attorneyId && lawFirms && attorneys) {
+      const lawFirm = lawFirms.find((lf: LawFirm) => lf.id === task.lawFirmId);
+      const attorney = attorneys.find((a: Attorney) => a.id === task.attorneyId);
+      if (lawFirm && attorney) {
+        return `${lawFirm.name} (${attorney.name})`;
+      }
+    }
+    // Only law firm is specified
     if (task.lawFirmId && lawFirms) {
       const lawFirm = lawFirms.find((lf: LawFirm) => lf.id === task.lawFirmId);
       return lawFirm ? lawFirm.name : "Unassigned";
     }
+    // Only attorney is specified (should not happen normally)
     if (task.attorneyId && attorneys) {
       const attorney = attorneys.find((a: Attorney) => a.id === task.attorneyId);
       return attorney ? attorney.name : "Unassigned";
