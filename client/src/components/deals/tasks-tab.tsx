@@ -255,16 +255,22 @@ export function TasksTab({ dealId }: TasksTabProps) {
   const createTaskMutation = useMutation({
     mutationFn: (data: any) => {
       console.log("Submitting task data:", data);
-      return apiRequest('/api/tasks', { method: 'POST', data })
-        .then(res => {
-          if (!res.ok) {
-            return res.json().then(err => {
-              console.error("Task creation failed with status:", res.status, err);
-              throw new Error(err.message || "Failed to create task");
-            });
-          }
-          return res.json();
-        });
+      return apiRequest('/api/tasks', { 
+        method: 'POST', 
+        data 
+      })
+      .then(async res => {
+        const responseData = await res.json();
+        if (!res.ok) {
+          console.error("Task creation failed with status:", res.status, responseData);
+          throw new Error(responseData.message || "Failed to create task");
+        }
+        return responseData;
+      })
+      .catch(err => {
+        console.error("Error in task creation request:", err);
+        throw err;
+      });
     },
     onSuccess: (data) => {
       console.log("Task created successfully:", data);
@@ -276,10 +282,10 @@ export function TasksTab({ dealId }: TasksTabProps) {
         description: "Task created successfully"
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to create task",
+        description: error.message || "Failed to create task",
         variant: "destructive"
       });
       console.error("Error creating task:", error);
@@ -409,7 +415,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
     const taskData = {
       name: values.name,
       description: values.description,
-      dealId,
+      dealId: Number(dealId), // Make sure dealId is converted to a number
       dueDate: values.dueDate,
       taskType: values.taskType,
       status: values.status,
@@ -439,12 +445,15 @@ export function TasksTab({ dealId }: TasksTabProps) {
     // Create a custom assignee if needed
     if (values.taskType === 'external' && externalAssigneeType === 'custom' && values.customAssigneeName && values.customAssigneeEmail) {
       try {
+        console.log("Creating custom assignee on edit:", values.customAssigneeName, values.customAssigneeEmail);
         const result = await createCustomAssigneeMutation.mutateAsync({
           name: values.customAssigneeName,
           email: values.customAssigneeEmail
         });
         customAssigneeId = result.id;
+        console.log("Created custom assignee with ID:", customAssigneeId);
       } catch (error) {
+        console.error("Failed to create custom assignee:", error);
         return; // Early return on error (error toast already shown via mutation)
       }
     }
