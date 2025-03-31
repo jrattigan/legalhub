@@ -480,14 +480,30 @@ export function TasksTab({ dealId }: TasksTabProps) {
         return;
       }
       
-      // For simplicity, let's create a minimal task first
-      // and then update it with full details after confirming it works
+      // Create a complete task object with all needed fields
       const taskData = {
         name: values.name,
         description: values.description || "",
         dealId: numericDealId,
         taskType: values.taskType || "internal",
-        status: "open"
+        status: "open",
+        dueDate: values.dueDate || null,
+        
+        // Include the correct assignee info based on task type
+        assigneeId: values.taskType === 'internal' ? values.assigneeId : null,
+        
+        // For external tasks, include the correct external assignee type
+        lawFirmId: values.taskType === 'external' && 
+                  (externalAssigneeType === 'lawFirm' || externalAssigneeType === 'attorney') ? 
+                  values.lawFirmId : null,
+        
+        attorneyId: values.taskType === 'external' && 
+                   externalAssigneeType === 'attorney' ? 
+                   values.attorneyId : null,
+        
+        customAssigneeId: values.taskType === 'external' && 
+                        (externalAssigneeType === 'existing' || externalAssigneeType === 'custom') ? 
+                        customAssigneeId : null
       };
       
       console.log("📋 FORM SUBMISSION - Simplified task data to submit:", JSON.stringify(taskData, null, 2));
@@ -1206,6 +1222,17 @@ export function TasksTab({ dealId }: TasksTabProps) {
                     // Get values from form
                     const values = form.getValues();
                     console.log("📋 Form values:", values);
+                    
+                    // Make sure we have the correct assignee information
+                    if (taskType === "internal" && !values.assigneeId) {
+                      // If no assignee is selected but we're in internal mode, show an error
+                      toast({
+                        title: "Error",
+                        description: "Please select an assignee for the task",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
                     
                     // Directly call onSubmit with form values
                     onSubmit(values);

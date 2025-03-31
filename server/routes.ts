@@ -1443,17 +1443,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("POST /api/tasks request body:", JSON.stringify(req.body, null, 2));
       
-      // Create a simplified, hardcoded task for debugging purposes
-      // Use a minimal set of required fields to test the basic functionality
+      // Use the full data sent from the client, with some sensible defaults
       const taskData = {
         name: req.body.name || "Test Task",
         description: req.body.description || "",
-        dealId: 1, // Hardcode to deal 1 for testing
+        dealId: req.body.dealId || 1,
         taskType: req.body.taskType || "internal",
-        status: "open"
+        status: req.body.status || "open",
+        dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null,
+        
+        // Include assignee information based on task type
+        assigneeId: req.body.assigneeId || null,
+        lawFirmId: req.body.lawFirmId || null,
+        attorneyId: req.body.attorneyId || null,
+        customAssigneeId: req.body.customAssigneeId || null
       };
 
-      console.log("Simplified task data for testing:", JSON.stringify(taskData, null, 2));
+      console.log("Creating task with data:", JSON.stringify(taskData, null, 2));
       
       try {
         const task = await storage.createTask(taskData);
