@@ -58,6 +58,7 @@ import CounselCard from './counsel-card';
 import TimelineCard from './timeline-card';
 import AllocationsTab from './allocations-tab';
 import { TasksTab } from './tasks-tab';
+import { ClosingChecklistTab } from './closing-checklist-tab';
 
 type DealDetailProps = {
   deal: Deal;
@@ -530,6 +531,7 @@ export default function DealDetail({
     { id: 'documents', label: 'Documents', icon: <File className="h-5 w-5" />, description: 'All deal documents' },
     { id: 'issues', label: 'Issues', icon: <Alert className="h-5 w-5" />, description: 'Outstanding issues' },
     { id: 'tasks', label: 'Tasks', icon: <CheckSquare className="h-5 w-5" />, description: 'Task management' },
+    { id: 'closing-checklist', label: 'Closing Checklist', icon: <CheckSquare className="h-5 w-5" />, description: 'Closing tasks and requirements' },
     { id: 'team', label: 'Team', icon: <Users className="h-5 w-5" />, description: 'Deal team members' },
     { id: 'allocations', label: 'Financials', icon: <DollarSign className="h-5 w-5" />, description: 'Financial details' },
     { id: 'timeline', label: 'Timeline', icon: <Clock className="h-5 w-5" />, description: 'Deal history and events' },
@@ -2680,6 +2682,10 @@ export default function DealDetail({
           <div className="p-6">
             <TasksTab dealId={deal.id} />
           </div>
+        </TabsContent>
+        
+        <TabsContent value="closing-checklist" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'closing-checklist' ? 'block' : 'none'}}>
+          <ClosingChecklistTab dealId={deal.id} />
         </TabsContent>
         
         <TabsContent value="team" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'team' ? 'block' : 'none'}}>

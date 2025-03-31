@@ -14,7 +14,8 @@ import {
   funds, Fund, InsertFund,
   allocations, Allocation, InsertAllocation,
   tasks, Task, InsertTask,
-  customAssignees, CustomAssignee, InsertCustomAssignee
+  customAssignees, CustomAssignee, InsertCustomAssignee,
+  closingChecklist, ClosingChecklistItem, InsertClosingChecklistItem
 } from "@shared/schema";
 import { format } from 'date-fns';
 import { generateDocumentComparison } from './document-compare';
@@ -128,6 +129,13 @@ export interface IStorage {
   updateCustomAssignee(id: number, customAssignee: Partial<InsertCustomAssignee>): Promise<CustomAssignee | undefined>;
   deleteCustomAssignee(id: number): Promise<boolean>;
   deleteUnusedCustomAssignees(): Promise<boolean>;
+  
+  // Closing Checklist
+  getClosingChecklistItem(id: number): Promise<ClosingChecklistItem | undefined>;
+  getClosingChecklistByDeal(dealId: number): Promise<ClosingChecklistItem[]>;
+  createClosingChecklistItem(item: InsertClosingChecklistItem): Promise<ClosingChecklistItem>;
+  updateClosingChecklistItem(id: number, item: Partial<InsertClosingChecklistItem>): Promise<ClosingChecklistItem | undefined>;
+  deleteClosingChecklistItem(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -148,6 +156,7 @@ export class MemStorage implements IStorage {
   private allocations: Map<number, Allocation>;
   private tasks: Map<number, Task>;
   private customAssignees: Map<number, CustomAssignee>;
+  private closingChecklist: Map<number, ClosingChecklistItem>;
 
 
   currentUserId: number;
@@ -166,6 +175,7 @@ export class MemStorage implements IStorage {
   currentAllocationId: number;
   currentTaskId: number;
   currentCustomAssigneeId: number;
+  currentClosingChecklistItemId: number;
   
 
 
@@ -186,6 +196,7 @@ export class MemStorage implements IStorage {
     this.allocations = new Map();
     this.tasks = new Map();
     this.customAssignees = new Map();
+    this.closingChecklist = new Map();
     
 
 
@@ -205,6 +216,7 @@ export class MemStorage implements IStorage {
     this.currentAllocationId = 1;
     this.currentTaskId = 1;
     this.currentCustomAssigneeId = 1;
+    this.currentClosingChecklistItemId = 1;
     
 
 
@@ -2204,6 +2216,63 @@ export class MemStorage implements IStorage {
     }
     
     return true;
+  }
+
+  // Closing Checklist methods
+  async getClosingChecklistItem(id: number): Promise<ClosingChecklistItem | undefined> {
+    return this.closingChecklist.get(id);
+  }
+
+  async getClosingChecklistByDeal(dealId: number): Promise<ClosingChecklistItem[]> {
+    const items: ClosingChecklistItem[] = [];
+    for (const item of this.closingChecklist.values()) {
+      if (item.dealId === dealId) {
+        items.push(item);
+      }
+    }
+    return items;
+  }
+
+  async createClosingChecklistItem(item: InsertClosingChecklistItem): Promise<ClosingChecklistItem> {
+    const now = new Date();
+    const id = this.currentClosingChecklistItemId++;
+    const newItem: ClosingChecklistItem = {
+      ...item,
+      id,
+      createdAt: now,
+      updatedAt: now,
+      description: item.description || null,
+      dueDate: item.dueDate || null,
+      assigneeId: item.assigneeId || null,
+      isComplete: item.isComplete !== undefined ? item.isComplete : false
+    };
+    this.closingChecklist.set(id, newItem);
+    return newItem;
+  }
+
+  async updateClosingChecklistItem(id: number, item: Partial<InsertClosingChecklistItem>): Promise<ClosingChecklistItem | undefined> {
+    const existingItem = this.closingChecklist.get(id);
+    
+    if (!existingItem) {
+      return undefined;
+    }
+    
+    const updatedItem: ClosingChecklistItem = {
+      ...existingItem,
+      ...item,
+      updatedAt: new Date(),
+      description: item.description !== undefined ? item.description : existingItem.description,
+      dueDate: item.dueDate !== undefined ? item.dueDate : existingItem.dueDate,
+      assigneeId: item.assigneeId !== undefined ? item.assigneeId : existingItem.assigneeId,
+      isComplete: item.isComplete !== undefined ? item.isComplete : existingItem.isComplete
+    };
+    
+    this.closingChecklist.set(id, updatedItem);
+    return updatedItem;
+  }
+
+  async deleteClosingChecklistItem(id: number): Promise<boolean> {
+    return this.closingChecklist.delete(id);
   }
 }
 

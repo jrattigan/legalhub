@@ -16,11 +16,13 @@ import {
   insertAllocationSchema,
   insertTaskSchema,
   insertCustomAssigneeSchema,
+  insertClosingChecklistSchema,
   documents, // Import the base schema tables for creating partial schemas
   funds,
   allocations,
   tasks,
   customAssignees,
+  closingChecklist,
 } from "@shared/schema";
 import { createInsertSchema } from "drizzle-zod";
 
@@ -1737,6 +1739,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: String(error),
         stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
       });
+    }
+  });
+
+  // Closing Checklist API
+  app.get("/api/deals/:id/closing-checklist", async (req, res) => {
+    const dealId = parseInt(req.params.id);
+    if (isNaN(dealId)) {
+      return res.status(400).json({ message: "Invalid deal ID" });
+    }
+
+    try {
+      const checklistItems = await storage.getClosingChecklistByDeal(dealId);
+      res.json(checklistItems);
+    } catch (error) {
+      console.error("Error fetching closing checklist:", error);
+      res.status(500).json({ message: "Failed to fetch closing checklist" });
+    }
+  });
+
+  app.post("/api/deals/:id/closing-checklist", async (req, res) => {
+    const dealId = parseInt(req.params.id);
+    if (isNaN(dealId)) {
+      return res.status(400).json({ message: "Invalid deal ID" });
+    }
+
+    try {
+      const data = { ...req.body, dealId };
+      
+      // Convert dueDate to Date object if provided
+      if (data.dueDate && !(data.dueDate instanceof Date)) {
+        data.dueDate = new Date(data.dueDate);
+      }
+      
+      const validatedData = insertClosingChecklistSchema.parse(data);
+      const checklistItem = await storage.createClosingChecklistItem(validatedData);
+      res.status(201).json(checklistItem);
+    } catch (error) {
+      console.error("Error creating closing checklist item:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid checklist item data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create closing checklist item" });
+    }
+  });
+
+  app.patch("/api/closing-checklist/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid closing checklist item ID" });
+    }
+
+    try {
+      // Convert dueDate to Date object if provided
+      const data = req.body;
+      if (data.dueDate && !(data.dueDate instanceof Date)) {
+        data.dueDate = new Date(data.dueDate);
+      }
+
+      // Create partial validation schema
+      const validationSchema = z.object({
+        title: z.string().optional(),
+        description: z.string().nullable().optional(),
+        dueDate: z.date().nullable().optional(),
+        assigneeId: z.number().nullable().optional(),
+        isComplete: z.boolean().optional()
+      });
+      
+      const validatedData = validationSchema.parse(data);
+      const updatedItem = await storage.updateClosingChecklistItem(id, validatedData);
+      
+      if (!updatedItem) {
+        return res.status(404).json({ message: "Closing checklist item not found" });
+      }
+      
+      res.json(updatedItem);
+    } catch (error) {
+      console.error("Error updating closing checklist item:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid checklist item data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update closing checklist item" });
+    }
+  });
+
+  app.delete("/api/closing-checklist/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid closing checklist item ID" });
+    }
+
+    try {
+      const success = await storage.deleteClosingChecklistItem(id);
+      if (!success) {
+        return res.status(404).json({ message: "Closing checklist item not found" });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting closing checklist item:", error);
+      res.status(500).json({ message: "Failed to delete closing checklist item" });
     }
   });
   
