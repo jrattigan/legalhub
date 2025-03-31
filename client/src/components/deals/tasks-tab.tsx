@@ -256,15 +256,27 @@ export function TasksTab({ dealId }: TasksTabProps) {
     mutationFn: async (data: any) => {
       console.log("Submitting task data:", JSON.stringify(data, null, 2));
       
+      // Make a direct fetch call instead of using apiRequest to get more detailed error info
       try {
-        const response = await apiRequest('/api/tasks', { 
-          method: 'POST', 
-          data
+        const response = await fetch('/api/tasks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
         });
         
-        console.log("Response received:", response.status, response.statusText);
+        console.log("Raw response:", response);
+        console.log("Response status:", response.status, response.statusText);
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null);
+          console.error("API error response:", errorData);
+          throw new Error(errorData?.message || `Error: ${response.status} ${response.statusText}`);
+        }
+        
         const responseData = await response.json();
-        console.log("Response data:", responseData);
+        console.log("Success response data:", responseData);
         return responseData;
       } catch (err) {
         console.error("Error in task creation request:", err);

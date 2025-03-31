@@ -1453,29 +1453,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         if (isNaN(data.dealId)) {
+          console.error("Invalid dealId received:", data.dealId, "type:", typeof data.dealId);
           return res.status(400).json({ 
             message: "Invalid dealId. Must be a valid number.",
-            received: req.body.dealId
+            received: req.body.dealId,
+            type: typeof req.body.dealId
           });
         }
       } else {
+        console.error("Missing dealId in request body");
         return res.status(400).json({ message: "dealId is required" });
+      }
+      
+      // Validate required fields
+      if (!data.name) {
+        console.error("Missing task name in request body");
+        return res.status(400).json({ message: "Task name is required" });
+      }
+      
+      if (!data.taskType) {
+        console.error("Missing taskType in request body");
+        return res.status(400).json({ message: "taskType is required" });
       }
       
       // Ensure dueDate is properly converted to a Date object if it exists
       if (data.dueDate && !(data.dueDate instanceof Date)) {
-        data.dueDate = new Date(data.dueDate);
-        if (isNaN(data.dueDate.getTime())) {
+        try {
+          data.dueDate = new Date(data.dueDate);
+          if (isNaN(data.dueDate.getTime())) {
+            console.error("Invalid dueDate format:", data.dueDate);
+            return res.status(400).json({ 
+              message: "Invalid dueDate format. Must be a valid date string.",
+              received: req.body.dueDate
+            });
+          }
+        } catch (dateError) {
+          console.error("Error parsing dueDate:", dateError);
           return res.status(400).json({ 
-            message: "Invalid dueDate format",
-            received: req.body.dueDate
+            message: "Failed to parse dueDate",
+            received: req.body.dueDate,
+            error: String(dateError)
           });
         }
       }
 
       try {
+        // Ensure all IDs are numeric
+        ['assigneeId', 'customAssigneeId', 'lawFirmId', 'attorneyId'].forEach(field => {
+          if (data[field] !== undefined && data[field] !== null && typeof data[field] === 'string') {
+            const parsed = parseInt(data[field], 10);
+            if (!isNaN(parsed)) {
+              data[field] = parsed;
+              console.log(`Converted ${field} from string to number:`, parsed);
+            }
+          }
+        });
+        
+        console.log("Processed task data before validation:", JSON.stringify(data, null, 2));
         const validatedData = insertTaskSchema.parse(data);
         console.log("Validated task data:", JSON.stringify(validatedData, null, 2));
+        
         const task = await storage.createTask(validatedData);
         console.log("Task created successfully:", JSON.stringify(task, null, 2));
         return res.status(201).json(task);
@@ -1484,14 +1521,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (validationError instanceof z.ZodError) {
           return res.status(400).json({ 
             message: "Invalid task data", 
-            errors: validationError.errors 
+            errors: validationError.format()
           });
         }
         throw validationError; // Rethrow if it's not a Zod error
       }
     } catch (error) {
       console.error("Unexpected error creating task:", error);
-      return res.status(500).json({ message: "Failed to create task", error: String(error) });
+      return res.status(500).json({ 
+        message: "Failed to create task", 
+        error: String(error),
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      });
     }
   });
 
