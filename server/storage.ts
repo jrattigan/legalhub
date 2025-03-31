@@ -2099,6 +2099,10 @@ export class MemStorage implements IStorage {
       return undefined;
     }
 
+    // Check if the custom assignee is being changed
+    const isCustomAssigneeChanged = task.customAssigneeId !== undefined && 
+                                   task.customAssigneeId !== existingTask.customAssigneeId;
+    
     const updatedTask: Task = {
       ...existingTask,
       ...task,
@@ -2112,11 +2116,24 @@ export class MemStorage implements IStorage {
     };
 
     this.tasks.set(id, updatedTask);
+    
+    // If the custom assignee was changed, clean up any unused custom assignees
+    if (isCustomAssigneeChanged) {
+      await this.deleteUnusedCustomAssignees();
+    }
+    
     return updatedTask;
   }
 
   async deleteTask(id: number): Promise<boolean> {
-    return this.tasks.delete(id);
+    const taskDeleted = this.tasks.delete(id);
+    
+    if (taskDeleted) {
+      // Clean up unused custom assignees after task deletion
+      await this.deleteUnusedCustomAssignees();
+    }
+    
+    return taskDeleted;
   }
 
   // Custom Assignee method implementations
@@ -2163,6 +2180,7 @@ export class MemStorage implements IStorage {
     // Get all custom assignee IDs that are still attached to tasks
     const usedCustomAssigneeIds = new Set<number>();
     
+    // Build a set of all custom assignee IDs currently in use
     for (const task of this.tasks.values()) {
       if (task.customAssigneeId) {
         usedCustomAssigneeIds.add(task.customAssigneeId);
@@ -2173,9 +2191,16 @@ export class MemStorage implements IStorage {
     let deletedCount = 0;
     for (const assignee of this.customAssignees.values()) {
       if (!usedCustomAssigneeIds.has(assignee.id)) {
-        this.customAssignees.delete(assignee.id);
-        deletedCount++;
+        const wasDeleted = this.customAssignees.delete(assignee.id);
+        if (wasDeleted) {
+          deletedCount++;
+          console.log(`Deleted unused custom assignee: ${assignee.name} (ID: ${assignee.id})`);
+        }
       }
+    }
+    
+    if (deletedCount > 0) {
+      console.log(`Custom assignee cleanup completed. Deleted ${deletedCount} unused assignees.`);
     }
     
     return true;
