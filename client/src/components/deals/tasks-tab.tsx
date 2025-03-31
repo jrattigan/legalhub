@@ -97,13 +97,31 @@ export function TasksTab({ dealId }: TasksTabProps) {
   // Fetch Users (for internal tasks)
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ['/api/users'],
-    queryFn: () => apiRequest('/api/users'),
+    queryFn: () => {
+      console.log("Fetching users...");
+      return apiRequest('/api/users').then(data => {
+        console.log("Users data:", data);
+        return data;
+      }).catch(error => {
+        console.error("Error fetching users:", error);
+        return [];
+      });
+    },
   });
 
   // Fetch Law Firms (for external tasks)
   const { data: lawFirms, isLoading: lawFirmsLoading } = useQuery({
     queryKey: ['/api/law-firms'],
-    queryFn: () => apiRequest('/api/law-firms'),
+    queryFn: () => {
+      console.log("Fetching law firms...");
+      return apiRequest('/api/law-firms').then(data => {
+        console.log("Law firms data:", data);
+        return data;
+      }).catch(error => {
+        console.error("Error fetching law firms:", error);
+        return [];
+      });
+    },
   });
 
   // Fetch Attorneys based on selected law firm
