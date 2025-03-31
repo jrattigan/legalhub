@@ -506,72 +506,14 @@ export function TasksTab({ dealId }: TasksTabProps) {
         values.attorneyId : null
     };
     
-    console.log("Submitting task data to API:", JSON.stringify(taskData, null, 2));
+    console.log("Submitting task data to createTaskMutation:", JSON.stringify(taskData, null, 2));
     
-    // NEW APPROACH: Use direct fetch call that we know works from our test
+    // Use the mutation to create the task
     try {
-      // Ensure all IDs are properly converted to numbers
-      Object.keys(taskData).forEach(key => {
-        if (key.toLowerCase().includes('id') && taskData[key] !== null && typeof taskData[key] === 'string') {
-          const parsedValue = parseInt(taskData[key], 10);
-          if (!isNaN(parsedValue)) {
-            taskData[key] = parsedValue;
-            console.log(`Converted ${key} from string to number:`, parsedValue);
-          }
-        }
-      });
-      
-      // Ensure due date is formatted properly
-      if (taskData.dueDate && typeof taskData.dueDate === 'string') {
-        taskData.dueDate = new Date(taskData.dueDate);
-      }
-      
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(taskData)
-      });
-      
-      console.log("Task creation response:", response);
-      
-      if (!response.ok) {
-        let errorMessage = `Error: ${response.status} ${response.statusText}`;
-        
-        try {
-          const errorData = await response.json();
-          console.error("API error response:", errorData);
-          errorMessage = errorData.message || errorMessage;
-        } catch (parseError) {
-          console.error("Failed to parse error response:", parseError);
-        }
-        
-        throw new Error(errorMessage);
-      }
-      
-      const responseData = await response.json();
-      console.log("Task creation success:", responseData);
-      
-      // Show success message
-      toast({
-        title: "Success",
-        description: "Task created successfully!"
-      });
-      
-      // Reset form and close dialog
-      form.reset();
-      setIsAddTaskOpen(false);
-      
-      // Refresh tasks list
-      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      await createTaskMutation.mutateAsync(taskData);
     } catch (error) {
-      console.error("Error creating task:", error);
-      toast({
-        title: "Error Creating Task",
-        description: String(error),
-        variant: "destructive"
-      });
+      console.error("Error in createTaskMutation:", error);
+      // Error handling is done in the mutation's onError callback
     }
   };
 
