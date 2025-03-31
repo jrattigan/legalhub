@@ -136,6 +136,16 @@ export function TasksTab({ dealId }: TasksTabProps) {
       : Promise.resolve([]),
     enabled: !!selectedLawFirm,
   });
+  
+  // Fetch custom assignees for external tasks
+  const { data: customAssignees, isLoading: customAssigneesLoading } = useQuery({
+    queryKey: ['/api/custom-assignees'],
+    queryFn: () => apiRequest('/api/custom-assignees').then(res => res.json())
+      .catch(error => {
+        console.error("Error fetching custom assignees:", error);
+        return [];
+      }),
+  });
 
   // Task Form Schema
   const taskFormSchema = z.object({
@@ -327,7 +337,9 @@ export function TasksTab({ dealId }: TasksTabProps) {
       taskType: values.taskType,
       status: values.status,
       assigneeId: values.taskType === 'internal' ? values.assigneeId : null,
-      customAssigneeId: values.taskType === 'external' && externalAssigneeType === 'custom' ? customAssigneeId : null
+      customAssigneeId: values.taskType === 'external' ? 
+        (externalAssigneeType === 'custom' ? customAssigneeId : values.customAssigneeId) : 
+        null
     };
     
     createTaskMutation.mutate(taskData);
@@ -360,7 +372,9 @@ export function TasksTab({ dealId }: TasksTabProps) {
       taskType: values.taskType,
       status: values.status,
       assigneeId: values.taskType === 'internal' ? values.assigneeId : null,
-      customAssigneeId: values.taskType === 'external' && externalAssigneeType === 'custom' ? customAssigneeId : null
+      customAssigneeId: values.taskType === 'external' ? 
+        (externalAssigneeType === 'custom' ? customAssigneeId : values.customAssigneeId) : 
+        null
     };
     
     updateTaskMutation.mutate({ id: currentTask.id, data: taskData });
@@ -385,7 +399,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
       return user ? user.fullName : "Unassigned";
     }
     if (task.customAssigneeId && customAssignees) {
-      const customAssignee = customAssignees.find((ca) => ca.id === task.customAssigneeId);
+      const customAssignee = customAssignees.find((ca: CustomAssignee) => ca.id === task.customAssigneeId);
       return customAssignee ? customAssignee.name : "Unassigned";
     }
     return "Unassigned";
@@ -694,13 +708,48 @@ export function TasksTab({ dealId }: TasksTabProps) {
                             <SelectValue placeholder="Select assignee type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="custom">Custom Assignee</SelectItem>
+                            <SelectItem value="existing">Existing Assignee</SelectItem>
+                            <SelectItem value="custom">New Custom Assignee</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  
+                  {externalAssigneeType === "existing" && (
+                    <FormField
+                      control={form.control}
+                      name="customAssigneeId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Select Assignee</FormLabel>
+                          <Select
+                            value={field.value?.toString() || ""}
+                            onValueChange={(value) => field.onChange(parseInt(value))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select assignee" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {customAssigneesLoading ? (
+                                <div className="p-2 text-sm text-muted-foreground">Loading assignees...</div>
+                              ) : customAssignees?.length === 0 ? (
+                                <div className="p-2 text-sm text-muted-foreground">No custom assignees available</div>
+                              ) : (
+                                customAssignees?.map((assignee: CustomAssignee) => (
+                                  <SelectItem key={assignee.id} value={assignee.id.toString()}>
+                                    {assignee.name}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                   
                   {externalAssigneeType === "custom" && (
                     <>
@@ -931,13 +980,48 @@ export function TasksTab({ dealId }: TasksTabProps) {
                             <SelectValue placeholder="Select assignee type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="custom">Custom Assignee</SelectItem>
+                            <SelectItem value="existing">Existing Assignee</SelectItem>
+                            <SelectItem value="custom">New Custom Assignee</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  
+                  {externalAssigneeType === "existing" && (
+                    <FormField
+                      control={editForm.control}
+                      name="customAssigneeId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Select Assignee</FormLabel>
+                          <Select
+                            value={field.value?.toString() || ""}
+                            onValueChange={(value) => field.onChange(parseInt(value))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select assignee" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {customAssigneesLoading ? (
+                                <div className="p-2 text-sm text-muted-foreground">Loading assignees...</div>
+                              ) : customAssignees?.length === 0 ? (
+                                <div className="p-2 text-sm text-muted-foreground">No custom assignees available</div>
+                              ) : (
+                                customAssignees?.map((assignee: CustomAssignee) => (
+                                  <SelectItem key={assignee.id} value={assignee.id.toString()}>
+                                    {assignee.name}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                   
                   {externalAssigneeType === "custom" && (
                     <>
