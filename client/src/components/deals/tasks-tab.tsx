@@ -256,64 +256,32 @@ export function TasksTab({ dealId }: TasksTabProps) {
     mutationFn: async (data: any) => {
       console.log("Submitting task data:", JSON.stringify(data, null, 2));
       
+      // Make a proper copy of the data to avoid modifying the original
+      const processedData = { ...data };
+      
       // Ensure all IDs are properly converted to numbers
-      Object.keys(data).forEach(key => {
-        if (key.toLowerCase().includes('id') && data[key] !== null && typeof data[key] === 'string') {
-          const parsedValue = parseInt(data[key], 10);
+      Object.keys(processedData).forEach(key => {
+        if (key.toLowerCase().includes('id') && processedData[key] !== null && typeof processedData[key] === 'string') {
+          const parsedValue = parseInt(processedData[key], 10);
           if (!isNaN(parsedValue)) {
-            data[key] = parsedValue;
+            processedData[key] = parsedValue;
             console.log(`Converted ${key} from string to number:`, parsedValue);
           }
         }
       });
       
       // Ensure due date is either a valid Date object or null
-      if (data.dueDate && typeof data.dueDate === 'string') {
-        data.dueDate = new Date(data.dueDate);
+      if (processedData.dueDate && typeof processedData.dueDate === 'string') {
+        processedData.dueDate = new Date(processedData.dueDate);
       }
       
-      // Make a direct fetch call instead of using apiRequest to get more detailed error info
-      try {
-        console.log("Final task data to submit:", JSON.stringify(data, null, 2));
-        
-        const response = await fetch('/api/tasks', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data)
-        });
-        
-        console.log("Raw response:", response);
-        console.log("Response status:", response.status, response.statusText);
-        
-        if (!response.ok) {
-          let errorMessage = `Error: ${response.status} ${response.statusText}`;
-          
-          try {
-            const errorData = await response.json();
-            console.error("API error response:", errorData);
-            errorMessage = errorData.message || errorMessage;
-            
-            // If there are validation errors, format them for display
-            if (errorData.errors) {
-              console.error("Validation errors:", errorData.errors);
-              errorMessage += ': ' + JSON.stringify(errorData.errors);
-            }
-          } catch (parseError) {
-            console.error("Failed to parse error response:", parseError);
-          }
-          
-          throw new Error(errorMessage);
-        }
-        
-        const responseData = await response.json();
-        console.log("Success response data:", responseData);
-        return responseData;
-      } catch (err) {
-        console.error("Error in task creation request:", err);
-        throw err;
-      }
+      console.log("Final task data to submit:", JSON.stringify(processedData, null, 2));
+      
+      // Use apiRequest from queryClient
+      return apiRequest('/api/tasks', {
+        method: 'POST',
+        data: processedData
+      });
     },
     onSuccess: (data) => {
       console.log("Task created successfully:", data);
