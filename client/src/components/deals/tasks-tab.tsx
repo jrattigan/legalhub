@@ -256,8 +256,26 @@ export function TasksTab({ dealId }: TasksTabProps) {
     mutationFn: async (data: any) => {
       console.log("Submitting task data:", JSON.stringify(data, null, 2));
       
+      // Ensure all IDs are properly converted to numbers
+      Object.keys(data).forEach(key => {
+        if (key.toLowerCase().includes('id') && data[key] !== null && typeof data[key] === 'string') {
+          const parsedValue = parseInt(data[key], 10);
+          if (!isNaN(parsedValue)) {
+            data[key] = parsedValue;
+            console.log(`Converted ${key} from string to number:`, parsedValue);
+          }
+        }
+      });
+      
+      // Ensure due date is either a valid Date object or null
+      if (data.dueDate && typeof data.dueDate === 'string') {
+        data.dueDate = new Date(data.dueDate);
+      }
+      
       // Make a direct fetch call instead of using apiRequest to get more detailed error info
       try {
+        console.log("Final task data to submit:", JSON.stringify(data, null, 2));
+        
         const response = await fetch('/api/tasks', {
           method: 'POST',
           headers: {
@@ -270,9 +288,23 @@ export function TasksTab({ dealId }: TasksTabProps) {
         console.log("Response status:", response.status, response.statusText);
         
         if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-          console.error("API error response:", errorData);
-          throw new Error(errorData?.message || `Error: ${response.status} ${response.statusText}`);
+          let errorMessage = `Error: ${response.status} ${response.statusText}`;
+          
+          try {
+            const errorData = await response.json();
+            console.error("API error response:", errorData);
+            errorMessage = errorData.message || errorMessage;
+            
+            // If there are validation errors, format them for display
+            if (errorData.errors) {
+              console.error("Validation errors:", errorData.errors);
+              errorMessage += ': ' + JSON.stringify(errorData.errors);
+            }
+          } catch (parseError) {
+            console.error("Failed to parse error response:", parseError);
+          }
+          
+          throw new Error(errorMessage);
         }
         
         const responseData = await response.json();
