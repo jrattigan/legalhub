@@ -57,6 +57,7 @@ import IssueCard from './issue-card';
 import CounselCard from './counsel-card';
 import TimelineCard from './timeline-card';
 import AllocationsTab from './allocations-tab';
+import { TasksTab } from './tasks-tab';
 
 type DealDetailProps = {
   deal: Deal;
@@ -528,6 +529,7 @@ export default function DealDetail({
     { id: 'overview', label: 'Overview', icon: <Eye className="h-5 w-5" />, description: 'Deal summary and progress' },
     { id: 'documents', label: 'Documents', icon: <File className="h-5 w-5" />, description: 'All deal documents' },
     { id: 'issues', label: 'Issues', icon: <Alert className="h-5 w-5" />, description: 'Outstanding issues' },
+    { id: 'tasks', label: 'Tasks', icon: <CheckSquare className="h-5 w-5" />, description: 'Task management' },
     { id: 'team', label: 'Team', icon: <Users className="h-5 w-5" />, description: 'Deal team members' },
     { id: 'allocations', label: 'Financials', icon: <DollarSign className="h-5 w-5" />, description: 'Financial details' },
     { id: 'timeline', label: 'Timeline', icon: <Clock className="h-5 w-5" />, description: 'Deal history and events' },
@@ -2672,6 +2674,12 @@ export default function DealDetail({
 
         <TabsContent value="issues" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'issues' ? 'block' : 'none'}}>
           <IssueCard issues={issues} onRefreshData={onRefreshData} preview={false} dealId={deal.id} />
+        </TabsContent>
+        
+        <TabsContent value="tasks" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'tasks' ? 'block' : 'none'}}>
+          <div className="p-6">
+            <TasksTab dealId={deal.id} />
+          </div>
         </TabsContent>
         
         <TabsContent value="team" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'team' ? 'block' : 'none'}}>

@@ -14,9 +14,13 @@ import {
   insertCompanySchema,
   insertFundSchema,
   insertAllocationSchema,
+  insertTaskSchema,
+  insertCustomAssigneeSchema,
   documents, // Import the base schema tables for creating partial schemas
   funds,
   allocations,
+  tasks,
+  customAssignees,
 } from "@shared/schema";
 import { createInsertSchema } from "drizzle-zod";
 
@@ -1416,6 +1420,211 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting allocation:", error);
       res.status(500).json({ message: "Failed to delete allocation" });
+    }
+  });
+  
+  // Tasks API
+  app.get("/api/deals/:id/tasks", async (req, res) => {
+    const dealId = parseInt(req.params.id);
+    if (isNaN(dealId)) {
+      return res.status(400).json({ message: "Invalid deal ID" });
+    }
+
+    try {
+      const tasks = await storage.getTasksByDeal(dealId);
+      res.json(tasks);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      res.status(500).json({ message: "Failed to fetch tasks" });
+    }
+  });
+
+  app.post("/api/tasks", async (req, res) => {
+    try {
+      // Ensure dueDate is properly converted to a Date object if it exists
+      const data = req.body;
+      if (data.dueDate && !(data.dueDate instanceof Date)) {
+        data.dueDate = new Date(data.dueDate);
+      }
+
+      const validatedData = insertTaskSchema.parse(data);
+      const task = await storage.createTask(validatedData);
+      res.status(201).json(task);
+    } catch (error) {
+      console.error("Error creating task:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid task data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create task" });
+    }
+  });
+
+  app.get("/api/tasks/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid task ID" });
+    }
+
+    try {
+      const task = await storage.getTask(id);
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      res.json(task);
+    } catch (error) {
+      console.error("Error fetching task:", error);
+      res.status(500).json({ message: "Failed to fetch task" });
+    }
+  });
+
+  app.patch("/api/tasks/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid task ID" });
+    }
+
+    try {
+      // Ensure dueDate is properly converted to a Date object if it exists
+      const data = req.body;
+      if (data.dueDate && !(data.dueDate instanceof Date)) {
+        data.dueDate = new Date(data.dueDate);
+      }
+
+      // Create a partial schema for validation
+      const partialTaskSchema = z.object({
+        name: z.string().optional(),
+        description: z.string().nullable().optional(),
+        dealId: z.number().optional(),
+        dueDate: z.date().nullable().optional(),
+        assigneeId: z.number().nullable().optional(),
+        customAssigneeId: z.number().nullable().optional(),
+        taskType: z.string().optional(),
+        status: z.string().optional()
+      });
+
+      const validatedData = partialTaskSchema.parse(data);
+      const updatedTask = await storage.updateTask(id, validatedData);
+      
+      if (!updatedTask) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      res.json(updatedTask);
+    } catch (error) {
+      console.error("Error updating task:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid task data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update task" });
+    }
+  });
+
+  app.delete("/api/tasks/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid task ID" });
+    }
+
+    try {
+      const success = await storage.deleteTask(id);
+      if (!success) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      res.status(500).json({ message: "Failed to delete task" });
+    }
+  });
+
+  // Custom Assignees API
+  app.get("/api/custom-assignees/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid custom assignee ID" });
+    }
+
+    try {
+      const customAssignee = await storage.getCustomAssignee(id);
+      if (!customAssignee) {
+        return res.status(404).json({ message: "Custom assignee not found" });
+      }
+      res.json(customAssignee);
+    } catch (error) {
+      console.error("Error fetching custom assignee:", error);
+      res.status(500).json({ message: "Failed to fetch custom assignee" });
+    }
+  });
+
+  app.post("/api/custom-assignees", async (req, res) => {
+    try {
+      const validatedData = insertCustomAssigneeSchema.parse(req.body);
+      const customAssignee = await storage.createCustomAssignee(validatedData);
+      res.status(201).json(customAssignee);
+    } catch (error) {
+      console.error("Error creating custom assignee:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid custom assignee data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create custom assignee" });
+    }
+  });
+
+  app.patch("/api/custom-assignees/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid custom assignee ID" });
+    }
+
+    try {
+      const partialCustomAssigneeSchema = z.object({
+        name: z.string().optional(),
+        email: z.string().optional()
+      });
+
+      const validatedData = partialCustomAssigneeSchema.parse(req.body);
+      const updatedCustomAssignee = await storage.updateCustomAssignee(id, validatedData);
+      
+      if (!updatedCustomAssignee) {
+        return res.status(404).json({ message: "Custom assignee not found" });
+      }
+      
+      res.json(updatedCustomAssignee);
+    } catch (error) {
+      console.error("Error updating custom assignee:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid custom assignee data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update custom assignee" });
+    }
+  });
+
+  app.delete("/api/custom-assignees/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid custom assignee ID" });
+    }
+
+    try {
+      const success = await storage.deleteCustomAssignee(id);
+      if (!success) {
+        return res.status(404).json({ message: "Custom assignee not found" });
+      }
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting custom assignee:", error);
+      res.status(500).json({ message: "Failed to delete custom assignee" });
+    }
+  });
+
+  // Clean up unused custom assignees
+  app.post("/api/custom-assignees/cleanup", async (req, res) => {
+    try {
+      const success = await storage.deleteUnusedCustomAssignees();
+      res.json({ success, message: "Unused custom assignees cleaned up" });
+    } catch (error) {
+      console.error("Error cleaning up custom assignees:", error);
+      res.status(500).json({ message: "Failed to clean up custom assignees" });
     }
   });
   

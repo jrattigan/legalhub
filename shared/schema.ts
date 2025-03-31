@@ -384,7 +384,73 @@ export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type DocumentVersion = typeof documentVersions.$inferSelect;
 export type InsertDocumentVersion = z.infer<typeof insertDocumentVersionSchema>;
 
-// Task type and schema removed
+// Tasks schema
+export const tasks = pgTable("tasks", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  dueDate: timestamp("due_date"),
+  assigneeId: integer("assignee_id"), // For internal tasks, this will be a user ID
+  customAssigneeId: integer("custom_assignee_id"), // For external tasks with a custom assignee
+  taskType: text("task_type").notNull(), // 'internal' or 'external'
+  status: text("status").notNull().default("open"), // 'open' or 'completed'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertTaskSchema = createInsertSchema(tasks).pick({
+  dealId: true,
+  name: true,
+  description: true,
+  dueDate: true,
+  assigneeId: true,
+  customAssigneeId: true,
+  taskType: true,
+  status: true,
+}).transform((data) => {
+  // Ensure optional fields are null not undefined when empty
+  const transformedData = { ...data };
+  
+  if (transformedData.description === undefined) {
+    transformedData.description = null;
+  }
+  
+  if (transformedData.dueDate && typeof transformedData.dueDate === 'string') {
+    transformedData.dueDate = new Date(transformedData.dueDate);
+  } else if (transformedData.dueDate === undefined) {
+    transformedData.dueDate = null;
+  }
+  
+  if (transformedData.assigneeId === undefined) {
+    transformedData.assigneeId = null;
+  }
+  
+  if (transformedData.customAssigneeId === undefined) {
+    transformedData.customAssigneeId = null;
+  }
+  
+  return transformedData;
+});
+
+// Custom Assignees schema (for external tasks)
+export const customAssignees = pgTable("custom_assignees", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCustomAssigneeSchema = createInsertSchema(customAssignees).pick({
+  name: true,
+  email: true,
+});
+
+export type Task = typeof tasks.$inferSelect;
+export type InsertTask = z.infer<typeof insertTaskSchema>;
+
+export type CustomAssignee = typeof customAssignees.$inferSelect;
+export type InsertCustomAssignee = z.infer<typeof insertCustomAssigneeSchema>;
 
 export type Issue = typeof issues.$inferSelect;
 export type InsertIssue = z.infer<typeof insertIssueSchema>;

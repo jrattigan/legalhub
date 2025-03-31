@@ -12,7 +12,9 @@ import {
   timelineEvents, TimelineEvent, InsertTimelineEvent,
   appSettings, AppSetting, InsertAppSetting,
   funds, Fund, InsertFund,
-  allocations, Allocation, InsertAllocation
+  allocations, Allocation, InsertAllocation,
+  tasks, Task, InsertTask,
+  customAssignees, CustomAssignee, InsertCustomAssignee
 } from "@shared/schema";
 import { format } from 'date-fns';
 import { generateDocumentComparison } from './document-compare';
@@ -111,6 +113,20 @@ export interface IStorage {
   createAllocation(allocation: InsertAllocation): Promise<Allocation>;
   updateAllocation(id: number, allocation: Partial<InsertAllocation>): Promise<Allocation | undefined>;
   deleteAllocation(id: number): Promise<boolean>;
+  
+  // Tasks
+  getTask(id: number): Promise<Task | undefined>;
+  getTasksByDeal(dealId: number): Promise<Task[]>;
+  createTask(task: InsertTask): Promise<Task>;
+  updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined>;
+  deleteTask(id: number): Promise<boolean>;
+  
+  // Custom Assignees
+  getCustomAssignee(id: number): Promise<CustomAssignee | undefined>;
+  createCustomAssignee(customAssignee: InsertCustomAssignee): Promise<CustomAssignee>;
+  updateCustomAssignee(id: number, customAssignee: Partial<InsertCustomAssignee>): Promise<CustomAssignee | undefined>;
+  deleteCustomAssignee(id: number): Promise<boolean>;
+  deleteUnusedCustomAssignees(): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -129,7 +145,8 @@ export class MemStorage implements IStorage {
   private appSettings: Map<number, AppSetting>;
   private funds: Map<number, Fund>;
   private allocations: Map<number, Allocation>;
-  
+  private tasks: Map<number, Task>;
+  private customAssignees: Map<number, CustomAssignee>;
 
 
   currentUserId: number;
@@ -146,6 +163,8 @@ export class MemStorage implements IStorage {
   currentAppSettingId: number;
   currentFundId: number;
   currentAllocationId: number;
+  currentTaskId: number;
+  currentCustomAssigneeId: number;
   
 
 
@@ -164,6 +183,8 @@ export class MemStorage implements IStorage {
     this.appSettings = new Map();
     this.funds = new Map();
     this.allocations = new Map();
+    this.tasks = new Map();
+    this.customAssignees = new Map();
     
 
 
@@ -181,6 +202,8 @@ export class MemStorage implements IStorage {
     this.currentAppSettingId = 1;
     this.currentFundId = 1;
     this.currentAllocationId = 1;
+    this.currentTaskId = 1;
+    this.currentCustomAssigneeId = 1;
     
 
 
@@ -2022,6 +2045,115 @@ export class MemStorage implements IStorage {
 
   async deleteAllocation(id: number): Promise<boolean> {
     return this.allocations.delete(id);
+  }
+
+  // Task method implementations
+  async getTask(id: number): Promise<Task | undefined> {
+    return this.tasks.get(id);
+  }
+
+  async getTasksByDeal(dealId: number): Promise<Task[]> {
+    return Array.from(this.tasks.values()).filter(task => task.dealId === dealId);
+  }
+
+  async createTask(task: InsertTask): Promise<Task> {
+    const id = this.currentTaskId++;
+    const now = new Date();
+    const createdTask: Task = {
+      ...task,
+      id,
+      createdAt: now,
+      updatedAt: now,
+      status: task.status || 'open',
+      description: task.description || null,
+      dueDate: task.dueDate || null,
+      assigneeId: task.assigneeId || null,
+      customAssigneeId: task.customAssigneeId || null
+    };
+    this.tasks.set(id, createdTask);
+    return createdTask;
+  }
+
+  async updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined> {
+    const existingTask = this.tasks.get(id);
+    if (!existingTask) {
+      return undefined;
+    }
+
+    const updatedTask: Task = {
+      ...existingTask,
+      ...task,
+      updatedAt: new Date(),
+      description: task.description !== undefined ? task.description : existingTask.description,
+      dueDate: task.dueDate !== undefined ? task.dueDate : existingTask.dueDate,
+      assigneeId: task.assigneeId !== undefined ? task.assigneeId : existingTask.assigneeId,
+      customAssigneeId: task.customAssigneeId !== undefined ? task.customAssigneeId : existingTask.customAssigneeId
+    };
+
+    this.tasks.set(id, updatedTask);
+    return updatedTask;
+  }
+
+  async deleteTask(id: number): Promise<boolean> {
+    return this.tasks.delete(id);
+  }
+
+  // Custom Assignee method implementations
+  async getCustomAssignee(id: number): Promise<CustomAssignee | undefined> {
+    return this.customAssignees.get(id);
+  }
+
+  async createCustomAssignee(customAssignee: InsertCustomAssignee): Promise<CustomAssignee> {
+    const id = this.currentCustomAssigneeId++;
+    const now = new Date();
+    const createdCustomAssignee: CustomAssignee = {
+      ...customAssignee,
+      id,
+      createdAt: now
+    };
+    this.customAssignees.set(id, createdCustomAssignee);
+    return createdCustomAssignee;
+  }
+
+  async updateCustomAssignee(id: number, customAssignee: Partial<InsertCustomAssignee>): Promise<CustomAssignee | undefined> {
+    const existingCustomAssignee = this.customAssignees.get(id);
+    if (!existingCustomAssignee) {
+      return undefined;
+    }
+
+    const updatedCustomAssignee: CustomAssignee = {
+      ...existingCustomAssignee,
+      ...customAssignee
+    };
+
+    this.customAssignees.set(id, updatedCustomAssignee);
+    return updatedCustomAssignee;
+  }
+
+  async deleteCustomAssignee(id: number): Promise<boolean> {
+    return this.customAssignees.delete(id);
+  }
+
+  async deleteUnusedCustomAssignees(): Promise<boolean> {
+    // Get all custom assignee IDs that are still attached to tasks
+    const usedCustomAssigneeIds = new Set<number>();
+    
+    for (const task of this.tasks.values()) {
+      if (task.customAssigneeId) {
+        usedCustomAssigneeIds.add(task.customAssigneeId);
+      }
+    }
+    
+    // Delete custom assignees that are not in the used set
+    let deletedCount = 0;
+    for (const assignee of this.customAssignees.values()) {
+      if (!usedCustomAssigneeIds.has(assignee.id)) {
+        this.customAssignees.delete(assignee.id);
+        deletedCount++;
+      }
+    }
+    
+    return true;
   }
 }
 
