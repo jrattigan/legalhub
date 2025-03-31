@@ -344,7 +344,15 @@ export function TasksTab({ dealId }: TasksTabProps) {
 
   // Delete Task Mutation
   const deleteTaskMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/tasks/${id}`, { method: 'DELETE' }).then(res => res.json()),
+    mutationFn: async (id: number) => {
+      const response = await apiRequest(`/api/tasks/${id}`, { method: 'DELETE' });
+      // For a 204 No Content response (typical for DELETE operations), don't attempt to parse JSON
+      if (response.status === 204) {
+        return { success: true };
+      }
+      // For other status codes, try to parse the response body (if any)
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       toast({
@@ -367,7 +375,15 @@ export function TasksTab({ dealId }: TasksTabProps) {
 
   // Delete Custom Assignee Mutation
   const deleteCustomAssigneeMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/custom-assignees/${id}`, { method: 'DELETE' }).then(res => res.json()),
+    mutationFn: async (id: number) => {
+      const response = await apiRequest(`/api/custom-assignees/${id}`, { method: 'DELETE' });
+      // For a 204 No Content response (typical for DELETE operations), don't attempt to parse JSON
+      if (response.status === 204) {
+        return { success: true };
+      }
+      // For other status codes, try to parse the response body (if any)
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/custom-assignees'] });
     },
