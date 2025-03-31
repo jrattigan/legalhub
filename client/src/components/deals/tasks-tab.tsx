@@ -376,7 +376,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
       });
       
       // After updating a task, check if any custom assignees are no longer in use
-      checkAndDeleteUnusedCustomAssignees();
+      cleanupUnusedCustomAssignees();
     },
     onError: (error) => {
       toast({
@@ -407,7 +407,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
       });
       
       // After deleting a task, check if any custom assignees are no longer in use
-      checkAndDeleteUnusedCustomAssignees();
+      cleanupUnusedCustomAssignees();
     },
     onError: (error) => {
       toast({
@@ -455,23 +455,33 @@ export function TasksTab({ dealId }: TasksTabProps) {
     }
   });
 
-  // Function to check for and delete unused custom assignees
-  const checkAndDeleteUnusedCustomAssignees = () => {
-    if (!customAssignees || !tasks) return;
-    
-    // Get a set of all custom assignee IDs used in tasks
-    const usedCustomAssigneeIds = new Set(
-      tasks
-        .filter((task: Task) => task.customAssigneeId !== null)
-        .map((task: Task) => task.customAssigneeId)
-    );
-    
-    // Find and delete any custom assignees not in the used set
-    customAssignees.forEach((assignee: CustomAssignee) => {
-      if (!usedCustomAssigneeIds.has(assignee.id)) {
-        deleteCustomAssigneeMutation.mutate(assignee.id);
-      }
-    });
+  // Cleanup custom assignees mutation using dedicated endpoint
+  const cleanupCustomAssigneesMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('/api/custom-assignees/cleanup', {
+        method: 'POST'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/custom-assignees'] });
+      toast({
+        title: "Cleanup Complete",
+        description: "Unused custom assignees have been removed."
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to clean up custom assignees:", error);
+      toast({
+        title: "Cleanup Failed",
+        description: "Failed to remove unused custom assignees.",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Function to clean up unused custom assignees
+  const cleanupUnusedCustomAssignees = () => {
+    cleanupCustomAssigneesMutation.mutate();
   };
 
   // Handle form submission for creating a new task
@@ -833,6 +843,22 @@ export function TasksTab({ dealId }: TasksTabProps) {
             }}
           >
             Run Test
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => cleanupUnusedCustomAssignees()}
+            disabled={cleanupCustomAssigneesMutation.isPending}
+          >
+            {cleanupCustomAssigneesMutation.isPending ? (
+              <>
+                <span className="mr-2">Cleaning up...</span>
+                <span className="animate-spin">⟳</span>
+              </>
+            ) : (
+              "Clean Up Assignees"
+            )}
           </Button>
           
           <Select
