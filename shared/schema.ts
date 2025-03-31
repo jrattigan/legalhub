@@ -326,6 +326,7 @@ export const closingChecklist = pgTable("closing_checklist", {
   dueDate: timestamp("due_date"),
   assigneeId: integer("assignee_id"),
   isComplete: boolean("is_complete").default(false),
+  parentId: integer("parent_id"), // Parent item ID for sub-items
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -337,6 +338,7 @@ export const insertClosingChecklistSchema = createInsertSchema(closingChecklist)
   dueDate: true,
   assigneeId: true,
   isComplete: true,
+  parentId: true,
 }).transform((data) => {
   const transformedData = { ...data };
   
@@ -346,6 +348,10 @@ export const insertClosingChecklistSchema = createInsertSchema(closingChecklist)
   
   if (transformedData.dueDate && typeof transformedData.dueDate === 'string') {
     transformedData.dueDate = new Date(transformedData.dueDate);
+  }
+  
+  if (transformedData.parentId === undefined) {
+    transformedData.parentId = null;
   }
   
   return transformedData;

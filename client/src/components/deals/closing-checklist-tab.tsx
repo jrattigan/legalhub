@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -41,6 +42,7 @@ interface ClosingChecklistItem {
   dueDate: string | null; // Will be converted to Date as needed
   assigneeId: number | null;
   isComplete: boolean;
+  parentId: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -48,7 +50,8 @@ interface ClosingChecklistItem {
 // Schema for form validation
 const checklistItemSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  isComplete: z.boolean().optional()
+  isComplete: z.boolean().optional(),
+  parentId: z.number().nullable().optional()
 });
 
 type ChecklistItemFormValues = z.infer<typeof checklistItemSchema>;
@@ -62,6 +65,8 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
   const { toast } = useToast();
   const [editItemId, setEditItemId] = useState<number | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
+  const [isAddSubItemDialogOpen, setIsAddSubItemDialogOpen] = useState(false);
   
   // Query to fetch checklist items
   const { data: checklistItems = [], isLoading } = useQuery<ClosingChecklistItem[]>({
@@ -222,7 +227,18 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
     resolver: zodResolver(checklistItemSchema),
     defaultValues: {
       title: '',
-      isComplete: false
+      isComplete: false,
+      parentId: null
+    }
+  });
+
+  // Form for adding new sub-items
+  const addSubItemForm = useForm<ChecklistItemFormValues>({
+    resolver: zodResolver(checklistItemSchema),
+    defaultValues: {
+      title: '',
+      isComplete: false,
+      parentId: null
     }
   });
 
@@ -231,7 +247,8 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
     resolver: zodResolver(checklistItemSchema),
     defaultValues: {
       title: '',
-      isComplete: false
+      isComplete: false,
+      parentId: null
     }
   });
 
@@ -239,6 +256,25 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
   const handleAddItem = (values: ChecklistItemFormValues) => {
     createItemMutation.mutate(values);
     addForm.reset();
+  };
+  
+  // Function to handle adding a new sub-item
+  const handleAddSubItem = (values: ChecklistItemFormValues) => {
+    if (selectedParentId !== null) {
+      const subItemValues = {
+        ...values,
+        parentId: selectedParentId
+      };
+      createItemMutation.mutate(subItemValues);
+      addSubItemForm.reset();
+      setIsAddSubItemDialogOpen(false);
+    }
+  };
+
+  // Function to open sub-item dialog
+  const openAddSubItemDialog = (parentId: number) => {
+    setSelectedParentId(parentId);
+    setIsAddSubItemDialogOpen(true);
   };
 
   // Function to handle editing an item
@@ -321,79 +357,200 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
         </Dialog>
       </div>
 
+      {/* Dialog for adding sub-items */}
+      <Dialog open={isAddSubItemDialogOpen} onOpenChange={setIsAddSubItemDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Sub-Item</DialogTitle>
+            <DialogDescription>
+              Add a sub-item to the selected checklist item.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...addSubItemForm}>
+            <form onSubmit={addSubItemForm.handleSubmit(handleAddSubItem)} className="space-y-4">
+              <FormField
+                control={addSubItemForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter sub-item title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button type="submit" disabled={createItemMutation.isPending}>
+                  {createItemMutation.isPending ? "Adding..." : "Add Sub-Item"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
       {Array.isArray(checklistItems) && checklistItems.length === 0 ? (
         <Card className="p-6 text-center text-gray-500">
           No checklist items yet. Click "Add Item" to create one.
         </Card>
       ) : (
         <div className="space-y-4">
-          {Array.isArray(checklistItems) && checklistItems.map((item: ClosingChecklistItem) => (
-            <Card key={item.id} className="p-4">
-              {editItemId === item.id ? (
-                // Edit form
-                <Form {...editForm}>
-                  <form onSubmit={editForm.handleSubmit(handleEditItem)} className="space-y-4">
-                    <FormField
-                      control={editForm.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Title</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <div className="flex justify-end space-x-2">
-                      <Button type="button" variant="outline" onClick={() => setEditItemId(null)}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={updateItemMutation.isPending}>
-                        {updateItemMutation.isPending ? "Saving..." : "Save"}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              ) : (
-                // Display mode
-                <div className="flex items-start">
-                  <div className="mr-3 mt-1">
-                    <Checkbox 
-                      checked={item.isComplete} 
-                      onCheckedChange={() => handleToggleComplete(item.id, item.isComplete)}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between">
-                      <h3 className={`text-lg font-medium ${item.isComplete ? 'line-through text-gray-500' : ''}`}>
-                        {item.title}
-                      </h3>
-                      <div className="flex space-x-2">
-                        <Button variant="ghost" size="sm" onClick={() => startEditItem(item)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteItem(item.id)}>
-                          <TrashIcon className="h-4 w-4 text-red-500" />
-                        </Button>
+          {/* Filter to show only top-level items (no parent) */}
+          {Array.isArray(checklistItems) && checklistItems
+            .filter(item => item.parentId === null)
+            .map((item: ClosingChecklistItem) => {
+              // Get sub-items for this item
+              const subItems = checklistItems.filter(subItem => subItem.parentId === item.id);
+              
+              return (
+                <div key={item.id} className="space-y-2">
+                  <Card className="p-4">
+                    {editItemId === item.id ? (
+                      // Edit form
+                      <Form {...editForm}>
+                        <form onSubmit={editForm.handleSubmit(handleEditItem)} className="space-y-4">
+                          <FormField
+                            control={editForm.control}
+                            name="title"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Title</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <div className="flex justify-end space-x-2">
+                            <Button type="button" variant="outline" onClick={() => setEditItemId(null)}>
+                              Cancel
+                            </Button>
+                            <Button type="submit" disabled={updateItemMutation.isPending}>
+                              {updateItemMutation.isPending ? "Saving..." : "Save"}
+                            </Button>
+                          </div>
+                        </form>
+                      </Form>
+                    ) : (
+                      // Display mode
+                      <div className="flex items-start">
+                        <div className="mr-3 mt-1">
+                          <Checkbox 
+                            checked={item.isComplete} 
+                            onCheckedChange={() => handleToggleComplete(item.id, item.isComplete)}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between">
+                            <h3 className={`text-lg font-medium ${item.isComplete ? 'line-through text-gray-500' : ''}`}>
+                              {item.title}
+                            </h3>
+                            <div className="flex space-x-2">
+                              <Button variant="ghost" size="sm" onClick={() => openAddSubItemDialog(item.id)}>
+                                <PlusIcon className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => startEditItem(item)}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => handleDeleteItem(item.id)}>
+                                <TrashIcon className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>
+                          {item.description && (
+                            <p className="text-gray-600 mt-1">{item.description}</p>
+                          )}
+                          {item.dueDate && (
+                            <div className="text-sm text-gray-500 mt-2 flex items-center">
+                              <CalendarIcon className="h-4 w-4 mr-1" />
+                              Due: {format(new Date(item.dueDate), "PP")}
+                            </div>
+                          )}
+                        </div>
                       </div>
+                    )}
+                  </Card>
+                  
+                  {/* Render sub-items with indentation */}
+                  {subItems.length > 0 && (
+                    <div className="ml-8 space-y-2">
+                      {subItems.map((subItem: ClosingChecklistItem) => (
+                        <Card key={subItem.id} className="p-3 border-l-4 border-gray-200">
+                          {editItemId === subItem.id ? (
+                            // Edit form for sub-item
+                            <Form {...editForm}>
+                              <form onSubmit={editForm.handleSubmit(handleEditItem)} className="space-y-4">
+                                <FormField
+                                  control={editForm.control}
+                                  name="title"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Title</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                
+                                <div className="flex justify-end space-x-2">
+                                  <Button type="button" variant="outline" onClick={() => setEditItemId(null)}>
+                                    Cancel
+                                  </Button>
+                                  <Button type="submit" disabled={updateItemMutation.isPending}>
+                                    {updateItemMutation.isPending ? "Saving..." : "Save"}
+                                  </Button>
+                                </div>
+                              </form>
+                            </Form>
+                          ) : (
+                            // Display mode for sub-item
+                            <div className="flex items-start">
+                              <div className="mr-3 mt-1">
+                                <Checkbox 
+                                  checked={subItem.isComplete} 
+                                  onCheckedChange={() => handleToggleComplete(subItem.id, subItem.isComplete)}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex justify-between">
+                                  <h3 className={`text-md font-medium ${subItem.isComplete ? 'line-through text-gray-500' : ''}`}>
+                                    {subItem.title}
+                                  </h3>
+                                  <div className="flex space-x-2">
+                                    <Button variant="ghost" size="sm" onClick={() => startEditItem(subItem)}>
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteItem(subItem.id)}>
+                                      <TrashIcon className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                {subItem.description && (
+                                  <p className="text-gray-600 mt-1">{subItem.description}</p>
+                                )}
+                                {subItem.dueDate && (
+                                  <div className="text-sm text-gray-500 mt-2 flex items-center">
+                                    <CalendarIcon className="h-4 w-4 mr-1" />
+                                    Due: {format(new Date(subItem.dueDate), "PP")}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </Card>
+                      ))}
                     </div>
-                    {item.description && (
-                      <p className="text-gray-600 mt-1">{item.description}</p>
-                    )}
-                    {item.dueDate && (
-                      <div className="text-sm text-gray-500 mt-2 flex items-center">
-                        <CalendarIcon className="h-4 w-4 mr-1" />
-                        Due: {format(new Date(item.dueDate), "PP")}
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
-              )}
-            </Card>
-          ))}
+              );
+            })}
         </div>
       )}
     </div>

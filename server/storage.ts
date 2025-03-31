@@ -2244,6 +2244,7 @@ export class MemStorage implements IStorage {
       description: item.description || null,
       dueDate: item.dueDate || null,
       assigneeId: item.assigneeId || null,
+      parentId: item.parentId || null,
       isComplete: item.isComplete !== undefined ? item.isComplete : false
     };
     this.closingChecklist.set(id, newItem);
@@ -2264,6 +2265,7 @@ export class MemStorage implements IStorage {
       description: item.description !== undefined ? item.description : existingItem.description,
       dueDate: item.dueDate !== undefined ? item.dueDate : existingItem.dueDate,
       assigneeId: item.assigneeId !== undefined ? item.assigneeId : existingItem.assigneeId,
+      parentId: item.parentId !== undefined ? item.parentId : existingItem.parentId,
       isComplete: item.isComplete !== undefined ? item.isComplete : existingItem.isComplete
     };
     
