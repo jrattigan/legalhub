@@ -144,11 +144,24 @@ export function TasksTab({ dealId }: TasksTabProps) {
   // Fetch custom assignees for external tasks
   const { data: customAssignees, isLoading: customAssigneesLoading } = useQuery({
     queryKey: ['/api/custom-assignees'],
-    queryFn: () => apiRequest('/api/custom-assignees').then(res => res.json())
-      .catch(error => {
-        console.error("Error fetching custom assignees:", error);
-        return [];
-      }),
+    queryFn: () => {
+      console.log("Making GET request to /api/custom-assignees", "");
+      return apiRequest('/api/custom-assignees')
+        .then(res => {
+          console.log("Response from GET /api/custom-assignees:", res.status, res.statusText);
+          return res.json();
+        })
+        .then(data => {
+          console.log("Custom assignees data:", data);
+          return data || []; // Ensure we always return an array
+        })
+        .catch(error => {
+          console.error("Error fetching custom assignees:", error);
+          return [];
+        });
+    },
+    staleTime: 0, // Don't cache this data, always refetch
+    refetchOnMount: true, // Always refetch when component mounts
   });
 
   // Task Form Schema
@@ -597,12 +610,16 @@ export function TasksTab({ dealId }: TasksTabProps) {
   const onEditSubmit = async (values: z.infer<typeof taskFormSchema>) => {
     if (!currentTask) return;
     
+    console.log("📝 EDIT FORM SUBMISSION - Starting form submission");
+    console.log("📝 EDIT FORM SUBMISSION - Form values:", JSON.stringify(values, null, 2));
+    console.log("📝 EDIT FORM SUBMISSION - External assignee type:", externalAssigneeType);
+    
     let customAssigneeId = values.customAssigneeId;
     
     // Create a custom assignee if needed
     if (values.taskType === 'external' && externalAssigneeType === 'custom' && values.customAssigneeName && values.customAssigneeEmail) {
       try {
-        console.log("Creating custom assignee on edit:", values.customAssigneeName, values.customAssigneeEmail);
+        console.log("📝 EDIT FORM SUBMISSION - Creating custom assignee:", values.customAssigneeName, values.customAssigneeEmail);
         
         // Use fetch directly for debugging and consistency with add task form
         const customAssigneeResponse = await fetch('/api/custom-assignees', {
@@ -620,12 +637,12 @@ export function TasksTab({ dealId }: TasksTabProps) {
         
         const result = await customAssigneeResponse.json();
         customAssigneeId = result.id;
-        console.log("Created custom assignee with ID:", customAssigneeId);
+        console.log("📝 EDIT FORM SUBMISSION - Created custom assignee with ID:", customAssigneeId);
         
         // Make sure to invalidate the custom assignees query to refresh the list
         queryClient.invalidateQueries({ queryKey: ['/api/custom-assignees'] });
       } catch (error) {
-        console.error("Failed to create custom assignee:", error);
+        console.error("📝 EDIT FORM SUBMISSION - Failed to create custom assignee:", error);
         toast({
           title: "Error Creating Custom Assignee",
           description: String(error),
@@ -642,14 +659,31 @@ export function TasksTab({ dealId }: TasksTabProps) {
       dueDate: values.dueDate ? new Date(values.dueDate) : null, // Ensure Date object
       taskType: values.taskType,
       status: values.status || "open",
-      assigneeId: values.taskType === 'internal' ? Number(values.assigneeId) : null,
-      customAssigneeId: values.taskType === 'external' && externalAssigneeType === 'existing' ? 
-        Number(values.customAssigneeId) : (externalAssigneeType === 'custom' ? Number(customAssigneeId) : null),
-      lawFirmId: values.taskType === 'external' && externalAssigneeType === 'lawFirm' ? 
-        Number(values.lawFirmId) : null,
-      attorneyId: values.taskType === 'external' && externalAssigneeType === 'attorney' ? 
-        Number(values.attorneyId) : null
+      
+      // Clear all assignee fields first to avoid conflicts
+      assigneeId: null,
+      customAssigneeId: null,
+      lawFirmId: null,
+      attorneyId: null
     };
+    
+    // Set the appropriate assignee field based on task type and external assignee type
+    if (values.taskType === 'internal') {
+      taskData.assigneeId = Number(values.assigneeId);
+    } else if (values.taskType === 'external') {
+      if (externalAssigneeType === 'lawFirm') {
+        taskData.lawFirmId = Number(values.lawFirmId);
+      } else if (externalAssigneeType === 'attorney') {
+        taskData.attorneyId = Number(values.attorneyId);
+        taskData.lawFirmId = Number(values.lawFirmId);
+      } else if (externalAssigneeType === 'existing') {
+        taskData.customAssigneeId = Number(values.customAssigneeId);
+      } else if (externalAssigneeType === 'custom') {
+        taskData.customAssigneeId = Number(customAssigneeId);
+      }
+    }
+    
+    console.log("📝 EDIT FORM SUBMISSION - Task data to update:", JSON.stringify(taskData, null, 2));
     
     updateTaskMutation.mutate({ id: currentTask.id, data: taskData });
   };
@@ -1454,7 +1488,31 @@ export function TasksTab({ dealId }: TasksTabProps) {
                         <FormLabel>Assignee Type</FormLabel>
                         <Select
                           value={externalAssigneeType}
-                          onValueChange={setExternalAssigneeType}
+                          onValueChange={(value) => {
+                            console.log("Edit form: Changed external assignee type to:", value);
+                            setExternalAssigneeType(value as "lawFirm" | "attorney" | "existing" | "custom");
+                            
+                            // Reset fields that are no longer relevant when changing assignee type
+                            if (value === "lawFirm") {
+                              editForm.setValue("attorneyId", null);
+                              editForm.setValue("customAssigneeId", null);
+                              editForm.setValue("customAssigneeName", "");
+                              editForm.setValue("customAssigneeEmail", "");
+                            } else if (value === "attorney") {
+                              editForm.setValue("customAssigneeId", null);
+                              editForm.setValue("customAssigneeName", "");
+                              editForm.setValue("customAssigneeEmail", "");
+                            } else if (value === "existing") {
+                              editForm.setValue("lawFirmId", null);
+                              editForm.setValue("attorneyId", null);
+                              editForm.setValue("customAssigneeName", "");
+                              editForm.setValue("customAssigneeEmail", "");
+                            } else if (value === "custom") {
+                              editForm.setValue("lawFirmId", null);
+                              editForm.setValue("attorneyId", null);
+                              editForm.setValue("customAssigneeId", null);
+                            }
+                          }}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select assignee type" />
