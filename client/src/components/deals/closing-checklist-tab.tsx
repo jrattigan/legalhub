@@ -68,9 +68,13 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
     queryKey: [`/api/deals/${dealId}/closing-checklist`],
     queryFn: async () => {
       const response = await apiRequest(`/api/deals/${dealId}/closing-checklist`);
+      console.log("Closing checklist API response:", response);
       return Array.isArray(response) ? response : [];
     },
     enabled: !!dealId && dealId > 0,
+    // Add refetch interval to ensure we get the latest data
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   // Mutation to create a new checklist item
