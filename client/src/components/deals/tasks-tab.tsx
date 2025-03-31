@@ -413,23 +413,15 @@ export function TasksTab({ dealId }: TasksTabProps) {
       try {
         console.log("Creating custom assignee:", values.customAssigneeName, values.customAssigneeEmail);
         
-        // Use direct fetch for custom assignee creation
-        const customAssigneeResponse = await fetch('/api/custom-assignees', {
+        // Use apiRequest from queryClient instead of direct fetch
+        const result = await apiRequest('/api/custom-assignees', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+          data: {
             name: values.customAssigneeName,
             email: values.customAssigneeEmail || ""
-          })
-        });
+          }
+        }).then(res => res.json());
         
-        if (!customAssigneeResponse.ok) {
-          throw new Error(`Failed to create custom assignee: ${customAssigneeResponse.status}`);
-        }
-        
-        const result = await customAssigneeResponse.json();
         customAssigneeId = result.id;
         console.log("Created custom assignee with ID:", customAssigneeId);
       } catch (error) {
@@ -591,12 +583,9 @@ export function TasksTab({ dealId }: TasksTabProps) {
             onClick={async () => {
               console.log("Testing task creation endpoint...");
               try {
-                const response = await fetch('/api/test-create-task', {
+                const response = await apiRequest('/api/test-create-task', {
                   method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({})
+                  data: {}
                 });
                 
                 console.log("Test create task response:", response);
