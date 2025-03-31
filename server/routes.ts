@@ -1592,6 +1592,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Custom Assignees API
+  // Get all custom assignees
+  app.get("/api/custom-assignees", async (req, res) => {
+    try {
+      const customAssignees = await storage.getCustomAssignees();
+      return res.status(200).json(customAssignees);
+    } catch (error) {
+      console.error("Error fetching all custom assignees:", error);
+      return res.status(500).json({ message: "Failed to fetch custom assignees" });
+    }
+  });
+
+  // Get specific custom assignee by ID
   app.get("/api/custom-assignees/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {

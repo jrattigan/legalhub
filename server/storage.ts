@@ -122,6 +122,7 @@ export interface IStorage {
   deleteTask(id: number): Promise<boolean>;
   
   // Custom Assignees
+  getCustomAssignees(): Promise<CustomAssignee[]>;
   getCustomAssignee(id: number): Promise<CustomAssignee | undefined>;
   createCustomAssignee(customAssignee: InsertCustomAssignee): Promise<CustomAssignee>;
   updateCustomAssignee(id: number, customAssignee: Partial<InsertCustomAssignee>): Promise<CustomAssignee | undefined>;
@@ -2119,6 +2120,10 @@ export class MemStorage implements IStorage {
   }
 
   // Custom Assignee method implementations
+  async getCustomAssignees(): Promise<CustomAssignee[]> {
+    return Array.from(this.customAssignees.values());
+  }
+
   async getCustomAssignee(id: number): Promise<CustomAssignee | undefined> {
     return this.customAssignees.get(id);
   }
