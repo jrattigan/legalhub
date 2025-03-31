@@ -437,20 +437,21 @@ export function TasksTab({ dealId }: TasksTabProps) {
       try {
         console.log("📋 FORM SUBMISSION - Creating custom assignee:", values.customAssigneeName, values.customAssigneeEmail);
         
-        // Use apiRequest from queryClient instead of direct fetch
-        const response = await apiRequest('/api/custom-assignees', {
+        // Use fetch directly for debugging
+        const customAssigneeResponse = await fetch('/api/custom-assignees', {
           method: 'POST',
-          data: {
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             name: values.customAssigneeName,
             email: values.customAssigneeEmail || ""
-          }
+          })
         });
         
-        if (!response.ok) {
+        if (!customAssigneeResponse.ok) {
           throw new Error("Failed to create custom assignee");
         }
         
-        const result = await response.json();
+        const result = await customAssigneeResponse.json();
         customAssigneeId = result.id;
         console.log("📋 FORM SUBMISSION - Created custom assignee with ID:", customAssigneeId);
       } catch (error) {
@@ -481,7 +482,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
     // Prepare task data based on type and assignee type
     const taskData = {
       name: values.name,
-      description: values.description,
+      description: values.description || "",
       dealId: numericDealId,
       dueDate: values.dueDate,
       taskType: values.taskType,
@@ -495,30 +496,42 @@ export function TasksTab({ dealId }: TasksTabProps) {
         values.attorneyId : null
     };
     
-    console.log("📋 FORM SUBMISSION - Submitting task data to createTaskMutation:", JSON.stringify(taskData, null, 2));
+    console.log("📋 FORM SUBMISSION - Task data to submit:", JSON.stringify(taskData, null, 2));
     
-    // Use the mutation to create the task
+    // Use direct fetch instead of mutation for debugging
     try {
-      console.log("📋 FORM SUBMISSION - Calling createTaskMutation.mutateAsync");
-      const response = await createTaskMutation.mutateAsync(taskData);
-      console.log("📋 FORM SUBMISSION - Response from mutation:", response);
+      console.log("📋 FORM SUBMISSION - Sending direct fetch request to /api/tasks");
       
-      // Manually trigger the successful UI updates in case the onSuccess callback isn't firing
-      if (response) {
-        console.log("📋 FORM SUBMISSION - Task created successfully");
-        setIsAddTaskOpen(false);
-        form.reset();
-        queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
-        toast({
-          title: "Success",
-          description: "Task created successfully"
-        });
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(taskData)
+      });
+      
+      console.log("📋 FORM SUBMISSION - Response status:", response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => "Unknown error");
+        console.error("📋 FORM SUBMISSION - Error creating task:", errorText);
+        throw new Error(errorText);
       }
+      
+      const responseData = await response.json();
+      console.log("📋 FORM SUBMISSION - Task created successfully:", responseData);
+      
+      // Update UI state
+      setIsAddTaskOpen(false);
+      form.reset();
+      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      toast({
+        title: "Success",
+        description: "Task created successfully"
+      });
     } catch (error) {
-      console.error("📋 FORM SUBMISSION - Error in createTaskMutation:", error);
+      console.error("📋 FORM SUBMISSION - Error in task creation:", error);
       toast({
         title: "Error",
-        description: "Failed to create task. See console for details.",
+        description: "Failed to create task. Please check console for details.",
         variant: "destructive"
       });
     }

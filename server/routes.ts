@@ -1615,6 +1615,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete task" });
     }
   });
+  
+  // Test endpoint to create a task directly for debugging
+  app.post("/api/test-create-task", async (req, res) => {
+    try {
+      // Create a test task for the current deal
+      const dealIdParam = req.query.dealId || 1; // Default to deal 1
+      const dealId = typeof dealIdParam === 'string' ? parseInt(dealIdParam, 10) : dealIdParam;
+      
+      const testTask = {
+        name: `Test Task ${new Date().toLocaleTimeString()}`,
+        description: "This is an automatically generated test task",
+        dealId,
+        taskType: "internal",
+        status: "open",
+        assigneeId: 1, // Default to the first user
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Due in 1 week
+      };
+      
+      console.log("Creating test task:", testTask);
+      
+      const task = await storage.createTask(testTask);
+      console.log("Test task created:", task);
+      
+      res.status(201).json(task);
+    } catch (error) {
+      console.error("Error creating test task:", error);
+      res.status(500).json({ message: "Failed to create test task", error: String(error) });
+    }
+  });
 
   // Custom Assignees API
   app.get("/api/custom-assignees/:id", async (req, res) => {
