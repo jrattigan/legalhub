@@ -654,9 +654,9 @@ export function TasksTab({ dealId }: TasksTabProps) {
                         </SelectTrigger>
                         <SelectContent>
                           {usersLoading ? (
-                            <div className="p-2 text-sm text-muted-foreground">Loading users...</div>
+                            <SelectItem value="">Loading users...</SelectItem>
                           ) : users?.length === 0 ? (
-                            <div className="p-2 text-sm text-muted-foreground">No users available</div>
+                            <SelectItem value="">No users available</SelectItem>
                           ) : (
                             users?.map((user: User) => (
                               <SelectItem key={user.id} value={user.id.toString()}>
@@ -891,9 +891,9 @@ export function TasksTab({ dealId }: TasksTabProps) {
                         </SelectTrigger>
                         <SelectContent>
                           {usersLoading ? (
-                            <div className="p-2 text-sm text-muted-foreground">Loading users...</div>
+                            <SelectItem value="">Loading users...</SelectItem>
                           ) : users?.length === 0 ? (
-                            <div className="p-2 text-sm text-muted-foreground">No users available</div>
+                            <SelectItem value="">No users available</SelectItem>
                           ) : (
                             users?.map((user: User) => (
                               <SelectItem key={user.id} value={user.id.toString()}>
