@@ -91,7 +91,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
   // Fetch Tasks
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
     queryKey: ['/api/deals', dealId, 'tasks'],
-    queryFn: () => apiRequest(`/api/deals/${dealId}/tasks`),
+    queryFn: () => apiRequest(`/api/deals/${dealId}/tasks`, { method: 'GET' }),
   });
 
   // Fetch Users (for internal tasks)
@@ -99,7 +99,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
     queryKey: ['/api/users'],
     queryFn: () => {
       console.log("Fetching users...");
-      return apiRequest('/api/users').then(data => {
+      return apiRequest('/api/users', { method: 'GET' }).then(data => {
         console.log("Users data:", data);
         return data;
       }).catch(error => {
@@ -114,7 +114,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
     queryKey: ['/api/law-firms'],
     queryFn: () => {
       console.log("Fetching law firms...");
-      return apiRequest('/api/law-firms').then(data => {
+      return apiRequest('/api/law-firms', { method: 'GET' }).then(data => {
         console.log("Law firms data:", data);
         return data;
       }).catch(error => {
@@ -127,7 +127,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
   // Fetch Attorneys based on selected law firm
   const { data: attorneys, isLoading: attorneysLoading } = useQuery({
     queryKey: ['/api/law-firms', selectedLawFirm, 'attorneys'],
-    queryFn: () => selectedLawFirm ? apiRequest(`/api/law-firms/${selectedLawFirm}/attorneys`) : Promise.resolve([]),
+    queryFn: () => selectedLawFirm ? apiRequest(`/api/law-firms/${selectedLawFirm}/attorneys`, { method: 'GET' }) : Promise.resolve([]),
     enabled: !!selectedLawFirm,
   });
 
