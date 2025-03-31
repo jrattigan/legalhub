@@ -850,7 +850,11 @@ export function TasksTab({ dealId }: TasksTabProps) {
           </DialogHeader>
           
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              console.log("📋 FORM SUBMITTED VIA ONSUBMIT EVENT");
+              form.handleSubmit(onSubmit)(e);
+            }} className="space-y-4">
               <FormField
                 control={form.control}
                 name="taskType"
@@ -1191,10 +1195,10 @@ export function TasksTab({ dealId }: TasksTabProps) {
                   Cancel
                 </Button>
                 <Button 
-                  type="submit" 
-                  disabled={createTaskMutation.isPending}
+                  type="submit"
+                  onClick={() => console.log("📋 SUBMIT BUTTON CLICKED")}
                 >
-                  {createTaskMutation.isPending ? "Creating..." : "Create Task"}
+                  Create Task
                 </Button>
               </DialogFooter>
             </form>
@@ -1213,7 +1217,11 @@ export function TasksTab({ dealId }: TasksTabProps) {
           </DialogHeader>
           
           <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              console.log("📝 EDIT FORM SUBMITTED VIA ONSUBMIT EVENT");
+              editForm.handleSubmit(onEditSubmit)(e);
+            }} className="space-y-4">
               <FormField
                 control={editForm.control}
                 name="taskType"
@@ -1576,8 +1584,11 @@ export function TasksTab({ dealId }: TasksTabProps) {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={updateTaskMutation.isPending}>
-                  {updateTaskMutation.isPending ? "Updating..." : "Update Task"}
+                <Button 
+                  type="submit"
+                  onClick={() => console.log("📝 UPDATE BUTTON CLICKED")}
+                >
+                  Update Task
                 </Button>
               </DialogFooter>
             </form>
