@@ -344,7 +344,6 @@
   a {
     @apply transition-colors duration-200;
   }
-}
 
 @layer components {
   /* Text Gradients */
