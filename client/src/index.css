@@ -282,6 +282,34 @@
     --primary-foreground: 210 40% 98%;
     --primary-light: 222.2 47.4% 50%;
     --primary-dark: 222.2 47.4% 30%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border transition-colors duration-200;
+  }
+
+  body {
+    @apply text-foreground bg-muted antialiased;
+  }
+
+  .card-base {
+    @apply bg-card rounded-lg border shadow-soft hover:shadow-card transition-shadow duration-200;
+  }
+
+  .button-base {
+    @apply rounded-md font-medium transition-all duration-200 active:scale-95;
+  }
     
     --destructive: 0 70% 50%;
     --destructive-foreground: 210 40% 98%;
