@@ -816,16 +816,16 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     }
   };
 
-  // COMPLETELY REWRITTEN: Get tasks by type (internal or external) for current deal
-  // FIXED: Improved task filtering with strict type checking
-  const getTasksByType = (type: string) => {
+  // REWRITE VERSION 2: Get tasks by type (internal or external) for current deal
+  // FIXED: Added hard-coded type checking for both internal and external types
+  const getTasksByType = (requestedType: string) => {
     if (!tasks || tasks.length === 0) return [];
     
-    // Clear debug logging to identify issue
-    console.log(`------- FILTERED TASKS DEBUG (dealId=${dealId}, type=${type}) -------`);
+    // Debug log
+    console.log(`------- FILTERED TASKS DEBUG (dealId=${dealId}, type=${requestedType}) -------`);
     console.log(`Total tasks available: ${tasks.length}`);
     
-    // First get all tasks for this deal
+    // Step 1: Filter to just this deal's tasks 
     const dealTasks = tasks.filter(task => {
       // Handle string or number deal IDs
       const taskDealId = typeof task.dealId === 'string' ? parseInt(task.dealId, 10) : task.dealId;
@@ -834,39 +834,56 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     
     console.log(`Tasks for deal ${dealId}: ${dealTasks.length}`);
     
-    // Extra validation to ensure taskType field is correctly set 
+    if (dealTasks.length === 0) {
+      return [];
+    }
+    
+    // Step 2: Set up explicit task type classification - only two possible types
+    const externalTasks: Task[] = [];
+    const internalTasks: Task[] = [];
+    
+    // Step 3: Hard-coded classification based on the exact task type
     dealTasks.forEach(task => {
-      if (!task.taskType) {
-        console.warn(`Task ${task.id} is missing taskType field!`, task);
+      // Very strict checking to assign tasks to the right category
+      // We explicitly normalize the case to ensure case-insensitive comparison
+      const taskType = String(task.taskType || '').toLowerCase();
+      
+      // Debug each task's type
+      console.log(`Task ${task.id} (${task.name}) - type: "${taskType}"`);
+      
+      if (taskType === 'external') {
+        externalTasks.push(task);
+      } else if (taskType === 'internal') {
+        internalTasks.push(task);
+      } else {
+        console.warn(`Task ${task.id} has unrecognized type: "${taskType}"`);
+        // Default to internal if type is missing or unknown
+        internalTasks.push(task);
       }
     });
     
-    // Strict type checking for task filtering with better logging
-    const typedTasks = dealTasks.filter(task => {
-      // Normalize both values to strings for safer comparison
-      const normalizedTaskType = String(task.taskType || '').trim().toLowerCase();
-      const normalizedRequestedType = String(type || '').trim().toLowerCase();
-      
-      const isMatch = normalizedTaskType === normalizedRequestedType;
-      
-      // Only log detailed info for mismatches to reduce noise
-      if (!isMatch) {
-        console.log(`Task ${task.id} "${task.name}" has type "${normalizedTaskType}" but requested "${normalizedRequestedType}"`);
-      }
-      
-      return isMatch;
-    });
+    console.log(`CLASSIFIED: ${internalTasks.length} internal tasks, ${externalTasks.length} external tasks`);
     
-    console.log(`Tasks of type "${type}": ${typedTasks.length}`);
+    // Step 4: Return the requested type
+    let result: Task[] = [];
+    if (requestedType === 'internal') {
+      result = internalTasks;
+    } else if (requestedType === 'external') {
+      result = externalTasks;
+    } else {
+      console.warn(`Unknown task type requested: "${requestedType}"`);
+      result = [];
+    }
     
-    // Apply status filter if present
+    // Step 5: Apply status filter if present
     if (statusFilter) {
-      const statusFiltered = typedTasks.filter(task => task.status === statusFilter);
+      const statusFiltered = result.filter(task => task.status === statusFilter);
       console.log(`After status filter "${statusFilter}": ${statusFiltered.length} tasks`);
       return statusFiltered;
     }
     
-    return typedTasks;
+    console.log(`Returning ${result.length} tasks of type "${requestedType}"`);
+    return result;
   };
 
   // Helper to get assignee name for display
@@ -962,8 +979,9 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     }
   };
 
-  // Remove the global taskList variable and use getFilteredTaskList directly
+  // Simplified helper function to get filtered task list
   const getFilteredTaskList = (tabType: string) => {
+    // Use our completely rewritten getTasksByType function that's more robust
     return getTasksByType(tabType);
   };
   
