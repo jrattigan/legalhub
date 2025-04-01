@@ -1152,40 +1152,84 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   const completedTasks = activeTabTasks.filter(task => task.status === "completed").length || 0;
   const percentage = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
+  // Filter tasks by deal ID and type
+  const internalTasks = tasks.filter(task => {
+    const taskDealId = typeof task.dealId === 'string' ? parseInt(task.dealId, 10) : task.dealId;
+    return taskDealId === dealId && task.taskType === 'internal';
+  });
+    
+  const externalTasks = tasks.filter(task => {
+    const taskDealId = typeof task.dealId === 'string' ? parseInt(task.dealId, 10) : task.dealId;
+    return taskDealId === dealId && task.taskType === 'external';
+  });
+    
+  // Calculate progress statistics
+  const internalCompletedTasks = internalTasks.filter(task => task.status === "completed").length || 0;
+  const internalTotalTasks = internalTasks.length || 0;
+  const internalPercentage = internalTotalTasks ? Math.round((internalCompletedTasks / internalTotalTasks) * 100) : 0;
+  
+  const externalCompletedTasks = externalTasks.filter(task => task.status === "completed").length || 0;
+  const externalTotalTasks = externalTasks.length || 0;
+  const externalPercentage = externalTotalTasks ? Math.round((externalCompletedTasks / externalTotalTasks) * 100) : 0;
+
   return (
-    <div className="space-y-4">
-      <Tabs defaultValue="internal" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex justify-between items-center mb-4">
-          <TabsList>
-            <TabsTrigger value="internal" className="px-4">Internal Tasks</TabsTrigger>
-            <TabsTrigger value="external" className="px-4">External Tasks</TabsTrigger>
-          </TabsList>
-          
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => {
-                form.reset({
-                  name: "",
-                  description: "",
-                  dueDate: null,
-                  taskType: activeTab,
-                  status: "open",
-                  assigneeId: null,
-                  customAssigneeId: null,
-                  customAssigneeName: "",
-                  lawFirmId: null,
-                  attorneyId: null
-                });
-                setTaskType(activeTab);
-                setIsAddTaskOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4 mr-1" /> Add Task
-            </Button>
-          </div>
+    <div className="space-y-8">
+      {/* Header with Add Task button */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Tasks</h2>
+        
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Plus className="h-4 w-4 mr-1" /> Add Task
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => {
+                  form.reset({
+                    name: "",
+                    description: "",
+                    dueDate: null,
+                    taskType: "internal",
+                    status: "open",
+                    assigneeId: null,
+                    customAssigneeId: null,
+                    lawFirmId: null,
+                    attorneyId: null
+                  });
+                  setTaskType("internal");
+                  setIsAddTaskOpen(true);
+                }}
+              >
+                <Users2 className="h-4 w-4 mr-2" />
+                Add Internal Task
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  form.reset({
+                    name: "",
+                    description: "",
+                    dueDate: null,
+                    taskType: "external",
+                    status: "open",
+                    assigneeId: null,
+                    customAssigneeId: null,
+                    lawFirmId: null,
+                    attorneyId: null
+                  });
+                  setTaskType("external");
+                  setIsAddTaskOpen(true);
+                }}
+              >
+                <Building2 className="h-4 w-4 mr-2" />
+                Add External Task
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+      </div>
       
         <TabsContent value="internal" className="space-y-4">
           <div className="space-y-4">

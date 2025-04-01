@@ -57,7 +57,7 @@ import IssueCard from './issue-card';
 import CounselCard from './counsel-card';
 import TimelineCard from './timeline-card';
 import AllocationsTab from './allocations-tab';
-import TasksTab from './tasks-tab';
+import TasksCombined from './tasks-combined';
 import { ClosingChecklistTab } from './closing-checklist-tab';
 
 type DealDetailProps = {
@@ -2680,8 +2680,8 @@ export default function DealDetail({
         
         <TabsContent value="tasks" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'tasks' ? 'block' : 'none'}}>
           <div className="p-6">
-            {/* Single instance of TasksTab to avoid duplicates */}
-            <TasksTab dealId={deal.id} />
+            {/* Task management interface with internal and external sections */}
+            <TasksCombined dealId={deal.id} />
           </div>
         </TabsContent>
         
