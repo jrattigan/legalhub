@@ -100,35 +100,10 @@ export default {
             height: "0",
           },
         },
-        "shimmer": {
-          "0%": { transform: "translateX(-100%)" },
-          "100%": { transform: "translateX(100%)" }
-        },
-        "chart-rise": {
-          "0%": { opacity: "0.2", transform: "translateY(20%)" },
-          "100%": { opacity: "1", transform: "translateY(0)" }
-        },
-        "line-draw": {
-          "0%": { strokeDasharray: "20", strokeDashoffset: "20" },
-          "100%": { strokeDasharray: "20", strokeDashoffset: "0" }
-        },
-        "bounce-dollar": {
-          "0%, 100%": { transform: "translateY(-5%)" },
-          "50%": { transform: "translateY(0)" }
-        },
-        "scale-in-out": {
-          "0%, 100%": { transform: "scale(0.9)" },
-          "50%": { transform: "scale(1)" }
-        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "shimmer": "shimmer 2s infinite",
-        "chart-rise": "chart-rise 1.5s ease-in-out infinite alternate",
-        "line-draw": "line-draw 1.5s ease-in-out infinite",
-        "bounce-dollar": "bounce-dollar 1.5s ease-in-out infinite",
-        "scale-in-out": "scale-in-out 2s ease-in-out infinite"
       },
     },
   },
