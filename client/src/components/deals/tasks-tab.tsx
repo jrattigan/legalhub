@@ -451,10 +451,16 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   const saveInlineEdit = async (task: Task) => {
     if (!editingField) return;
     
+    console.log('DEBUGGING - saveInlineEdit called with:', {
+      taskData: task,
+      editingField: editingField
+    });
+    
     // Create a complete copy of the task with all existing fields
     // This ensures we don't lose any data when updating just one field
     const updatedTask: any = {
       // Start with a copy of all task's existing properties
+      id: task.id, // Ensure we always include the ID
       name: task.name,
       description: task.description || null,
       dueDate: task.dueDate,
@@ -599,6 +605,7 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     // This ensures we don't lose any data when updating just one field
     const updatedTask: any = {
       // Start with a copy of all task's existing properties
+      id: task.id, // Ensure we always include the ID
       name: task.name,
       description: task.description || null,
       dueDate: task.dueDate,
