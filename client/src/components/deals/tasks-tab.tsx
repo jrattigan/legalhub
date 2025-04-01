@@ -547,8 +547,11 @@ export default function TasksTab({ dealId }: TasksTabProps) {
           // If dueDate is a Date object, serialize it
           (updatedTask.dueDate instanceof Date ? 
             updatedTask.dueDate.toISOString() : 
-            // Otherwise if it's already a string, use it as is
-            updatedTask.dueDate) : 
+            // Check if it's a string but not an ISO string, try to parse and convert
+            (typeof updatedTask.dueDate === 'string' && !updatedTask.dueDate.includes('T') ?
+              new Date(updatedTask.dueDate).toISOString() :
+              // Otherwise if it's already a string in ISO format, use it as is
+              updatedTask.dueDate)) : 
           // If dueDate is null or undefined, send null
           null
       };
