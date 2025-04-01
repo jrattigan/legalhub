@@ -377,10 +377,25 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     
     console.log(`Setting task ${task.id} status to ${newStatus}`);
     
-    // Update the task using updateTaskMutation
+    // Create a complete copy of the task with all existing fields
+    // This ensures we don't lose any data when updating just the status
+    const updatedTask = {
+      name: task.name,
+      description: task.description || null,
+      dueDate: task.dueDate,
+      status: newStatus,
+      dealId: task.dealId,
+      taskType: task.taskType,
+      assigneeId: task.assigneeId,
+      lawFirmId: task.lawFirmId,
+      attorneyId: task.attorneyId,
+      customAssigneeId: task.customAssigneeId
+    };
+    
+    // Update the task using updateTaskMutation with the complete task object
     updateTaskMutation.mutate({
       id: task.id,
-      task: { status: newStatus }
+      task: updatedTask
     });
   };
 
@@ -436,9 +451,23 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   const saveInlineEdit = async (task: Task) => {
     if (!editingField) return;
     
-    const updatedTask: any = {};
+    // Create a complete copy of the task with all existing fields
+    // This ensures we don't lose any data when updating just one field
+    const updatedTask: any = {
+      // Start with a copy of all task's existing properties
+      name: task.name,
+      description: task.description || null,
+      dueDate: task.dueDate,
+      status: task.status,
+      dealId: task.dealId,
+      taskType: task.taskType,
+      assigneeId: task.assigneeId,
+      lawFirmId: task.lawFirmId,
+      attorneyId: task.attorneyId,
+      customAssigneeId: task.customAssigneeId
+    };
     
-    // Handle different field updates
+    // Now update only the specific field being edited
     switch (editingField.field) {
       case 'name':
         updatedTask.name = editingField.value;
@@ -448,7 +477,6 @@ export default function TasksTab({ dealId }: TasksTabProps) {
         break;
       case 'dueDate':
         // Format the date to ensure it's sent correctly
-        // If it's already a string, we'll keep it as is
         if (editingField.value instanceof Date) {
           updatedTask.dueDate = editingField.value.toISOString();
         } else {
@@ -459,16 +487,14 @@ export default function TasksTab({ dealId }: TasksTabProps) {
         updatedTask.status = editingField.value;
         break;
       case 'assignee':
-        // Special handling for assignee field to prevent UI update issues
-        // Reset all assignee fields first, then set the selected one
-        
-        // Reset all assignee fields first to avoid conflicts
+        // Special handling for assignee field 
+        // First reset all assignee fields, then set the selected one
         updatedTask.assigneeId = null;
         updatedTask.lawFirmId = null;
         updatedTask.attorneyId = null;
         updatedTask.customAssigneeId = null;
         
-        // Now set the correct field based on the selected assignee
+        // Now set only the correct field based on the selected assignee
         if (editingField.value) {
           if (editingField.value.userId) {
             updatedTask.assigneeId = Number(editingField.value.userId);
@@ -487,17 +513,27 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     }
     
     // Ensure we're sending numbers for IDs, not strings
-    if (updatedTask.assigneeId !== null) updatedTask.assigneeId = Number(updatedTask.assigneeId);
-    if (updatedTask.lawFirmId !== null) updatedTask.lawFirmId = Number(updatedTask.lawFirmId);
-    if (updatedTask.attorneyId !== null) updatedTask.attorneyId = Number(updatedTask.attorneyId);
-    if (updatedTask.customAssigneeId !== null) updatedTask.customAssigneeId = Number(updatedTask.customAssigneeId);
+    if (updatedTask.assigneeId !== null && updatedTask.assigneeId !== undefined) 
+      updatedTask.assigneeId = Number(updatedTask.assigneeId);
+    if (updatedTask.lawFirmId !== null && updatedTask.lawFirmId !== undefined) 
+      updatedTask.lawFirmId = Number(updatedTask.lawFirmId);
+    if (updatedTask.attorneyId !== null && updatedTask.attorneyId !== undefined) 
+      updatedTask.attorneyId = Number(updatedTask.attorneyId);
+    if (updatedTask.customAssigneeId !== null && updatedTask.customAssigneeId !== undefined) 
+      updatedTask.customAssigneeId = Number(updatedTask.customAssigneeId);
     
-    // Create a copy of editing field for potential error handling
+    // Debug log to verify what we're sending
+    console.log("Saving task update with complete data:", {
+      taskId: task.id,
+      fieldBeingEdited: editingField.field,
+      updatedTaskData: updatedTask
+    });
+    
+    // Save a copy of editing field for potential error handling
     const currentEditField = {...editingField};
     
     try {
       // First, clear the editing state to give immediate UI feedback 
-      // (but we'll set it back if the API call fails)
       setEditingField(null);
       
       // Make the API call
@@ -552,44 +588,67 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     }
   };
 
-  // Cycle through task statuses
-  const cycleTaskStatus = (task: Task) => {
+  // Cycle through task statuses - using async/await and preserving task state
+  const cycleTaskStatus = async (task: Task) => {
     const statusOrder = ['open', 'in-progress', 'completed'];
     const currentIndex = statusOrder.indexOf(task.status);
     const nextIndex = (currentIndex + 1) % statusOrder.length;
     const newStatus = statusOrder[nextIndex];
     
-    console.log(`Cycling task ${task.id} status from ${task.status} to ${newStatus}`);
+    // Create a complete copy of the task with all existing fields
+    // This ensures we don't lose any data when updating just one field
+    const updatedTask: any = {
+      // Start with a copy of all task's existing properties
+      name: task.name,
+      description: task.description || null,
+      dueDate: task.dueDate,
+      status: newStatus, // Only change the status
+      dealId: task.dealId,
+      taskType: task.taskType,
+      assigneeId: task.assigneeId,
+      lawFirmId: task.lawFirmId,
+      attorneyId: task.attorneyId,
+      customAssigneeId: task.customAssigneeId
+    };
     
-    // Update the task using direct fetch
-    fetch(`/api/tasks/${task.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus })
-    })
-    .then(res => {
-      console.log(`Response status from cycle status:`, res.status, res.ok);
-      if (!res.ok) {
-        throw new Error(`Server returned ${res.status}`);
+    // Debug log
+    console.log(`Cycling task ${task.id} status from ${task.status} to ${newStatus}`, updatedTask);
+    
+    try {
+      // Update the task using direct fetch with async/await
+      const response = await fetch(`/api/tasks/${task.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedTask)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
       }
-      return res.json();
-    })
-    .then(data => {
+      
+      const data = await response.json();
       console.log("Task status cycle successful:", data);
-      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      
+      // Force an immediate refetch of the tasks data
+      await queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      
       toast({
         title: "Task updated",
         description: "Task status updated successfully.",
       });
-    })
-    .catch(error => {
+      
+      return data;
+    } catch (error) {
       console.error("Error cycling task status:", error);
+      
       toast({
         title: "Failed to update task",
         description: "There was an error updating the task status. Please try again.",
         variant: "destructive"
       });
-    });
+      
+      return null;
+    }
   };
 
   // Get tasks by type (internal or external)
