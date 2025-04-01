@@ -456,22 +456,48 @@ export default function TasksTab({ dealId }: TasksTabProps) {
         updatedTask.status = editingField.value;
         break;
       case 'assignee':
-        // Always explicitly set all assignee fields to null first
+        // Always explicitly set all assignee fields to null first to avoid conflicts
         updatedTask.assigneeId = null;
         updatedTask.lawFirmId = null;
         updatedTask.attorneyId = null;
         updatedTask.customAssigneeId = null;
         
+        console.log("ASSIGNEE EDIT - Original editing field value:", editingField.value);
+        
         if (editingField.value) {
           // Set the appropriate field based on the type of assignee
           if (editingField.value.type === 'user') {
-            updatedTask.assigneeId = Number(editingField.value.id);
+            const numId = Number(editingField.value.id);
+            updatedTask.assigneeId = numId;
+            console.log(`ASSIGNEE EDIT - Setting assigneeId to ${numId}`, {
+              original: editingField.value.id,
+              converted: numId,
+              type: typeof numId
+            });
           } else if (editingField.value.type === 'lawFirm') {
-            updatedTask.lawFirmId = Number(editingField.value.id);
+            const numId = Number(editingField.value.id);
+            updatedTask.lawFirmId = numId;
+            console.log(`ASSIGNEE EDIT - Setting lawFirmId to ${numId}`, {
+              original: editingField.value.id,
+              converted: numId,
+              type: typeof numId
+            });
           } else if (editingField.value.type === 'attorney') {
-            updatedTask.attorneyId = Number(editingField.value.id);
+            const numId = Number(editingField.value.id);
+            updatedTask.attorneyId = numId;
+            console.log(`ASSIGNEE EDIT - Setting attorneyId to ${numId}`, {
+              original: editingField.value.id,
+              converted: numId,
+              type: typeof numId
+            });
           } else if (editingField.value.type === 'customAssignee') {
-            updatedTask.customAssigneeId = Number(editingField.value.id);
+            const numId = Number(editingField.value.id);
+            updatedTask.customAssigneeId = numId;
+            console.log(`ASSIGNEE EDIT - Setting customAssigneeId to ${numId}`, {
+              original: editingField.value.id,
+              converted: numId,
+              type: typeof numId
+            });
           }
         }
         break;
@@ -484,7 +510,13 @@ export default function TasksTab({ dealId }: TasksTabProps) {
       fieldsBeingSent: JSON.stringify(updatedTask)
     });
     
-    // Update the task
+    // Ensure we're sending numbers for IDs, not strings
+    if (updatedTask.assigneeId) updatedTask.assigneeId = Number(updatedTask.assigneeId);
+    if (updatedTask.lawFirmId) updatedTask.lawFirmId = Number(updatedTask.lawFirmId);
+    if (updatedTask.attorneyId) updatedTask.attorneyId = Number(updatedTask.attorneyId);
+    if (updatedTask.customAssigneeId) updatedTask.customAssigneeId = Number(updatedTask.customAssigneeId);
+    
+    // Make a direct fetch call instead of using the mutation
     fetch(`/api/tasks/${task.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -493,12 +525,13 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     .then(res => {
       console.log(`Response status from task update:`, res.status, res.ok);
       if (!res.ok) {
-        throw new Error(`Server returned ${res.status}`);
+        throw new Error(`Server returned ${res.status}: ${res.statusText}`);
       }
       return res.json();
     })
     .then(data => {
       console.log("Task update successful:", data);
+      // Force a refetch of the tasks data
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       toast({
         title: "Task updated",

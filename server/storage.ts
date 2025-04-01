@@ -2526,6 +2526,13 @@ export class MemStorage implements IStorage {
       }
       return value;
     }, 2));
+    console.log(`🔍 STORAGE.updateTask(${id}) - Data types:`, {
+      assigneeId: task.assigneeId !== undefined ? `${typeof task.assigneeId} - ${task.assigneeId}` : 'undefined',
+      lawFirmId: task.lawFirmId !== undefined ? `${typeof task.lawFirmId} - ${task.lawFirmId}` : 'undefined',
+      attorneyId: task.attorneyId !== undefined ? `${typeof task.attorneyId} - ${task.attorneyId}` : 'undefined',
+      customAssigneeId: task.customAssigneeId !== undefined ? `${typeof task.customAssigneeId} - ${task.customAssigneeId}` : 'undefined',
+      dueDate: task.dueDate !== undefined ? `${typeof task.dueDate} - ${task.dueDate instanceof Date ? task.dueDate.toISOString() : task.dueDate}` : 'undefined'
+    });
     
     const existingTask = this.tasks.get(id);
     if (!existingTask) {
@@ -2543,6 +2550,19 @@ export class MemStorage implements IStorage {
     // Check if the custom assignee is being changed
     const isCustomAssigneeChanged = task.customAssigneeId !== undefined && 
                                    task.customAssigneeId !== existingTask.customAssigneeId;
+    
+    console.log(`📊 STORAGE.updateTask(${id}) - BEFORE MAP SET:`, 
+                `Current task in map:`, JSON.stringify([...this.tasks.entries()]
+                  .filter(([taskId]) => taskId === id)
+                  .map(([, t]) => ({
+                    id: t.id,
+                    name: t.name,
+                    assigneeId: t.assigneeId,
+                    customAssigneeId: t.customAssigneeId,
+                    lawFirmId: t.lawFirmId,
+                    attorneyId: t.attorneyId,
+                    dueDate: t.dueDate instanceof Date ? t.dueDate.toISOString() : t.dueDate
+                  })), null, 2));
     
     // Create an updated task with careful handling of null values
     const updatedTask: Task = {
@@ -2609,7 +2629,22 @@ export class MemStorage implements IStorage {
       return value;
     }, 2));
 
+    // Important - store the task
     this.tasks.set(id, updatedTask);
+    
+    // Double check the task was actually updated in the map
+    console.log(`📊 STORAGE.updateTask(${id}) - AFTER MAP SET:`, 
+                `Current task in map:`, JSON.stringify([...this.tasks.entries()]
+                  .filter(([taskId]) => taskId === id)
+                  .map(([, t]) => ({
+                    id: t.id,
+                    name: t.name,
+                    assigneeId: t.assigneeId,
+                    customAssigneeId: t.customAssigneeId,
+                    lawFirmId: t.lawFirmId,
+                    attorneyId: t.attorneyId,
+                    dueDate: t.dueDate instanceof Date ? t.dueDate.toISOString() : t.dueDate
+                  })), null, 2));
     
     // If the custom assignee was changed, clean up any unused custom assignees
     if (isCustomAssigneeChanged) {
@@ -2617,6 +2652,8 @@ export class MemStorage implements IStorage {
     }
     
     console.log(`✅ STORAGE.updateTask(${id}) - Task updated successfully`);
+    
+    // Return the updated task
     return updatedTask;
   }
 
