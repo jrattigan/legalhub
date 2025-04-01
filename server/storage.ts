@@ -290,83 +290,279 @@ export class MemStorage implements IStorage {
     const createdUser3: User = { ...user3, id: id3 };
     this.users.set(id3, createdUser3);
 
-    // Create law firms
-    const firm1: InsertLawFirm = {
-      name: "Smith & Wilson LLP",
-      specialty: "Corporate Securities",
-      email: "info@smithwilson.com",
-      phone: "555-123-4567"
-    };
-    const firm2: InsertLawFirm = {
-      name: "Blackstone & Roberts",
-      specialty: "IP Specialist",
-      email: "contact@blackstoneroberts.com",
-      phone: "555-987-6543"
-    };
+    // Create law firms - real firms that specialize in emerging companies and venture capital
+    const lawFirms: InsertLawFirm[] = [
+      {
+        name: "Cooley LLP",
+        specialty: "Emerging Companies & Venture Capital",
+        email: "info@cooley.com",
+        phone: "650-843-5000"
+      },
+      {
+        name: "Wilson Sonsini Goodrich & Rosati",
+        specialty: "Corporate & Securities Law",
+        email: "info@wsgr.com",
+        phone: "650-493-9300"
+      },
+      {
+        name: "Gunderson Dettmer",
+        specialty: "Venture Capital & Emerging Companies",
+        email: "info@gunder.com",
+        phone: "650-321-2400"
+      },
+      {
+        name: "Fenwick & West LLP",
+        specialty: "Technology & Life Sciences",
+        email: "info@fenwick.com",
+        phone: "650-988-8500"
+      },
+      {
+        name: "Latham & Watkins LLP",
+        specialty: "Corporate & Capital Markets",
+        email: "info@lw.com",
+        phone: "212-906-1200"
+      },
+      {
+        name: "Orrick, Herrington & Sutcliffe",
+        specialty: "Technology Companies Group",
+        email: "info@orrick.com",
+        phone: "415-773-5700"
+      },
+      {
+        name: "Goodwin Procter LLP",
+        specialty: "Technology & Life Sciences",
+        email: "info@goodwinlaw.com",
+        phone: "617-570-1000"
+      },
+      {
+        name: "Perkins Coie LLP",
+        specialty: "Emerging Companies & Venture Capital",
+        email: "startups@perkinscoie.com",
+        phone: "206-359-8000"
+      },
+      {
+        name: "Morrison & Foerster LLP",
+        specialty: "Corporate Finance",
+        email: "info@mofo.com",
+        phone: "415-268-7000"
+      },
+      {
+        name: "DLA Piper",
+        specialty: "Emerging Growth & Venture Capital",
+        email: "info@dlapiper.com",
+        phone: "650-833-2000"
+      }
+    ];
 
     // Create firms directly for sample data
-    const firmId1 = this.currentLawFirmId++;
-    const createdFirm1: LawFirm = { 
-      ...firm1, 
-      id: firmId1, 
-      createdAt: new Date(),
-      email: firm1.email || null,
-      phone: firm1.phone || null 
-    };
-    this.lawFirms.set(firmId1, createdFirm1);
+    const createdFirms: {[key: string]: LawFirm} = {};
     
-    const firmId2 = this.currentLawFirmId++;
-    const createdFirm2: LawFirm = { 
-      ...firm2, 
-      id: firmId2, 
-      createdAt: new Date(),
-      email: firm2.email || null,
-      phone: firm2.phone || null 
-    };
-    this.lawFirms.set(firmId2, createdFirm2);
+    for (const firm of lawFirms) {
+      const firmId = this.currentLawFirmId++;
+      const createdFirm: LawFirm = { 
+        ...firm, 
+        id: firmId, 
+        createdAt: new Date(),
+        email: firm.email || null,
+        phone: firm.phone || null 
+      };
+      this.lawFirms.set(firmId, createdFirm);
+      createdFirms[firm.name] = createdFirm;
+    }
 
-    // Create attorneys
-    const attorney1: InsertAttorney = {
-      lawFirmId: createdFirm1.id,
-      name: "Sarah Wilson",
-      position: "Partner",
-      email: "swilson@smithwilson.com",
-      phone: "555-111-2222",
-      initials: "SW",
-      avatarColor: "#9333ea" // purple-600
-    };
-    const attorney2: InsertAttorney = {
-      lawFirmId: createdFirm2.id,
-      name: "Robert Black",
-      position: "Senior Associate",
-      email: "rblack@blackstoneroberts.com",
-      phone: "555-333-4444",
-      initials: "RB",
-      avatarColor: "#71717a" // gray-600
+    // Create attorneys - real attorneys from top law firms
+    const attorneys: {[key: string]: InsertAttorney[]} = {
+      "Cooley LLP": [
+        {
+          name: "Michael Platt",
+          position: "Partner",
+          email: "mplatt@cooley.com",
+          phone: "650-843-5059",
+          initials: "MP",
+          avatarColor: "#9333ea" // purple-600
+        },
+        {
+          name: "Rachel Proffitt",
+          position: "Partner",
+          email: "rproffitt@cooley.com",
+          phone: "415-693-2031",
+          initials: "RP",
+          avatarColor: "#22c55e" // green-600
+        },
+        {
+          name: "Jodie Bourdet",
+          position: "Partner",
+          email: "jbourdet@cooley.com",
+          phone: "415-693-2054",
+          initials: "JB",
+          avatarColor: "#2563eb" // blue-600
+        }
+      ],
+      "Wilson Sonsini Goodrich & Rosati": [
+        {
+          name: "David Segre",
+          position: "Partner",
+          email: "dsegre@wsgr.com",
+          phone: "650-565-3517",
+          initials: "DS",
+          avatarColor: "#71717a" // gray-600
+        },
+        {
+          name: "Mark Baudler",
+          position: "Partner",
+          email: "mbaudler@wsgr.com",
+          phone: "650-320-4508",
+          initials: "MB",
+          avatarColor: "#ea580c" // orange-600
+        }
+      ],
+      "Gunderson Dettmer": [
+        {
+          name: "Ivan Gaviria",
+          position: "Partner",
+          email: "igaviria@gunder.com",
+          phone: "650-463-5267",
+          initials: "IG",
+          avatarColor: "#0284c7" // sky-600
+        },
+        {
+          name: "Heidi Walas",
+          position: "Partner",
+          email: "hwalas@gunder.com",
+          phone: "650-463-5052",
+          initials: "HW",
+          avatarColor: "#db2777" // pink-600
+        }
+      ],
+      "Fenwick & West LLP": [
+        {
+          name: "Samuel Angus",
+          position: "Partner",
+          email: "sangus@fenwick.com",
+          phone: "415-875-2300",
+          initials: "SA",
+          avatarColor: "#7c3aed" // violet-600
+        },
+        {
+          name: "Cindy Hess",
+          position: "Partner",
+          email: "chess@fenwick.com",
+          phone: "650-335-7177",
+          initials: "CH",
+          avatarColor: "#c2410c" // amber-700
+        }
+      ],
+      "Latham & Watkins LLP": [
+        {
+          name: "Benjamin Potter",
+          position: "Partner",
+          email: "benjamin.potter@lw.com",
+          phone: "202-637-2237",
+          initials: "BP",
+          avatarColor: "#0f766e" // teal-700
+        }
+      ],
+      "Orrick, Herrington & Sutcliffe": [
+        {
+          name: "John Bautista",
+          position: "Partner",
+          email: "jbautista@orrick.com",
+          phone: "415-773-5469",
+          initials: "JB",
+          avatarColor: "#9f1239" // rose-800
+        },
+        {
+          name: "Harold Yu",
+          position: "Partner",
+          email: "hyu@orrick.com",
+          phone: "415-773-5987",
+          initials: "HY",
+          avatarColor: "#4338ca" // indigo-700
+        }
+      ],
+      "Goodwin Procter LLP": [
+        {
+          name: "Anthony McCusker",
+          position: "Partner",
+          email: "amccusker@goodwinlaw.com",
+          phone: "650-752-3267",
+          initials: "AM",
+          avatarColor: "#1e3a8a" // blue-900
+        }
+      ],
+      "Perkins Coie LLP": [
+        {
+          name: "Fiona Brophy",
+          position: "Partner",
+          email: "fbrophy@perkinscoie.com",
+          phone: "415-344-7050",
+          initials: "FB",
+          avatarColor: "#365314" // lime-900
+        }
+      ],
+      "Morrison & Foerster LLP": [
+        {
+          name: "Timothy Harris",
+          position: "Partner",
+          email: "tharris@mofo.com",
+          phone: "415-268-6180",
+          initials: "TH",
+          avatarColor: "#7f1d1d" // red-900
+        }
+      ],
+      "DLA Piper": [
+        {
+          name: "Curtis Mo",
+          position: "Partner",
+          email: "curtis.mo@dlapiper.com",
+          phone: "650-833-2000",
+          initials: "CM",
+          avatarColor: "#0f172a" // slate-900
+        },
+        {
+          name: "Louis Lehot",
+          position: "Partner",
+          email: "louis.lehot@dlapiper.com",
+          phone: "650-833-2300",
+          initials: "LL",
+          avatarColor: "#57534e" // stone-600
+        }
+      ]
     };
 
     // Create attorneys directly for sample data
-    const attorneyId1 = this.currentAttorneyId++;
-    const createdAttorney1: Attorney = { 
-      ...attorney1, 
-      id: attorneyId1, 
-      createdAt: new Date(),
-      phone: attorney1.phone || null,
-      mobile: attorney1.mobile || null,
-      photoUrl: "https://randomuser.me/api/portraits/women/44.jpg" // Sample photo URL
-    };
-    this.attorneys.set(attorneyId1, createdAttorney1);
+    const createdAttorneys: {[key: string]: Attorney} = {};
     
-    const attorneyId2 = this.currentAttorneyId++;
-    const createdAttorney2: Attorney = { 
-      ...attorney2, 
-      id: attorneyId2, 
-      createdAt: new Date(),
-      phone: attorney2.phone || null,
-      mobile: attorney2.mobile || null,
-      photoUrl: "https://randomuser.me/api/portraits/men/32.jpg" // Sample photo URL
-    };
-    this.attorneys.set(attorneyId2, createdAttorney2);
+    // For each law firm, create the associated attorneys
+    for (const firmName in attorneys) {
+      if (attorneys.hasOwnProperty(firmName) && createdFirms[firmName]) {
+        const firmAttorneys = attorneys[firmName];
+        const lawFirmId = createdFirms[firmName].id;
+        
+        for (const attorney of firmAttorneys) {
+          const attorneyId = this.currentAttorneyId++;
+          const createdAttorney: Attorney = { 
+            ...attorney, 
+            lawFirmId,
+            id: attorneyId, 
+            createdAt: new Date(),
+            phone: attorney.phone || null,
+            mobile: attorney.mobile || null,
+            photoUrl: attorney.name.toLowerCase().includes('rachel') || attorney.name.toLowerCase().includes('jodie') || 
+                     attorney.name.toLowerCase().includes('heidi') || attorney.name.toLowerCase().includes('cindy') || 
+                     attorney.name.toLowerCase().includes('fiona') ? 
+                     "https://randomuser.me/api/portraits/women/" + (attorneyId % 70) + ".jpg" : 
+                     "https://randomuser.me/api/portraits/men/" + (attorneyId % 70) + ".jpg"
+          };
+          this.attorneys.set(attorneyId, createdAttorney);
+          createdAttorneys[attorney.name] = createdAttorney;
+        }
+      }
+    }
+    
+    // Store references to first two attorneys for use in deal assignments
+    const createdAttorney1 = createdAttorneys["Michael Platt"];
+    const createdAttorney2 = createdAttorneys["Ivan Gaviria"];
 
     // Create sample companies
     const company1: InsertCompany = {
@@ -520,16 +716,31 @@ export class MemStorage implements IStorage {
     // Assign law firms to deals
     this.createDealCounsel({ 
       dealId: createdDeal1.id, 
-      lawFirmId: createdFirm1.id, 
-      attorneyId: createdAttorney1.id, 
+      lawFirmId: createdFirms["Cooley LLP"].id, 
+      attorneyId: createdAttorneys["Michael Platt"].id, 
       role: "Lead Counsel" 
     });
     
     this.createDealCounsel({ 
       dealId: createdDeal1.id, 
-      lawFirmId: createdFirm2.id, 
-      attorneyId: createdAttorney2.id, 
+      lawFirmId: createdFirms["Gunderson Dettmer"].id, 
+      attorneyId: createdAttorneys["Ivan Gaviria"].id, 
       role: "Supporting" 
+    });
+    
+    // Add more law firm assignments for the other deals
+    this.createDealCounsel({ 
+      dealId: createdDeal2.id, 
+      lawFirmId: createdFirms["Wilson Sonsini Goodrich & Rosati"].id, 
+      attorneyId: createdAttorneys["David Segre"].id, 
+      role: "Lead Counsel" 
+    });
+    
+    this.createDealCounsel({ 
+      dealId: createdDeal3.id, 
+      lawFirmId: createdFirms["Fenwick & West LLP"].id, 
+      attorneyId: createdAttorneys["Samuel Angus"].id, 
+      role: "Lead Counsel" 
     });
 
     // Create documents for Deal 1
@@ -627,7 +838,7 @@ export class MemStorage implements IStorage {
       fileSize: 1250000,
       fileType: "application/pdf",
       fileContent: "base64_encoded_content_placeholder",
-      uploadedById: createdAttorney1.id,
+      uploadedById: createdAttorneys["Michael Platt"].id,
       comment: "Reviewed by outside counsel"
     };
     const versionId2 = this.currentVersionId++;
@@ -646,7 +857,7 @@ export class MemStorage implements IStorage {
       fileSize: 1280000,
       fileType: "application/pdf",
       fileContent: "base64_encoded_content_placeholder",
-      uploadedById: createdAttorney1.id,
+      uploadedById: createdAttorneys["Michael Platt"].id,
       comment: "Redlined by outside counsel"
     };
     const versionId3 = this.currentVersionId++;
@@ -686,7 +897,7 @@ export class MemStorage implements IStorage {
       description: "Investors pushing for 20% discount to last round valuation",
       status: "open",  // Use the schema default from shared/schema.ts
       priority: "high",
-      assigneeId: createdAttorney1.id
+      assigneeId: createdAttorneys["Michael Platt"].id
     };
     
     const issue2: InsertIssue = {
@@ -836,7 +1047,7 @@ export class MemStorage implements IStorage {
     const event1: InsertTimelineEvent = {
       dealId: createdDeal1.id,
       title: "Term Sheet Updated",
-      description: "Sarah Wilson from Smith & Wilson LLP reviewed and updated the term sheet with new valuation terms.",
+      description: "Michael Platt from Cooley LLP reviewed and updated the term sheet with new valuation terms.",
       eventType: "document",
       referenceId: createdDoc3.id,
       referenceType: "document"
@@ -1005,8 +1216,8 @@ export class MemStorage implements IStorage {
     // Deal Counsel for TechStart deal
     const techCounsel1: InsertDealCounsel = {
       dealId: createdDeal2.id,
-      lawFirmId: createdFirm2.id,
-      attorneyId: createdAttorney2.id,
+      lawFirmId: createdFirms["Goodwin Procter LLP"].id,
+      attorneyId: createdAttorneys["Anthony McCusker"].id,
       role: "Lead Counsel",
       notes: "Handling all acquisition documentation"
     };
@@ -1175,8 +1386,8 @@ export class MemStorage implements IStorage {
     // Deal Counsel for HealthTech deal
     const healthCounsel1: InsertDealCounsel = {
       dealId: createdDeal3.id,
-      lawFirmId: createdFirm1.id,
-      attorneyId: createdAttorney1.id,
+      lawFirmId: createdFirms["Cooley LLP"].id,
+      attorneyId: createdAttorneys["Michael Platt"].id,
       role: "Lead Counsel",
       notes: "Handling all Series A documentation"
     };
