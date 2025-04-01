@@ -169,29 +169,40 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
     );
   }
 
-  // Effect to listen for messages from the iframe
+  // Save scroll position before navigating to a new firm
+  const saveScrollPositionAndNavigate = (firmId: number) => {
+    if (scrollAreaRef.current) {
+      setScrollPosition(scrollAreaRef.current.scrollTop);
+    }
+    navigate(`/counsel/${firmId}`);
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
+  
+  // Restore scroll position when component mounts or updates
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      // Make sure the message is from our iframe
-      if (event.data && event.data.type === 'NAVIGATE_TO_LAW_FIRM') {
-        navigate(`/counsel/${event.data.firmId}`);
-        if (isMobile) {
-          setSidebarOpen(false);
-        }
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-  }, [navigate, isMobile]);
-
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollPosition;
+    }
+  }, [scrollPosition, lawFirms]);
+  
   // Sidebar content component to reuse in both desktop and mobile
   const SidebarContent = () => (
     <>
       <div className="p-4 border-b border-neutral-200">
         <h2 className="text-lg font-semibold mb-4">Law Firms</h2>
+        
+        {/* Search input */}
+        <div className="relative mb-4">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
+          <Input
+            placeholder="Search law firms..."
+            className="pl-9 bg-neutral-50"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
         
         {/* Add law firm button */}
         <Dialog>
@@ -284,13 +295,41 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
         </Dialog>
       </div>
       
-      {/* Law firms list iframe - this will maintain its own scroll state */}
-      <div className="flex-1">
-        <iframe 
-          src="/law-firms-list" 
-          className="w-full h-full border-0"
-          title="Law Firms List"
-        />
+      {/* Scrollable law firms list */}
+      <div className="flex-1 overflow-hidden" ref={scrollAreaRef}>
+        <ScrollArea className="h-full law-firms-scrollarea">
+          <div className="space-y-0.5 p-2">
+            {filteredLawFirms?.map((firm) => (
+              <div
+                key={firm.id}
+                className={`flex items-center p-3 rounded-md cursor-pointer transition-colors ${
+                  lawFirmId === firm.id
+                    ? 'bg-primary/10 text-primary font-medium'
+                    : 'text-neutral-600 hover:bg-neutral-100'
+                }`}
+                onClick={() => saveScrollPositionAndNavigate(firm.id)}
+              >
+                <Users className={`h-4 w-4 mr-3 ${lawFirmId === firm.id ? 'text-primary' : 'text-neutral-400'}`} />
+                <div className="truncate">
+                  <div className="font-medium">{firm.name}</div>
+                  <div className="text-xs text-neutral-500 truncate">{firm.specialty}</div>
+                </div>
+              </div>
+            ))}
+            
+            {filteredLawFirms?.length === 0 && (
+              <div className="text-center p-6 text-neutral-500">
+                No law firms found matching your search.
+              </div>
+            )}
+
+            {lawFirms?.length === 0 && (
+              <div className="text-center p-6 text-neutral-500">
+                No law firms found. Add your first law firm.
+              </div>
+            )}
+          </div>
+        </ScrollArea>
       </div>
     </>
   );

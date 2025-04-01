@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -188,29 +188,37 @@ export default function CompaniesLayout({ children }: CompaniesLayoutProps) {
     );
   }
 
-  // Effect to listen for messages from the iframe
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      // Make sure the message is from our iframe
-      if (event.data && event.data.type === 'NAVIGATE_TO_COMPANY') {
-        navigate(`/companies/${event.data.companyId}`);
-        if (isMobile) {
-          setSidebarOpen(false);
-        }
+  // Save scroll position before navigating to a new company
+  const navigateAndSaveScroll = (companyId: number) => {
+    // Save the scroll position before navigation
+    if (scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        localStorage.setItem('companiesScrollPosition', scrollContainer.scrollTop.toString());
       }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-  }, [navigate, isMobile]);
+    }
+    navigate(`/companies/${companyId}`);
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
 
   // Sidebar content component to reuse in both desktop and mobile
   const SidebarContent = () => (
     <>
       <div className="p-4 border-b border-neutral-200">
         <h2 className="text-lg font-semibold mb-4">Companies</h2>
+        
+        {/* Search input */}
+        <div className="relative mb-4">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
+          <Input
+            placeholder="Search companies..."
+            className="pl-9 bg-neutral-50"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
         
         {/* Add company button */}
         <Dialog>
@@ -293,13 +301,41 @@ export default function CompaniesLayout({ children }: CompaniesLayoutProps) {
         </Dialog>
       </div>
       
-      {/* Companies list iframe - this will maintain its own scroll state */}
-      <div className="flex-1">
-        <iframe 
-          src="/companies-list" 
-          className="w-full h-full border-0"
-          title="Companies List"
-        />
+      {/* Scrollable companies list */}
+      <div className="flex-1 overflow-hidden" ref={scrollAreaRef}>
+        <ScrollArea className="h-full companies-scrollarea">
+          <div className="space-y-0.5 p-2">
+            {filteredCompanies?.map((company) => (
+              <div
+                key={company.id}
+                className={`flex items-center p-3 rounded-md cursor-pointer transition-colors ${
+                  companyId === company.id
+                    ? 'bg-primary/10 text-primary font-medium'
+                    : 'text-neutral-600 hover:bg-neutral-100'
+                }`}
+                onClick={() => navigateAndSaveScroll(company.id)}
+              >
+                <Building2 className={`h-4 w-4 mr-3 ${companyId === company.id ? 'text-primary' : 'text-neutral-400'}`} />
+                <div className="truncate">
+                  <div className="font-medium">{company.displayName}</div>
+                  <div className="text-xs text-neutral-500 truncate">{company.legalName}</div>
+                </div>
+              </div>
+            ))}
+            
+            {filteredCompanies?.length === 0 && (
+              <div className="text-center p-6 text-neutral-500">
+                No companies found matching your search.
+              </div>
+            )}
+            
+            {companies?.length === 0 && (
+              <div className="text-center p-6 text-neutral-500">
+                No companies found. Add your first company.
+              </div>
+            )}
+          </div>
+        </ScrollArea>
       </div>
     </>
   );
