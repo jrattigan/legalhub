@@ -423,7 +423,8 @@ export class MemStorage implements IStorage {
           email: "mplatt@cooley.com",
           phone: "650-843-5059",
           initials: "MP",
-          avatarColor: "#9333ea" // purple-600
+          avatarColor: "#9333ea", // purple-600
+          photoUrl: "https://www.cooley.com/-/media/cooley/attorneys/platt-michael.jpg"
         },
         {
           name: "Rachel Proffitt",
@@ -431,7 +432,8 @@ export class MemStorage implements IStorage {
           email: "rproffitt@cooley.com",
           phone: "415-693-2031",
           initials: "RP",
-          avatarColor: "#22c55e" // green-600
+          avatarColor: "#22c55e", // green-600
+          photoUrl: "https://www.cooley.com/-/media/cooley/attorneys/proffitt-rachel.jpg"
         },
         {
           name: "Jodie Bourdet",
@@ -439,7 +441,8 @@ export class MemStorage implements IStorage {
           email: "jbourdet@cooley.com",
           phone: "415-693-2054",
           initials: "JB",
-          avatarColor: "#2563eb" // blue-600
+          avatarColor: "#2563eb", // blue-600
+          photoUrl: "https://www.cooley.com/-/media/cooley/attorneys/bourdet-jodie.jpg"
         }
       ],
       "Wilson Sonsini Goodrich & Rosati": [
@@ -449,7 +452,8 @@ export class MemStorage implements IStorage {
           email: "dsegre@wsgr.com",
           phone: "650-565-3517",
           initials: "DS",
-          avatarColor: "#71717a" // gray-600
+          avatarColor: "#71717a", // gray-600
+          photoUrl: "https://cdn.wilsonsonsini.com/content/uploads/2020/06/headshot-david-segre.jpg"
         },
         {
           name: "Mark Baudler",
@@ -457,7 +461,8 @@ export class MemStorage implements IStorage {
           email: "mbaudler@wsgr.com",
           phone: "650-320-4508",
           initials: "MB",
-          avatarColor: "#ea580c" // orange-600
+          avatarColor: "#ea580c", // orange-600
+          photoUrl: "https://cdn.wilsonsonsini.com/content/uploads/2020/06/headshot-mark-baudler.jpg"
         }
       ],
       "Gunderson Dettmer": [
@@ -467,7 +472,8 @@ export class MemStorage implements IStorage {
           email: "igaviria@gunder.com",
           phone: "650-463-5267",
           initials: "IG",
-          avatarColor: "#0284c7" // sky-600
+          avatarColor: "#0284c7", // sky-600
+          photoUrl: "https://www.gunder.com/wp-content/uploads/2023/10/Ivan-Gaviria-Photo-Oct-2023-square-400x400.jpg"
         },
         {
           name: "Heidi Walas",
@@ -475,7 +481,8 @@ export class MemStorage implements IStorage {
           email: "hwalas@gunder.com",
           phone: "650-463-5052",
           initials: "HW",
-          avatarColor: "#db2777" // pink-600
+          avatarColor: "#db2777", // pink-600
+          photoUrl: "https://www.gunder.com/wp-content/uploads/2022/11/Heidi-Walas-Photo-Nov-2022-square-400x400.jpg"
         }
       ],
       "Fenwick & West LLP": [
@@ -485,7 +492,8 @@ export class MemStorage implements IStorage {
           email: "sangus@fenwick.com",
           phone: "415-875-2300",
           initials: "SA",
-          avatarColor: "#7c3aed" // violet-600
+          avatarColor: "#7c3aed", // violet-600
+          photoUrl: "https://www.fenwick.com/sites/default/files/styles/individual_page_photo/public/2023-06/samangus.jpg"
         },
         {
           name: "Cindy Hess",
@@ -493,7 +501,8 @@ export class MemStorage implements IStorage {
           email: "chess@fenwick.com",
           phone: "650-335-7177",
           initials: "CH",
-          avatarColor: "#c2410c" // amber-700
+          avatarColor: "#c2410c", // amber-700
+          photoUrl: "https://www.fenwick.com/sites/default/files/styles/individual_page_photo/public/2021-11/CindyHess.jpg"
         }
       ],
       "Latham & Watkins LLP": [
@@ -503,7 +512,8 @@ export class MemStorage implements IStorage {
           email: "benjamin.potter@lw.com",
           phone: "202-637-2237",
           initials: "BP",
-          avatarColor: "#0f766e" // teal-700
+          avatarColor: "#0f766e", // teal-700
+          photoUrl: "https://www.lw.com/cdn/MDAwMDAwMDAwMDAwLzAvYy8v/ce5cIm/a-benjamin-potter.jpg"
         }
       ],
       "Orrick, Herrington & Sutcliffe": [
@@ -513,7 +523,8 @@ export class MemStorage implements IStorage {
           email: "jbautista@orrick.com",
           phone: "415-773-5469",
           initials: "JB",
-          avatarColor: "#9f1239" // rose-800
+          avatarColor: "#9f1239", // rose-800
+          photoUrl: "https://www.orrick.com/-/media/images/people/b/john-bautista.jpg"
         },
         {
           name: "Harold Yu",
@@ -521,7 +532,8 @@ export class MemStorage implements IStorage {
           email: "hyu@orrick.com",
           phone: "415-773-5987",
           initials: "HY",
-          avatarColor: "#4338ca" // indigo-700
+          avatarColor: "#4338ca", // indigo-700
+          photoUrl: "https://www.orrick.com/-/media/images/people/y/harold-yu.jpg"
         }
       ],
       "Goodwin Procter LLP": [
@@ -531,7 +543,8 @@ export class MemStorage implements IStorage {
           email: "amccusker@goodwinlaw.com",
           phone: "650-752-3267",
           initials: "AM",
-          avatarColor: "#1e3a8a" // blue-900
+          avatarColor: "#1e3a8a", // blue-900
+          photoUrl: "https://www.goodwinlaw.com/-/media/images/people/m/mccusker-anthony.jpg"
         }
       ],
       "Perkins Coie LLP": [
@@ -541,7 +554,8 @@ export class MemStorage implements IStorage {
           email: "fbrophy@perkinscoie.com",
           phone: "415-344-7050",
           initials: "FB",
-          avatarColor: "#365314" // lime-900
+          avatarColor: "#365314", // lime-900
+          photoUrl: "https://www.perkinscoie.com/images/content/7/2/v2/72178/Brophy-Fiona-hs-2023.jpg"
         }
       ],
       "Morrison & Foerster LLP": [
@@ -551,7 +565,8 @@ export class MemStorage implements IStorage {
           email: "tharris@mofo.com",
           phone: "415-268-6180",
           initials: "TH",
-          avatarColor: "#7f1d1d" // red-900
+          avatarColor: "#7f1d1d", // red-900
+          photoUrl: "https://media.mofo.com/images/content/7/4/74909.jpg"
         }
       ],
       "DLA Piper": [
@@ -561,7 +576,8 @@ export class MemStorage implements IStorage {
           email: "curtis.mo@dlapiper.com",
           phone: "650-833-2000",
           initials: "CM",
-          avatarColor: "#0f172a" // slate-900
+          avatarColor: "#0f172a", // slate-900
+          photoUrl: "https://www.dlapiper.com/sites/default/files/vcard/2022-10/curtis-mo-650-833-2141.jpg"
         },
         {
           name: "Louis Lehot",
@@ -569,7 +585,8 @@ export class MemStorage implements IStorage {
           email: "louis.lehot@dlapiper.com",
           phone: "650-833-2300",
           initials: "LL",
-          avatarColor: "#57534e" // stone-600
+          avatarColor: "#57534e", // stone-600
+          photoUrl: "https://www.dlapiper.com/sites/default/files/vcard/2022-10/louis-lehot-650-833-2341.jpg"
         }
       ]
     };
@@ -592,7 +609,7 @@ export class MemStorage implements IStorage {
             createdAt: new Date(),
             phone: attorney.phone || null,
             mobile: attorney.mobile || null,
-            photoUrl: this.getAttorneyHeadshot(attorney.name)
+            photoUrl: attorney.photoUrl || this.getAttorneyHeadshot(attorney.name)
           };
           this.attorneys.set(attorneyId, createdAttorney);
           createdAttorneys[attorney.name] = createdAttorney;
