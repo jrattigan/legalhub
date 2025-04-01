@@ -535,25 +535,54 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     updateTask(updatedTask);
   };
   
-  // Direct update task function
+  // Updated direct update task function with improved date handling
   const updateTask = async (updatedTask: Task) => {
     try {
       // Create a clean copy of the task data for API submission
       // This ensures correct serialization of Date objects
+      let formattedDueDate = null;
+      
+      // Comprehensive date handling with detailed logging
+      if (updatedTask.dueDate) {
+        console.log("PROCESSING DUE DATE:", updatedTask.dueDate, "TYPE:", typeof updatedTask.dueDate);
+        
+        if (updatedTask.dueDate instanceof Date) {
+          formattedDueDate = updatedTask.dueDate.toISOString();
+          console.log("CONVERTED FROM DATE OBJECT:", formattedDueDate);
+        } 
+        else if (typeof updatedTask.dueDate === 'string') {
+          // Try to determine if it's already an ISO string or needs conversion
+          if (updatedTask.dueDate.includes('T')) {
+            // Already looks like an ISO string, use as is
+            formattedDueDate = updatedTask.dueDate;
+            console.log("USING EXISTING ISO STRING:", formattedDueDate);
+          } else {
+            // Not ISO format, try to parse
+            try {
+              const parsedDate = new Date(updatedTask.dueDate);
+              if (!isNaN(parsedDate.getTime())) {
+                formattedDueDate = parsedDate.toISOString();
+                console.log("PARSED FROM STRING:", formattedDueDate);
+              } else {
+                console.log("INVALID DATE STRING, USING AS IS");
+                formattedDueDate = updatedTask.dueDate;
+              }
+            } catch (e) {
+              console.log("ERROR PARSING DATE:", e);
+              formattedDueDate = updatedTask.dueDate;
+            }
+          }
+        } else {
+          console.log("UNKNOWN DATE TYPE, USING AS IS");
+          formattedDueDate = updatedTask.dueDate;
+        }
+      } else {
+        console.log("NULL OR UNDEFINED DATE");
+      }
+      
       const dataToSubmit = {
         ...updatedTask,
-        // Ensure proper date serialization - Convert Date objects to ISO strings
-        dueDate: updatedTask.dueDate ? 
-          // If dueDate is a Date object, serialize it
-          (updatedTask.dueDate instanceof Date ? 
-            updatedTask.dueDate.toISOString() : 
-            // Check if it's a string but not an ISO string, try to parse and convert
-            (typeof updatedTask.dueDate === 'string' && !updatedTask.dueDate.includes('T') ?
-              new Date(updatedTask.dueDate).toISOString() :
-              // Otherwise if it's already a string in ISO format, use it as is
-              updatedTask.dueDate)) : 
-          // If dueDate is null or undefined, send null
-          null
+        dueDate: formattedDueDate
       };
       
       console.log('SUBMITTING TASK UPDATE:', dataToSubmit);
@@ -597,6 +626,22 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     }
   };
 
+  // Direct save function specifically for due dates
+  const saveDueDate = async (task: Task, newDate: Date | null) => {
+    console.log("DIRECT SAVE DUE DATE:", newDate);
+    
+    // Create a task copy with the correctly formatted date
+    const taskWithDate = {
+      ...task,
+      dueDate: newDate ? newDate.toISOString() : null
+    };
+    
+    console.log("SAVE DUE DATE - Date formatted as:", taskWithDate.dueDate);
+    
+    // Bypass saveInlineEdit and go directly to API
+    return updateTask(taskWithDate);
+  };
+  
   // Save the edited value - using async/await for better control flow
   const saveInlineEdit = async (task: Task) => {
     if (!editingField) return;
@@ -605,6 +650,12 @@ export default function TasksTab({ dealId }: TasksTabProps) {
       taskData: task,
       editingField: editingField
     });
+    
+    // Special case for date fields - use direct date saving
+    if (editingField.field === 'dueDate' && editingField.value instanceof Date) {
+      console.log("SPECIAL CASE: Direct date saving triggered");
+      return saveDueDate(task, editingField.value);
+    }
     
     // Create a complete copy of the task with all existing fields
     // This ensures we don't lose any data when updating just one field
@@ -632,41 +683,46 @@ export default function TasksTab({ dealId }: TasksTabProps) {
         updatedTask.description = editingField.value;
         break;
       case 'dueDate':
-        // FIXED: Enhanced date handling to ensure format compatibility
-        console.log("Due date value type:", typeof editingField.value, editingField.value);
+        // IMPROVED: Always use direct date saving for dates 
+        console.log("Due date detected - using direct saving path for better compatibility");
         
+        // This is a critical change for reliability - don't manipulate the date here.
+        // Instead, transfer control to our specialized date saving function.
+        
+        // First clear editing field to give visual feedback
+        setEditingField(null);
+        
+        // Then initiate the direct date saving function with the original date value
+        // This ensures we're using the fresh Date object directly from the calendar
+        // rather than any potentially corrupted value in the updated task
+        saveDueDate(task, editingField.value);
+        
+        // Return early since we're handling this through a separate function
+        return;
+        
+        // NOTE: The code below won't execute because of the return above
+        // We're keeping it as a reference of what used to happen
+        /*
         if (editingField.value === null) {
-          // Handle null case (no date)
           updatedTask.dueDate = null;
         } else if (editingField.value instanceof Date) {
-          // Handle Date object
           updatedTask.dueDate = editingField.value.toISOString();
-          console.log(`Converted Date to ISO: ${updatedTask.dueDate}`);
         } else if (typeof editingField.value === 'string') {
-          // Handle date string
           try {
-            // Try to parse string to date and then to ISO
             const dateObj = new Date(editingField.value);
             if (!isNaN(dateObj.getTime())) {
               updatedTask.dueDate = dateObj.toISOString();
-              console.log(`Parsed string date to ISO: ${updatedTask.dueDate}`);
             } else {
-              // If we can't parse it as a date, use as is
               updatedTask.dueDate = editingField.value;
-              console.log(`Using unparseable date string as is: ${updatedTask.dueDate}`);
             }
           } catch (e) {
-            // If any error, use as is
             updatedTask.dueDate = editingField.value;
-            console.log(`Error parsing date, using as is: ${updatedTask.dueDate}`);
           }
         } else {
-          // Handle any other case
           updatedTask.dueDate = editingField.value;
-          console.log(`Using date value as is: ${updatedTask.dueDate}`);
         }
+        */
         
-        console.log("Final dueDate value:", updatedTask.dueDate);
         break;
       case 'status':
         updatedTask.status = editingField.value;
