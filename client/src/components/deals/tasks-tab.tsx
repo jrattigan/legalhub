@@ -447,11 +447,11 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     setEditingField(null);
   };
   
-  // Handle assignee selection
+  // Handle assignee selection - completely rebuilt to fix issues with external tasks
   const handleAssigneeSelection = (task: Task, assignee: any) => {
-    console.log("handleAssigneeSelection called with:", { taskId: task.id, assignee });
+    console.log("handleAssigneeSelection called with:", { taskId: task.id, taskType: task.taskType, assignee });
     
-    // Create a new task object with updated assignee fields
+    // Create a new task object with all assignee fields cleared
     const updatedTask = {
       ...task,
       assigneeId: null,
@@ -460,22 +460,34 @@ export default function TasksTab({ dealId }: TasksTabProps) {
       customAssigneeId: null
     };
     
+    console.log("Initial updatedTask with cleared assignee fields:", updatedTask);
+    
     // Set the specific assignee field based on what was selected
-    if (assignee.userId) {
-      updatedTask.assigneeId = Number(assignee.userId);
-    } else if (assignee.lawFirmId) {
-      updatedTask.lawFirmId = Number(assignee.lawFirmId);
-    } else if (assignee.attorneyId) {
-      updatedTask.attorneyId = Number(assignee.attorneyId);
-    } else if (assignee.customAssigneeId) {
-      updatedTask.customAssigneeId = Number(assignee.customAssigneeId);
+    if (assignee.userId !== undefined) {
+      updatedTask.assigneeId = assignee.userId ? Number(assignee.userId) : null;
+      console.log("Setting assigneeId to:", updatedTask.assigneeId);
+    } 
+    
+    if (assignee.lawFirmId !== undefined) {
+      updatedTask.lawFirmId = assignee.lawFirmId ? Number(assignee.lawFirmId) : null;
+      console.log("Setting lawFirmId to:", updatedTask.lawFirmId);
+    } 
+    
+    if (assignee.attorneyId !== undefined) {
+      updatedTask.attorneyId = assignee.attorneyId ? Number(assignee.attorneyId) : null;
+      console.log("Setting attorneyId to:", updatedTask.attorneyId);
+    } 
+    
+    if (assignee.customAssigneeId !== undefined) {
+      updatedTask.customAssigneeId = assignee.customAssigneeId ? Number(assignee.customAssigneeId) : null;
+      console.log("Setting customAssigneeId to:", updatedTask.customAssigneeId);
     }
     
     // Update the editing field value for consistency
     setEditingField(prev => prev ? {...prev, value: assignee} : null);
     
     // Save the updated task
-    console.log("Saving updated task with new assignee:", updatedTask);
+    console.log("Final task object to save:", updatedTask);
     
     // Make the API call directly instead of using saveInlineEdit to ensure updates are applied
     updateTask(updatedTask);
@@ -737,15 +749,21 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   const getTasksByType = (type: string) => {
     if (!tasks || tasks.length === 0) return [];
     
+    console.log(`Getting tasks for dealId=${dealId} and type=${type}`);
+    console.log("All tasks:", tasks);
+    
     // First filter by dealId to ensure we only show tasks for the current deal
     let filtered = tasks.filter((task: Task) => task.dealId === dealId);
+    console.log(`After dealId filter (${filtered.length} tasks):`, filtered);
     
     // Then filter by task type (internal or external)
     filtered = filtered.filter((task: Task) => task.taskType === type);
+    console.log(`After taskType filter (${filtered.length} tasks):`, filtered);
     
     // Apply status filter if present
     if (statusFilter) {
       filtered = filtered.filter((task: Task) => task.status === statusFilter);
+      console.log(`After status filter (${filtered.length} tasks):`, filtered);
     }
     
     return filtered;
