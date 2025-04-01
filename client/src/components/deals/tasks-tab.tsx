@@ -133,6 +133,8 @@ export function TasksTab({ dealId }: TasksTabProps) {
     "Completed": true
   });
   const [quickAddText, setQuickAddText] = useState("");
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
+  const [editingTaskText, setEditingTaskText] = useState("");
   const editInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch Tasks
