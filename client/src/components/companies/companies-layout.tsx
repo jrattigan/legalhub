@@ -73,19 +73,29 @@ export default function CompaniesLayout({ children }: CompaniesLayoutProps) {
     return () => {
       if (scrollAreaRef.current) {
         const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-        if (scrollContainer) {
-          setScrollPosition(scrollContainer.scrollTop);
+        if (scrollContainer && scrollContainer.scrollTop > 0) {
+          localStorage.setItem('companiesScrollPosition', scrollContainer.scrollTop.toString());
         }
       }
     };
+  }, []);
+
+  // Initialize scroll position from localStorage
+  useEffect(() => {
+    const savedPosition = localStorage.getItem('companiesScrollPosition');
+    if (savedPosition) {
+      setScrollPosition(parseInt(savedPosition, 10));
+    }
   }, []);
   
   // Save scroll position when navigating to a company detail
   const saveScrollPositionAndNavigate = (companyId: number) => {
     if (scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer) {
-        setScrollPosition(scrollContainer.scrollTop);
+      if (scrollContainer && scrollContainer.scrollTop > 0) {
+        const position = scrollContainer.scrollTop;
+        localStorage.setItem('companiesScrollPosition', position.toString());
+        setScrollPosition(position);
       }
     }
     navigate(`/companies/${companyId}`);
@@ -99,9 +109,8 @@ export default function CompaniesLayout({ children }: CompaniesLayoutProps) {
     if (scrollPosition > 0 && !companiesLoading && scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollContainer) {
-        setTimeout(() => {
-          scrollContainer.scrollTop = scrollPosition;
-        }, 200);
+        // Apply the position immediately
+        scrollContainer.scrollTop = scrollPosition;
       }
     }
   }, [companiesLoading, scrollPosition]);

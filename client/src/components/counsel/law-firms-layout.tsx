@@ -56,22 +56,32 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
     return () => {
       if (scrollAreaRef.current) {
         const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-        if (scrollContainer) {
-          setScrollPosition(scrollContainer.scrollTop);
+        if (scrollContainer && scrollContainer.scrollTop > 0) {
+          localStorage.setItem('lawFirmsScrollPosition', scrollContainer.scrollTop.toString());
         }
       }
     };
+  }, []);
+
+  // Initialize scroll position from localStorage
+  useEffect(() => {
+    const savedPosition = localStorage.getItem('lawFirmsScrollPosition');
+    if (savedPosition) {
+      setScrollPosition(parseInt(savedPosition, 10));
+    }
   }, []);
   
   // Save scroll position when navigating to a law firm detail
   const saveScrollPositionAndNavigate = (firmId: number) => {
     if (scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer) {
-        setScrollPosition(scrollContainer.scrollTop);
+      if (scrollContainer && scrollContainer.scrollTop > 0) {
+        const position = scrollContainer.scrollTop;
+        localStorage.setItem('lawFirmsScrollPosition', position.toString());
+        setScrollPosition(position);
       }
     }
-    navigate(`/law-firms/${firmId}`);
+    navigate(`/counsel/${firmId}`);
     if (isMobile) {
       setSidebarOpen(false);
     }
@@ -82,9 +92,8 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
     if (scrollPosition > 0 && !lawFirmsLoading && scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollContainer) {
-        setTimeout(() => {
-          scrollContainer.scrollTop = scrollPosition;
-        }, 200);
+        // Apply the position immediately
+        scrollContainer.scrollTop = scrollPosition;
       }
     }
   }, [lawFirmsLoading, scrollPosition]);
