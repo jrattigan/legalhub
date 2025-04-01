@@ -877,16 +877,8 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
       <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex justify-between items-center">
+            <DialogTitle>
               {selectedAttorney?.name}
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-7 w-7 rounded-full" 
-                onClick={() => setIsImageDialogOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </DialogTitle>
             <DialogDescription>
               {selectedAttorney?.position} at {lawFirm?.name}
