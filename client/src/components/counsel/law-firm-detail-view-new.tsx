@@ -629,7 +629,10 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                   <div key={attorney.id} className="flex items-start p-3 rounded-md border border-neutral-200">
                     <Avatar className="h-10 w-10 mr-4">
                       {attorney.photoUrl ? (
-                        <AvatarImage src={attorney.photoUrl} alt={attorney.name} />
+                        <AvatarImage 
+                          src={`/api/image-proxy?url=${encodeURIComponent(attorney.photoUrl)}`} 
+                          alt={attorney.name} 
+                        />
                       ) : (
                         <AvatarFallback 
                           style={{ backgroundColor: attorney.avatarColor || '#cbd5e1' }}
@@ -827,7 +830,13 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
               {editingAttorney?.photoUrl && (
                 <div className="mt-2 flex items-center space-x-2">
                   <Avatar>
-                    <AvatarImage src={editingAttorney.photoUrl} alt="Preview" />
+                    <AvatarImage 
+                      src={editingAttorney.photoUrl ? 
+                          `/api/image-proxy?url=${encodeURIComponent(editingAttorney.photoUrl)}` : 
+                          undefined
+                      } 
+                      alt="Preview" 
+                    />
                     <AvatarFallback>
                       {editingAttorney.initials || editingAttorney.name.charAt(0)}
                     </AvatarFallback>

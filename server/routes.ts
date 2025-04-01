@@ -968,6 +968,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(attorneys);
   });
   
+  // Image proxy endpoint to handle external image requests
+  app.get("/api/image-proxy", async (req, res) => {
+    const { url } = req.query;
+    
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ message: "URL parameter is required" });
+    }
+    
+    try {
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        return res.status(response.status).json({ 
+          message: `Failed to fetch image: ${response.statusText}` 
+        });
+      }
+      
+      // Get content type from original response
+      const contentType = response.headers.get('content-type');
+      if (contentType) {
+        res.setHeader('Content-Type', contentType);
+      }
+      
+      // Convert the response to a buffer and send it
+      const buffer = await response.arrayBuffer();
+      res.send(Buffer.from(buffer));
+      
+    } catch (error) {
+      console.error('Image proxy error:', error);
+      res.status(500).json({ message: "Failed to proxy image" });
+    }
+  });
+  
   // Get deals associated with a law firm
   app.get("/api/law-firms/:id/deals", async (req, res) => {
     const firmId = parseInt(req.params.id);
