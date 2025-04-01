@@ -2680,6 +2680,7 @@ export default function DealDetail({
         
         <TabsContent value="tasks" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'tasks' ? 'block' : 'none'}}>
           <div className="p-6">
+            {/* Single instance of TasksTab to avoid duplicates */}
             <TasksTab dealId={deal.id} />
           </div>
         </TabsContent>

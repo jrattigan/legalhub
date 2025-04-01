@@ -299,7 +299,7 @@ export function TasksTab({ dealId }: TasksTabProps) {
           setExternalAssigneeType("attorney");
           
           // Find the law firm for this attorney
-          const attorney = attorneys.find((a) => a.id === currentTask.attorneyId);
+          const attorney = attorneys.find((a: Attorney) => a.id === currentTask.attorneyId);
           if (attorney) {
             console.log("Setting selected law firm to:", attorney.lawFirmId);
             setSelectedLawFirm(attorney.lawFirmId);
