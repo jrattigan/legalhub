@@ -419,9 +419,56 @@ export function TasksTab({ dealId }: TasksTabProps) {
 
   // Update Task Mutation
   const updateTaskMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => 
-      apiRequest(`/api/tasks/${id}`, { method: 'PATCH', data }).then(res => res.json()),
-    onSuccess: () => {
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      console.log("🔧 UPDATE MUTATION - Submitting task update:", JSON.stringify(data, null, 2));
+      
+      // Make a proper copy of the data to avoid modifying the original
+      const processedData = { ...data };
+      
+      // Ensure all IDs are properly converted to numbers
+      Object.keys(processedData).forEach(key => {
+        if (key.toLowerCase().includes('id') && processedData[key] !== null && typeof processedData[key] === 'string') {
+          const parsedValue = parseInt(processedData[key], 10);
+          if (!isNaN(parsedValue)) {
+            processedData[key] = parsedValue;
+            console.log(`🔧 UPDATE MUTATION - Converted ${key} from string to number:`, parsedValue);
+          }
+        }
+      });
+      
+      // Format the date properly if it exists
+      if (processedData.dueDate) {
+        if (typeof processedData.dueDate === 'string') {
+          try {
+            processedData.dueDate = new Date(processedData.dueDate);
+            console.log(`🔧 UPDATE MUTATION - Converted dueDate from string to Date:`, processedData.dueDate);
+          } catch (e) {
+            console.error("Failed to parse date string:", processedData.dueDate, e);
+          }
+        }
+      }
+      
+      console.log("🔧 UPDATE MUTATION - Final data to submit:", JSON.stringify(processedData, null, 2));
+      
+      const response = await apiRequest(`/api/tasks/${id}`, { 
+        method: 'PATCH', 
+        data: processedData 
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+        console.error("🔧 UPDATE MUTATION - Task update failed:", errorData);
+        throw new Error(errorData.message || `Server responded with ${response.status}: ${response.statusText}`);
+      }
+      
+      console.log("🔧 UPDATE MUTATION - Response status:", response.status);
+      const responseData = await response.json();
+      console.log("🔧 UPDATE MUTATION - Response data:", responseData);
+      
+      return responseData;
+    },
+    onSuccess: (data) => {
+      console.log("🔧 UPDATE MUTATION - Task updated successfully:", data);
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       setIsEditTaskOpen(false);
       setCurrentTask(null);
@@ -432,10 +479,10 @@ export function TasksTab({ dealId }: TasksTabProps) {
         description: "Task updated successfully"
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to update task",
+        description: error.message || "Failed to update task",
         variant: "destructive"
       });
       console.error("Error updating task:", error);
@@ -483,9 +530,9 @@ export function TasksTab({ dealId }: TasksTabProps) {
   const saveInlineEdit = (task: Task) => {
     if (!editingField) return;
 
-    const updatedTask = { ...task };
+    const updatedTask: Partial<Task> = {};
     
-    // Update the task with the edited value
+    // Update only the specific field being edited
     if (editingField.field === 'name') {
       if (!editingField.value.trim()) {
         toast({
@@ -500,17 +547,33 @@ export function TasksTab({ dealId }: TasksTabProps) {
       updatedTask.description = editingField.value || null;
     } else if (editingField.field === 'dueDate') {
       updatedTask.dueDate = editingField.value ? new Date(editingField.value).toISOString() : null;
+      console.log("Setting due date to:", updatedTask.dueDate);
     } else if (editingField.field === 'status') {
       updatedTask.status = editingField.value;
+      console.log("Setting status to:", updatedTask.status);
     } else if (editingField.field === 'assignee') {
       if (task.taskType === 'internal') {
         updatedTask.assigneeId = editingField.value?.userId || null;
+        // Reset other assignee fields
+        updatedTask.lawFirmId = null;
+        updatedTask.attorneyId = null;
+        updatedTask.customAssigneeId = null;
       } else {
         updatedTask.lawFirmId = editingField.value?.lawFirmId || null;
         updatedTask.attorneyId = editingField.value?.attorneyId || null;
         updatedTask.customAssigneeId = editingField.value?.customAssigneeId || null;
+        // Reset internal assignee
+        updatedTask.assigneeId = null;
       }
+      console.log("Setting assignee fields:", {
+        assigneeId: updatedTask.assigneeId,
+        lawFirmId: updatedTask.lawFirmId,
+        attorneyId: updatedTask.attorneyId,
+        customAssigneeId: updatedTask.customAssigneeId
+      });
     }
+
+    console.log("Saving inline edit for task", task.id, "with field", editingField.field, "new value:", updatedTask);
 
     // Update the task in the database
     updateTaskMutation.mutate({
@@ -710,10 +773,12 @@ export function TasksTab({ dealId }: TasksTabProps) {
     
     if (task.status === newStatus) return; // No change needed
     
+    // Only send the field we're updating
     const updatedTask = {
-      ...task,
       status: newStatus
     };
+    
+    console.log("Toggling task status:", { id: task.id, status: newStatus });
     
     updateTaskMutation.mutate({ 
       id: task.id, 
@@ -728,10 +793,12 @@ export function TasksTab({ dealId }: TasksTabProps) {
     const nextIndex = (currentIndex + 1) % statusOrder.length;
     const newStatus = statusOrder[nextIndex];
     
+    // Only send the field we're updating
     const updatedTask = {
-      ...task,
       status: newStatus
     };
+    
+    console.log("Cycling task status:", { id: task.id, status: newStatus });
     
     updateTaskMutation.mutate({ 
       id: task.id, 
