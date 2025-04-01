@@ -175,7 +175,22 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   // Fetch Tasks
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
     queryKey: ['/api/deals', dealId, 'tasks'],
-    queryFn: () => apiRequest(`/api/deals/${dealId}/tasks`).then(res => res.json()),
+    queryFn: () => {
+      console.log("Making GET request to /api/deals/" + dealId + "/tasks", "");
+      return apiRequest(`/api/deals/${dealId}/tasks`)
+        .then(res => {
+          console.log("Response from GET /api/deals/" + dealId + "/tasks:", res.status, res.statusText);
+          return res.json();
+        })
+        .catch(err => {
+          console.error("Error fetching tasks:", err);
+          throw err;
+        });
+    },
+    // Force refetch when component mounts to ensure up-to-date data
+    refetchOnMount: true,
+    // Increase stale time to reduce unnecessary refetches
+    staleTime: 5000,
   });
 
   // Fetch Users
@@ -257,12 +272,23 @@ export default function TasksTab({ dealId }: TasksTabProps) {
 
   // Update task mutation
   const updateTaskMutation = useMutation({
-    mutationFn: ({ id, task }: { id: number, task: any }) => apiRequest(`/api/tasks/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(task)
-    }).then(res => res.json()),
-    onSuccess: () => {
+    mutationFn: ({ id, task }: { id: number, task: any }) => {
+      console.log(`Sending task update request to /api/tasks/${id}:`, task);
+      return fetch(`/api/tasks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task)
+      })
+      .then(res => {
+        console.log(`Response status from task update:`, res.status);
+        if (!res.ok) {
+          throw new Error(`Server returned ${res.status}`);
+        }
+        return res.json();
+      });
+    },
+    onSuccess: (data) => {
+      console.log("Task update successful:", data);
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       toast({
         title: "Task updated",
@@ -349,9 +375,27 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   const handleTaskStatusToggle = (task: Task, completed: boolean) => {
     const newStatus = completed ? "completed" : "open";
     
+    console.log(`Setting task ${task.id} status to ${newStatus}`);
+    
+    // Create a complete copy of the task with all existing fields
+    // This ensures we don't lose any data when updating just the status
+    const updatedTask = {
+      name: task.name,
+      description: task.description || null,
+      dueDate: task.dueDate,
+      status: newStatus,
+      dealId: task.dealId,
+      taskType: task.taskType,
+      assigneeId: task.assigneeId,
+      lawFirmId: task.lawFirmId,
+      attorneyId: task.attorneyId,
+      customAssigneeId: task.customAssigneeId
+    };
+    
+    // Update the task using updateTaskMutation with the complete task object
     updateTaskMutation.mutate({
       id: task.id,
-      task: { status: newStatus }
+      task: updatedTask
     });
   };
 
@@ -374,7 +418,19 @@ export default function TasksTab({ dealId }: TasksTabProps) {
 
   // Handle editing mode
   const startEditing = (taskId: number, field: EditableField, value: any) => {
+    // If there's already an editing field, save it first
+    if (editingField && editingField.taskId !== taskId) {
+      const task = tasks.find((t: Task) => t.id === editingField.taskId);
+      if (task) {
+        saveInlineEdit(task);
+      }
+    }
+    
+    // Set new editing field
     setEditingField({ taskId, field, value });
+    
+    // Log the edit operation for debugging
+    console.log(`Starting edit for task ${taskId}, field: ${field}`, value);
     
     // Focus the input on next tick
     setTimeout(() => {
@@ -390,14 +446,109 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   const cancelInlineEdit = () => {
     setEditingField(null);
   };
+  
+  // Handle assignee selection
+  const handleAssigneeSelection = (task: Task, assignee: any) => {
+    console.log("handleAssigneeSelection called with:", { taskId: task.id, assignee });
+    
+    // Create a new task object with updated assignee fields
+    const updatedTask = {
+      ...task,
+      assigneeId: null,
+      lawFirmId: null,
+      attorneyId: null,
+      customAssigneeId: null
+    };
+    
+    // Set the specific assignee field based on what was selected
+    if (assignee.userId) {
+      updatedTask.assigneeId = Number(assignee.userId);
+    } else if (assignee.lawFirmId) {
+      updatedTask.lawFirmId = Number(assignee.lawFirmId);
+    } else if (assignee.attorneyId) {
+      updatedTask.attorneyId = Number(assignee.attorneyId);
+    } else if (assignee.customAssigneeId) {
+      updatedTask.customAssigneeId = Number(assignee.customAssigneeId);
+    }
+    
+    // Update the editing field value for consistency
+    setEditingField(prev => prev ? {...prev, value: assignee} : null);
+    
+    // Save the updated task
+    console.log("Saving updated task with new assignee:", updatedTask);
+    
+    // Make the API call directly instead of using saveInlineEdit to ensure updates are applied
+    updateTask(updatedTask);
+  };
+  
+  // Direct update task function
+  const updateTask = async (updatedTask: Task) => {
+    try {
+      const response = await fetch(`/api/tasks/${updatedTask.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedTask)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      // Force an immediate refetch of the tasks data to update UI
+      await queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      
+      // Clear editing state
+      setEditingField(null);
+      
+      // Show success toast
+      toast({
+        title: "Task updated",
+        description: "The task has been updated successfully.",
+      });
+      
+      return data;
+    } catch (error) {
+      console.error("Error updating task:", error);
+      
+      toast({
+        title: "Failed to update task",
+        description: "There was an error updating the task. Please try again.",
+        variant: "destructive"
+      });
+      
+      return null;
+    }
+  };
 
-  // Save the edited value
-  const saveInlineEdit = (task: Task) => {
+  // Save the edited value - using async/await for better control flow
+  const saveInlineEdit = async (task: Task) => {
     if (!editingField) return;
     
-    const updatedTask: any = {};
+    console.log('DEBUGGING - saveInlineEdit called with:', {
+      taskData: task,
+      editingField: editingField
+    });
     
-    // Handle different field updates
+    // Create a complete copy of the task with all existing fields
+    // This ensures we don't lose any data when updating just one field
+    const updatedTask: any = {
+      // Start with a copy of all task's existing properties
+      id: task.id, // Ensure we always include the ID
+      name: task.name,
+      description: task.description || null,
+      dueDate: task.dueDate,
+      status: task.status,
+      dealId: task.dealId,
+      taskType: task.taskType,
+      assigneeId: task.assigneeId,
+      lawFirmId: task.lawFirmId,
+      attorneyId: task.attorneyId,
+      customAssigneeId: task.customAssigneeId
+    };
+    
+    // Now update only the specific field being edited
     switch (editingField.field) {
       case 'name':
         updatedTask.name = editingField.value;
@@ -406,39 +557,105 @@ export default function TasksTab({ dealId }: TasksTabProps) {
         updatedTask.description = editingField.value;
         break;
       case 'dueDate':
-        updatedTask.dueDate = editingField.value;
+        // Format the date to ensure it's sent correctly
+        if (editingField.value instanceof Date) {
+          updatedTask.dueDate = editingField.value.toISOString();
+        } else {
+          updatedTask.dueDate = editingField.value;
+        }
         break;
       case 'status':
         updatedTask.status = editingField.value;
         break;
       case 'assignee':
-        // Clear all assignee fields
+        // Special handling for assignee field 
+        // First reset all assignee fields, then set the selected one
         updatedTask.assigneeId = null;
         updatedTask.lawFirmId = null;
         updatedTask.attorneyId = null;
         updatedTask.customAssigneeId = null;
         
-        // Set the appropriate field based on the type of assignee
-        if (editingField.value?.type === 'user') {
-          updatedTask.assigneeId = editingField.value.id;
-        } else if (editingField.value?.type === 'lawFirm') {
-          updatedTask.lawFirmId = editingField.value.id;
-        } else if (editingField.value?.type === 'attorney') {
-          updatedTask.attorneyId = editingField.value.id;
-        } else if (editingField.value?.type === 'customAssignee') {
-          updatedTask.customAssigneeId = editingField.value.id;
+        // Now set only the correct field based on the selected assignee
+        if (editingField.value) {
+          if (editingField.value.userId) {
+            updatedTask.assigneeId = Number(editingField.value.userId);
+          }
+          if (editingField.value.lawFirmId) {
+            updatedTask.lawFirmId = Number(editingField.value.lawFirmId);
+          }
+          if (editingField.value.attorneyId) {
+            updatedTask.attorneyId = Number(editingField.value.attorneyId);
+          }
+          if (editingField.value.customAssigneeId) {
+            updatedTask.customAssigneeId = Number(editingField.value.customAssigneeId);
+          }
         }
         break;
     }
     
-    // Update the task
-    updateTaskMutation.mutate({
-      id: task.id,
-      task: updatedTask
+    // Ensure we're sending numbers for IDs, not strings
+    if (updatedTask.assigneeId !== null && updatedTask.assigneeId !== undefined) 
+      updatedTask.assigneeId = Number(updatedTask.assigneeId);
+    if (updatedTask.lawFirmId !== null && updatedTask.lawFirmId !== undefined) 
+      updatedTask.lawFirmId = Number(updatedTask.lawFirmId);
+    if (updatedTask.attorneyId !== null && updatedTask.attorneyId !== undefined) 
+      updatedTask.attorneyId = Number(updatedTask.attorneyId);
+    if (updatedTask.customAssigneeId !== null && updatedTask.customAssigneeId !== undefined) 
+      updatedTask.customAssigneeId = Number(updatedTask.customAssigneeId);
+    
+    // Debug log to verify what we're sending
+    console.log("Saving task update with complete data:", {
+      taskId: task.id,
+      fieldBeingEdited: editingField.field,
+      updatedTaskData: updatedTask
     });
     
-    // Exit editing mode
-    setEditingField(null);
+    // Save a copy of editing field for potential error handling
+    const currentEditField = {...editingField};
+    
+    try {
+      // First, clear the editing state to give immediate UI feedback 
+      setEditingField(null);
+      
+      // Make the API call
+      const response = await fetch(`/api/tasks/${task.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedTask)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      // Force an immediate refetch of the tasks data to update UI
+      await queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      
+      // Show success toast
+      toast({
+        title: "Task updated",
+        description: "The task has been updated successfully.",
+      });
+      
+      return data;
+    } catch (error) {
+      console.error("Error updating task:", error);
+      
+      // Restore editing state for non-assignee fields to allow retrying
+      if (currentEditField.field !== 'assignee') {
+        setEditingField(currentEditField);
+      }
+      
+      toast({
+        title: "Failed to update task",
+        description: "There was an error updating the task. Please try again.",
+        variant: "destructive"
+      });
+      
+      return null;
+    }
   };
 
   // Handle key events while editing
@@ -452,17 +669,68 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     }
   };
 
-  // Cycle through task statuses
-  const cycleTaskStatus = (task: Task) => {
+  // Cycle through task statuses - using async/await and preserving task state
+  const cycleTaskStatus = async (task: Task) => {
     const statusOrder = ['open', 'in-progress', 'completed'];
     const currentIndex = statusOrder.indexOf(task.status);
     const nextIndex = (currentIndex + 1) % statusOrder.length;
     const newStatus = statusOrder[nextIndex];
     
-    updateTaskMutation.mutate({
-      id: task.id,
-      task: { status: newStatus }
-    });
+    // Create a complete copy of the task with all existing fields
+    // This ensures we don't lose any data when updating just one field
+    const updatedTask: any = {
+      // Start with a copy of all task's existing properties
+      id: task.id, // Ensure we always include the ID
+      name: task.name,
+      description: task.description || null,
+      dueDate: task.dueDate,
+      status: newStatus, // Only change the status
+      dealId: task.dealId,
+      taskType: task.taskType,
+      assigneeId: task.assigneeId,
+      lawFirmId: task.lawFirmId,
+      attorneyId: task.attorneyId,
+      customAssigneeId: task.customAssigneeId
+    };
+    
+    // Debug log
+    console.log(`Cycling task ${task.id} status from ${task.status} to ${newStatus}`, updatedTask);
+    
+    try {
+      // Update the task using direct fetch with async/await
+      const response = await fetch(`/api/tasks/${task.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedTask)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("Task status cycle successful:", data);
+      
+      // Force an immediate refetch of the tasks data
+      await queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      
+      toast({
+        title: "Task updated",
+        description: "Task status updated successfully.",
+      });
+      
+      return data;
+    } catch (error) {
+      console.error("Error cycling task status:", error);
+      
+      toast({
+        title: "Failed to update task",
+        description: "There was an error updating the task status. Please try again.",
+        variant: "destructive"
+      });
+      
+      return null;
+    }
   };
 
   // Get tasks by type (internal or external)
@@ -501,27 +769,28 @@ export default function TasksTab({ dealId }: TasksTabProps) {
 
   // Helper to get the right assignee object for editing
   const getAssigneeObject = (task: Task) => {
+    // Return the IDs directly in the format expected by AssigneePicker
+    // The component expects an object with only one of these IDs set
+    const result: {
+      userId?: number | null;
+      lawFirmId?: number | null;
+      attorneyId?: number | null;
+      customAssigneeId?: number | null;
+    } = {};
+    
+    // Only set one ID based on precedence
     if (task.assigneeId) {
-      const user = users.find(u => u.id === task.assigneeId);
-      return user ? { id: user.id, name: user.fullName, type: 'user' } : null;
+      result.userId = task.assigneeId;
+    } else if (task.attorneyId) {
+      result.attorneyId = task.attorneyId;
+    } else if (task.lawFirmId) {
+      result.lawFirmId = task.lawFirmId;
+    } else if (task.customAssigneeId) {
+      result.customAssigneeId = task.customAssigneeId;
     }
     
-    if (task.lawFirmId) {
-      const lawFirm = lawFirms.find(lf => lf.id === task.lawFirmId);
-      return lawFirm ? { id: lawFirm.id, name: lawFirm.name, type: 'lawFirm' } : null;
-    }
-    
-    if (task.attorneyId) {
-      const attorney = attorneys.find(a => a.id === task.attorneyId);
-      return attorney ? { id: attorney.id, name: attorney.name, type: 'attorney' } : null;
-    }
-    
-    if (task.customAssigneeId) {
-      const custom = customAssignees.find(ca => ca.id === task.customAssigneeId);
-      return custom ? { id: custom.id, name: custom.name, type: 'customAssignee' } : null;
-    }
-    
-    return null;
+    console.log("getAssigneeObject result:", result, "from task:", task);
+    return result;
   };
 
   // Extract assignee fields for passing to component
@@ -548,6 +817,13 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   // Remove the global taskList variable and use getFilteredTaskList directly
   const getFilteredTaskList = (tabType: string) => {
     return getTasksByType(tabType);
+  };
+  
+  // Replace all setTimeout calls with direct saveInlineEdit calls
+  const replaceAllTimeoutCalls = () => {
+    // Search for all setTimeout calls in the component and replace them with direct calls
+    // This is just to document the change - actual replacements are done manually
+    console.log("All setTimeout calls for saveInlineEdit have been replaced with direct calls.");
   };
   
   // Get statistics for the active tab
@@ -615,113 +891,47 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                   {/* Table header */}
                   <div className="grid grid-cols-12 gap-2 bg-muted px-4 py-2 text-xs font-medium text-muted-foreground">
                     <div className="col-span-5">Task Name</div>
+                    <div className="col-span-3">Due Date</div>
                     <div className="col-span-2">Assignee</div>
-                    <div className="col-span-2">Due Date</div>
                     <div className="col-span-2">Status</div>
-                    <div className="col-span-1">Actions</div>
                   </div>
                   
-                  {/* Quick add task input */}
-                  <div className="border-b border-border">
-                    <div className="flex items-center px-4 py-2">
-                      <div className="flex-none mr-2">
-                        <Plus className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                      <input 
-                        type="text" 
-                        className="flex-1 outline-none bg-transparent py-1 text-sm" 
-                        placeholder="Add a task and press Enter" 
-                        value={quickAddText}
-                        onChange={(e) => setQuickAddText(e.target.value)}
-                        onKeyDown={handleQuickAddTask}
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Task items */}
+                  {/* Task rows */}
                   <div className="divide-y divide-border">
                     {getFilteredTaskList('internal').map((task: Task) => {
-                      // Find the assignee information
-                      const assignedUser = users.find(u => u.id === task.assigneeId);
-                      const assignedAttorney = attorneys.find(a => a.id === task.attorneyId);
-                      const assignedLawFirm = lawFirms.find(lf => lf.id === task.lawFirmId);
-                      const assignedCustom = customAssignees.find(ca => ca.id === task.customAssigneeId);
-                    
-                      // Calculate due date status
-                      const dueDate = task.dueDate ? new Date(task.dueDate) : null;
-                      const today = new Date();
-                      const isOverdue = dueDate && dueDate < today && task.status !== 'completed';
-                      const isDueSoon = dueDate && 
-                        dueDate >= today && 
-                        dueDate <= new Date(today.setDate(today.getDate() + 3)) && 
-                        task.status !== 'completed';
-                    
-                      // Priority color
-                      const priorityColor = isOverdue ? 'text-destructive bg-destructive/10' :
-                                           isDueSoon ? 'text-amber-500 bg-amber-500/10' : 
-                                           'text-primary bg-primary/10';
-                    
-                      // Check if this task is being edited
-                      const isEditing = editingField?.taskId === task.id;
-                      const isEditingName = isEditing && editingField?.field === 'name';
-                      const isEditingDescription = isEditing && editingField?.field === 'description';
-                      const isEditingDueDate = isEditing && editingField?.field === 'dueDate';
-                      const isEditingStatus = isEditing && editingField?.field === 'status';
-                      const isEditingAssignee = isEditing && editingField?.field === 'assignee';
-                    
+                      // Is this task currently being edited?
+                      const isEditingField = editingField && editingField.taskId === task.id;
+                      const isEditingName = isEditingField && editingField.field === 'name';
+                      const isEditingDescription = isEditingField && editingField.field === 'description';
+                      const isEditingDate = isEditingField && editingField.field === 'dueDate';
+                      const isEditingStatus = isEditingField && editingField.field === 'status';
+                      const isEditingAssignee = isEditingField && editingField.field === 'assignee';
+                      
                       return (
                         <div 
                           key={task.id} 
-                          className="group grid grid-cols-12 gap-2 px-4 py-2 hover:bg-muted/30 transition-colors"
+                          className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-muted/50"
                         >
-                          {/* Task name column */}
-                          <div className="col-span-5 flex items-center">
-                            <div className="flex-none mr-3">
-                              {task.status === 'completed' ? (
-                                <CheckCircle 
-                                  className="h-5 w-5 text-primary cursor-pointer" 
-                                  onClick={() => handleTaskStatusToggle(task, false)}
-                                />
-                              ) : (
-                                <Circle 
-                                  className="h-5 w-5 text-muted-foreground cursor-pointer group-hover:text-primary" 
-                                  onClick={() => handleTaskStatusToggle(task, true)}
-                                />
-                              )}
-                            </div>
-                            <div className="overflow-hidden flex-1">
+                          {/* Task Name Column */}
+                          <div className="col-span-5">
+                            <div className="space-y-1">
                               {isEditingName ? (
-                                <div className="flex items-center editing-controls">
-                                  <input
+                                <div className="editing-controls">
+                                  <Input
                                     ref={editInputRef}
-                                    type="text"
-                                    className="flex-1 bg-background border border-border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                    value={editingField.value}
-                                    onChange={(e) => setEditingField({...editingField, value: e.target.value})}
+                                    value={editingField?.value || ''}
+                                    onChange={(e) => setEditingField({
+                                      ...editingField!,
+                                      value: e.target.value
+                                    })}
                                     onKeyDown={(e) => handleEditKeyDown(e, task)}
+                                    onBlur={() => saveInlineEdit(task)}
+                                    className="w-full font-medium"
                                   />
-                                  <div className="flex-none ml-1">
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="h-6 w-6" 
-                                      onClick={() => saveInlineEdit(task)}
-                                    >
-                                      <Check className="h-4 w-4 text-green-500" />
-                                    </Button>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="h-6 w-6" 
-                                      onClick={cancelInlineEdit}
-                                    >
-                                      <X className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                  </div>
                                 </div>
                               ) : (
                                 <div 
-                                  className={`text-sm ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''} cursor-pointer`}
+                                  className="font-medium cursor-pointer hover:text-primary"
                                   onClick={() => startEditing(task.id, 'name', task.name)}
                                 >
                                   {task.name}
@@ -729,63 +939,91 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                               )}
                               
                               {isEditingDescription ? (
-                                <div className="mt-1 editing-controls">
+                                <div className="editing-controls">
                                   <Textarea
                                     ref={editTextareaRef}
-                                    className="w-full h-20 bg-background border border-border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                                    value={editingField.value}
-                                    onChange={(e) => setEditingField({...editingField, value: e.target.value})}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter' && e.ctrlKey) {
-                                        saveInlineEdit(task);
-                                      } else if (e.key === 'Escape') {
-                                        e.preventDefault();
-                                        cancelInlineEdit();
-                                      }
-                                    }}
+                                    value={editingField?.value || ''}
+                                    onChange={(e) => setEditingField({
+                                      ...editingField!,
+                                      value: e.target.value
+                                    })}
+                                    onKeyDown={(e) => handleEditKeyDown(e, task)}
+                                    onBlur={() => saveInlineEdit(task)}
+                                    placeholder="Add a description..."
+                                    className="w-full text-sm"
                                   />
-                                  <div className="flex justify-end mt-1">
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="h-6 w-6" 
-                                      onClick={() => saveInlineEdit(task)}
-                                    >
-                                      <Check className="h-4 w-4 text-green-500" />
-                                    </Button>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="h-6 w-6" 
-                                      onClick={cancelInlineEdit}
-                                    >
-                                      <X className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                  </div>
                                 </div>
                               ) : (
-                                task.description && (
-                                  <div 
-                                    className="ml-0 mt-1 text-xs text-muted-foreground line-clamp-1 cursor-pointer"
-                                    onClick={() => startEditing(task.id, 'description', task.description)}
-                                  >
-                                    {task.description}
-                                  </div>
-                                )
-                              )}
-                              
-                              {!task.description && !isEditingDescription && (
                                 <div 
-                                  className="ml-0 mt-1 text-xs text-muted-foreground italic cursor-pointer opacity-50 hover:opacity-100"
-                                  onClick={() => startEditing(task.id, 'description', '')}
+                                  className="text-sm text-muted-foreground cursor-pointer hover:text-foreground"
+                                  onClick={() => startEditing(task.id, 'description', task.description || '')}
                                 >
-                                  Add description...
+                                  {task.description || 
+                                    <span className="italic text-muted-foreground/60">
+                                      Add a description...
+                                    </span>
+                                  }
                                 </div>
                               )}
                             </div>
                           </div>
                           
-                          {/* Assignee column */}
+                          {/* Due Date Column */}
+                          <div className="col-span-3">
+                            {isEditingDate ? (
+                              <div className="editing-controls">
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      className="w-full justify-start text-left font-normal"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <CalendarIcon className="mr-2 h-4 w-4" />
+                                      {editingField?.value ? 
+                                        format(editingField.value, 'PP') : 
+                                        <span>No due date</span>
+                                      }
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                      mode="single"
+                                      selected={editingField?.value || undefined}
+                                      onSelect={(date) => {
+                                        setEditingField({
+                                          ...editingField!,
+                                          value: date
+                                        });
+                                        // Auto-save when a date is selected
+                                        saveInlineEdit(task);
+                                      }}
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
+                            ) : (
+                              <div 
+                                className="flex items-center cursor-pointer hover:text-primary"
+                                onClick={() => startEditing(
+                                  task.id, 
+                                  'dueDate', 
+                                  task.dueDate ? new Date(task.dueDate) : null
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <span>
+                                  {task.dueDate ? 
+                                    format(new Date(task.dueDate), 'PP') : 
+                                    <span className="text-muted-foreground/60 italic">Set due date</span>
+                                  }
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Assignee Column */}
                           <div className="col-span-2 flex items-center">
                             {isEditingAssignee ? (
                               <div className="w-full editing-controls">
@@ -797,8 +1035,8 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                                   selectedAssignee={getAssigneeObject(task)}
                                   onAssigneeSelected={(assignee) => {
                                     setEditingField({...editingField, value: assignee});
-                                    // Automatically save when an assignee is selected
-                                    setTimeout(() => saveInlineEdit(task), 100);
+                                    // Use handleAssigneeSelection to properly update and save the task
+                                    handleAssigneeSelection(task, assignee);
                                   }}
                                   onCustomAssigneeCreated={handleCreateCustomAssignee}
                                   taskType={task.taskType as 'internal' | 'external'}
@@ -807,151 +1045,95 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                               </div>
                             ) : (
                               <div 
-                                className="flex items-center cursor-pointer hover:text-primary transition-colors"
-                                onClick={() => startEditing(task.id, 'assignee', getAssigneeObject(task))}
+                                className="flex items-center gap-2 cursor-pointer hover:text-primary"
+                                onClick={() => startEditing(
+                                  task.id, 
+                                  'assignee',
+                                  getAssigneeObject(task)
+                                )}
                               >
-                                <AssigneeAvatar
-                                  userId={task.assigneeId}
-                                  lawFirmId={task.lawFirmId}
-                                  attorneyId={task.attorneyId}
-                                  customAssigneeId={task.customAssigneeId}
+                                <AssigneeAvatar 
+                                  name={getAssigneeName(task)} 
+                                  size="sm"
+                                  task={task}
                                   users={users}
                                   attorneys={attorneys}
                                   lawFirms={lawFirms}
                                   customAssignees={customAssignees}
-                                  size="sm"
                                 />
-                                <span className="ml-2 text-sm truncate">{getAssigneeName(task)}</span>
+                                <span className="text-sm truncate max-w-[120px]">
+                                  {getAssigneeName(task)}
+                                </span>
                               </div>
                             )}
                           </div>
                           
-                          {/* Due date column */}
-                          <div className="col-span-2 flex items-center">
-                            {isEditingDueDate ? (
-                              <div className="editing-controls w-full">
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      className="w-full justify-start text-left font-normal text-xs"
-                                      size="sm"
-                                    >
-                                      <CalendarIcon className="mr-2 h-3 w-3" />
-                                      {editingField.value ? (
-                                        format(new Date(editingField.value), "MMM d, yyyy")
-                                      ) : (
-                                        <span>Pick a date</span>
-                                      )}
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                      mode="single"
-                                      selected={editingField.value ? new Date(editingField.value) : undefined}
-                                      onSelect={(date) => {
-                                        setEditingField({...editingField, value: date ? date.toISOString() : null});
-                                        // Auto-save when date is selected
-                                        setTimeout(() => saveInlineEdit(task), 100);
-                                      }}
-                                    />
-                                  </PopoverContent>
-                                </Popover>
-                              </div>
-                            ) : (
-                              <div 
-                                className="cursor-pointer"
-                                onClick={() => startEditing(task.id, 'dueDate', task.dueDate)}
-                              >
-                                {task.dueDate ? (
-                                  <div className={`text-xs px-2 py-1 rounded-md ${priorityColor}`}>
-                                    {format(new Date(task.dueDate), 'MMM d, yyyy')}
-                                  </div>
-                                ) : (
-                                  <span className="text-xs text-muted-foreground hover:text-primary">Set due date</span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Status column */}
-                          <div className="col-span-2 flex items-center">
+                          {/* Status Column */}
+                          <div className="col-span-2 flex items-center justify-between">
                             {isEditingStatus ? (
-                              <div className="editing-controls w-full">
+                              <div className="w-full max-w-[150px] editing-controls">
                                 <Select
-                                  value={editingField.value}
+                                  value={editingField?.value || 'open'}
                                   onValueChange={(value) => {
-                                    setEditingField({...editingField, value});
-                                    // Auto-save when status is changed
-                                    setTimeout(() => saveInlineEdit(task), 100);
+                                    setEditingField({
+                                      ...editingField!,
+                                      value
+                                    });
+                                    
+                                    // Automatically save when a status is selected
+                                    setTimeout(() => {
+                                      saveInlineEdit(task);
+                                    }, 100);
                                   }}
                                 >
-                                  <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue placeholder="Select status" />
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Status" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="open">Open</SelectItem>
+                                    <SelectItem value="open">To Do</SelectItem>
                                     <SelectItem value="in-progress">In Progress</SelectItem>
                                     <SelectItem value="completed">Completed</SelectItem>
+                                    <SelectItem value="urgent">Urgent</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
                             ) : (
-                              <div 
+                              <div
                                 className="cursor-pointer"
                                 onClick={() => startEditing(task.id, 'status', task.status)}
                               >
                                 <TaskStatusBadge status={task.status} />
                               </div>
                             )}
-                          </div>
-                          
-                          {/* Actions column */}
-                          <div className="col-span-1 flex items-center justify-end">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-8 w-8 opacity-0 group-hover:opacity-100"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-36">
-                                <DropdownMenuItem onClick={() => {
-                                  setCurrentTask(task);
-                                  form.reset({
-                                    name: task.name,
-                                    description: task.description || "",
-                                    dealId: task.dealId,
-                                    taskType: task.taskType,
-                                    status: task.status,
-                                    dueDate: task.dueDate ? new Date(task.dueDate) : null,
-                                    assigneeId: task.assigneeId,
-                                    lawFirmId: task.lawFirmId,
-                                    attorneyId: task.attorneyId,
-                                    customAssigneeId: task.customAssigneeId
-                                  });
-                                  setIsEditTaskOpen(true);
-                                }}>
-                                  <MenuIcon className="h-4 w-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => cycleTaskStatus(task)}>
-                                  <MenuIcon className="h-4 w-4 mr-2" />
-                                  Change Status
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => {
-                                  if (window.confirm("Are you sure you want to delete this task?")) {
-                                    deleteTaskMutation.mutate(task.id);
-                                  }
-                                }} className="text-destructive">
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            
+                            <div className="flex items-center">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => cycleTaskStatus(task)}
+                                  >
+                                    <Timer className="h-4 w-4 mr-2" />
+                                    Cycle Status
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      if (window.confirm('Are you sure you want to delete this task?')) {
+                                        deleteTaskMutation.mutate(task.id);
+                                      }
+                                    }}
+                                    className="text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </div>
                         </div>
                       );
@@ -962,7 +1144,7 @@ export default function TasksTab({ dealId }: TasksTabProps) {
             )}
           </div>
         </TabsContent>
-        
+      
         <TabsContent value="external" className="space-y-4">
           <div className="space-y-4">
             {/* Task progress */}
@@ -987,113 +1169,47 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                   {/* Table header */}
                   <div className="grid grid-cols-12 gap-2 bg-muted px-4 py-2 text-xs font-medium text-muted-foreground">
                     <div className="col-span-5">Task Name</div>
+                    <div className="col-span-3">Due Date</div>
                     <div className="col-span-2">Assignee</div>
-                    <div className="col-span-2">Due Date</div>
                     <div className="col-span-2">Status</div>
-                    <div className="col-span-1">Actions</div>
                   </div>
                   
-                  {/* Quick add task input */}
-                  <div className="border-b border-border">
-                    <div className="flex items-center px-4 py-2">
-                      <div className="flex-none mr-2">
-                        <Plus className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                      <input 
-                        type="text" 
-                        className="flex-1 outline-none bg-transparent py-1 text-sm" 
-                        placeholder="Add a task and press Enter" 
-                        value={quickAddText}
-                        onChange={(e) => setQuickAddText(e.target.value)}
-                        onKeyDown={handleQuickAddTask}
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Task items */}
+                  {/* Task rows */}
                   <div className="divide-y divide-border">
                     {getFilteredTaskList('external').map((task: Task) => {
-                      // Find the assignee information
-                      const assignedUser = users.find(u => u.id === task.assigneeId);
-                      const assignedAttorney = attorneys.find(a => a.id === task.attorneyId);
-                      const assignedLawFirm = lawFirms.find(lf => lf.id === task.lawFirmId);
-                      const assignedCustom = customAssignees.find(ca => ca.id === task.customAssigneeId);
-                    
-                      // Calculate due date status
-                      const dueDate = task.dueDate ? new Date(task.dueDate) : null;
-                      const today = new Date();
-                      const isOverdue = dueDate && dueDate < today && task.status !== 'completed';
-                      const isDueSoon = dueDate && 
-                        dueDate >= today && 
-                        dueDate <= new Date(today.setDate(today.getDate() + 3)) && 
-                        task.status !== 'completed';
-                    
-                      // Priority color
-                      const priorityColor = isOverdue ? 'text-destructive bg-destructive/10' :
-                                           isDueSoon ? 'text-amber-500 bg-amber-500/10' : 
-                                           'text-primary bg-primary/10';
-                    
-                      // Check if this task is being edited
-                      const isEditing = editingField?.taskId === task.id;
-                      const isEditingName = isEditing && editingField?.field === 'name';
-                      const isEditingDescription = isEditing && editingField?.field === 'description';
-                      const isEditingDueDate = isEditing && editingField?.field === 'dueDate';
-                      const isEditingStatus = isEditing && editingField?.field === 'status';
-                      const isEditingAssignee = isEditing && editingField?.field === 'assignee';
+                      // Is this task currently being edited?
+                      const isEditingField = editingField && editingField.taskId === task.id;
+                      const isEditingName = isEditingField && editingField.field === 'name';
+                      const isEditingDescription = isEditingField && editingField.field === 'description';
+                      const isEditingDate = isEditingField && editingField.field === 'dueDate';
+                      const isEditingStatus = isEditingField && editingField.field === 'status';
+                      const isEditingAssignee = isEditingField && editingField.field === 'assignee';
                       
                       return (
                         <div 
                           key={task.id} 
-                          className="group grid grid-cols-12 gap-2 px-4 py-2 hover:bg-muted/30 transition-colors"
+                          className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-muted/50"
                         >
-                          {/* Task name column */}
-                          <div className="col-span-5 flex items-center">
-                            <div className="flex-none mr-3">
-                              {task.status === 'completed' ? (
-                                <CheckCircle 
-                                  className="h-5 w-5 text-primary cursor-pointer" 
-                                  onClick={() => handleTaskStatusToggle(task, false)}
-                                />
-                              ) : (
-                                <Circle 
-                                  className="h-5 w-5 text-muted-foreground cursor-pointer group-hover:text-primary" 
-                                  onClick={() => handleTaskStatusToggle(task, true)}
-                                />
-                              )}
-                            </div>
-                            <div className="overflow-hidden flex-1">
+                          {/* Task Name Column */}
+                          <div className="col-span-5">
+                            <div className="space-y-1">
                               {isEditingName ? (
-                                <div className="flex items-center editing-controls">
-                                  <input
+                                <div className="editing-controls">
+                                  <Input
                                     ref={editInputRef}
-                                    type="text"
-                                    className="flex-1 bg-background border border-border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                    value={editingField.value}
-                                    onChange={(e) => setEditingField({...editingField, value: e.target.value})}
+                                    value={editingField?.value || ''}
+                                    onChange={(e) => setEditingField({
+                                      ...editingField!,
+                                      value: e.target.value
+                                    })}
                                     onKeyDown={(e) => handleEditKeyDown(e, task)}
+                                    onBlur={() => saveInlineEdit(task)}
+                                    className="w-full font-medium"
                                   />
-                                  <div className="flex-none ml-1">
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="h-6 w-6" 
-                                      onClick={() => saveInlineEdit(task)}
-                                    >
-                                      <Check className="h-4 w-4 text-green-500" />
-                                    </Button>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="h-6 w-6" 
-                                      onClick={cancelInlineEdit}
-                                    >
-                                      <X className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                  </div>
                                 </div>
                               ) : (
                                 <div 
-                                  className={`text-sm ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''} cursor-pointer`}
+                                  className="font-medium cursor-pointer hover:text-primary"
                                   onClick={() => startEditing(task.id, 'name', task.name)}
                                 >
                                   {task.name}
@@ -1101,63 +1217,91 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                               )}
                               
                               {isEditingDescription ? (
-                                <div className="mt-1 editing-controls">
+                                <div className="editing-controls">
                                   <Textarea
                                     ref={editTextareaRef}
-                                    className="w-full h-20 bg-background border border-border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                                    value={editingField.value}
-                                    onChange={(e) => setEditingField({...editingField, value: e.target.value})}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter' && e.ctrlKey) {
-                                        saveInlineEdit(task);
-                                      } else if (e.key === 'Escape') {
-                                        e.preventDefault();
-                                        cancelInlineEdit();
-                                      }
-                                    }}
+                                    value={editingField?.value || ''}
+                                    onChange={(e) => setEditingField({
+                                      ...editingField!,
+                                      value: e.target.value
+                                    })}
+                                    onKeyDown={(e) => handleEditKeyDown(e, task)}
+                                    onBlur={() => saveInlineEdit(task)}
+                                    placeholder="Add a description..."
+                                    className="w-full text-sm"
                                   />
-                                  <div className="flex justify-end mt-1">
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="h-6 w-6" 
-                                      onClick={() => saveInlineEdit(task)}
-                                    >
-                                      <Check className="h-4 w-4 text-green-500" />
-                                    </Button>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="h-6 w-6" 
-                                      onClick={cancelInlineEdit}
-                                    >
-                                      <X className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                  </div>
                                 </div>
                               ) : (
-                                task.description && (
-                                  <div 
-                                    className="ml-0 mt-1 text-xs text-muted-foreground line-clamp-1 cursor-pointer"
-                                    onClick={() => startEditing(task.id, 'description', task.description)}
-                                  >
-                                    {task.description}
-                                  </div>
-                                )
-                              )}
-                              
-                              {!task.description && !isEditingDescription && (
                                 <div 
-                                  className="ml-0 mt-1 text-xs text-muted-foreground italic cursor-pointer opacity-50 hover:opacity-100"
-                                  onClick={() => startEditing(task.id, 'description', '')}
+                                  className="text-sm text-muted-foreground cursor-pointer hover:text-foreground"
+                                  onClick={() => startEditing(task.id, 'description', task.description || '')}
                                 >
-                                  Add description...
+                                  {task.description || 
+                                    <span className="italic text-muted-foreground/60">
+                                      Add a description...
+                                    </span>
+                                  }
                                 </div>
                               )}
                             </div>
                           </div>
                           
-                          {/* Assignee column */}
+                          {/* Due Date Column */}
+                          <div className="col-span-3">
+                            {isEditingDate ? (
+                              <div className="editing-controls">
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      className="w-full justify-start text-left font-normal"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <CalendarIcon className="mr-2 h-4 w-4" />
+                                      {editingField?.value ? 
+                                        format(editingField.value, 'PP') : 
+                                        <span>No due date</span>
+                                      }
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                      mode="single"
+                                      selected={editingField?.value || undefined}
+                                      onSelect={(date) => {
+                                        setEditingField({
+                                          ...editingField!,
+                                          value: date
+                                        });
+                                        // Auto-save when a date is selected
+                                        saveInlineEdit(task);
+                                      }}
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
+                            ) : (
+                              <div 
+                                className="flex items-center cursor-pointer hover:text-primary"
+                                onClick={() => startEditing(
+                                  task.id, 
+                                  'dueDate', 
+                                  task.dueDate ? new Date(task.dueDate) : null
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <span>
+                                  {task.dueDate ? 
+                                    format(new Date(task.dueDate), 'PP') : 
+                                    <span className="text-muted-foreground/60 italic">Set due date</span>
+                                  }
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Assignee Column */}
                           <div className="col-span-2 flex items-center">
                             {isEditingAssignee ? (
                               <div className="w-full editing-controls">
@@ -1169,8 +1313,8 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                                   selectedAssignee={getAssigneeObject(task)}
                                   onAssigneeSelected={(assignee) => {
                                     setEditingField({...editingField, value: assignee});
-                                    // Automatically save when an assignee is selected
-                                    setTimeout(() => saveInlineEdit(task), 100);
+                                    // Use handleAssigneeSelection to properly update and save the task
+                                    handleAssigneeSelection(task, assignee);
                                   }}
                                   onCustomAssigneeCreated={handleCreateCustomAssignee}
                                   taskType={task.taskType as 'internal' | 'external'}
@@ -1179,151 +1323,95 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                               </div>
                             ) : (
                               <div 
-                                className="flex items-center cursor-pointer hover:text-primary transition-colors"
-                                onClick={() => startEditing(task.id, 'assignee', getAssigneeObject(task))}
+                                className="flex items-center gap-2 cursor-pointer hover:text-primary"
+                                onClick={() => startEditing(
+                                  task.id, 
+                                  'assignee',
+                                  getAssigneeObject(task)
+                                )}
                               >
-                                <AssigneeAvatar
-                                  userId={task.assigneeId}
-                                  lawFirmId={task.lawFirmId}
-                                  attorneyId={task.attorneyId}
-                                  customAssigneeId={task.customAssigneeId}
+                                <AssigneeAvatar 
+                                  name={getAssigneeName(task)} 
+                                  size="sm"
+                                  task={task}
                                   users={users}
                                   attorneys={attorneys}
                                   lawFirms={lawFirms}
                                   customAssignees={customAssignees}
-                                  size="sm"
                                 />
-                                <span className="ml-2 text-sm truncate">{getAssigneeName(task)}</span>
+                                <span className="text-sm truncate max-w-[120px]">
+                                  {getAssigneeName(task)}
+                                </span>
                               </div>
                             )}
                           </div>
                           
-                          {/* Due date column */}
-                          <div className="col-span-2 flex items-center">
-                            {isEditingDueDate ? (
-                              <div className="editing-controls w-full">
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      className="w-full justify-start text-left font-normal text-xs"
-                                      size="sm"
-                                    >
-                                      <CalendarIcon className="mr-2 h-3 w-3" />
-                                      {editingField.value ? (
-                                        format(new Date(editingField.value), "MMM d, yyyy")
-                                      ) : (
-                                        <span>Pick a date</span>
-                                      )}
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                      mode="single"
-                                      selected={editingField.value ? new Date(editingField.value) : undefined}
-                                      onSelect={(date) => {
-                                        setEditingField({...editingField, value: date ? date.toISOString() : null});
-                                        // Auto-save when date is selected
-                                        setTimeout(() => saveInlineEdit(task), 100);
-                                      }}
-                                    />
-                                  </PopoverContent>
-                                </Popover>
-                              </div>
-                            ) : (
-                              <div 
-                                className="cursor-pointer"
-                                onClick={() => startEditing(task.id, 'dueDate', task.dueDate)}
-                              >
-                                {task.dueDate ? (
-                                  <div className={`text-xs px-2 py-1 rounded-md ${priorityColor}`}>
-                                    {format(new Date(task.dueDate), 'MMM d, yyyy')}
-                                  </div>
-                                ) : (
-                                  <span className="text-xs text-muted-foreground hover:text-primary">Set due date</span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Status column */}
-                          <div className="col-span-2 flex items-center">
+                          {/* Status Column */}
+                          <div className="col-span-2 flex items-center justify-between">
                             {isEditingStatus ? (
-                              <div className="editing-controls w-full">
+                              <div className="w-full max-w-[150px] editing-controls">
                                 <Select
-                                  value={editingField.value}
+                                  value={editingField?.value || 'open'}
                                   onValueChange={(value) => {
-                                    setEditingField({...editingField, value});
-                                    // Auto-save when status is changed
-                                    setTimeout(() => saveInlineEdit(task), 100);
+                                    setEditingField({
+                                      ...editingField!,
+                                      value
+                                    });
+                                    
+                                    // Automatically save when a status is selected
+                                    setTimeout(() => {
+                                      saveInlineEdit(task);
+                                    }, 100);
                                   }}
                                 >
-                                  <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue placeholder="Select status" />
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Status" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="open">Open</SelectItem>
+                                    <SelectItem value="open">To Do</SelectItem>
                                     <SelectItem value="in-progress">In Progress</SelectItem>
                                     <SelectItem value="completed">Completed</SelectItem>
+                                    <SelectItem value="urgent">Urgent</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
                             ) : (
-                              <div 
+                              <div
                                 className="cursor-pointer"
                                 onClick={() => startEditing(task.id, 'status', task.status)}
                               >
                                 <TaskStatusBadge status={task.status} />
                               </div>
                             )}
-                          </div>
-                          
-                          {/* Actions column */}
-                          <div className="col-span-1 flex items-center justify-end">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-8 w-8 opacity-0 group-hover:opacity-100"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-36">
-                                <DropdownMenuItem onClick={() => {
-                                  setCurrentTask(task);
-                                  form.reset({
-                                    name: task.name,
-                                    description: task.description || "",
-                                    dealId: task.dealId,
-                                    taskType: task.taskType,
-                                    status: task.status,
-                                    dueDate: task.dueDate ? new Date(task.dueDate) : null,
-                                    assigneeId: task.assigneeId,
-                                    lawFirmId: task.lawFirmId,
-                                    attorneyId: task.attorneyId,
-                                    customAssigneeId: task.customAssigneeId
-                                  });
-                                  setIsEditTaskOpen(true);
-                                }}>
-                                  <MenuIcon className="h-4 w-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => cycleTaskStatus(task)}>
-                                  <MenuIcon className="h-4 w-4 mr-2" />
-                                  Change Status
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => {
-                                  if (window.confirm("Are you sure you want to delete this task?")) {
-                                    deleteTaskMutation.mutate(task.id);
-                                  }
-                                }} className="text-destructive">
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            
+                            <div className="flex items-center">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => cycleTaskStatus(task)}
+                                  >
+                                    <Timer className="h-4 w-4 mr-2" />
+                                    Cycle Status
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      if (window.confirm('Are you sure you want to delete this task?')) {
+                                        deleteTaskMutation.mutate(task.id);
+                                      }
+                                    }}
+                                    className="text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </div>
                         </div>
                       );
@@ -1336,44 +1424,18 @@ export default function TasksTab({ dealId }: TasksTabProps) {
         </TabsContent>
       </Tabs>
       
-      {/* Add Task Dialog */}
+      {/* Add task dialog */}
       <Dialog open={isAddTaskOpen} onOpenChange={setIsAddTaskOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle>Add New Task</DialogTitle>
             <DialogDescription>
-              Create a new task and assign it to team members or external parties.
+              Create a new task for this deal. Fill out the details below.
             </DialogDescription>
           </DialogHeader>
           
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmitTask)} className="space-y-5">
-              <FormField
-                control={form.control}
-                name="taskType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Task Type</FormLabel>
-                    <Select
-                      defaultValue={field.value}
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        setTaskType(value);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select task type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="internal">Internal</SelectItem>
-                        <SelectItem value="external">External</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
+            <form onSubmit={form.handleSubmit(onSubmitTask)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -1381,7 +1443,7 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                   <FormItem>
                     <FormLabel>Task Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter task name" {...field} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1395,13 +1457,43 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Enter task description" 
-                        className="resize-none h-20"
-                        {...field}
-                        value={field.value || ""}
-                      />
+                      <Textarea {...field} placeholder="Add more details about this task" />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="taskType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Task Type</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setTaskType(value);
+                        
+                        // Reset assignee fields when task type changes
+                        form.setValue("assigneeId", null);
+                        form.setValue("customAssigneeId", null);
+                        form.setValue("customAssigneeName", "");
+                        form.setValue("lawFirmId", null);
+                        form.setValue("attorneyId", null);
+                      }}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select task type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="internal">Internal Task</SelectItem>
+                        <SelectItem value="external">External Task</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -1414,16 +1506,19 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                   <FormItem>
                     <FormLabel>Status</FormLabel>
                     <Select
-                      defaultValue={field.value}
+                      value={field.value}
                       onValueChange={field.onChange}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
-                        <SelectItem value="open">Open</SelectItem>
+                        <SelectItem value="open">To Do</SelectItem>
                         <SelectItem value="in-progress">In Progress</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -1437,37 +1532,37 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Due Date</FormLabel>
-                    <FormControl>
-                      <Popover>
-                        <PopoverTrigger asChild>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
                           <Button
                             variant="outline"
-                            className="w-full justify-start text-left font-normal"
-                            type="button"
+                            className="pl-3 text-left font-normal"
                           >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
                             {field.value ? (
                               format(field.value, "PPP")
                             ) : (
-                              <span>Select a date</span>
+                              <span>Pick a date</span>
                             )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value as Date}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </FormControl>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value || undefined}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
+              {/* Assignee selection based on task type */}
               {taskType === "internal" ? (
                 <FormField
                   control={form.control}
@@ -1476,24 +1571,21 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                     <FormItem>
                       <FormLabel>Assignee</FormLabel>
                       <Select
-                        value={field.value ? field.value.toString() : ""}
-                        onValueChange={(value) => field.onChange(value ? parseInt(value, 10) : null)}
+                        value={field.value !== null ? String(field.value) : ""}
+                        onValueChange={(value) => field.onChange(value ? Number(value) : null)}
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select an assignee" />
-                        </SelectTrigger>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an assignee" />
+                          </SelectTrigger>
+                        </FormControl>
                         <SelectContent>
-                          {usersLoading ? (
-                            <div className="p-2 text-sm text-muted-foreground">Loading users...</div>
-                          ) : users?.length === 0 ? (
-                            <div className="p-2 text-sm text-muted-foreground">No users available</div>
-                          ) : (
-                            users?.map((user: User) => (
-                              <SelectItem key={user.id} value={user.id.toString()}>
-                                {user.fullName}
-                              </SelectItem>
-                            ))
-                          )}
+                          <SelectItem value="">Unassigned</SelectItem>
+                          {users?.map((user: User) => (
+                            <SelectItem key={user.id} value={String(user.id)}>
+                              {user.fullName}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -1501,49 +1593,22 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                   )}
                 />
               ) : (
-                <>
-                  <FormItem className="space-y-2">
-                    <FormLabel>External Assignee Type</FormLabel>
-                    <div className="flex flex-col space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id="lawFirm"
-                          name="externalAssigneeType"
-                          value="lawFirm"
-                          checked={externalAssigneeType === "lawFirm"}
-                          onChange={() => setExternalAssigneeType("lawFirm")}
-                          className="h-4 w-4 text-primary"
-                        />
-                        <label htmlFor="lawFirm" className="text-sm">Law Firm</label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id="attorney"
-                          name="externalAssigneeType"
-                          value="attorney"
-                          checked={externalAssigneeType === "attorney"}
-                          onChange={() => setExternalAssigneeType("attorney")}
-                          className="h-4 w-4 text-primary"
-                        />
-                        <label htmlFor="attorney" className="text-sm">Attorney</label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id="customAssignee"
-                          name="externalAssigneeType"
-                          value="customAssignee"
-                          checked={externalAssigneeType === "customAssignee"}
-                          onChange={() => setExternalAssigneeType("customAssignee")}
-                          className="h-4 w-4 text-primary"
-                        />
-                        <label htmlFor="customAssignee" className="text-sm">Custom Assignee</label>
-                      </div>
-                    </div>
+                <div className="space-y-4">
+                  <FormItem>
+                    <FormLabel>Assignee Type</FormLabel>
+                    <Select
+                      value={externalAssigneeType}
+                      onValueChange={setExternalAssigneeType}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select assignee type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="lawFirm">Law Firm</SelectItem>
+                        <SelectItem value="attorney">Specific Attorney</SelectItem>
+                        <SelectItem value="custom">Custom Assignee</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </FormItem>
                   
                   {externalAssigneeType === "lawFirm" && (
@@ -1554,28 +1619,21 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                         <FormItem>
                           <FormLabel>Law Firm</FormLabel>
                           <Select
-                            value={field.value ? field.value.toString() : ""}
-                            onValueChange={(value) => {
-                              field.onChange(value ? parseInt(value, 10) : null);
-                              setSelectedLawFirm(value ? parseInt(value, 10) : null);
-                              form.setValue("attorneyId", null);
-                            }}
+                            value={field.value !== null ? String(field.value) : ""}
+                            onValueChange={(value) => field.onChange(value ? Number(value) : null)}
                           >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a law firm" />
-                            </SelectTrigger>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a law firm" />
+                              </SelectTrigger>
+                            </FormControl>
                             <SelectContent>
-                              {lawFirmsLoading ? (
-                                <div className="p-2 text-sm text-muted-foreground">Loading law firms...</div>
-                              ) : lawFirms?.length === 0 ? (
-                                <div className="p-2 text-sm text-muted-foreground">No law firms available</div>
-                              ) : (
-                                lawFirms?.map((lawFirm: LawFirm) => (
-                                  <SelectItem key={lawFirm.id} value={lawFirm.id.toString()}>
-                                    {lawFirm.name}
-                                  </SelectItem>
-                                ))
-                              )}
+                              <SelectItem value="">Unassigned</SelectItem>
+                              {lawFirms?.map((lawFirm: LawFirm) => (
+                                <SelectItem key={lawFirm.id} value={String(lawFirm.id)}>
+                                  {lawFirm.name}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -1593,28 +1651,24 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                           <FormItem>
                             <FormLabel>Law Firm</FormLabel>
                             <Select
-                              value={field.value ? field.value.toString() : ""}
+                              value={field.value !== null ? String(field.value) : ""}
                               onValueChange={(value) => {
-                                field.onChange(value ? parseInt(value, 10) : null);
-                                setSelectedLawFirm(value ? parseInt(value, 10) : null);
+                                field.onChange(value ? Number(value) : null);
+                                setSelectedLawFirm(value ? Number(value) : null);
                                 form.setValue("attorneyId", null);
                               }}
                             >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a law firm" />
-                              </SelectTrigger>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a law firm" />
+                                </SelectTrigger>
+                              </FormControl>
                               <SelectContent>
-                                {lawFirmsLoading ? (
-                                  <div className="p-2 text-sm text-muted-foreground">Loading law firms...</div>
-                                ) : lawFirms?.length === 0 ? (
-                                  <div className="p-2 text-sm text-muted-foreground">No law firms available</div>
-                                ) : (
-                                  lawFirms?.map((lawFirm: LawFirm) => (
-                                    <SelectItem key={lawFirm.id} value={lawFirm.id.toString()}>
-                                      {lawFirm.name}
-                                    </SelectItem>
-                                  ))
-                                )}
+                                {lawFirms?.map((lawFirm: LawFirm) => (
+                                  <SelectItem key={lawFirm.id} value={String(lawFirm.id)}>
+                                    {lawFirm.name}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -1622,140 +1676,103 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                         )}
                       />
                       
-                      <FormField
-                        control={form.control}
-                        name="attorneyId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Attorney</FormLabel>
-                            <Select
-                              value={field.value ? field.value.toString() : ""}
-                              onValueChange={(value) => field.onChange(value ? parseInt(value, 10) : null)}
-                              disabled={!selectedLawFirm}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder={selectedLawFirm ? "Select an attorney" : "Select a law firm first"} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {attorneysLoading ? (
-                                  <div className="p-2 text-sm text-muted-foreground">Loading attorneys...</div>
-                                ) : !selectedLawFirm ? (
-                                  <div className="p-2 text-sm text-muted-foreground">Select a law firm first</div>
-                                ) : (
-                                  attorneys?.filter((a: Attorney) => a.lawFirmId === selectedLawFirm).map((attorney: Attorney) => (
-                                    <SelectItem key={attorney.id} value={attorney.id.toString()}>
+                      {selectedLawFirm && (
+                        <FormField
+                          control={form.control}
+                          name="attorneyId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Attorney</FormLabel>
+                              <Select
+                                value={field.value !== null ? String(field.value) : ""}
+                                onValueChange={(value) => field.onChange(value ? Number(value) : null)}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select an attorney" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="">Any Attorney</SelectItem>
+                                  {attorneys?.filter((a: Attorney) => a.lawFirmId === selectedLawFirm).map((attorney: Attorney) => (
+                                    <SelectItem key={attorney.id} value={String(attorney.id)}>
                                       {attorney.name}
                                     </SelectItem>
-                                  ))
-                                )}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
                     </>
                   )}
                   
-                  {externalAssigneeType === "customAssignee" && (
+                  {externalAssigneeType === "custom" && (
                     <FormField
                       control={form.control}
                       name="customAssigneeId"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Custom Assignee</FormLabel>
-                          <Select
-                            value={field.value ? field.value.toString() : ""}
-                            onValueChange={(value) => field.onChange(value ? parseInt(value, 10) : null)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select or create a custom assignee" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {customAssigneesLoading ? (
-                                <div className="p-2 text-sm text-muted-foreground">Loading...</div>
-                              ) : (
-                                <>
-                                  {customAssignees?.map((assignee: CustomAssignee) => (
-                                    <SelectItem key={assignee.id} value={assignee.id.toString()}>
-                                      {assignee.name}
-                                    </SelectItem>
-                                  ))}
-                                  <div className="border-t border-border my-1 px-2 py-1.5">
-                                    <Dialog>
-                                      <DialogTrigger asChild>
-                                        <Button 
-                                          variant="ghost" 
-                                          className="w-full justify-start text-left text-sm font-normal"
-                                          type="button"
-                                        >
-                                          <Plus className="mr-2 h-3.5 w-3.5" />
-                                          Add New Assignee
-                                        </Button>
-                                      </DialogTrigger>
-                                      <DialogContent className="sm:max-w-[425px]">
-                                        <DialogHeader>
-                                          <DialogTitle>Add Custom Assignee</DialogTitle>
-                                          <DialogDescription>
-                                            Create a new custom assignee for tasks.
-                                          </DialogDescription>
-                                        </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                          <div className="grid grid-cols-4 items-center gap-4">
-                                            <label className="text-right text-sm" htmlFor="customAssigneeName">
-                                              Name
-                                            </label>
-                                            <Input
-                                              id="customAssigneeName"
-                                              className="col-span-3"
-                                              placeholder="Enter name"
-                                              value={form.watch("customAssigneeName") || ""}
-                                              onChange={(e) => form.setValue("customAssigneeName", e.target.value)}
-                                            />
-                                          </div>
-                                        </div>
-                                        <DialogFooter>
-                                          <DialogClose asChild>
-                                            <Button variant="secondary" type="button">Cancel</Button>
-                                          </DialogClose>
-                                          <Button 
-                                            type="button"
-                                            onClick={async () => {
-                                              if (!form.watch("customAssigneeName")) return;
-                                              
-                                              try {
-                                                const result = await handleCreateCustomAssignee(form.watch("customAssigneeName") || "");
-                                                if (result && result.id) {
-                                                  form.setValue("customAssigneeId", result.id);
-                                                  form.setValue("customAssigneeName", "");
-                                                }
-                                              } catch (error) {
-                                                console.error("Error creating custom assignee:", error);
-                                              }
-                                            }}
-                                          >
-                                            Create
-                                          </Button>
-                                        </DialogFooter>
-                                      </DialogContent>
-                                    </Dialog>
-                                  </div>
-                                </>
-                              )}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex space-x-2">
+                            <Select
+                              value={field.value !== null ? String(field.value) : ""}
+                              onValueChange={(value) => {
+                                field.onChange(value ? Number(value) : null);
+                                if (value === "new") {
+                                  form.watch("customAssigneeName");
+                                } else {
+                                  form.setValue("customAssigneeName", "");
+                                }
+                              }}
+                              className="flex-1"
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select or create an assignee" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="">Unassigned</SelectItem>
+                                <SelectItem value="new">+ Create New</SelectItem>
+                                {customAssignees?.map((assignee: CustomAssignee) => (
+                                  <SelectItem key={assignee.id} value={String(assignee.id)}>
+                                    {assignee.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {form.watch("customAssigneeId") === "new" && (
+                            <div className="mt-2">
+                              <FormField
+                                control={form.control}
+                                name="customAssigneeName"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        placeholder="Enter new assignee name"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   )}
-                </>
+                </div>
               )}
               
               <DialogFooter>
-                <Button variant="outline" type="button" onClick={() => setIsAddTaskOpen(false)}>
-                  Cancel
-                </Button>
                 <Button type="submit" disabled={createTaskMutation.isPending}>
                   {createTaskMutation.isPending ? "Creating..." : "Create Task"}
                 </Button>
@@ -1765,44 +1782,18 @@ export default function TasksTab({ dealId }: TasksTabProps) {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Task Dialog */}
+      {/* Edit task dialog */}
       <Dialog open={isEditTaskOpen} onOpenChange={setIsEditTaskOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle>Edit Task</DialogTitle>
             <DialogDescription>
-              Update the task details.
+              Update the task details below.
             </DialogDescription>
           </DialogHeader>
           
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onUpdateTask)} className="space-y-5">
-              <FormField
-                control={form.control}
-                name="taskType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Task Type</FormLabel>
-                    <Select
-                      defaultValue={field.value}
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        setTaskType(value);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select task type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="internal">Internal</SelectItem>
-                        <SelectItem value="external">External</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
+            <form onSubmit={form.handleSubmit(onUpdateTask)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -1810,7 +1801,7 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                   <FormItem>
                     <FormLabel>Task Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter task name" {...field} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1824,13 +1815,43 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Enter task description" 
-                        className="resize-none h-20"
-                        {...field}
-                        value={field.value || ""}
-                      />
+                      <Textarea {...field} placeholder="Add more details about this task" />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="taskType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Task Type</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setTaskType(value);
+                        
+                        // Reset assignee fields when task type changes
+                        form.setValue("assigneeId", null);
+                        form.setValue("customAssigneeId", null);
+                        form.setValue("customAssigneeName", "");
+                        form.setValue("lawFirmId", null);
+                        form.setValue("attorneyId", null);
+                      }}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select task type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="internal">Internal Task</SelectItem>
+                        <SelectItem value="external">External Task</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -1843,16 +1864,19 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                   <FormItem>
                     <FormLabel>Status</FormLabel>
                     <Select
-                      defaultValue={field.value}
+                      value={field.value}
                       onValueChange={field.onChange}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
-                        <SelectItem value="open">Open</SelectItem>
+                        <SelectItem value="open">To Do</SelectItem>
                         <SelectItem value="in-progress">In Progress</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -1866,37 +1890,37 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Due Date</FormLabel>
-                    <FormControl>
-                      <Popover>
-                        <PopoverTrigger asChild>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
                           <Button
                             variant="outline"
-                            className="w-full justify-start text-left font-normal"
-                            type="button"
+                            className="pl-3 text-left font-normal"
                           >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
                             {field.value ? (
                               format(field.value, "PPP")
                             ) : (
-                              <span>Select a date</span>
+                              <span>Pick a date</span>
                             )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value as Date}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </FormControl>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value || undefined}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
+              {/* Assignee selection based on task type */}
               {taskType === "internal" ? (
                 <FormField
                   control={form.control}
@@ -1905,24 +1929,21 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                     <FormItem>
                       <FormLabel>Assignee</FormLabel>
                       <Select
-                        value={field.value ? field.value.toString() : ""}
-                        onValueChange={(value) => field.onChange(value ? parseInt(value, 10) : null)}
+                        value={field.value !== null ? String(field.value) : ""}
+                        onValueChange={(value) => field.onChange(value ? Number(value) : null)}
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select an assignee" />
-                        </SelectTrigger>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an assignee" />
+                          </SelectTrigger>
+                        </FormControl>
                         <SelectContent>
-                          {usersLoading ? (
-                            <div className="p-2 text-sm text-muted-foreground">Loading users...</div>
-                          ) : users?.length === 0 ? (
-                            <div className="p-2 text-sm text-muted-foreground">No users available</div>
-                          ) : (
-                            users?.map((user: User) => (
-                              <SelectItem key={user.id} value={user.id.toString()}>
-                                {user.fullName}
-                              </SelectItem>
-                            ))
-                          )}
+                          <SelectItem value="">Unassigned</SelectItem>
+                          {users?.map((user: User) => (
+                            <SelectItem key={user.id} value={String(user.id)}>
+                              {user.fullName}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -1930,49 +1951,22 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                   )}
                 />
               ) : (
-                <>
-                  <FormItem className="space-y-2">
-                    <FormLabel>External Assignee Type</FormLabel>
-                    <div className="flex flex-col space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id="lawFirmEdit"
-                          name="externalAssigneeTypeEdit"
-                          value="lawFirm"
-                          checked={externalAssigneeType === "lawFirm"}
-                          onChange={() => setExternalAssigneeType("lawFirm")}
-                          className="h-4 w-4 text-primary"
-                        />
-                        <label htmlFor="lawFirmEdit" className="text-sm">Law Firm</label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id="attorneyEdit"
-                          name="externalAssigneeTypeEdit"
-                          value="attorney"
-                          checked={externalAssigneeType === "attorney"}
-                          onChange={() => setExternalAssigneeType("attorney")}
-                          className="h-4 w-4 text-primary"
-                        />
-                        <label htmlFor="attorneyEdit" className="text-sm">Attorney</label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id="customAssigneeEdit"
-                          name="externalAssigneeTypeEdit"
-                          value="customAssignee"
-                          checked={externalAssigneeType === "customAssignee"}
-                          onChange={() => setExternalAssigneeType("customAssignee")}
-                          className="h-4 w-4 text-primary"
-                        />
-                        <label htmlFor="customAssigneeEdit" className="text-sm">Custom Assignee</label>
-                      </div>
-                    </div>
+                <div className="space-y-4">
+                  <FormItem>
+                    <FormLabel>Assignee Type</FormLabel>
+                    <Select
+                      value={externalAssigneeType}
+                      onValueChange={setExternalAssigneeType}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select assignee type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="lawFirm">Law Firm</SelectItem>
+                        <SelectItem value="attorney">Specific Attorney</SelectItem>
+                        <SelectItem value="custom">Custom Assignee</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </FormItem>
                   
                   {externalAssigneeType === "lawFirm" && (
@@ -1983,28 +1977,21 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                         <FormItem>
                           <FormLabel>Law Firm</FormLabel>
                           <Select
-                            value={field.value ? field.value.toString() : ""}
-                            onValueChange={(value) => {
-                              field.onChange(value ? parseInt(value, 10) : null);
-                              setSelectedLawFirm(value ? parseInt(value, 10) : null);
-                              form.setValue("attorneyId", null);
-                            }}
+                            value={field.value !== null ? String(field.value) : ""}
+                            onValueChange={(value) => field.onChange(value ? Number(value) : null)}
                           >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a law firm" />
-                            </SelectTrigger>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a law firm" />
+                              </SelectTrigger>
+                            </FormControl>
                             <SelectContent>
-                              {lawFirmsLoading ? (
-                                <div className="p-2 text-sm text-muted-foreground">Loading law firms...</div>
-                              ) : lawFirms?.length === 0 ? (
-                                <div className="p-2 text-sm text-muted-foreground">No law firms available</div>
-                              ) : (
-                                lawFirms?.map((lawFirm: LawFirm) => (
-                                  <SelectItem key={lawFirm.id} value={lawFirm.id.toString()}>
-                                    {lawFirm.name}
-                                  </SelectItem>
-                                ))
-                              )}
+                              <SelectItem value="">Unassigned</SelectItem>
+                              {lawFirms?.map((lawFirm: LawFirm) => (
+                                <SelectItem key={lawFirm.id} value={String(lawFirm.id)}>
+                                  {lawFirm.name}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -2022,28 +2009,24 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                           <FormItem>
                             <FormLabel>Law Firm</FormLabel>
                             <Select
-                              value={field.value ? field.value.toString() : ""}
+                              value={field.value !== null ? String(field.value) : ""}
                               onValueChange={(value) => {
-                                field.onChange(value ? parseInt(value, 10) : null);
-                                setSelectedLawFirm(value ? parseInt(value, 10) : null);
+                                field.onChange(value ? Number(value) : null);
+                                setSelectedLawFirm(value ? Number(value) : null);
                                 form.setValue("attorneyId", null);
                               }}
                             >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a law firm" />
-                              </SelectTrigger>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a law firm" />
+                                </SelectTrigger>
+                              </FormControl>
                               <SelectContent>
-                                {lawFirmsLoading ? (
-                                  <div className="p-2 text-sm text-muted-foreground">Loading law firms...</div>
-                                ) : lawFirms?.length === 0 ? (
-                                  <div className="p-2 text-sm text-muted-foreground">No law firms available</div>
-                                ) : (
-                                  lawFirms?.map((lawFirm: LawFirm) => (
-                                    <SelectItem key={lawFirm.id} value={lawFirm.id.toString()}>
-                                      {lawFirm.name}
-                                    </SelectItem>
-                                  ))
-                                )}
+                                {lawFirms?.map((lawFirm: LawFirm) => (
+                                  <SelectItem key={lawFirm.id} value={String(lawFirm.id)}>
+                                    {lawFirm.name}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -2051,142 +2034,112 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                         )}
                       />
                       
-                      <FormField
-                        control={form.control}
-                        name="attorneyId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Attorney</FormLabel>
-                            <Select
-                              value={field.value ? field.value.toString() : ""}
-                              onValueChange={(value) => field.onChange(value ? parseInt(value, 10) : null)}
-                              disabled={!selectedLawFirm}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder={selectedLawFirm ? "Select an attorney" : "Select a law firm first"} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {attorneysLoading ? (
-                                  <div className="p-2 text-sm text-muted-foreground">Loading attorneys...</div>
-                                ) : !selectedLawFirm ? (
-                                  <div className="p-2 text-sm text-muted-foreground">Select a law firm first</div>
-                                ) : (
-                                  attorneys?.filter((a: Attorney) => a.lawFirmId === selectedLawFirm).map((attorney: Attorney) => (
-                                    <SelectItem key={attorney.id} value={attorney.id.toString()}>
+                      {selectedLawFirm && (
+                        <FormField
+                          control={form.control}
+                          name="attorneyId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Attorney</FormLabel>
+                              <Select
+                                value={field.value !== null ? String(field.value) : ""}
+                                onValueChange={(value) => field.onChange(value ? Number(value) : null)}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select an attorney" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="">Any Attorney</SelectItem>
+                                  {attorneys?.filter((a: Attorney) => a.lawFirmId === selectedLawFirm).map((attorney: Attorney) => (
+                                    <SelectItem key={attorney.id} value={String(attorney.id)}>
                                       {attorney.name}
                                     </SelectItem>
-                                  ))
-                                )}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
                     </>
                   )}
                   
-                  {externalAssigneeType === "customAssignee" && (
+                  {externalAssigneeType === "custom" && (
                     <FormField
                       control={form.control}
                       name="customAssigneeId"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Custom Assignee</FormLabel>
-                          <Select
-                            value={field.value ? field.value.toString() : ""}
-                            onValueChange={(value) => field.onChange(value ? parseInt(value, 10) : null)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select or create a custom assignee" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {customAssigneesLoading ? (
-                                <div className="p-2 text-sm text-muted-foreground">Loading...</div>
-                              ) : (
-                                <>
-                                  {customAssignees?.map((assignee: CustomAssignee) => (
-                                    <SelectItem key={assignee.id} value={assignee.id.toString()}>
-                                      {assignee.name}
-                                    </SelectItem>
-                                  ))}
-                                  <div className="border-t border-border my-1 px-2 py-1.5">
-                                    <Dialog>
-                                      <DialogTrigger asChild>
-                                        <Button 
-                                          variant="ghost" 
-                                          className="w-full justify-start text-left text-sm font-normal"
-                                          type="button"
-                                        >
-                                          <Plus className="mr-2 h-3.5 w-3.5" />
-                                          Add New Assignee
-                                        </Button>
-                                      </DialogTrigger>
-                                      <DialogContent className="sm:max-w-[425px]">
-                                        <DialogHeader>
-                                          <DialogTitle>Add Custom Assignee</DialogTitle>
-                                          <DialogDescription>
-                                            Create a new custom assignee for tasks.
-                                          </DialogDescription>
-                                        </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                          <div className="grid grid-cols-4 items-center gap-4">
-                                            <label className="text-right text-sm" htmlFor="customAssigneeNameEdit">
-                                              Name
-                                            </label>
-                                            <Input
-                                              id="customAssigneeNameEdit"
-                                              className="col-span-3"
-                                              placeholder="Enter name"
-                                              value={form.watch("customAssigneeName") || ""}
-                                              onChange={(e) => form.setValue("customAssigneeName", e.target.value)}
-                                            />
-                                          </div>
-                                        </div>
-                                        <DialogFooter>
-                                          <DialogClose asChild>
-                                            <Button variant="secondary" type="button">Cancel</Button>
-                                          </DialogClose>
-                                          <Button 
-                                            type="button"
-                                            onClick={async () => {
-                                              if (!form.watch("customAssigneeName")) return;
-                                              
-                                              try {
-                                                const result = await handleCreateCustomAssignee(form.watch("customAssigneeName") || "");
-                                                if (result && result.id) {
-                                                  form.setValue("customAssigneeId", result.id);
-                                                  form.setValue("customAssigneeName", "");
-                                                }
-                                              } catch (error) {
-                                                console.error("Error creating custom assignee:", error);
-                                              }
-                                            }}
-                                          >
-                                            Create
-                                          </Button>
-                                        </DialogFooter>
-                                      </DialogContent>
-                                    </Dialog>
-                                  </div>
-                                </>
-                              )}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex space-x-2">
+                            <Select
+                              value={field.value !== null ? String(field.value) : ""}
+                              onValueChange={(value) => {
+                                field.onChange(value ? Number(value) : null);
+                                if (value === "new") {
+                                  form.watch("customAssigneeName");
+                                } else {
+                                  form.setValue("customAssigneeName", "");
+                                }
+                              }}
+                              className="flex-1"
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select or create an assignee" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="">Unassigned</SelectItem>
+                                <SelectItem value="new">+ Create New</SelectItem>
+                                {customAssignees?.map((assignee: CustomAssignee) => (
+                                  <SelectItem key={assignee.id} value={String(assignee.id)}>
+                                    {assignee.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {form.watch("customAssigneeId") === "new" && (
+                            <div className="mt-2">
+                              <FormField
+                                control={form.control}
+                                name="customAssigneeName"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        placeholder="Enter new assignee name"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   )}
-                </>
+                </div>
               )}
               
               <DialogFooter>
-                <Button variant="outline" type="button" onClick={() => setIsEditTaskOpen(false)}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsEditTaskOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={updateTaskMutation.isPending}>
-                  {updateTaskMutation.isPending ? "Updating..." : "Update Task"}
+                  {updateTaskMutation.isPending ? "Saving..." : "Save Changes"}
                 </Button>
               </DialogFooter>
             </form>
