@@ -1,11 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { CalendarIcon, PlusIcon, TrashIcon, Pencil, ChevronRight, ChevronDown } from 'lucide-react';
+import { 
+  CalendarIcon, 
+  PlusIcon, 
+  TrashIcon, 
+  Pencil, 
+  ChevronRight, 
+  ChevronDown,
+  MoreHorizontal,
+  Circle,
+  CheckCircle
+} from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { format } from 'date-fns';
 import {
@@ -32,6 +42,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 
 // Define the types based on our schema
 interface ClosingChecklistItem {
@@ -68,6 +84,9 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
   const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
   const [isAddSubItemDialogOpen, setIsAddSubItemDialogOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({});
+  const [editingInlineId, setEditingInlineId] = useState<number | null>(null);
+  const editInputRef = useRef<HTMLInputElement>(null);
+  const [newItemText, setNewItemText] = useState('');
 
   // Load expanded state from localStorage on component mount
   useEffect(() => {
@@ -334,6 +353,47 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
       return newState;
     });
   };
+  
+  // Function to start inline editing
+  const startInlineEditing = (id: number) => {
+    setEditingInlineId(id);
+    // Focus the input after the state update has been processed
+    setTimeout(() => {
+      if (editInputRef.current) {
+        editInputRef.current.focus();
+      }
+    }, 0);
+  };
+  
+  // Function to save inline edited name
+  const saveInlineItemName = (id: number, newName: string) => {
+    if (!newName.trim()) {
+      toast({
+        title: "Error",
+        description: "Item name cannot be empty",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    updateItemMutation.mutate({
+      id,
+      values: { title: newName.trim() }
+    });
+    
+    setEditingInlineId(null);
+  };
+  
+  // Function to add a new item with enter key
+  const handleQuickAddItem = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && newItemText.trim()) {
+      createItemMutation.mutate({
+        title: newItemText.trim(),
+        isComplete: false
+      });
+      setNewItemText('');
+    }
+  };
 
   if (isLoading) {
     return <div className="p-6">Loading closing checklist...</div>;
@@ -348,42 +408,6 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
             {checklistItems.filter(item => item.isComplete).length}/{checklistItems.length}
           </span>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusIcon className="h-4 w-4 mr-2" />
-              Add Item
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Checklist Item</DialogTitle>
-            </DialogHeader>
-            <Form {...addForm}>
-              <form onSubmit={addForm.handleSubmit(handleAddItem)} className="space-y-4">
-                <FormField
-                  control={addForm.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter item title" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <DialogFooter>
-                  <Button type="submit" disabled={createItemMutation.isPending}>
-                    {createItemMutation.isPending ? "Adding..." : "Add Item"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
       </div>
 
       {/* Dialog for adding sub-items */}
@@ -421,180 +445,222 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
         </DialogContent>
       </Dialog>
 
-      {Array.isArray(checklistItems) && checklistItems.length === 0 ? (
-        <Card className="p-6 text-center text-gray-500">
-          No checklist items yet. Click "Add Item" to create one.
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {/* Filter to show only top-level items (no parent) */}
-          {Array.isArray(checklistItems) && checklistItems
-            .filter(item => item.parentId === null)
-            .map((item: ClosingChecklistItem) => {
-              // Get sub-items for this item
-              const subItems = checklistItems.filter(subItem => subItem.parentId === item.id);
-              
-              return (
-                <div key={item.id} className="space-y-2">
-                  <Card className="p-4">
-                    {editItemId === item.id ? (
-                      // Edit form
-                      <Form {...editForm}>
-                        <form onSubmit={editForm.handleSubmit(handleEditItem)} className="space-y-4">
-                          <FormField
-                            control={editForm.control}
-                            name="title"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Title</FormLabel>
-                                <FormControl>
-                                  <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <div className="flex justify-end space-x-2">
-                            <Button type="button" variant="outline" onClick={() => setEditItemId(null)}>
-                              Cancel
-                            </Button>
-                            <Button type="submit" disabled={updateItemMutation.isPending}>
-                              {updateItemMutation.isPending ? "Saving..." : "Save"}
-                            </Button>
-                          </div>
-                        </form>
-                      </Form>
-                    ) : (
-                      // Display mode
-                      <div className="flex items-start">
-                        <div className="mr-3 mt-1">
-                          <Checkbox 
-                            checked={item.isComplete} 
-                            onCheckedChange={() => handleToggleComplete(item.id, item.isComplete)}
-                          />
+      {/* Asana-like interface */}
+      <div className="border rounded-md shadow-sm">
+        {/* Quick add input */}
+        <div className="border-b p-3">
+          <div className="flex items-center">
+            <Input
+              type="text"
+              placeholder="Type checklist item and press Enter to add..."
+              value={newItemText}
+              onChange={(e) => setNewItemText(e.target.value)}
+              onKeyDown={handleQuickAddItem}
+              className="border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
+                if (newItemText.trim()) {
+                  createItemMutation.mutate({
+                    title: newItemText.trim(),
+                    isComplete: false,
+                  });
+                  setNewItemText('');
+                }
+              }}
+              disabled={!newItemText.trim() || createItemMutation.isPending}
+            >
+              <PlusIcon className="h-4 w-4 mr-1" />
+              Add
+            </Button>
+          </div>
+        </div>
+
+        {/* Checklist items */}
+        {Array.isArray(checklistItems) && checklistItems.length === 0 ? (
+          <div className="p-6 text-center text-gray-500">
+            No checklist items yet. Type above to create one.
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {/* Filter to show only top-level items (no parent) */}
+            {Array.isArray(checklistItems) && checklistItems
+              .filter(item => item.parentId === null)
+              .map((item: ClosingChecklistItem) => {
+                // Get sub-items for this item
+                const subItems = checklistItems.filter(subItem => subItem.parentId === item.id);
+                
+                return (
+                  <div key={item.id}>
+                    <div className="group px-4 py-3 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center">
+                        <div className="flex-none mr-3">
+                          {item.isComplete ? (
+                            <CheckCircle 
+                              className="h-5 w-5 text-primary cursor-pointer" 
+                              onClick={() => handleToggleComplete(item.id, item.isComplete)}
+                            />
+                          ) : (
+                            <Circle 
+                              className="h-5 w-5 text-muted-foreground hover:text-primary cursor-pointer" 
+                              onClick={() => handleToggleComplete(item.id, item.isComplete)}
+                            />
+                          )}
                         </div>
-                        <div className="flex-1">
-                          <div className="flex justify-between">
-                            <div className="flex items-center">
-                              {subItems.length > 0 && (
-                                <button 
-                                  onClick={() => toggleExpandItem(item.id)} 
-                                  className="mr-1 text-gray-500 hover:text-gray-800 focus:outline-none"
-                                >
-                                  {expandedItems[item.id] === false ? 
-                                    <ChevronRight className="h-4 w-4" /> : 
-                                    <ChevronDown className="h-4 w-4" />
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center">
+                            {subItems.length > 0 && (
+                              <button 
+                                onClick={() => toggleExpandItem(item.id)} 
+                                className="mr-2 text-gray-500 hover:text-gray-800 focus:outline-none"
+                              >
+                                {expandedItems[item.id] === false ? 
+                                  <ChevronRight className="h-4 w-4" /> : 
+                                  <ChevronDown className="h-4 w-4" />
+                                }
+                              </button>
+                            )}
+                            
+                            {editingInlineId === item.id ? (
+                              <input
+                                ref={editInputRef}
+                                type="text"
+                                className="w-full border-b border-primary outline-none bg-transparent py-1"
+                                defaultValue={item.title}
+                                onBlur={(e) => saveInlineItemName(item.id, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    saveInlineItemName(item.id, e.currentTarget.value);
+                                  } else if (e.key === 'Escape') {
+                                    setEditingInlineId(null);
                                   }
-                                </button>
-                              )}
-                              <h3 className={`text-lg font-medium ${item.isComplete ? 'line-through text-gray-500' : ''}`}>
+                                }}
+                              />
+                            ) : (
+                              <div 
+                                className={`text-sm ${item.isComplete ? 'line-through text-muted-foreground' : ''}`}
+                                onClick={() => startInlineEditing(item.id)}
+                              >
                                 {item.title}
-                              </h3>
-                            </div>
-                            <div className="flex space-x-2">
-                              <Button variant="ghost" size="sm" onClick={() => openAddSubItemDialog(item.id)}>
-                                <PlusIcon className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => startEditItem(item)}>
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => handleDeleteItem(item.id)}>
-                                <TrashIcon className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </div>
+                              </div>
+                            )}
                           </div>
-                          {item.description && (
-                            <p className="text-gray-600 mt-1">{item.description}</p>
-                          )}
-                          {item.dueDate && (
-                            <div className="text-sm text-gray-500 mt-2 flex items-center">
-                              <CalendarIcon className="h-4 w-4 mr-1" />
-                              Due: {format(new Date(item.dueDate), "PP")}
-                            </div>
-                          )}
+                        </div>
+
+                        <div className="flex-none ml-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => startInlineEditing(item.id)}>
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openAddSubItemDialog(item.id)}>
+                                <PlusIcon className="h-4 w-4 mr-2" />
+                                Add Sub-Item
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteItem(item.id)}
+                                className="text-destructive"
+                              >
+                                <TrashIcon className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
-                    )}
-                  </Card>
-                  
-                  {/* Render sub-items with indentation */}
-                  {subItems.length > 0 && expandedItems[item.id] !== false && (
-                    <div className="ml-8 space-y-2">
-                      {subItems.map((subItem: ClosingChecklistItem) => (
-                        <Card key={subItem.id} className="p-3 border-l-4 border-gray-200">
-                          {editItemId === subItem.id ? (
-                            // Edit form for sub-item
-                            <Form {...editForm}>
-                              <form onSubmit={editForm.handleSubmit(handleEditItem)} className="space-y-4">
-                                <FormField
-                                  control={editForm.control}
-                                  name="title"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Title</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                
-                                <div className="flex justify-end space-x-2">
-                                  <Button type="button" variant="outline" onClick={() => setEditItemId(null)}>
-                                    Cancel
-                                  </Button>
-                                  <Button type="submit" disabled={updateItemMutation.isPending}>
-                                    {updateItemMutation.isPending ? "Saving..." : "Save"}
-                                  </Button>
-                                </div>
-                              </form>
-                            </Form>
-                          ) : (
-                            // Display mode for sub-item
-                            <div className="flex items-start">
-                              <div className="mr-3 mt-1">
-                                <Checkbox 
-                                  checked={subItem.isComplete} 
-                                  onCheckedChange={() => handleToggleComplete(subItem.id, subItem.isComplete)}
-                                />
+                    </div>
+                    
+                    {/* Render sub-items with indentation */}
+                    {subItems.length > 0 && expandedItems[item.id] !== false && (
+                      <div className="bg-muted/30">
+                        {subItems.map((subItem: ClosingChecklistItem) => (
+                          <div 
+                            key={subItem.id} 
+                            className="group border-t border-border/50 px-4 py-3 pl-10 hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="flex items-center">
+                              <div className="flex-none mr-3">
+                                {subItem.isComplete ? (
+                                  <CheckCircle 
+                                    className="h-5 w-5 text-primary cursor-pointer" 
+                                    onClick={() => handleToggleComplete(subItem.id, subItem.isComplete)}
+                                  />
+                                ) : (
+                                  <Circle 
+                                    className="h-5 w-5 text-muted-foreground hover:text-primary cursor-pointer" 
+                                    onClick={() => handleToggleComplete(subItem.id, subItem.isComplete)}
+                                  />
+                                )}
                               </div>
-                              <div className="flex-1">
-                                <div className="flex justify-between">
-                                  <h3 className={`text-md font-medium ${subItem.isComplete ? 'line-through text-gray-500' : ''}`}>
+
+                              <div className="flex-1 min-w-0">
+                                {editingInlineId === subItem.id ? (
+                                  <input
+                                    ref={editInputRef}
+                                    type="text"
+                                    className="w-full border-b border-primary outline-none bg-transparent py-1"
+                                    defaultValue={subItem.title}
+                                    onBlur={(e) => saveInlineItemName(subItem.id, e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        saveInlineItemName(subItem.id, e.currentTarget.value);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingInlineId(null);
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  <div 
+                                    className={`text-sm ${subItem.isComplete ? 'line-through text-muted-foreground' : ''}`}
+                                    onClick={() => startInlineEditing(subItem.id)}
+                                  >
                                     {subItem.title}
-                                  </h3>
-                                  <div className="flex space-x-2">
-                                    <Button variant="ghost" size="sm" onClick={() => startEditItem(subItem)}>
-                                      <Pencil className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteItem(subItem.id)}>
-                                      <TrashIcon className="h-4 w-4 text-red-500" />
-                                    </Button>
-                                  </div>
-                                </div>
-                                {subItem.description && (
-                                  <p className="text-gray-600 mt-1">{subItem.description}</p>
-                                )}
-                                {subItem.dueDate && (
-                                  <div className="text-sm text-gray-500 mt-2 flex items-center">
-                                    <CalendarIcon className="h-4 w-4 mr-1" />
-                                    Due: {format(new Date(subItem.dueDate), "PP")}
                                   </div>
                                 )}
+                              </div>
+
+                              <div className="flex-none ml-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => startInlineEditing(subItem.id)}>
+                                      <Pencil className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      onClick={() => handleDeleteItem(subItem.id)}
+                                      className="text-destructive"
+                                    >
+                                      <TrashIcon className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </div>
                             </div>
-                          )}
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-        </div>
-      )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
