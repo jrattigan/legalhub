@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -13,12 +13,30 @@ import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon, Plus, Edit, Trash2, CheckCircle, Circle } from "lucide-react";
+import { 
+  CalendarIcon, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  CheckCircle, 
+  Circle, 
+  ChevronDown, 
+  ChevronRight, 
+  MoreHorizontal,
+  MenuIcon,
+  Clock
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 interface TasksTabProps {
   dealId: number;
@@ -104,6 +122,14 @@ export function TasksTab({ dealId }: TasksTabProps) {
   const [selectedLawFirm, setSelectedLawFirm] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("internal");
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    "To Do": true,
+    "In Progress": true,
+    "Completed": true
+  });
+  const [quickAddText, setQuickAddText] = useState("");
+  const editInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch Tasks
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
@@ -726,9 +752,31 @@ export function TasksTab({ dealId }: TasksTabProps) {
 
   // Handle task status toggle
   const handleTaskStatusToggle = (task: Task, checked: boolean) => {
+    // If a task is currently completed and we're unchecking it, move it to in-progress
+    // If a task is in any other state and we're checking it, mark it as completed
+    const newStatus = checked ? 'completed' : (task.status === 'completed' ? 'in-progress' : 'open');
+    
     toggleTaskStatusMutation.mutate({
       id: task.id,
-      data: { status: checked ? 'completed' : 'open' }
+      data: { status: newStatus }
+    });
+  };
+  
+  // Toggle task to next status in cycle: open -> in-progress -> completed -> open
+  const cycleTaskStatus = (task: Task) => {
+    let newStatus: string;
+    
+    if (task.status === 'open') {
+      newStatus = 'in-progress';
+    } else if (task.status === 'in-progress') {
+      newStatus = 'completed';
+    } else {
+      newStatus = 'open';
+    }
+    
+    toggleTaskStatusMutation.mutate({
+      id: task.id,
+      data: { status: newStatus }
     });
   };
 
@@ -750,8 +798,76 @@ export function TasksTab({ dealId }: TasksTabProps) {
     return filteredTasks;
   };
   
+  // Group tasks by status for Asana-like sections
+  const getTasksBySection = () => {
+    const filteredTasks = getFilteredTasks();
+    const sections: Record<string, Task[]> = {
+      "To Do": [],
+      "In Progress": [],
+      "Completed": []
+    };
+    
+    filteredTasks.forEach(task => {
+      if (task.status === 'completed') {
+        sections["Completed"].push(task);
+      } else if (task.status === 'in-progress') {
+        sections["In Progress"].push(task);
+      } else {
+        sections["To Do"].push(task);
+      }
+    });
+    
+    return sections;
+  };
+  
+  // Toggle section expansion
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+  
+  // Handle inline task name editing
+  const startEditingTask = (taskId: number) => {
+    setEditingTaskId(taskId);
+    // Focus the input after rendering
+    setTimeout(() => {
+      if (editInputRef.current) {
+        editInputRef.current.focus();
+      }
+    }, 10);
+  };
+  
+  // Save inline task editing
+  const saveTaskName = (taskId: number, newName: string) => {
+    if (newName.trim()) {
+      updateTaskMutation.mutate({
+        id: taskId,
+        data: { name: newName.trim() }
+      });
+    }
+    setEditingTaskId(null);
+  };
+  
+  // Handle quick add task
+  const handleQuickAddTask = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && quickAddText.trim()) {
+      createTaskMutation.mutate({
+        name: quickAddText.trim(),
+        description: null,
+        dueDate: null,
+        dealId,
+        taskType: activeTab,
+        status: 'open'
+      });
+      setQuickAddText("");
+    }
+  };
+  
   // Filter tasks based on the selected tab and status filter
   const currentTasks = getFilteredTasks();
+  const tasksBySection = getTasksBySection();
   
   // Log when active tab changes
   useEffect(() => {
@@ -816,20 +932,17 @@ export function TasksTab({ dealId }: TasksTabProps) {
             <SelectContent>
               <SelectItem value="all">All Tasks</SelectItem>
               <SelectItem value="open">Open Tasks</SelectItem>
+              <SelectItem value="in-progress">In Progress</SelectItem>
               <SelectItem value="completed">Completed Tasks</SelectItem>
             </SelectContent>
           </Select>
           
           <Button 
             onClick={() => {
-              console.log("👉 ADD TASK BUTTON CLICKED");
               form.reset();
-              // Use the active tab to determine which type of task to create
               setTaskType(activeTab);
               form.setValue("taskType", activeTab);
               setIsAddTaskOpen(true);
-              console.log("👉 isAddTaskOpen set to:", true);
-              console.log("👉 Setting task type to:", activeTab);
             }}
             size="sm"
           >
@@ -844,7 +957,6 @@ export function TasksTab({ dealId }: TasksTabProps) {
         defaultValue="internal" 
         className="w-full" 
         onValueChange={(value) => {
-          console.log("Tab value changed to:", value);
           setActiveTab(value as "internal" | "external");
         }}>
         <TabsList className="grid w-[200px] grid-cols-2">
@@ -853,62 +965,162 @@ export function TasksTab({ dealId }: TasksTabProps) {
         </TabsList>
         
         {/* Common Tabs Content for both Internal and External Tasks */}
-        <TabsContent value={activeTab}>
+        <TabsContent value={activeTab} className="mt-2">
           {tasksLoading ? (
-            <p>Loading tasks...</p>
+            <div className="py-8 text-center text-muted-foreground">
+              <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+              Loading tasks...
+            </div>
           ) : currentTasks.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
               No {activeTab} tasks found. Create a new task to get started.
             </div>
           ) : (
-            <div className="grid gap-4">
-              {currentTasks.map((task: Task) => (
-                <Card key={task.id} className={task.status === 'completed' ? "opacity-70" : ""}>
-                  <CardHeader className="py-3 px-4 flex flex-row items-start justify-between space-y-0">
-                    <div className="flex items-center space-x-3">
-                      <Checkbox 
-                        checked={task.status === 'completed'}
-                        onCheckedChange={(checked) => handleTaskStatusToggle(task, checked as boolean)}
-                      />
-                      <CardTitle className="text-sm font-medium">{task.name}</CardTitle>
-                    </div>
+            <div className="space-y-4 pb-6">
+              {/* Quick add task input */}
+              <div className="flex items-center border border-input rounded-md overflow-hidden">
+                <div className="flex-none px-3 py-2 border-r border-input">
+                  <Plus className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <input 
+                  type="text" 
+                  className="flex-1 px-3 py-2 outline-none bg-transparent" 
+                  placeholder="Add a task and press Enter" 
+                  value={quickAddText}
+                  onChange={(e) => setQuickAddText(e.target.value)}
+                  onKeyDown={handleQuickAddTask}
+                />
+              </div>
+              
+              {/* Task sections */}
+              {Object.entries(tasksBySection).map(([section, sectionTasks]) => (
+                <div key={section} className="border border-border rounded-md overflow-hidden">
+                  {/* Section header */}
+                  <div 
+                    className="flex items-center justify-between px-4 py-2 bg-muted cursor-pointer"
+                    onClick={() => toggleSection(section)}
+                  >
                     <div className="flex items-center space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => {
-                          setCurrentTask(task);
-                          setTaskType(task.taskType);
-                          setIsEditTaskOpen(true);
-                        }}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => {
-                          if (confirm("Are you sure you want to delete this task?")) {
-                            deleteTaskMutation.mutate(task.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {expandedSections[section] ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                      <h4 className="font-medium text-sm">{section}</h4>
+                      <span className="text-xs text-muted-foreground">({sectionTasks.length})</span>
                     </div>
-                  </CardHeader>
-                  <CardContent className="pb-4 px-4">
-                    {task.description && (
-                      <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
-                    )}
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Assignee: {getAssigneeName(task)}</span>
-                      {task.dueDate && (
-                        <span>Due: {format(new Date(task.dueDate), 'PPP')}</span>
+                  </div>
+                  
+                  {/* Section tasks */}
+                  {expandedSections[section] && (
+                    <div className="divide-y divide-border">
+                      {sectionTasks.length === 0 ? (
+                        <div className="px-4 py-3 text-sm text-muted-foreground italic">
+                          No tasks in this section
+                        </div>
+                      ) : (
+                        sectionTasks.map((task: Task) => (
+                          <div 
+                            key={task.id} 
+                            className="group px-4 py-2 hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="flex items-center">
+                              <div className="flex-none mr-3">
+                                {task.status === 'completed' ? (
+                                  <CheckCircle 
+                                    className="h-5 w-5 text-primary cursor-pointer" 
+                                    onClick={() => handleTaskStatusToggle(task, false)}
+                                  />
+                                ) : (
+                                  <Circle 
+                                    className="h-5 w-5 text-muted-foreground hover:text-primary cursor-pointer" 
+                                    onClick={() => handleTaskStatusToggle(task, true)}
+                                  />
+                                )}
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                {editingTaskId === task.id ? (
+                                  <input
+                                    ref={editInputRef}
+                                    type="text"
+                                    className="w-full border-b border-primary outline-none bg-transparent py-1"
+                                    defaultValue={task.name}
+                                    onBlur={(e) => saveTaskName(task.id, e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        saveTaskName(task.id, e.currentTarget.value);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingTaskId(null);
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  <div 
+                                    className={`text-sm truncate ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}
+                                    onClick={() => startEditingTask(task.id)}
+                                  >
+                                    {task.name}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex-none ml-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {task.dueDate && (
+                                  <div className="text-xs bg-muted px-2 py-1 rounded-full flex items-center">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    {format(new Date(task.dueDate), 'MMM d')}
+                                  </div>
+                                )}
+                                
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => {
+                                      setCurrentTask(task);
+                                      setTaskType(task.taskType);
+                                      setIsEditTaskOpen(true);
+                                    }}>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => cycleTaskStatus(task)}>
+                                      <MenuIcon className="h-4 w-4 mr-2" />
+                                      Change Status
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => {
+                                      if (window.confirm("Are you sure you want to delete this task?")) {
+                                        deleteTaskMutation.mutate(task.id);
+                                      }
+                                    }} className="text-destructive">
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+
+                              {/* Assignee indicator - simplified in this view */}
+                              <div className="flex-none ml-2 text-xs text-muted-foreground hidden md:block">
+                                {getAssigneeName(task)}
+                              </div>
+                            </div>
+                            
+                            {task.description && (
+                              <div className="ml-8 mt-1 text-xs text-muted-foreground line-clamp-1">
+                                {task.description}
+                              </div>
+                            )}
+                          </div>
+                        ))
                       )}
                     </div>
-                  </CardContent>
-                </Card>
+                  )}
+                </div>
               ))}
             </div>
           )}
@@ -987,6 +1199,30 @@ export function TasksTab({ dealId }: TasksTabProps) {
                         value={field.value || ""}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="open">To Do</SelectItem>
+                        <SelectItem value="in-progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
