@@ -977,9 +977,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      const response = await fetch(url);
+      console.log(`DEBUG - Image proxy fetching: ${url}`);
+      
+      // Add user-agent to avoid being blocked
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
       
       if (!response.ok) {
+        console.error(`Failed to fetch image: ${response.status} ${response.statusText}`);
         return res.status(response.status).json({ 
           message: `Failed to fetch image: ${response.statusText}` 
         });
@@ -993,7 +1001,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Convert the response to a buffer and send it
       const buffer = await response.arrayBuffer();
-      res.send(Buffer.from(buffer));
+      const imageBuffer = Buffer.from(buffer);
+      console.log(`DEBUG - Image proxy success: ${url} (${imageBuffer.length} bytes, content-type: ${contentType})`);
+      
+      res.send(imageBuffer);
       
     } catch (error) {
       console.error('Image proxy error:', error);
