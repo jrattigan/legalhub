@@ -28,6 +28,7 @@ import {
   PopoverTrigger 
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { DirectDatePicker } from "@/components/ui/direct-calendar";
 import { 
   Dialog, 
   DialogContent, 
@@ -672,6 +673,64 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     return updateTask(taskWithDate);
   };
   
+  // EMERGENCY FIX: Direct handler for calendar date selection that bypasses the editing system
+  const handleCalendarDateSelect = (task: Task, date: Date | null) => {
+    console.log("CALENDAR SELECT DIRECT HANDLER:", {taskId: task.id, date});
+    
+    // Early return if the date is null or the same as the current one
+    if (date === null) {
+      setEditingField(null); // Just close the popover
+      return;
+    }
+    
+    // Directly update the task in the cache first for immediate UI feedback
+    const formattedDate = date.toISOString();
+    
+    // First, update the cache directly to prevent flashing
+    queryClient.setQueryData(['/api/deals', dealId, 'tasks'], (oldData: Task[] | undefined) => {
+      if (!oldData) return oldData;
+      return oldData.map(t => t.id === task.id ? {...t, dueDate: formattedDate} : t);
+    });
+    
+    // Reset editing field to close the popover
+    setEditingField(null);
+    
+    // Prepare task with the new date
+    const taskWithDate = {
+      ...task,
+      dueDate: formattedDate
+    };
+    
+    // Skip all other editing logic and directly send to API
+    fetch(`/api/tasks/${task.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(taskWithDate)
+    }).then(res => {
+      if (!res.ok) {
+        // If update fails, refetch to restore correct state
+        queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+        toast({
+          title: "Failed to update date",
+          description: "There was an error updating the due date.",
+          variant: "destructive"
+        });
+      } else {
+        // Refresh the data to ensure consistency
+        queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      }
+    }).catch(error => {
+      console.error("Error updating task date:", error);
+      // If there's a network error, refetch
+      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      toast({
+        title: "Network error",
+        description: "Please check your connection and try again.",
+        variant: "destructive"
+      });
+    });
+  };
+  
   // Save the edited value - using async/await for better control flow
   const saveInlineEdit = async (task: Task) => {
     if (!editingField) return;
@@ -1198,36 +1257,14 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                           <div className="col-span-3">
                             {isEditingDate ? (
                               <div className="editing-controls">
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      className="w-full justify-start text-left font-normal"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <CalendarIcon className="mr-2 h-4 w-4" />
-                                      {editingField?.value ? 
-                                        format(editingField.value, 'PP') : 
-                                        <span>No due date</span>
-                                      }
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                      mode="single"
-                                      selected={editingField?.value || undefined}
-                                      onSelect={(date) => {
-                                        setEditingField({
-                                          ...editingField!,
-                                          value: date
-                                        });
-                                        // Auto-save when a date is selected
-                                        saveInlineEdit(task);
-                                      }}
-                                      initialFocus
-                                    />
-                                  </PopoverContent>
-                                </Popover>
+                                <DirectDatePicker
+                                  initialDate={editingField?.value || null}
+                                  taskId={task.id}
+                                  dealId={dealId}
+                                  onChange={(date) => {
+                                    setEditingField(null);
+                                  }}
+                                />
                               </div>
                             ) : (
                               <div 
@@ -1476,36 +1513,14 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                           <div className="col-span-3">
                             {isEditingDate ? (
                               <div className="editing-controls">
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      className="w-full justify-start text-left font-normal"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <CalendarIcon className="mr-2 h-4 w-4" />
-                                      {editingField?.value ? 
-                                        format(editingField.value, 'PP') : 
-                                        <span>No due date</span>
-                                      }
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                      mode="single"
-                                      selected={editingField?.value || undefined}
-                                      onSelect={(date) => {
-                                        setEditingField({
-                                          ...editingField!,
-                                          value: date
-                                        });
-                                        // Auto-save when a date is selected
-                                        saveInlineEdit(task);
-                                      }}
-                                      initialFocus
-                                    />
-                                  </PopoverContent>
-                                </Popover>
+                                <DirectDatePicker
+                                  initialDate={editingField?.value || null}
+                                  taskId={task.id}
+                                  dealId={dealId}
+                                  onChange={(date) => {
+                                    setEditingField(null);
+                                  }}
+                                />
                               </div>
                             ) : (
                               <div 
