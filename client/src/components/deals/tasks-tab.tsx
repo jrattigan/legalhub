@@ -127,7 +127,8 @@ interface EditingField {
   value: any;
 }
 
-export function TasksTab({ dealId }: TasksTabProps) {
+// Export as default component to avoid potential naming conflicts
+export default function TasksTab({ dealId }: TasksTabProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);

@@ -57,7 +57,7 @@ import IssueCard from './issue-card';
 import CounselCard from './counsel-card';
 import TimelineCard from './timeline-card';
 import AllocationsTab from './allocations-tab';
-import { TasksTab } from './tasks-tab';
+import TasksTab from './tasks-tab';
 import { ClosingChecklistTab } from './closing-checklist-tab';
 
 type DealDetailProps = {
