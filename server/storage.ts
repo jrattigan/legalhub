@@ -2520,26 +2520,94 @@ export class MemStorage implements IStorage {
   }
 
   async updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined> {
+    console.log(`🔍 STORAGE.updateTask(${id}) - Starting update with data:`, JSON.stringify(task, (key, value) => {
+      if (value instanceof Date) {
+        return value.toISOString();
+      }
+      return value;
+    }, 2));
+    
     const existingTask = this.tasks.get(id);
     if (!existingTask) {
+      console.log(`❌ STORAGE.updateTask(${id}) - Task not found`);
       return undefined;
     }
+    
+    console.log(`🔍 STORAGE.updateTask(${id}) - Existing task:`, JSON.stringify(existingTask, (key, value) => {
+      if (value instanceof Date) {
+        return value.toISOString();
+      }
+      return value;
+    }, 2));
 
     // Check if the custom assignee is being changed
     const isCustomAssigneeChanged = task.customAssigneeId !== undefined && 
                                    task.customAssigneeId !== existingTask.customAssigneeId;
     
+    // Create an updated task with careful handling of null values
     const updatedTask: Task = {
-      ...existingTask,
-      ...task,
-      updatedAt: new Date(),
-      description: task.description !== undefined ? task.description : existingTask.description,
-      dueDate: task.dueDate !== undefined ? task.dueDate : existingTask.dueDate,
-      assigneeId: task.assigneeId !== undefined ? task.assigneeId : existingTask.assigneeId,
-      customAssigneeId: task.customAssigneeId !== undefined ? task.customAssigneeId : existingTask.customAssigneeId,
-      lawFirmId: task.lawFirmId !== undefined ? task.lawFirmId : existingTask.lawFirmId,
-      attorneyId: task.attorneyId !== undefined ? task.attorneyId : existingTask.attorneyId
+      ...existingTask,  // Start with existing task
+      updatedAt: new Date(),  // Always update the timestamp
     };
+    
+    // Now explicitly set each field that could be updated, with careful null handling
+    if (task.name !== undefined) {
+      updatedTask.name = task.name;
+      console.log(`🔍 STORAGE.updateTask(${id}) - Updating name to:`, task.name);
+    }
+    
+    if (task.description !== undefined) {
+      updatedTask.description = task.description;
+      console.log(`🔍 STORAGE.updateTask(${id}) - Updating description to:`, task.description);
+    }
+    
+    if (task.status !== undefined) {
+      updatedTask.status = task.status;
+      console.log(`🔍 STORAGE.updateTask(${id}) - Updating status to:`, task.status);
+    }
+    
+    if (task.dueDate !== undefined) {
+      updatedTask.dueDate = task.dueDate;
+      console.log(`🔍 STORAGE.updateTask(${id}) - Updating dueDate to:`, 
+        task.dueDate instanceof Date ? task.dueDate.toISOString() : task.dueDate);
+    }
+    
+    if (task.assigneeId !== undefined) {
+      updatedTask.assigneeId = task.assigneeId;
+      console.log(`🔍 STORAGE.updateTask(${id}) - Updating assigneeId to:`, task.assigneeId);
+    }
+    
+    if (task.customAssigneeId !== undefined) {
+      updatedTask.customAssigneeId = task.customAssigneeId;
+      console.log(`🔍 STORAGE.updateTask(${id}) - Updating customAssigneeId to:`, task.customAssigneeId);
+    }
+    
+    if (task.lawFirmId !== undefined) {
+      updatedTask.lawFirmId = task.lawFirmId;
+      console.log(`🔍 STORAGE.updateTask(${id}) - Updating lawFirmId to:`, task.lawFirmId);
+    }
+    
+    if (task.attorneyId !== undefined) {
+      updatedTask.attorneyId = task.attorneyId;
+      console.log(`🔍 STORAGE.updateTask(${id}) - Updating attorneyId to:`, task.attorneyId);
+    }
+    
+    if (task.taskType !== undefined) {
+      updatedTask.taskType = task.taskType;
+      console.log(`🔍 STORAGE.updateTask(${id}) - Updating taskType to:`, task.taskType);
+    }
+    
+    if (task.dealId !== undefined) {
+      updatedTask.dealId = task.dealId;
+      console.log(`🔍 STORAGE.updateTask(${id}) - Updating dealId to:`, task.dealId);
+    }
+
+    console.log(`🔍 STORAGE.updateTask(${id}) - Final updated task:`, JSON.stringify(updatedTask, (key, value) => {
+      if (value instanceof Date) {
+        return value.toISOString();
+      }
+      return value;
+    }, 2));
 
     this.tasks.set(id, updatedTask);
     
@@ -2548,6 +2616,7 @@ export class MemStorage implements IStorage {
       await this.deleteUnusedCustomAssignees();
     }
     
+    console.log(`✅ STORAGE.updateTask(${id}) - Task updated successfully`);
     return updatedTask;
   }
 

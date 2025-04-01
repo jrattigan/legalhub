@@ -1652,15 +1652,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/tasks/:id", async (req, res) => {
     const id = parseInt(req.params.id);
+    console.log(`🔍 PATCH /api/tasks/${id} - Received request with body:`, JSON.stringify(req.body, null, 2));
+    
     if (isNaN(id)) {
+      console.log(`❌ PATCH /api/tasks/${id} - Invalid task ID`);
       return res.status(400).json({ message: "Invalid task ID" });
     }
 
     try {
       // Ensure dueDate is properly converted to a Date object if it exists
       const data = req.body;
+      
+      console.log(`🔍 PATCH /api/tasks/${id} - Processing data:`, {
+        beforeConversion: { 
+          dueDate: data.dueDate, 
+          dueDateType: data.dueDate ? typeof data.dueDate : 'null/undefined',
+          isDateInstance: data.dueDate instanceof Date
+        }
+      });
+      
       if (data.dueDate && !(data.dueDate instanceof Date)) {
-        data.dueDate = new Date(data.dueDate);
+        try {
+          data.dueDate = new Date(data.dueDate);
+          console.log(`🔍 PATCH /api/tasks/${id} - Converted dueDate:`, {
+            newDueDate: data.dueDate,
+            isValid: !isNaN(data.dueDate.getTime())
+          });
+        } catch (err) {
+          console.error(`❌ PATCH /api/tasks/${id} - Error converting dueDate:`, err);
+          // Keep original value if conversion fails
+        }
       }
 
       // Create a partial schema for validation
@@ -1677,16 +1698,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: z.string().optional()
       });
 
+      console.log(`🔍 PATCH /api/tasks/${id} - Data before validation:`, JSON.stringify(data, (key, value) => {
+        if (value instanceof Date) {
+          return value.toISOString();
+        }
+        return value;
+      }, 2));
+      
       const validatedData = partialTaskSchema.parse(data);
+      
+      console.log(`🔍 PATCH /api/tasks/${id} - Data after validation:`, JSON.stringify(validatedData, (key, value) => {
+        if (value instanceof Date) {
+          return value.toISOString();
+        }
+        return value;
+      }, 2));
+      
       const updatedTask = await storage.updateTask(id, validatedData);
       
       if (!updatedTask) {
+        console.log(`❌ PATCH /api/tasks/${id} - Task not found`);
         return res.status(404).json({ message: "Task not found" });
       }
       
+      console.log(`✅ PATCH /api/tasks/${id} - Task updated successfully:`, JSON.stringify(updatedTask, (key, value) => {
+        if (value instanceof Date) {
+          return value.toISOString();
+        }
+        return value;
+      }, 2));
+      
       res.json(updatedTask);
     } catch (error) {
-      console.error("Error updating task:", error);
+      console.error(`❌ PATCH /api/tasks/${id} - Error updating task:`, error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid task data", errors: error.errors });
       }
