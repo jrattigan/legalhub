@@ -432,8 +432,8 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     setEditingField(null);
   };
 
-  // Save the edited value
-  const saveInlineEdit = (task: Task) => {
+  // Save the edited value - using async/await for better control flow
+  const saveInlineEdit = async (task: Task) => {
     if (!editingField) return;
     
     const updatedTask: any = {};
@@ -460,11 +460,9 @@ export default function TasksTab({ dealId }: TasksTabProps) {
         break;
       case 'assignee':
         // Special handling for assignee field to prevent UI update issues
-        // We need to reset all assignee fields first, then set the selected one
+        // Reset all assignee fields first, then set the selected one
         
-        console.log("ASSIGNEE EDIT - Original editing field value:", editingField.value);
-        
-        // Reset all assignee fields first
+        // Reset all assignee fields first to avoid conflicts
         updatedTask.assigneeId = null;
         updatedTask.lawFirmId = null;
         updatedTask.attorneyId = null;
@@ -484,18 +482,9 @@ export default function TasksTab({ dealId }: TasksTabProps) {
           if (editingField.value.customAssigneeId) {
             updatedTask.customAssigneeId = Number(editingField.value.customAssigneeId);
           }
-          
-          console.log("ASSIGNEE EDIT - Final task update:", updatedTask);
         }
         break;
     }
-    
-    console.log("Saving task update:", {
-      taskId: task.id,
-      updatedFields: updatedTask,
-      editingField,
-      fieldsBeingSent: JSON.stringify(updatedTask)
-    });
     
     // Ensure we're sending numbers for IDs, not strings
     if (updatedTask.assigneeId !== null) updatedTask.assigneeId = Number(updatedTask.assigneeId);
@@ -503,41 +492,43 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     if (updatedTask.attorneyId !== null) updatedTask.attorneyId = Number(updatedTask.attorneyId);
     if (updatedTask.customAssigneeId !== null) updatedTask.customAssigneeId = Number(updatedTask.customAssigneeId);
     
-    // Clear editing state BEFORE making the API call to make UI more responsive
-    const savedEditingField = {...editingField}; // Save a copy for error handling
-    setEditingField(null);
+    // Create a copy of editing field for potential error handling
+    const currentEditField = {...editingField};
     
-    // Use direct fetch for immediate update
-    fetch(`/api/tasks/${task.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updatedTask)
-    })
-    .then(res => {
-      console.log(`Response status from task update:`, res.status, res.ok);
-      if (!res.ok) {
-        throw new Error(`Server returned ${res.status}: ${res.statusText}`);
+    try {
+      // First, clear the editing state to give immediate UI feedback 
+      // (but we'll set it back if the API call fails)
+      setEditingField(null);
+      
+      // Make the API call
+      const response = await fetch(`/api/tasks/${task.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedTask)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
       }
-      return res.json();
-    })
-    .then(data => {
-      console.log("Task update successful:", data);
+      
+      const data = await response.json();
       
       // Force an immediate refetch of the tasks data to update UI
-      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       
       // Show success toast
       toast({
         title: "Task updated",
         description: "The task has been updated successfully.",
       });
-    })
-    .catch(error => {
+      
+      return data;
+    } catch (error) {
       console.error("Error updating task:", error);
       
-      // Only restore editing state for non-assignee fields
-      if (savedEditingField.field !== 'assignee') {
-        setEditingField(savedEditingField);
+      // Restore editing state for non-assignee fields to allow retrying
+      if (currentEditField.field !== 'assignee') {
+        setEditingField(currentEditField);
       }
       
       toast({
@@ -545,7 +536,9 @@ export default function TasksTab({ dealId }: TasksTabProps) {
         description: "There was an error updating the task. Please try again.",
         variant: "destructive"
       });
-    });
+      
+      return null;
+    }
   };
 
   // Handle key events while editing
