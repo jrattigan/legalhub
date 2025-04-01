@@ -106,7 +106,13 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
       if (!response.ok) {
         throw new Error('Failed to fetch attorneys');
       }
-      return response.json();
+      const data = await response.json();
+      console.log('Attorney data from API:', data);
+      // Check each photoUrl
+      data.forEach((attorney: Attorney) => {
+        console.log(`Attorney ${attorney.name} photoUrl:`, attorney.photoUrl);
+      });
+      return data;
     },
     enabled: !!lawFirmId,
     retry: 1,
