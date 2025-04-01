@@ -587,6 +587,21 @@ export default function TasksTab({ dealId }: TasksTabProps) {
       
       console.log('SUBMITTING TASK UPDATE:', dataToSubmit);
       
+      // First, manually update the tasks array in the cache so the UI updates immediately
+      // This is the critical fix for the "flashing" issue - React Query will use this 
+      // value until the server responds
+      // Create an optimistic update for the task
+      queryClient.setQueryData(['/api/deals', dealId, 'tasks'], (oldData: Task[] | undefined) => {
+        // If we don't have the data yet, we can't update it
+        if (!oldData) return oldData;
+        
+        // Create a new array with the updated task
+        return oldData.map(task => 
+          task.id === updatedTask.id ? {...task, ...dataToSubmit} : task
+        );
+      });
+      
+      // Then make the actual API call
       const response = await fetch(`/api/tasks/${updatedTask.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -594,14 +609,17 @@ export default function TasksTab({ dealId }: TasksTabProps) {
       });
       
       if (!response.ok) {
+        // If the request fails, we need to rollback our optimistic update
+        queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
         throw new Error(`Server returned ${response.status}: ${response.statusText}`);
       }
       
       const data = await response.json();
       console.log('TASK UPDATE SUCCESS RESPONSE:', data);
       
-      // Force an immediate refetch of the tasks data to update UI
-      await queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      // After successful update, refetch to ensure our cache matches the server state
+      // Use invalidateQueries instead of fetchQuery to respect React Query's cache mechanics
+      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       
       // Clear editing state
       setEditingField(null);
@@ -637,6 +655,18 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     };
     
     console.log("SAVE DUE DATE - Date formatted as:", taskWithDate.dueDate);
+    
+    // First, directly update the optimistic UI state before API call
+    // This prevents the "flashing" where the old date briefly reappears
+    queryClient.setQueryData(['/api/deals', dealId, 'tasks'], (oldData: Task[] | undefined) => {
+      // If we don't have the data yet, we can't update it
+      if (!oldData) return oldData;
+      
+      // Create a new array with the updated task
+      return oldData.map(t => 
+        t.id === task.id ? {...t, dueDate: taskWithDate.dueDate} : t
+      );
+    });
     
     // Bypass saveInlineEdit and go directly to API
     return updateTask(taskWithDate);
