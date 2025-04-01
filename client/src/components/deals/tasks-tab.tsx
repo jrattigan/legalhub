@@ -491,8 +491,14 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     })
     .then(data => {
       console.log("Task update successful:", data);
+      
       // Force a refetch of the tasks data
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      
+      // Clear editing state before refetching to avoid UI flicker
+      setEditingField(null);
+      
+      // Show toast notification
       toast({
         title: "Task updated",
         description: "The task has been updated successfully.",
@@ -505,10 +511,9 @@ export default function TasksTab({ dealId }: TasksTabProps) {
         description: "There was an error updating the task. Please try again.",
         variant: "destructive"
       });
+      // Still clear editing state even on error
+      setEditingField(null);
     });
-    
-    // Exit editing mode
-    setEditingField(null);
   };
 
   // Handle key events while editing
