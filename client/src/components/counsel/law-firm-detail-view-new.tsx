@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { AlertCircle, Building, Mail, Phone, User, Briefcase, FileText, Calendar, ArrowRight, UserPlus, Edit } from "lucide-react";
+import { AlertCircle, Building, Mail, Phone, User, Briefcase, FileText, Calendar, ArrowRight, UserPlus, Edit, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -68,6 +68,8 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
   const [isAddAttorneyOpen, setIsAddAttorneyOpen] = useState(false);
   const [isEditAttorneyOpen, setIsEditAttorneyOpen] = useState(false);
   const [isEditLawFirmOpen, setIsEditLawFirmOpen] = useState(false);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const [selectedAttorney, setSelectedAttorney] = useState<Attorney | null>(null);
   const [newAttorney, setNewAttorney] = useState<Partial<InsertAttorney>>({});
   const [editingAttorney, setEditingAttorney] = useState<Attorney | null>(null);
   const [editingLawFirm, setEditingLawFirm] = useState<LawFirm | null>(null);
@@ -627,7 +629,13 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
               <div className="space-y-4">
                 {attorneys.map((attorney) => (
                   <div key={attorney.id} className="flex items-start p-3 rounded-md border border-neutral-200">
-                    <Avatar className="h-10 w-10 mr-4">
+                    <Avatar 
+                      className="h-10 w-10 mr-4 cursor-pointer"
+                      onClick={() => {
+                        setSelectedAttorney(attorney);
+                        setIsImageDialogOpen(true);
+                      }}
+                    >
                       {attorney.name ? (
                         <AvatarImage 
                           src={`/attorney-photos/${attorney.name.toLowerCase().replace(/ /g, '-')}.jpg`}
@@ -862,6 +870,41 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Enlarged attorney photo dialog */}
+      <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex justify-between items-center">
+              {selectedAttorney?.name}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7 rounded-full" 
+                onClick={() => setIsImageDialogOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+            <DialogDescription>
+              {selectedAttorney?.position} at {lawFirm?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center p-4">
+            <div className="rounded-md overflow-hidden border border-neutral-200 shadow-md">
+              <img
+                src={selectedAttorney?.name ? 
+                  `/attorney-photos/${selectedAttorney.name.toLowerCase().replace(/ /g, '-')}.jpg` : 
+                  undefined
+                }
+                alt={selectedAttorney?.name || 'Attorney photo'}
+                className="max-w-full h-auto object-cover"
+                style={{ maxHeight: '70vh' }}
+              />
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
