@@ -1087,31 +1087,51 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     }
   };
 
-  // Direct helper function to get filtered task list
+  // COMPLETELY REBUILT filtering function to fix the task type issue
   const getFilteredTaskList = (tabType: string) => {
-    // Use EXACT MATCHING on task types to ensure proper filtering
+    // Early return if no tasks
     if (!tasks || tasks.length === 0) return [];
     
-    // Debug logging to help identify any issues
-    console.log(`getFilteredTaskList: filtering for ${tabType} tasks in deal ${dealId}`);
-    console.log(`Total tasks before filtering: ${tasks.length}`);
+    // Debug logging
+    console.log(`[TASK FILTERING] Filtering for ${tabType} tasks in deal ${dealId}`);
+    console.log(`[TASK FILTERING] Total tasks before filtering: ${tasks.length}`);
     
-    const filteredTasks = tasks.filter(task => {
-      // 1. Filter for tasks with this deal ID
+    // First verify that we have valid task type values on all tasks
+    const taskTypes = tasks.map(t => t.taskType);
+    console.log(`[TASK FILTERING] All task types in data:`, taskTypes);
+    
+    // STEP 1: PRE-FILTER - Get only tasks for this deal
+    const dealTasks = tasks.filter(task => {
       const taskDealId = typeof task.dealId === 'string' ? parseInt(task.dealId, 10) : task.dealId;
-      const matchesDeal = taskDealId === dealId;
-      
-      // 2. Filter for EXACT task type equality using strict comparison
-      const matchesType = task.taskType === tabType;
-      
-      // Log each task for debugging
-      console.log(`Task ${task.id} (${task.name}): dealId=${task.dealId}, type=${task.taskType}, matchesDeal=${matchesDeal}, matchesType=${matchesType}`);
-            
-      return matchesDeal && matchesType;
+      return taskDealId === dealId;
     });
     
-    console.log(`Filtered ${tabType} tasks: ${filteredTasks.length}`);
-    return filteredTasks;
+    console.log(`[TASK FILTERING] Tasks for deal ${dealId}: ${dealTasks.length}`);
+    
+    // STEP 2: TYPE FILTERING - Filter by task type with EXHAUSTIVE LOGGING
+    const result = dealTasks.filter(task => {
+      // Direct string comparison 
+      const isMatch = String(task.taskType).trim() === String(tabType).trim();
+      
+      // Log EVERY task for debugging
+      console.log(`[TASK FILTERING] Task ID ${task.id} - "${task.name}":
+        - taskType=${task.taskType} (${typeof task.taskType})
+        - tabType=${tabType} (${typeof tabType})
+        - isMatch=${isMatch}
+        - All task fields: ${JSON.stringify({
+            id: task.id,
+            taskType: task.taskType,
+            name: task.name,
+            dealId: task.dealId
+          })}`);
+      
+      return isMatch;
+    });
+    
+    // Final count for this filter
+    console.log(`[TASK FILTERING] FINAL: ${result.length} tasks of type "${tabType}" for deal ${dealId}`);
+    
+    return result;
   };
   
   // Replace all setTimeout calls with direct saveInlineEdit calls
@@ -1121,10 +1141,15 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     console.log("All setTimeout calls for saveInlineEdit have been replaced with direct calls.");
   };
   
-  // Get statistics for the active tab
-  const activeTabTasks = getFilteredTaskList(activeTab);
+  // Get statistics for the active tab - DIRECT FILTERING
+  const activeTabTasks = tasks
+    .filter(task => {
+      const taskDealId = typeof task.dealId === 'string' ? parseInt(task.dealId, 10) : task.dealId;
+      return taskDealId === dealId && task.taskType === activeTab;
+    });
+    
   const totalTasks = activeTabTasks.length || 0;
-  const completedTasks = activeTabTasks.filter((task: Task) => task.status === "completed").length || 0;
+  const completedTasks = activeTabTasks.filter(task => task.status === "completed").length || 0;
   const percentage = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   return (
@@ -1175,10 +1200,6 @@ export default function TasksTab({ dealId }: TasksTabProps) {
               <div className="py-8 text-center text-muted-foreground">
                 Loading tasks...
               </div>
-            ) : getFilteredTaskList('internal').length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground">
-                No internal tasks found. Create a new task to get started.
-              </div>
             ) : (
               <div className="space-y-4 pb-6">
                 {/* Task table structure */}
@@ -1191,9 +1212,15 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                     <div className="col-span-2">Status</div>
                   </div>
                   
-                  {/* Task rows */}
+                  {/* Task rows - USING DIRECT FILTER WITH HARDCODED VALUE */}
                   <div className="divide-y divide-border">
-                    {getFilteredTaskList('internal').map((task: Task) => {
+                    {tasks
+                      .filter(task => {
+                        // Only include tasks that belong to this deal AND are internal type
+                        const taskDealId = typeof task.dealId === 'string' ? parseInt(task.dealId, 10) : task.dealId;
+                        return taskDealId === dealId && task.taskType === 'internal';
+                      })
+                      .map((task: Task) => {
                       // Is this task currently being edited?
                       const isEditingField = editingField && editingField.taskId === task.id;
                       const isEditingName = isEditingField && editingField.field === 'name';
@@ -1431,10 +1458,6 @@ export default function TasksTab({ dealId }: TasksTabProps) {
               <div className="py-8 text-center text-muted-foreground">
                 Loading tasks...
               </div>
-            ) : getFilteredTaskList('external').length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground">
-                No external tasks found. Create a new task to get started.
-              </div>
             ) : (
               <div className="space-y-4 pb-6">
                 {/* Task table structure */}
@@ -1447,9 +1470,15 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                     <div className="col-span-2">Status</div>
                   </div>
                   
-                  {/* Task rows */}
+                  {/* Task rows - USING DIRECT FILTER WITH HARDCODED VALUE */}
                   <div className="divide-y divide-border">
-                    {getFilteredTaskList('external').map((task: Task) => {
+                    {tasks
+                      .filter(task => {
+                        // Only include tasks that belong to this deal AND are external type
+                        const taskDealId = typeof task.dealId === 'string' ? parseInt(task.dealId, 10) : task.dealId;
+                        return taskDealId === dealId && task.taskType === 'external';
+                      })
+                      .map((task: Task) => {
                       // Is this task currently being edited?
                       const isEditingField = editingField && editingField.taskId === task.id;
                       const isEditingName = isEditingField && editingField.field === 'name';
