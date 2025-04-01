@@ -1,0 +1,621 @@
+
+<!doctype html>
+<html lang="en-US" dir="ltr" data-page-id="8bc0a1e4f7304e88b3752c0dffb6db43"  >
+<head>
+    <!-- Google Analytics Data Layer -->
+    <script>
+		window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({
+				'requesterOffice': '',
+                'requesterRegion': '',
+                'audienceRegion':  ''
+         });
+	</script>
+    <link rel="preload" as="font" crossorigin="anonymous" href="/assets/fonts/Mark-Book.woff2">
+    <link rel="preload" as="font" crossorigin="anonymous" href="/assets/fonts/Mark-Bold.woff2">
+    <link rel="preload" as="font" crossorigin="anonymous" href="/assets/fonts/Capoernicus-Book.woff2">
+    <link rel="preload" as="font" crossorigin="anonymous" href="/assets/fonts/Capoernicus-Medium.woff2">
+    <link rel="preload" as="font" crossorigin="anonymous" href="/assets/fonts/icomoon.woff2?d47e3s">
+
+    <!-- DNS preconnects for ubiquitous external host dependencies. -->
+    <link rel="preconnect" crossorigin="anonymous" href="//static.cloud.coveo.com">
+    <link rel="preconnect" crossorigin="anonymous" href="//www.googletagmanager.com">
+    <link rel="preconnect" crossorigin="anonymous" href="//www.google.com">
+    <link rel="preconnect" crossorigin="anonymous" href="//www.gstatic.com">
+
+    <meta charset="utf-8">
+
+    <link rel="stylesheet" href="/assets/css/style.css?v=133878778692404873">
+	
+    
+    
+<title>404 // Cooley // Global Law Firm</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://www.cooley.com/404" />
+<meta name="description" content="" />
+<meta name="keywords" content="" />
+<meta property="og:url" content="https://www.cooley.com/404" />
+<meta property="og:title" content="404 // Cooley // Global Law Firm" />
+<meta property="og:description" content="" />
+<meta property="og:image" content="https://www.cooley.com/-/media/cooley/media-logos/cooley-social-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="404 // Cooley // Global Law Firm" />
+<meta name="twitter:description" content="" />
+<meta name="twitter:image" content="https://www.cooley.com/-/media/cooley/media-logos/cooley-twitter-red-box-600.png" />
+<meta name="twitter:creator" content="@CooleyLLP" />
+<meta name="twitter:site" content="@CooleyLLP" />
+
+
+    <!-- Google Tag Manager -->
+    <script>
+		(function (w, d, s, l, i) {
+			w[l] = w[l] || []; w[l].push({
+				'gtm.start':
+					new Date().getTime(), event: 'gtm.js'
+			}); var f = d.getElementsByTagName(s)[0],
+				j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+					'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+		})(window, document, 'script', 'dataLayer', 'GTM-KX6KFHS');</script>
+    <!-- End Google Tag Manager -->
+
+    <link rel="manifest" href="/assets/pwa/manifest.json" crossorigin="use-credentials">
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/pwa/icons/favicon.ico">
+    <link rel="icon" href="/assets/pwa/icons/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/assets/pwa/icons/apple-touch-icon.png">
+    <meta name="theme-color" content="#ff0000">
+</head>
+<body>
+	<!-- Google Tag Manager (noscript) -->
+	<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KX6KFHS" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+	<!-- End Google Tag Manager (noscript) -->
+
+	
+<!-- BEGIN NOINDEX -->
+<!-- Skip Link for a11y -->
+<a class="skiplink" href="#maincontent">Skip to main content</a>
+<!-- components/site-header/site-header.twig -->
+<header class="site-header">
+    <div class="site-header-inner">
+
+        <!-- Nav Buttons -->
+        <div class="triggers">
+            <button class="menu-open js-menu-open icon-menu" type="button" aria-label="Open Menu">
+                <span class="sr-text">menu</span>
+            </button>
+
+            <button class="search-open js-search-open icon-header-search" type="button" aria-label="Open Search">
+                <span class="sr-text">search</span>
+            </button>
+        </div>
+
+        <!-- Logo -->
+        <a class="logo" href="/" aria-label="Cooley">
+            <svg width="131" height="44" viewBox="0 0 131 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M83.4534 0.387451H78.9927V32.4233H83.4534V0.387451Z" fill="white" />
+    <path d="M125.596 11.8459L119.617 25.02L113.306 11.8459H108.45L117.298 30.1358L111.444 43.0603H116.082L130.233 11.8459H125.596Z" fill="white" />
+    <path d="M57.0217 22.1293C57.0483 23.4357 57.4602 24.7052 58.2056 25.7784C58.9509 26.8516 59.9967 27.6808 61.2115 28.1619C62.4264 28.643 63.7563 28.7547 65.0344 28.4828C66.3125 28.2109 67.4818 27.5676 68.3957 26.6337C69.3095 25.6998 69.9273 24.5167 70.1713 23.233C70.4153 21.9493 70.2748 20.6222 69.7674 19.418C69.26 18.2139 68.4082 17.1864 67.3191 16.4646C66.2299 15.7427 64.9518 15.3585 63.6451 15.3603C62.7593 15.347 61.88 15.5141 61.0608 15.8514C60.2415 16.1888 59.4995 16.6893 58.8799 17.3226C58.2603 17.9558 57.776 18.7085 57.4566 19.5349C57.1371 20.3612 56.9891 21.244 57.0217 22.1293ZM52.613 22.1293C52.5696 19.9361 53.1805 17.7796 54.3676 15.935C55.5548 14.0903 57.2645 12.641 59.2786 11.7719C61.2928 10.9029 63.5202 10.6534 65.6767 11.0554C67.8332 11.4573 69.8211 12.4924 71.387 14.0288C72.9528 15.5651 74.0256 17.5329 74.4685 19.6814C74.9114 21.8299 74.7043 24.0616 73.8738 26.092C73.0432 28.1223 71.6267 29.8592 69.805 31.0813C67.9832 32.3033 65.8388 32.9551 63.6451 32.9535C62.2093 32.9699 60.7843 32.7027 59.4519 32.1672C58.1196 31.6316 56.9061 30.8382 55.8811 29.8325C54.8561 28.8268 54.0398 27.6287 53.479 26.3068C52.9181 24.9849 52.6239 23.5652 52.613 22.1293Z" fill="white" />
+    <path d="M97.5943 14.8717C98.9346 14.8727 100.233 15.3386 101.268 16.19C102.304 17.0413 103.012 18.2254 103.272 19.5403H91.5947C91.8888 18.1823 92.6508 16.9708 93.7474 16.1174C94.844 15.2641 96.2056 14.8232 97.5943 14.8717ZM103.511 26.1222C102.885 27.0251 102.048 27.7619 101.073 28.2691C100.099 28.7764 99.0153 29.0387 97.9166 29.0336C97.0993 29.0712 96.2826 28.9452 95.5147 28.6631C94.7467 28.3809 94.0428 27.9482 93.4442 27.3903C92.8457 26.8324 92.3646 26.1607 92.0291 25.4144C91.6937 24.6681 91.5106 23.8624 91.4907 23.0444H107.524C107.878 16.7433 104.311 11.274 97.5527 11.274C90.9916 11.274 87.2588 16.3066 87.2588 22.3997C87.2588 28.3057 91.4179 32.9952 97.6567 32.9952C99.4382 33.0386 101.202 32.6292 102.782 31.8054C104.362 30.9816 105.708 29.7703 106.692 28.2849L103.511 26.1222Z" fill="white" />
+    <path d="M31.8381 22.1293C31.8647 23.4357 32.2766 24.7052 33.022 25.7784C33.7673 26.8516 34.8131 27.6808 36.028 28.1619C37.2428 28.643 38.5727 28.7547 39.8508 28.4828C41.1289 28.2109 42.2982 27.5676 43.2121 26.6337C44.126 25.6998 44.7437 24.5167 44.9877 23.233C45.2317 21.9493 45.0912 20.6222 44.5838 19.418C44.0764 18.2139 43.2246 17.1864 42.1355 16.4646C41.0463 15.7427 39.7682 15.3585 38.4615 15.3603C37.5757 15.347 36.6964 15.5141 35.8772 15.8514C35.0579 16.1888 34.316 16.6893 33.6963 17.3226C33.0767 17.9558 32.5924 18.7085 32.273 19.5349C31.9535 20.3612 31.8055 21.244 31.8381 22.1293ZM27.4294 22.1293C27.386 19.9361 27.9969 17.7796 29.184 15.935C30.3712 14.0903 32.0809 12.641 34.095 11.7719C36.1092 10.9029 38.3366 10.6534 40.4931 11.0554C42.6496 11.4573 44.6375 12.4924 46.2034 14.0288C47.7692 15.5651 48.842 17.5329 49.2849 19.6814C49.7278 21.8299 49.5208 24.0616 48.6902 26.092C47.8596 28.1223 46.4431 29.8592 44.6214 31.0813C42.7996 32.3033 40.6552 32.9551 38.4615 32.9535C37.0257 32.9699 35.6007 32.7027 34.2683 32.1672C32.936 31.6316 31.7225 30.8382 30.6975 29.8325C29.6725 28.8268 28.8562 27.6287 28.2954 26.3068C27.7345 24.9849 27.4403 23.5652 27.4294 22.1293Z" fill="white" />
+    <path d="M15.0769 2.88286C11.0783 2.88286 7.24339 4.47131 4.41592 7.29878C1.58845 10.1262 0 13.9611 0 17.9598C0 21.9584 1.58845 25.7933 4.41592 28.6208C7.24339 31.4482 11.0783 33.0367 15.0769 33.0367C18.3241 33.036 21.4902 32.0219 24.1335 30.1357V24.8432C21.5652 27.7442 17.718 28.4928 14.9625 28.4928C12.1635 28.5038 9.47469 27.4025 7.48767 25.4311C5.50064 23.4596 4.37813 20.7796 4.3671 17.9806C4.35607 15.1815 5.45741 12.4927 7.42884 10.5057C9.40026 8.51866 12.0803 7.39615 14.8793 7.38512C17.7803 7.38512 21.5652 7.99862 24.1335 10.9828V5.78387C21.5439 3.79199 18.3421 2.76271 15.0769 2.87245" fill="white" />
+</svg>
+        </a>
+
+    </div>
+    <section class="site-header-search" aria-hidden="true" aria-modal="true">
+        <div class="site-header-search-inner">
+            
+
+
+
+<script>
+    document.addEventListener("CoveoSearchEndpointInitialized", function() {
+        var searchboxElement = document.getElementById("cooley-coveo-searchbox-site-header");
+        searchboxElement.addEventListener("CoveoComponentInitialized", function() {
+            CoveoForSitecore.initSearchboxIfStandalone(searchboxElement, "/search");
+        });
+    })
+</script>    <div id="cooley-coveo-searchbox-site-header_container" class="coveo-for-sitecore-search-box-container"
+                     data-prebind-maximum-age='currentMaximumAge'
+             data-pipeline='Replatform Default'
+>
+        <div id="cooley-coveo-searchbox-site-header"
+             class="CoveoSearchbox"
+                             data-enable-omnibox='true'
+                 data-prebind-maximum-age='currentMaximumAge'
+                 data-pipeline='Replatform Default'
+                 data-placeholder='Enter search keywords'
+                 data-clear-filters-on-new-query='false'
+>
+            
+            
+<script type="text/javascript">
+    document.addEventListener("CoveoSearchEndpointInitialized", function() {
+        var componentId = "cooley-coveo-searchbox-site-header";
+        var componentElement = document.getElementById(componentId);
+
+        function showError(error) {
+                console.error(error);
+        }
+
+        function areCoveoResourcesIncluded() {
+            return typeof (Coveo) !== "undefined";
+        }
+
+        if (areCoveoResourcesIncluded()) {
+            var event = document.createEvent("CustomEvent");
+            event.initEvent("CoveoComponentInitialized", false, true);
+            
+            setTimeout(function() {
+                componentElement.dispatchEvent(event);
+            }, 0);
+        } else {
+            componentElement.classList.add("invalid");
+            showError("The Coveo Resources component must be included in this page.");
+        }
+    });
+</script>
+			<div class="CoveoAnalytics"></div>
+            <div class="CoveoForSitecoreBindWithUserContext"></div>
+            <div class="CoveoForSitecoreExpressions"></div>
+            <div class="CoveoForSitecoreConfigureSearchHub" data-sc-search-hub="Search"></div>
+        </div>
+        
+    </div>
+
+
+           <button class="site-header-search-close js-search-close" type="button" aria-label="Close"></button>
+        </div>
+    </section>
+</header>
+
+
+
+<!-- Hamburger Menu -->
+
+<section class="hamburger-menu" aria-hidden="true" aria-modal="true">
+
+    <div class="inner">
+        <div class="hamburger-menu-top">
+            <!-- Close Button -->
+            <button class="menu-close js-menu-close" type="button" aria-label="Close"></button>
+        </div>
+
+        <!-- Main Nav -->
+        <nav class="nav" aria-label="Main Navigation">
+
+            <!-- Main -->
+            <ul class="nav-main">
+                    <li>
+                        <!-- Top Level Link-->
+                        <a class="nav-main-link" href="/about" target="" data-active="false">About</a>
+                    </li>
+                    <li>
+                        <!-- Top Level Link-->
+                        <a class="nav-main-link" href="/people" target="" data-active="false">People</a>
+                    </li>
+                    <li>
+                        <!-- Top Level Link-->
+                        <a class="nav-main-link" href="/services" target="" data-active="false">Services</a>
+                    </li>
+                    <li>
+                        <!-- Top Level Link-->
+                        <a class="nav-main-link" href="/news" target="" data-active="false">Insights</a>
+                    </li>
+                    <li>
+                        <!-- Top Level Link-->
+                        <a class="nav-main-link" href="/diversity" target="" data-active="false">Diversity</a>
+                    </li>
+                    <li>
+                        <!-- Top Level Link-->
+                        <a class="nav-main-link" href="/careers" target="" data-active="false">Careers</a>
+                    </li>
+                    <li>
+                        <!-- Top Level Link-->
+                        <a class="nav-main-link" href="/about/geographies" target="" data-active="false">Geographies</a>
+                    </li>
+            </ul>
+
+        </nav>
+
+        <div class="hamburger-menu-utility">
+            <!-- Utility Nav -->
+            <ul class="nav-utility">
+                    <li>
+                        <a href="/about/contact" target="" data-active="false">Contact</a>
+                    </li>
+                    <li>
+                        <a href="/news/search-media/filtered-our-news" target="" data-active="false">News</a>
+                    </li>
+                    <li>
+                        <a href="/events" target="" data-active="false">Events</a>
+                    </li>
+                    <li>
+                        <a href="/about/alumni" target="" data-active="false">Alumni</a>
+                    </li>
+                    <li>
+                        <a href="https://i.cooley.com/l/708103/2019-07-01/6kkn" target="_blank" data-active="false">Sign up</a>
+                    </li>
+            </ul>
+        </div>
+
+
+        <div class="hamburger-menu-search">
+
+            
+
+
+
+<script>
+    document.addEventListener("CoveoSearchEndpointInitialized", function() {
+        var searchboxElement = document.getElementById("cooley-coveo-searchbox-hamburger-menu");
+        searchboxElement.addEventListener("CoveoComponentInitialized", function() {
+            CoveoForSitecore.initSearchboxIfStandalone(searchboxElement, "/search");
+        });
+    })
+</script>    <div id="cooley-coveo-searchbox-hamburger-menu_container" class="coveo-for-sitecore-search-box-container"
+                     data-prebind-maximum-age='currentMaximumAge'
+             data-pipeline='Replatform Default'
+>
+        <div id="cooley-coveo-searchbox-hamburger-menu"
+             class="CoveoSearchbox"
+                             data-enable-omnibox='true'
+                 data-prebind-maximum-age='currentMaximumAge'
+                 data-pipeline='Replatform Default'
+                 data-placeholder='Enter search keywords'
+                 data-clear-filters-on-new-query='false'
+>
+            
+            
+<script type="text/javascript">
+    document.addEventListener("CoveoSearchEndpointInitialized", function() {
+        var componentId = "cooley-coveo-searchbox-hamburger-menu";
+        var componentElement = document.getElementById(componentId);
+
+        function showError(error) {
+                console.error(error);
+        }
+
+        function areCoveoResourcesIncluded() {
+            return typeof (Coveo) !== "undefined";
+        }
+
+        if (areCoveoResourcesIncluded()) {
+            var event = document.createEvent("CustomEvent");
+            event.initEvent("CoveoComponentInitialized", false, true);
+            
+            setTimeout(function() {
+                componentElement.dispatchEvent(event);
+            }, 0);
+        } else {
+            componentElement.classList.add("invalid");
+            showError("The Coveo Resources component must be included in this page.");
+        }
+    });
+</script>
+			<div class="CoveoAnalytics"></div>
+            <div class="CoveoForSitecoreBindWithUserContext"></div>
+            <div class="CoveoForSitecoreExpressions"></div>
+            <div class="CoveoForSitecoreConfigureSearchHub" data-sc-search-hub="Search"></div>
+        </div>
+        
+    </div>
+
+
+        </div>
+    </div>
+
+</section>
+
+<div class="page-container">
+    <main id="maincontent">
+        <article class="grid-container">
+            <!-- END NOINDEX -->
+            
+
+
+
+
+<!-- components/hero-standard/hero-standard.twig -->
+<article class="hero hero-standard -full-width" data-color="white">
+    <div class="hero-standard-image">
+            <picture>
+                <source srcset="/-/media/cooley/hero-images/landing-hero-404.jpg?cx=0&amp;cy=0&amp;cw=800&amp;ch=800&amp;hash=C921A551381AA35027487243C38B6F6B" type="image/webp">
+                <img src="/-/media/cooley/hero-images/landing-hero-404.jpg?cx=0&amp;cy=0&amp;cw=800&amp;ch=800&amp;hash=C921A551381AA35027487243C38B6F6B" alt="" loading="lazy">
+            </picture>
+    </div>
+    <div class="hero-standard-inner">
+        <div class="hero-standard-content">
+                <div class="hero-eyebrow">Page Not Found</div>
+            <div class="hero-accent"></div>
+            <h1 class="h1">404</h1>
+        </div>
+    </div>
+</article>
+
+
+
+<article class="cooley-searchbox-section cooley-searchbox-section-alumni">
+    <div class="cooley-searchbox-section-inner">
+        <h2 class="h3">Didn’t find what you were looking for?</h2>
+        <p class="cooley-searchbox-section-text"><br/></p>
+        <div>
+    
+    
+
+        <div id="_3F22BE42-DD10-4195-AC5F-A58579BE19CF"
+                             data-search-interface-id='cooley-coveo-global-search-interface-site-search'
+>
+            
+<div class='coveo-search-section'>
+    
+
+
+
+<script>
+    document.addEventListener("CoveoSearchEndpointInitialized", function() {
+        var searchboxElement = document.getElementById("cooley-careers-landing-search-box");
+        searchboxElement.addEventListener("CoveoComponentInitialized", function() {
+            CoveoForSitecore.initSearchboxIfStandalone(searchboxElement, "/search");
+        });
+    })
+</script>    <div id="cooley-careers-landing-search-box_container" class="coveo-for-sitecore-search-box-container"
+                     data-prebind-maximum-age='currentMaximumAge'
+             data-pipeline='Replatform Default'
+>
+        <div id="cooley-careers-landing-search-box"
+             class="CoveoSearchbox"
+                             data-enable-omnibox='true'
+                 data-prebind-maximum-age='currentMaximumAge'
+                 data-pipeline='Replatform Default'
+                 data-placeholder='Search by keyword'
+                 data-clear-filters-on-new-query='false'
+>
+            
+            
+<script type="text/javascript">
+    document.addEventListener("CoveoSearchEndpointInitialized", function() {
+        var componentId = "cooley-careers-landing-search-box";
+        var componentElement = document.getElementById(componentId);
+
+        function showError(error) {
+                console.error(error);
+        }
+
+        function areCoveoResourcesIncluded() {
+            return typeof (Coveo) !== "undefined";
+        }
+
+        if (areCoveoResourcesIncluded()) {
+            var event = document.createEvent("CustomEvent");
+            event.initEvent("CoveoComponentInitialized", false, true);
+            
+            setTimeout(function() {
+                componentElement.dispatchEvent(event);
+            }, 0);
+        } else {
+            componentElement.classList.add("invalid");
+            showError("The Coveo Resources component must be included in this page.");
+        }
+    });
+</script>
+			<div class="CoveoAnalytics"></div>
+            <div class="CoveoForSitecoreBindWithUserContext"></div>
+            <div class="CoveoForSitecoreExpressions"></div>
+            <div class="CoveoForSitecoreConfigureSearchHub" data-sc-search-hub="Search"></div>
+        </div>
+        
+    </div>
+
+</div>
+        </div>
+</div>
+
+    <script type="text/javascript">
+        document.addEventListener("CoveoSearchEndpointInitialized", function() {
+            var externalComponentsSection = document.getElementById("_3F22BE42-DD10-4195-AC5F-A58579BE19CF");
+                 CoveoForSitecore.initExternalComponentsSection(externalComponentsSection);
+        });
+    </script>
+
+    </div>
+</article>
+
+            <!-- BEGIN NOINDEX -->
+            
+        </article>
+    </main>
+    <!-- components/site-footer/site-footer.twig -->
+<footer class="site-footer" >
+    <!-- Banner -->
+        <div class="site-footer-banner">
+            <div class="site-footer-banner-inner">
+                <div class="site-footer-banner-content">
+                        <h2>Want to receive alerts from Cooley?</h2>
+
+                        <a class="button -secondary" href="https://i.cooley.com/l/708103/2019-07-01/6kkn" target="_blank">Sign up</a>
+                </div>
+            </div>
+        </div>
+
+<div class="site-footer-inner">
+
+    <!-- Upper - Logo + Menus -->
+    <div class="site-footer-upper">
+
+        <a class="site-footer-logo" href="/">
+            <img src="/-/media/cooley-website/global/site-header/logo.svg" alt="">
+        </a>
+
+        <div class="site-footer-main">
+                <nav class="site-footer-main-menu">
+                    <ul>
+                            <li>
+                                <a class="site-footer-superior" href="/" target="">Home</a>
+                            </li>
+                            <li>
+                                <a class="site-footer-superior" href="/people" target="">People</a>
+                            </li>
+                            <li>
+                                <a class="site-footer-superior" href="/services" target="">Services</a>
+                            </li>
+                            <li>
+                                <a class="site-footer-superior" href="/news" target="">Insights</a>
+                            </li>
+                            <li>
+                                <a class="site-footer-superior" href="/about" target="">About</a>
+                            </li>
+                            <li>
+                                <a class="site-footer-superior" href="/diversity" target="">Diversity</a>
+                            </li>
+                            <li>
+                                <a class="site-footer-superior" href="/careers" target="">Careers</a>
+                            </li>
+                            <li>
+                                <a class="site-footer-superior" href="/about/geographies" target="">Geographies</a>
+                            </li>
+                    </ul>
+                </nav>
+        </div>
+
+        <div class="site-footer-secondary">
+
+                <a class="site-footer-superior -alt" href="/about/contact" target="">Contact us</a>
+
+                <nav class="site-footer-secondary-menu">
+                    <ul>
+                            <li>
+                                <a class="site-footer-inferior" href="/corporate-content/rss-feeds/media-rss-feed" target="_blank">Media RSS Feed</a>
+                            </li>
+                            <li>
+                                <a class="site-footer-inferior" href="/legal-notices" target="">Legal Notices &amp; Privacy Policy</a>
+                            </li>
+                            <li>
+                                <a class="site-footer-inferior" href="/landing/attorney-advertising" target="">Attorney Advertising</a>
+                            </li>
+                    </ul>
+                </nav>
+        </div>
+
+    </div>
+
+    <!-- Middle - Social -->
+    <div class="site-footer-middle">
+            <nav class="site-footer-social" aria-label="Social Media Links">
+                <ul>
+                        <li>
+                            <a class="icon-linkedin" href="https://www.linkedin.com/company/cooleyllp" target="_blank" rel="noopener" aria-label="linkedin">
+                                <span class="sr-text">https://www.linkedin.com/company/cooleyllp</span>
+                            </a>
+                        </li>
+                                            <li>
+                            <a class="icon-twitter" href="https://twitter.com/CooleyLLP" target="_blank" rel="noopener" aria-label="twitter">
+                                <span class="sr-text">https://twitter.com/CooleyLLP</span>
+                            </a>
+                        </li>
+                                            <li>
+                            <a class="icon-instagram" href="https://www.instagram.com/cooley_llp/" target="_blank" rel="noopener" aria-label="instagram">
+                                <span class="sr-text">https://www.instagram.com/cooley_llp/</span>
+                            </a>
+                        </li>
+                                            <li>
+                            <a class="icon-facebook" href="https://www.facebook.com/CooleyLLP" target="_blank" rel="noopener" aria-label="facebook">
+                                <span class="sr-text">https://www.facebook.com/CooleyLLP</span>
+                            </a>
+                        </li>
+                </ul>
+            </nav>
+        <div class="site-footer-line"></div>
+    </div>
+
+    <!-- Lower - Copyright -->
+    <div class="site-footer-lower">
+        <p class="site-footer-lower-left">&copy; 2025 Cooley LLP and Cooley (UK) LLP.  All rights reserved.</p>
+        <p class="site-footer-lower-right">Cooley&reg; is a registered service mark of Cooley LLP in the United States and European Union as well as certain other jurisdictions.</p>
+    </div>
+</div>
+</footer>
+
+    
+    <!-- END NOINDEX -->
+</div>
+<!-- BEGIN NOINDEX -->
+<!-- Blocker for hamburger menu and header search -->
+<div class="js-blocker"></div>
+<!-- END NOINDEX -->
+
+	<!-- BEGIN NOINDEX -->
+	<!-- JQuery -->
+	<script src="/assets/js/jquery.min.js"></script>
+	<script src="https://www.google.com/recaptcha/api.js"></script>
+
+	<!-- Coveo Search Resources -->
+	<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.10099/css/CoveoFullSearch.css" />
+<link rel="stylesheet" href="https://static.cloud.coveo.com/coveoforsitecore/ui/v0.57.10/css/CoveoForSitecore.css" />
+<script class="coveo-script" type="text/javascript" src='https://static.cloud.coveo.com/searchui/v2.10099/js/CoveoJsSearch.Lazy.min.js'></script>
+<script class="coveo-for-sitecore-script" type="text/javascript" src='https://static.cloud.coveo.com/coveoforsitecore/ui/v0.57.10/js/CoveoForSitecore.Lazy.min.js'></script>
+<script type="text/javascript" src="https://static.cloud.coveo.com/searchui/v2.10099/js/cultures/en.js"></script>
+
+<div>
+
+
+    
+    
+    <!-- Resources -->
+    <div id="SearchResourcesProperties_c372bc0b080b40969fa60c67ea788327"
+         class="CoveoForSitecoreContext"
+                    data-sc-should-have-analytics-component='true'
+            data-sc-analytics-enabled='true'
+            data-sc-current-language='en'
+            data-prebind-sc-language-field-name='fieldTranslator'
+            data-sc-language-field-name='_language'
+            data-sc-labels='{&quot;Creation Time&quot; : &quot;Creation time.&quot; , &quot;Updated By&quot; : &quot;Updated by&quot; , &quot;Last Time Modified&quot; : &quot;Last time modified.&quot; , &quot;Created&quot; : &quot;Created&quot; , &quot;Created By&quot; : &quot;Created by&quot; , &quot;Template&quot; : &quot;Template&quot; , &quot;Language&quot; : &quot;Language&quot; , &quot;Uniform resource identifier&quot; : &quot;URI&quot; , &quot;Search is currently unavailable&quot; : &quot;Oops! Something went wrong on the server.&quot; , &quot;If the problem persists contact the administrator.&quot; : &quot;If the problem persists contact the administrator.&quot; , &quot;Descending&quot; : &quot;Descending&quot; , &quot;Ascending&quot; : &quot;Ascending&quot;}'
+            data-sc-maximum-age='900000'
+            data-sc-page-name='404'
+            data-sc-page-name-full-path='/sitecore/content/Cooley/Home/404'
+            data-sc-index-source-name='Coveo_web_index - CooleyProd2023'
+            data-sc-is-in-experience-editor='false'
+            data-sc-is-user-anonymous='true'
+            data-sc-item-uri='sitecore://web/{8BC0A1E4-F730-4E88-B375-2C0DFFB6DB43}?lang=en&amp;ver=6'
+            data-sc-item-id='8bc0a1e4-f730-4e88-b375-2c0dffb6db43'
+            data-prebind-sc-latest-version-field-name='fieldTranslator'
+            data-sc-latest-version-field-name='_latestversion'
+            data-sc-rest-endpoint-uri='/coveo/rest'
+            data-sc-analytics-endpoint-uri='/coveo/rest/ua'
+            data-sc-site-name='cooley'
+            data-sc-field-prefix='f'
+            data-sc-field-suffix='20190'
+            data-sc-prefer-source-specific-fields='false'
+            data-sc-external-fields='[{&quot;fieldName&quot;:&quot;permanentid&quot;,&quot;shouldEscape&quot;:false}]'
+            data-sc-source-specific-fields='[{&quot;fieldName&quot;:&quot;attachmentparentid&quot;},{&quot;fieldName&quot;:&quot;author&quot;},{&quot;fieldName&quot;:&quot;clickableuri&quot;},{&quot;fieldName&quot;:&quot;collection&quot;},{&quot;fieldName&quot;:&quot;concepts&quot;},{&quot;fieldName&quot;:&quot;date&quot;},{&quot;fieldName&quot;:&quot;filetype&quot;},{&quot;fieldName&quot;:&quot;indexeddate&quot;},{&quot;fieldName&quot;:&quot;isattachment&quot;},{&quot;fieldName&quot;:&quot;language&quot;},{&quot;fieldName&quot;:&quot;printableuri&quot;},{&quot;fieldName&quot;:&quot;rowid&quot;},{&quot;fieldName&quot;:&quot;size&quot;},{&quot;fieldName&quot;:&quot;source&quot;},{&quot;fieldName&quot;:&quot;title&quot;},{&quot;fieldName&quot;:&quot;topparent&quot;},{&quot;fieldName&quot;:&quot;topparentid&quot;},{&quot;fieldName&quot;:&quot;transactionid&quot;},{&quot;fieldName&quot;:&quot;uri&quot;},{&quot;fieldName&quot;:&quot;urihash&quot;}]'
+>
+    </div>
+    <script type="text/javascript">
+        var endpointConfiguration = {
+            itemUri: "sitecore://web/{8BC0A1E4-F730-4E88-B375-2C0DFFB6DB43}?lang=en&amp;ver=6",
+            siteName: "cooley",
+            restEndpointUri: "/coveo/rest"
+        };
+        if (typeof (CoveoForSitecore) !== "undefined") {
+            CoveoForSitecore.SearchEndpoint.configureSitecoreEndpoint(endpointConfiguration);
+            CoveoForSitecore.version = "5.0.1153.1";
+            var context = document.getElementById("SearchResourcesProperties_c372bc0b080b40969fa60c67ea788327");
+            if (!!context) {
+                CoveoForSitecore.Context.configureContext(context);
+            }
+        }
+    </script>
+</div>
+
+	<!-- Custom JS -->
+	<script src="/assets/js/bundle.js?v=133878778692404873"></script>
+	<script type="text/javascript" src="/CoveoCustom/Hive/custom-js/coveo-date-range-picker.min.js"></script>
+<input type="hidden" value="PRODCD1" name="machine">
+
+	<!-- END NOINDEX -->
+</body>
+</html>

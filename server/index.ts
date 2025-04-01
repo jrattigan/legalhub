@@ -1,11 +1,15 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
 
 const app = express();
 // Increase JSON payload limit to 50MB for file uploads
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+
+// Serve static attorney photos
+app.use('/attorney-photos', express.static(path.join(process.cwd(), 'public/attorney-photos')));
 
 // Log all incoming requests for debugging
 app.use((req, res, next) => {

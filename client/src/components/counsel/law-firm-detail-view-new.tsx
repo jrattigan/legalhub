@@ -628,9 +628,9 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                 {attorneys.map((attorney) => (
                   <div key={attorney.id} className="flex items-start p-3 rounded-md border border-neutral-200">
                     <Avatar className="h-10 w-10 mr-4">
-                      {attorney.photoUrl ? (
+                      {attorney.name ? (
                         <AvatarImage 
-                          src={`/api/image-proxy?url=${encodeURIComponent(attorney.photoUrl)}`} 
+                          src={`/attorney-photos/${attorney.name.toLowerCase().replace(/ /g, '-')}.jpg`}
                           alt={attorney.name} 
                         />
                       ) : (
@@ -831,8 +831,8 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                 <div className="mt-2 flex items-center space-x-2">
                   <Avatar>
                     <AvatarImage 
-                      src={editingAttorney.photoUrl ? 
-                          `/api/image-proxy?url=${encodeURIComponent(editingAttorney.photoUrl)}` : 
+                      src={editingAttorney.name ? 
+                          `/attorney-photos/${editingAttorney.name.toLowerCase().replace(/ /g, '-')}.jpg` : 
                           undefined
                       } 
                       alt="Preview" 
