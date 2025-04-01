@@ -278,30 +278,30 @@
 
 @layer base {
   :root {
-    --primary: 222.2 47.4% 40%;
+    --primary: 216 80% 45%;
     --primary-foreground: 210 40% 98%;
-    --primary-light: 222.2 47.4% 50%;
-    --primary-dark: 222.2 47.4% 30%;
+    --primary-light: 216 80% 55%;
+    --primary-dark: 216 80% 35%;
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 216 35% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 216 35% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96.1%;
+    --popover-foreground: 216 35% 10%;
+    --muted: 210 40% 97%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --radius: 0.5rem;
-    --destructive: 0 70% 50%;
+    --accent: 216 80% 97%;
+    --accent-foreground: 216 80% 25%;
+    --radius: 0.75rem;
+    --destructive: 0 84% 50%;
     --destructive-foreground: 210 40% 98%;
-    --destructive-light: 0 70% 65%;
-    --success: 142 70% 45%;
+    --destructive-light: 0 84% 65%;
+    --success: 142 76% 45%;
     --success-foreground: 210 40% 98%;
-    --success-light: 142 70% 60%;
-    --warning: 38 92% 50%;
+    --success-light: 142 76% 60%;
+    --warning: 38 95% 50%;
     --warning-foreground: 210 40% 98%;
-    --warning-light: 38 92% 65%;
+    --warning-light: 38 95% 65%;
   }
 
   * {
@@ -369,81 +369,119 @@
   
   /* Card Styles */
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-md hover:border-primary/20 hover:bg-primary/[0.02];
+    @apply transition-all duration-300 hover:shadow-lg hover:border-primary/30 hover:bg-primary/[0.02] hover:-translate-y-0.5;
   }
   
   .glass-card {
-    @apply bg-white/90 backdrop-blur-sm border border-neutral-200/80 shadow-sm;
+    @apply bg-white/95 backdrop-blur-md border border-neutral-200/60 shadow-sm rounded-xl;
+  }
+  
+  /* Modern Card Variants */
+  .card-subtle {
+    @apply bg-white rounded-xl border border-neutral-100 shadow-sm p-5 transition-all hover:shadow-md;
+  }
+  
+  .card-accent {
+    @apply bg-white rounded-xl border-l-4 border-l-primary border border-neutral-100 shadow-sm p-5 transition-all hover:shadow-md;
   }
   
   /* Section Titles */
   .section-title {
-    @apply text-xl font-medium mb-4 pb-2 border-b flex items-center gap-2;
+    @apply text-xl font-medium mb-5 pb-2 border-b border-neutral-200 flex items-center gap-2 text-foreground;
   }
   
   /* Status Badges */
   .status-badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors gap-1.5;
   }
   
   .status-active {
-    @apply bg-success-light/20 text-success border border-success/20;
+    @apply bg-success-light/20 text-success border border-success/20 shadow-sm;
   }
   
   .status-pending {
-    @apply bg-warning-light/20 text-warning border border-warning/20;
+    @apply bg-warning-light/20 text-warning border border-warning/20 shadow-sm;
   }
   
   .status-closed {
-    @apply bg-gray-100 text-gray-700 border border-gray-200;
+    @apply bg-gray-100 text-gray-700 border border-gray-200 shadow-sm;
   }
   
   .status-high {
-    @apply bg-destructive-light/20 text-destructive border border-destructive/20;
+    @apply bg-destructive-light/20 text-destructive border border-destructive/20 shadow-sm;
   }
   
   .status-medium {
-    @apply bg-warning-light/20 text-warning border border-warning/20;
+    @apply bg-warning-light/20 text-warning border border-warning/20 shadow-sm;
   }
   
   .status-low {
-    @apply bg-success-light/20 text-success border border-success/20;
+    @apply bg-success-light/20 text-success border border-success/20 shadow-sm;
   }
   
   /* Dashboard Cards */
   .dashboard-card {
-    @apply bg-white rounded-lg border border-neutral-200 shadow-sm p-5 transition-all hover:shadow-md;
+    @apply bg-white rounded-xl border border-neutral-100 shadow-sm p-6 transition-all hover:shadow-md hover:-translate-y-0.5;
   }
   
   .dashboard-card-gradient {
-    @apply bg-gradient-to-br from-white to-gray-50 rounded-lg border border-neutral-200 shadow-sm p-5 transition-all hover:shadow-md;
+    @apply bg-gradient-to-br from-white to-primary/5 rounded-xl border border-neutral-100 shadow-sm p-6 transition-all hover:shadow-md hover:-translate-y-0.5;
   }
   
   /* Data Tables */
   .data-table {
-    @apply w-full divide-y divide-gray-200;
+    @apply w-full divide-y divide-gray-200 bg-white rounded-lg overflow-hidden border border-neutral-100 shadow-sm;
   }
   
   .data-table th {
-    @apply px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+    @apply px-5 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider bg-gray-50 border-b;
   }
   
   .data-table td {
-    @apply px-4 py-3 text-sm text-gray-900;
+    @apply px-5 py-4 text-sm text-gray-800;
   }
   
   .data-table tr {
-    @apply hover:bg-gray-50;
+    @apply hover:bg-gray-50 transition-colors duration-150 ease-in-out border-b border-gray-100 last:border-b-0;
+  }
+  
+  /* Modern Data Table Styles */
+  .data-table-modern {
+    @apply w-full divide-y divide-gray-100 bg-white rounded-xl overflow-hidden border border-neutral-100 shadow-sm;
+  }
+  
+  .data-table-modern thead {
+    @apply bg-gray-50;
+  }
+  
+  .data-table-modern th {
+    @apply px-5 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider;
+  }
+  
+  .data-table-modern td {
+    @apply px-5 py-4 text-sm text-gray-800;
+  }
+  
+  .data-table-modern tr {
+    @apply hover:bg-primary/5 transition-colors duration-150 ease-in-out;
   }
   
   /* Button Variants */
   .btn-gradient {
-    @apply bg-gradient-to-r from-primary to-primary-dark text-white hover:shadow-md transition-all;
+    @apply bg-gradient-to-r from-primary to-primary-dark text-white hover:shadow-md hover:-translate-y-0.5 transition-all;
+  }
+  
+  .btn-subtle {
+    @apply bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-all border border-gray-200;
+  }
+  
+  .btn-outline-primary {
+    @apply border border-primary/30 text-primary hover:bg-primary/10 transition-all;
   }
   
   /* Form Enhancements */
   .form-card {
-    @apply p-6 rounded-lg border border-neutral-200 shadow-sm bg-white;
+    @apply p-6 rounded-xl border border-neutral-100 shadow-sm bg-white;
   }
   
   /* Document Comparison */
@@ -452,22 +490,64 @@
   }
   
   .diff-header {
-    @apply bg-gray-100 p-3 rounded mb-4 text-center text-gray-700 font-medium;
+    @apply bg-gray-50 p-4 rounded-lg mb-5 text-center text-gray-700 font-medium border border-gray-100 shadow-sm;
   }
   
   .diff-section {
-    @apply border-b border-gray-200 pb-4;
+    @apply border-b border-gray-200 pb-5 mb-5;
   }
   
   .diff-added {
-    @apply bg-green-50 text-green-800 p-3 mb-2 rounded border-l-4 border-green-500 font-mono;
+    @apply bg-green-50 text-green-800 p-4 mb-3 rounded-lg border-l-4 border-green-500 font-mono shadow-sm;
   }
   
   .diff-removed {
-    @apply bg-red-50 text-red-800 p-3 mb-2 rounded border-l-4 border-red-500 font-mono;
+    @apply bg-red-50 text-red-800 p-4 mb-3 rounded-lg border-l-4 border-red-500 font-mono shadow-sm;
   }
   
   .diff-unchanged {
-    @apply bg-gray-50 text-gray-800 p-3 mb-2 rounded border-l-4 border-gray-300 font-mono;
+    @apply bg-gray-50 text-gray-800 p-4 mb-3 rounded-lg border-l-4 border-gray-300 font-mono shadow-sm;
+  }
+  
+  /* Additional Modern UI Components */
+  .tag {
+    @apply inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800;
+  }
+  
+  .tag-primary {
+    @apply bg-primary/10 text-primary;
+  }
+  
+  .tag-success {
+    @apply bg-success/10 text-success;
+  }
+  
+  .tag-warning {
+    @apply bg-warning/10 text-warning;
+  }
+  
+  .tag-error {
+    @apply bg-destructive/10 text-destructive;
+  }
+  
+  /* Section Containers */
+  .content-section {
+    @apply bg-white rounded-xl border border-neutral-100 shadow-sm p-6 mb-6;
+  }
+  
+  .content-card {
+    @apply bg-white rounded-xl border border-neutral-100 shadow-sm overflow-hidden;
+  }
+  
+  .content-card-header {
+    @apply border-b border-neutral-100 p-5 bg-gray-50 flex items-center justify-between;
+  }
+  
+  .content-card-body {
+    @apply p-5;
+  }
+  
+  .content-card-footer {
+    @apply border-t border-neutral-100 p-5 bg-gray-50 flex items-center justify-between;
   }
 }
