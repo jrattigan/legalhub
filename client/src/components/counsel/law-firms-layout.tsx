@@ -51,9 +51,9 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
     }
   }, [lawFirmId, isMobile]);
   
-  // Save scroll position when component unmounts
+  // Save scroll position on scroll
   useEffect(() => {
-    return () => {
+    const handleScroll = () => {
       if (scrollAreaRef.current) {
         const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
         if (scrollContainer && scrollContainer.scrollTop > 0) {
@@ -61,42 +61,38 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
         }
       }
     };
-  }, []);
 
-  // Initialize scroll position from localStorage
-  useEffect(() => {
-    const savedPosition = localStorage.getItem('lawFirmsScrollPosition');
-    if (savedPosition) {
-      setScrollPosition(parseInt(savedPosition, 10));
+    // Get the scroll viewport element and attach the scroll event listener
+    const scrollContainer = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+      return () => scrollContainer.removeEventListener('scroll', handleScroll);
     }
-  }, []);
-  
-  // Save scroll position when navigating to a law firm detail
-  const saveScrollPositionAndNavigate = (firmId: number) => {
-    if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer && scrollContainer.scrollTop > 0) {
-        const position = scrollContainer.scrollTop;
-        localStorage.setItem('lawFirmsScrollPosition', position.toString());
-        setScrollPosition(position);
+  }, [scrollAreaRef.current]); // Only re-attach when the ref changes
+
+  // Restore scroll position once after initial load
+  useEffect(() => {
+    if (!lawFirmsLoading && scrollAreaRef.current) {
+      const savedPosition = localStorage.getItem('lawFirmsScrollPosition');
+      if (savedPosition) {
+        const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        if (scrollContainer) {
+          // Use requestAnimationFrame to ensure the DOM is ready
+          requestAnimationFrame(() => {
+            scrollContainer.scrollTop = parseInt(savedPosition, 10);
+          });
+        }
       }
     }
+  }, [lawFirmsLoading]);
+  
+  // Navigate to law firm detail
+  const navigateToLawFirm = (firmId: number) => {
     navigate(`/counsel/${firmId}`);
     if (isMobile) {
       setSidebarOpen(false);
     }
   };
-  
-  // Restore scroll position after component mounts and data loads
-  useEffect(() => {
-    if (scrollPosition > 0 && !lawFirmsLoading && scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer) {
-        // Apply the position immediately
-        scrollContainer.scrollTop = scrollPosition;
-      }
-    }
-  }, [lawFirmsLoading, scrollPosition]);
 
   // Form setup for creating a new law firm
   const form = useForm<LawFirmFormValues>({
@@ -173,22 +169,29 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
     );
   }
 
+  // Effect to listen for messages from the iframe
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Make sure the message is from our iframe
+      if (event.data && event.data.type === 'NAVIGATE_TO_LAW_FIRM') {
+        navigate(`/counsel/${event.data.firmId}`);
+        if (isMobile) {
+          setSidebarOpen(false);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [navigate, isMobile]);
+
   // Sidebar content component to reuse in both desktop and mobile
   const SidebarContent = () => (
     <>
       <div className="p-4 border-b border-neutral-200">
         <h2 className="text-lg font-semibold mb-4">Law Firms</h2>
-        
-        {/* Search input */}
-        <div className="relative mb-4">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
-          <Input
-            placeholder="Search law firms..."
-            className="pl-9 bg-neutral-50"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
         
         {/* Add law firm button */}
         <Dialog>
@@ -281,40 +284,14 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
         </Dialog>
       </div>
       
-      {/* Scrollable law firms list */}
-      <ScrollArea className="flex-1 law-firms-scrollarea" ref={scrollAreaRef}>
-        <div className="space-y-0.5 p-2">
-          {filteredLawFirms?.map((firm) => (
-            <div
-              key={firm.id}
-              className={`flex items-center p-3 rounded-md cursor-pointer transition-colors ${
-                lawFirmId === firm.id
-                  ? 'bg-primary/10 text-primary font-medium'
-                  : 'text-neutral-600 hover:bg-neutral-100'
-              }`}
-              onClick={() => saveScrollPositionAndNavigate(firm.id)}
-            >
-              <Users className={`h-4 w-4 mr-3 ${lawFirmId === firm.id ? 'text-primary' : 'text-neutral-400'}`} />
-              <div className="truncate">
-                <div className="font-medium">{firm.name}</div>
-                <div className="text-xs text-neutral-500 truncate">{firm.specialty}</div>
-              </div>
-            </div>
-          ))}
-          
-          {filteredLawFirms?.length === 0 && (
-            <div className="text-center p-6 text-neutral-500">
-              No law firms found matching your search.
-            </div>
-          )}
-
-          {lawFirms?.length === 0 && (
-            <div className="text-center p-6 text-neutral-500">
-              No law firms found. Add your first law firm.
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+      {/* Law firms list iframe - this will maintain its own scroll state */}
+      <div className="flex-1">
+        <iframe 
+          src="/law-firms-list" 
+          className="w-full h-full border-0"
+          title="Law Firms List"
+        />
+      </div>
     </>
   );
 

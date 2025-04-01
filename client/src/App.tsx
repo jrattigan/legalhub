@@ -13,6 +13,8 @@ import Counsel from "@/pages/counsel";
 import Reports from "@/pages/reports";
 import Companies from "@/pages/companies";
 import Settings from "@/pages/settings";
+import CompaniesList from "@/components/companies/companies-list";
+import LawFirmsList from "@/components/counsel/law-firms-list";
 
 function Router() {
   return (
@@ -29,6 +31,9 @@ function Router() {
       <Route path="/counsel/:id" component={Counsel} />
       <Route path="/reports" component={Reports} />
       <Route path="/settings" component={Settings} />
+      {/* Iframe content routes */}
+      <Route path="/companies-list" component={CompaniesList} />
+      <Route path="/law-firms-list" component={LawFirmsList} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
