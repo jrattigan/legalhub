@@ -956,7 +956,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: "Invalid law firm ID" });
     }
 
+    console.log(`DEBUG - Fetching attorneys for law firm ID: ${firmId}`);
     const attorneys = await storage.getAttorneysByFirm(firmId);
+    console.log(`DEBUG - Found ${attorneys.length} attorneys for law firm ID: ${firmId}`);
+    
+    // Log each attorney to verify the data
+    attorneys.forEach(attorney => {
+      console.log(`DEBUG - Attorney: ${attorney.name}, Law Firm ID: ${attorney.lawFirmId}`);
+    });
+    
     res.json(attorneys);
   });
   
