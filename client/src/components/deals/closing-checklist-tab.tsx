@@ -120,6 +120,10 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
       if (!result.ok) {
         throw new Error(`Failed to fetch checklist: ${result.status}`);
       }
+      
+      // Add artificial delay to show loading skeleton (DEMO ONLY - remove in production)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       const data = await result.json();
       console.log("Closing checklist API response data:", data);
       return Array.isArray(data) ? data : [];
