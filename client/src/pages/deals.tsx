@@ -5,12 +5,15 @@ import AppLayout from '@/components/layout/app-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Database } from 'lucide-react';
 import { Deal, Company } from '@shared/schema';
 import { formatDealTitle } from '@/lib/deal-title-formatter';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Deals() {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const [isSeeding, setIsSeeding] = useState(false);
   
   // Get deals data
   const { data: deals, isLoading: dealsLoading, refetch: refetchDeals } = useQuery<Deal[]>({ 
@@ -34,15 +37,66 @@ export default function Deals() {
     navigate('/deals/new');
   };
   
+  // Handle seeding sample data
+  const handleSeedData = async () => {
+    setIsSeeding(true);
+    try {
+      // Use the seed-data script to load sample data
+      const script = document.createElement('script');
+      script.src = '/seed-data.js';
+      script.onload = () => {
+        // Clean up
+        document.body.removeChild(script);
+        // Refetch data to show the new items
+        setTimeout(() => {
+          refetchDeals();
+          toast({
+            title: "Sample data added",
+            description: "Sample tasks and checklist items have been added to your deals.",
+            variant: "default",
+          });
+          setIsSeeding(false);
+        }, 1000);
+      };
+      script.onerror = () => {
+        toast({
+          title: "Error loading sample data",
+          description: "There was a problem adding sample data.",
+          variant: "destructive",
+        });
+        setIsSeeding(false);
+      };
+      document.body.appendChild(script);
+    } catch (error) {
+      console.error('Error seeding data:', error);
+      toast({
+        title: "Error adding sample data",
+        description: "Failed to add sample data to the database.",
+        variant: "destructive",
+      });
+      setIsSeeding(false);
+    }
+  };
+  
   return (
     <AppLayout>
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-neutral-800">My Deals</h1>
-          <Button onClick={handleNewDeal}>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            New Deal
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleSeedData} 
+              disabled={isSeeding}
+            >
+              <Database className="h-4 w-4 mr-2" />
+              {isSeeding ? "Adding Data..." : "Seed Sample Data"}
+            </Button>
+            <Button onClick={handleNewDeal}>
+              <PlusCircle className="h-4 w-4 mr-2" />
+              New Deal
+            </Button>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

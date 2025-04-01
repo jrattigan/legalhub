@@ -32,6 +32,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('Health check request received');
     res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
   });
+  
+  // Seed data endpoint - for development purposes
+  app.post('/api/seed-data', async (req: Request, res: Response) => {
+    try {
+      const { tasks, closingChecklistItems } = req.body;
+      const results: { tasks: any[], closingChecklistItems: any[] } = { tasks: [], closingChecklistItems: [] };
+      
+      // Add tasks
+      if (tasks && Array.isArray(tasks)) {
+        for (const task of tasks) {
+          // Ensure dealId is a number
+          const taskData = {
+            ...task,
+            dealId: typeof task.dealId === 'number' ? task.dealId : parseInt(String(task.dealId)),
+            // Parse date if it's a string
+            dueDate: task.dueDate ? new Date(task.dueDate) : null
+          };
+          
+          try {
+            const createdTask = await storage.createTask(taskData);
+            results.tasks.push(createdTask);
+          } catch (taskError) {
+            console.error('Error creating task:', taskError);
+          }
+        }
+      }
+      
+      // Add closing checklist items
+      if (closingChecklistItems && Array.isArray(closingChecklistItems)) {
+        for (const item of closingChecklistItems) {
+          // Ensure dealId is a number
+          const itemData = {
+            ...item,
+            dealId: typeof item.dealId === 'number' ? item.dealId : parseInt(String(item.dealId)),
+            // Parse date if it's a string
+            dueDate: item.dueDate ? new Date(item.dueDate) : null
+          };
+          
+          try {
+            const createdItem = await storage.createClosingChecklistItem(itemData);
+            results.closingChecklistItems.push(createdItem);
+          } catch (itemError) {
+            console.error('Error creating checklist item:', itemError);
+          }
+        }
+      }
+      
+      return res.status(201).json({
+        message: 'Sample data added successfully',
+        results
+      });
+    } catch (error) {
+      console.error('Error seeding data:', error);
+      return res.status(500).json({ error: 'Failed to seed data', details: String(error) });
+    }
+  });
 
   // Combined data endpoint for deals page
   app.get('/api/combined-data', async (req: Request, res: Response) => {
