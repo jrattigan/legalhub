@@ -538,10 +538,27 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   // Direct update task function
   const updateTask = async (updatedTask: Task) => {
     try {
+      // Create a clean copy of the task data for API submission
+      // This ensures correct serialization of Date objects
+      const dataToSubmit = {
+        ...updatedTask,
+        // Ensure proper date serialization - Convert Date objects to ISO strings
+        dueDate: updatedTask.dueDate ? 
+          // If dueDate is a Date object, serialize it
+          (updatedTask.dueDate instanceof Date ? 
+            updatedTask.dueDate.toISOString() : 
+            // Otherwise if it's already a string, use it as is
+            updatedTask.dueDate) : 
+          // If dueDate is null or undefined, send null
+          null
+      };
+      
+      console.log('SUBMITTING TASK UPDATE:', dataToSubmit);
+      
       const response = await fetch(`/api/tasks/${updatedTask.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedTask)
+        body: JSON.stringify(dataToSubmit)
       });
       
       if (!response.ok) {
@@ -549,6 +566,7 @@ export default function TasksTab({ dealId }: TasksTabProps) {
       }
       
       const data = await response.json();
+      console.log('TASK UPDATE SUCCESS RESPONSE:', data);
       
       // Force an immediate refetch of the tasks data to update UI
       await queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
@@ -700,27 +718,12 @@ export default function TasksTab({ dealId }: TasksTabProps) {
       // First, clear the editing state to give immediate UI feedback 
       setEditingField(null);
       
-      // Make the API call
-      const response = await fetch(`/api/tasks/${task.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedTask)
-      });
+      // Use the updateTask function which handles date serialization
+      // Instead of making a direct fetch call
+      const data = await updateTask(updatedTask);
       
-      if (!response.ok) {
-        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      // Force an immediate refetch of the tasks data to update UI
-      await queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
-      
-      // Show success toast
-      toast({
-        title: "Task updated",
-        description: "The task has been updated successfully.",
-      });
+      // No need to invalidate queries, handle success messages, or show toasts
+      // as updateTask already does all that
       
       return data;
     } catch (error) {
@@ -780,27 +783,11 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     console.log(`Cycling task ${task.id} status from ${task.status} to ${newStatus}`, updatedTask);
     
     try {
-      // Update the task using direct fetch with async/await
-      const response = await fetch(`/api/tasks/${task.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedTask)
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Server returned ${response.status}`);
-      }
-      
-      const data = await response.json();
+      // Use the enhanced updateTask function that properly handles serialization
+      const data = await updateTask(updatedTask);
       console.log("Task status cycle successful:", data);
       
-      // Force an immediate refetch of the tasks data
-      await queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
-      
-      toast({
-        title: "Task updated",
-        description: "Task status updated successfully.",
-      });
+      // No need to invalidate queries or show toasts as updateTask already does that
       
       return data;
     } catch (error) {
@@ -816,9 +803,9 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     }
   };
 
-  // REWRITE VERSION 2: Get tasks by type (internal or external) for current deal
-  // FIXED: Added hard-coded type checking for both internal and external types
-  const getTasksByType = (requestedType: string) => {
+  // REWRITE VERSION 3: Complete fix for task filtering
+  // This version enforces strict equality check on the taskType property
+  const getTasksByType = (requestedType: string): Task[] => {
     if (!tasks || tasks.length === 0) return [];
     
     // Debug log
@@ -827,7 +814,6 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     
     // Step 1: Filter to just this deal's tasks 
     const dealTasks = tasks.filter(task => {
-      // Handle string or number deal IDs
       const taskDealId = typeof task.dealId === 'string' ? parseInt(task.dealId, 10) : task.dealId;
       return taskDealId === dealId;
     });
@@ -838,52 +824,26 @@ export default function TasksTab({ dealId }: TasksTabProps) {
       return [];
     }
     
-    // Step 2: Set up explicit task type classification - only two possible types
-    const externalTasks: Task[] = [];
-    const internalTasks: Task[] = [];
-    
-    // Step 3: Hard-coded classification based on the exact task type
-    dealTasks.forEach(task => {
-      // Very strict checking to assign tasks to the right category
-      // We explicitly normalize the case to ensure case-insensitive comparison
-      const taskType = String(task.taskType || '').toLowerCase();
+    // Step 2: Now filter ONLY by the exact taskType property value
+    // This is the key fix - we're using DIRECT STRICT EQUALITY not string normalization
+    const filteredTasks = dealTasks.filter(task => {
+      // Debug task info
+      console.log(`Comparing task: "${task.name}" - ID: ${task.id} - Type: "${task.taskType}" vs requested: "${requestedType}"`);
       
-      // Debug each task's type
-      console.log(`Task ${task.id} (${task.name}) - type: "${taskType}"`);
-      
-      if (taskType === 'external') {
-        externalTasks.push(task);
-      } else if (taskType === 'internal') {
-        internalTasks.push(task);
-      } else {
-        console.warn(`Task ${task.id} has unrecognized type: "${taskType}"`);
-        // Default to internal if type is missing or unknown
-        internalTasks.push(task);
-      }
+      // This is the critical line - the === comparison ensures exact matching for tasks
+      return task.taskType === requestedType;
     });
     
-    console.log(`CLASSIFIED: ${internalTasks.length} internal tasks, ${externalTasks.length} external tasks`);
+    console.log(`FILTERED: ${filteredTasks.length} tasks of type "${requestedType}"`);
     
-    // Step 4: Return the requested type
-    let result: Task[] = [];
-    if (requestedType === 'internal') {
-      result = internalTasks;
-    } else if (requestedType === 'external') {
-      result = externalTasks;
-    } else {
-      console.warn(`Unknown task type requested: "${requestedType}"`);
-      result = [];
-    }
-    
-    // Step 5: Apply status filter if present
+    // Apply status filter if present
     if (statusFilter) {
-      const statusFiltered = result.filter(task => task.status === statusFilter);
+      const statusFiltered = filteredTasks.filter(task => task.status === statusFilter);
       console.log(`After status filter "${statusFilter}": ${statusFiltered.length} tasks`);
       return statusFiltered;
     }
     
-    console.log(`Returning ${result.length} tasks of type "${requestedType}"`);
-    return result;
+    return filteredTasks;
   };
 
   // Helper to get assignee name for display
@@ -979,10 +939,21 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     }
   };
 
-  // Simplified helper function to get filtered task list
+  // Direct helper function to get filtered task list
   const getFilteredTaskList = (tabType: string) => {
-    // Use our completely rewritten getTasksByType function that's more robust
-    return getTasksByType(tabType);
+    // Use EXACT MATCHING on task types to ensure proper filtering
+    if (!tasks || tasks.length === 0) return [];
+    
+    return tasks.filter(task => {
+      // 1. Filter for tasks with this deal ID
+      const taskDealId = typeof task.dealId === 'string' ? parseInt(task.dealId, 10) : task.dealId;
+      const matchesDeal = taskDealId === dealId;
+      
+      // 2. Filter for EXACT task type equality
+      const matchesType = task.taskType === tabType;
+            
+      return matchesDeal && matchesType;
+    });
   };
   
   // Replace all setTimeout calls with direct saveInlineEdit calls
