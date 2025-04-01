@@ -68,36 +68,43 @@ export default function CompaniesLayout({ children }: CompaniesLayoutProps) {
     }
   }, [companyId, isMobile]);
   
-  // Save scroll position when selecting a company
+  // Save scroll position when component unmounts
   useEffect(() => {
-    const scrollableElement = document.querySelector('.companies-scrollarea .scrollbar-thumb-y');
-    if (scrollableElement) {
-      const observer = new ResizeObserver(() => {
-        const container = document.querySelector('.companies-scrollarea');
-        if (container) {
-          const scrollTop = container.scrollTop;
-          if (scrollTop > 0) {
-            setScrollPosition(scrollTop);
-          }
+    return () => {
+      if (scrollAreaRef.current) {
+        const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        if (scrollContainer) {
+          setScrollPosition(scrollContainer.scrollTop);
         }
-      });
-      
-      observer.observe(scrollableElement);
-      return () => observer.disconnect();
-    }
-  }, [companyId]);
+      }
+    };
+  }, []);
   
-  // Restore scroll position after component mounts or after navigation
+  // Save scroll position when navigating to a company detail
+  const saveScrollPositionAndNavigate = (companyId: number) => {
+    if (scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        setScrollPosition(scrollContainer.scrollTop);
+      }
+    }
+    navigate(`/companies/${companyId}`);
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
+  
+  // Restore scroll position after component mounts and data loads
   useEffect(() => {
-    if (scrollPosition > 0 && !companiesLoading) {
-      const scrollContainer = document.querySelector('.companies-scrollarea');
+    if (scrollPosition > 0 && !companiesLoading && scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollContainer) {
         setTimeout(() => {
           scrollContainer.scrollTop = scrollPosition;
-        }, 100);
+        }, 200);
       }
     }
-  }, [scrollPosition, companiesLoading]);
+  }, [companiesLoading, scrollPosition]);
 
   // Form setup for creating a new company
   const form = useForm<CompanyFormValues>({
@@ -285,12 +292,7 @@ export default function CompaniesLayout({ children }: CompaniesLayoutProps) {
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'text-neutral-600 hover:bg-neutral-100'
               }`}
-              onClick={() => {
-                navigate(`/companies/${company.id}`);
-                if (isMobile) {
-                  setSidebarOpen(false);
-                }
-              }}
+              onClick={() => saveScrollPositionAndNavigate(company.id)}
             >
               <Building2 className={`h-4 w-4 mr-3 ${companyId === company.id ? 'text-primary' : 'text-neutral-400'}`} />
               <div className="truncate">

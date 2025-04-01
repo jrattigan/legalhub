@@ -51,36 +51,43 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
     }
   }, [lawFirmId, isMobile]);
   
-  // Save scroll position when selecting a law firm
+  // Save scroll position when component unmounts
   useEffect(() => {
-    const scrollableElement = document.querySelector('.law-firms-scrollarea .scrollbar-thumb-y');
-    if (scrollableElement) {
-      const observer = new ResizeObserver(() => {
-        const container = document.querySelector('.law-firms-scrollarea');
-        if (container) {
-          const scrollTop = container.scrollTop;
-          if (scrollTop > 0) {
-            setScrollPosition(scrollTop);
-          }
+    return () => {
+      if (scrollAreaRef.current) {
+        const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        if (scrollContainer) {
+          setScrollPosition(scrollContainer.scrollTop);
         }
-      });
-      
-      observer.observe(scrollableElement);
-      return () => observer.disconnect();
-    }
-  }, [lawFirmId]);
+      }
+    };
+  }, []);
   
-  // Restore scroll position after component mounts or after navigation
+  // Save scroll position when navigating to a law firm detail
+  const saveScrollPositionAndNavigate = (firmId: number) => {
+    if (scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        setScrollPosition(scrollContainer.scrollTop);
+      }
+    }
+    navigate(`/law-firms/${firmId}`);
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
+  
+  // Restore scroll position after component mounts and data loads
   useEffect(() => {
-    if (scrollPosition > 0 && !lawFirmsLoading) {
-      const scrollContainer = document.querySelector('.law-firms-scrollarea');
+    if (scrollPosition > 0 && !lawFirmsLoading && scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollContainer) {
         setTimeout(() => {
           scrollContainer.scrollTop = scrollPosition;
-        }, 100);
+        }, 200);
       }
     }
-  }, [scrollPosition, lawFirmsLoading]);
+  }, [lawFirmsLoading, scrollPosition]);
 
   // Form setup for creating a new law firm
   const form = useForm<LawFirmFormValues>({
@@ -276,12 +283,7 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'text-neutral-600 hover:bg-neutral-100'
               }`}
-              onClick={() => {
-                navigate(`/counsel/${firm.id}`);
-                if (isMobile) {
-                  setSidebarOpen(false);
-                }
-              }}
+              onClick={() => saveScrollPositionAndNavigate(firm.id)}
             >
               <Users className={`h-4 w-4 mr-3 ${lawFirmId === firm.id ? 'text-primary' : 'text-neutral-400'}`} />
               <div className="truncate">
