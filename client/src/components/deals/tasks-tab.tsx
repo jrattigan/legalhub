@@ -1092,16 +1092,26 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     // Use EXACT MATCHING on task types to ensure proper filtering
     if (!tasks || tasks.length === 0) return [];
     
-    return tasks.filter(task => {
+    // Debug logging to help identify any issues
+    console.log(`getFilteredTaskList: filtering for ${tabType} tasks in deal ${dealId}`);
+    console.log(`Total tasks before filtering: ${tasks.length}`);
+    
+    const filteredTasks = tasks.filter(task => {
       // 1. Filter for tasks with this deal ID
       const taskDealId = typeof task.dealId === 'string' ? parseInt(task.dealId, 10) : task.dealId;
       const matchesDeal = taskDealId === dealId;
       
-      // 2. Filter for EXACT task type equality
+      // 2. Filter for EXACT task type equality using strict comparison
       const matchesType = task.taskType === tabType;
+      
+      // Log each task for debugging
+      console.log(`Task ${task.id} (${task.name}): dealId=${task.dealId}, type=${task.taskType}, matchesDeal=${matchesDeal}, matchesType=${matchesType}`);
             
       return matchesDeal && matchesType;
     });
+    
+    console.log(`Filtered ${tabType} tasks: ${filteredTasks.length}`);
+    return filteredTasks;
   };
   
   // Replace all setTimeout calls with direct saveInlineEdit calls
