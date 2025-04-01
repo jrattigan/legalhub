@@ -226,6 +226,8 @@ export class MemStorage implements IStorage {
 
   // Initialize with sample data to have a working app on start
   private initializeSampleData() {
+    console.log("DEBUG - Initializing sample data");
+
     // Create global app settings
     const organizationSetting: InsertAppSetting = {
       key: "organizationName",
@@ -241,6 +243,9 @@ export class MemStorage implements IStorage {
       updatedAt: initialTime
     };
     this.appSettings.set(settingId, createdSetting);
+    
+    // Initialize sample tasks and closing checklist items
+    this.initializeTasksAndChecklists();
     
     // Create users
     const user1: InsertUser = {
@@ -2289,6 +2294,372 @@ export class MemStorage implements IStorage {
 
   async deleteClosingChecklistItem(id: number): Promise<boolean> {
     return this.closingChecklist.delete(id);
+  }
+
+  // Initialize sample tasks and closingChecklistItems
+  private initializeTasksAndChecklists() {
+    console.log("DEBUG - Initializing sample tasks and checklist items");
+    
+    // Sample tasks for Deal 1 (Acme Corp)
+    const sampleTasks = [
+      {
+        name: "Create stock purchase agreement",
+        description: "Draft the initial SPA document for review",
+        dealId: 1,
+        taskType: "internal",
+        status: "completed",
+        dueDate: new Date("2025-02-20"),
+        assigneeId: 1
+      },
+      {
+        name: "Review term sheet with finance team",
+        description: "Discuss valuation and investment terms",
+        dealId: 1,
+        taskType: "internal",
+        status: "completed",
+        dueDate: new Date("2025-02-15"),
+        assigneeId: 2
+      },
+      {
+        name: "Prepare investor presentation",
+        description: "Create slides for upcoming investor meeting",
+        dealId: 1,
+        taskType: "internal",
+        status: "in-progress",
+        dueDate: new Date("2025-04-10"),
+        assigneeId: 3
+      },
+      {
+        name: "Update cap table",
+        description: "Reflect new investment in the capitalization table",
+        dealId: 1,
+        taskType: "internal",
+        status: "open",
+        dueDate: new Date("2025-04-15"),
+        assigneeId: 1
+      },
+      {
+        name: "Due diligence review",
+        description: "Comprehensive legal review of company documents",
+        dealId: 1,
+        taskType: "external",
+        status: "in-progress",
+        dueDate: new Date("2025-04-05"),
+        lawFirmId: 1
+      },
+      {
+        name: "Draft investor rights agreement",
+        description: "Prepare investor rights and governance terms",
+        dealId: 1,
+        taskType: "external",
+        status: "open",
+        dueDate: new Date("2025-04-12"),
+        lawFirmId: 1,
+        attorneyId: 2
+      },
+      {
+        name: "IP ownership verification",
+        description: "Verify all intellectual property assignments and registrations",
+        dealId: 1,
+        taskType: "external",
+        status: "open",
+        dueDate: new Date("2025-04-20"),
+        lawFirmId: 2
+      }
+    ];
+
+    // Sample internal team tasks for Deal 2 (TechStart)
+    const deal2Tasks = [
+      {
+        name: "Compile acquisition checklist",
+        description: "Create comprehensive list of required documents",
+        dealId: 2,
+        taskType: "internal",
+        status: "completed",
+        dueDate: new Date("2025-03-10"),
+        assigneeId: 3
+      },
+      {
+        name: "Review acquisition agreement",
+        description: "Detailed review of purchase terms and conditions",
+        dealId: 2,
+        taskType: "internal",
+        status: "in-progress",
+        dueDate: new Date("2025-04-05"),
+        assigneeId: 1
+      }
+    ];
+
+    // Sample external team tasks for Deal 3 (HealthTech)
+    const deal3Tasks = [
+      {
+        name: "Complete Series A documents",
+        description: "Finalize all Series A closing documents",
+        dealId: 3,
+        taskType: "external",
+        status: "urgent",
+        dueDate: new Date("2025-04-02"),
+        lawFirmId: 1,
+        attorneyId: 1
+      },
+      {
+        name: "Coordinate signing process",
+        description: "Manage document signing with all parties",
+        dealId: 3,
+        taskType: "internal",
+        status: "open",
+        dueDate: new Date("2025-04-03"),
+        assigneeId: 2
+      },
+      {
+        name: "Prepare board resolution",
+        description: "Draft resolution for board approval of Series A",
+        dealId: 3,
+        taskType: "internal",
+        status: "in-progress",
+        dueDate: new Date("2025-04-01"),
+        assigneeId: 1
+      }
+    ];
+
+    // Combine all tasks
+    const allTasks = [...sampleTasks, ...deal2Tasks, ...deal3Tasks];
+
+    // Add all tasks
+    console.log(`DEBUG - Adding ${allTasks.length} sample tasks`);
+    for (const task of allTasks) {
+      const taskId = this.currentTaskId++;
+      const now = new Date();
+      
+      const createdTask: Task = {
+        id: taskId,
+        name: task.name,
+        description: task.description || null,
+        dealId: task.dealId,
+        taskType: task.taskType,
+        status: task.status || "open",
+        dueDate: task.dueDate || null,
+        assigneeId: task.assigneeId || null,
+        lawFirmId: task.lawFirmId || null,
+        attorneyId: task.attorneyId || null,
+        customAssigneeId: null,
+        createdAt: now,
+        updatedAt: now
+      };
+      
+      this.tasks.set(taskId, createdTask);
+    }
+
+    // Sample closing checklist items for Deal 1
+    const sampleChecklist = [
+      {
+        title: "Stockholder approvals",
+        dealId: 1,
+        isComplete: true
+      },
+      {
+        title: "Investor wire transfers",
+        dealId: 1,
+        isComplete: false
+      },
+      {
+        title: "Board approvals",
+        dealId: 1,
+        isComplete: true
+      },
+      {
+        title: "Updated cap table",
+        dealId: 1,
+        isComplete: false
+      },
+      {
+        title: "Regulatory filings",
+        dealId: 1,
+        isComplete: false,
+        parentId: null
+      }
+    ];
+
+    // Add sub-items for "Regulatory filings"
+    const parentItems: {[key: string]: number} = {};
+
+    console.log("DEBUG - Adding sample closing checklist items");
+    for (const item of sampleChecklist) {
+      const itemId = this.currentClosingChecklistItemId++;
+      const now = new Date();
+      
+      const createdItem: ClosingChecklistItem = {
+        id: itemId,
+        title: item.title,
+        dealId: item.dealId,
+        isComplete: item.isComplete || false,
+        description: null,
+        dueDate: null,
+        assigneeId: null,
+        parentId: item.parentId || null,
+        createdAt: now,
+        updatedAt: now
+      };
+      
+      this.closingChecklist.set(itemId, createdItem);
+      
+      // Store the IDs of items that might have children
+      if (item.title === "Regulatory filings") {
+        parentItems["Regulatory filings"] = itemId;
+      }
+    }
+
+    // Add sub-items for "Regulatory filings"
+    const regulatorySubItems = [
+      {
+        title: "Securities filings",
+        dealId: 1,
+        isComplete: false,
+        parentId: parentItems["Regulatory filings"]
+      },
+      {
+        title: "Blue sky filings",
+        dealId: 1,
+        isComplete: false,
+        parentId: parentItems["Regulatory filings"]
+      },
+      {
+        title: "CFIUS review",
+        dealId: 1,
+        isComplete: false,
+        parentId: parentItems["Regulatory filings"]
+      }
+    ];
+
+    for (const item of regulatorySubItems) {
+      const itemId = this.currentClosingChecklistItemId++;
+      const now = new Date();
+      
+      const createdItem: ClosingChecklistItem = {
+        id: itemId,
+        title: item.title,
+        dealId: item.dealId,
+        isComplete: item.isComplete || false,
+        description: null,
+        dueDate: null,
+        assigneeId: null,
+        parentId: item.parentId,
+        createdAt: now,
+        updatedAt: now
+      };
+      
+      this.closingChecklist.set(itemId, createdItem);
+    }
+
+    // Sample closing checklist items for Deal 2 (TechStart Acquisition)
+    const deal2Checklist = [
+      {
+        title: "Due diligence completed",
+        dealId: 2,
+        isComplete: true
+      },
+      {
+        title: "Transaction documents signed",
+        dealId: 2,
+        isComplete: true
+      },
+      {
+        title: "Regulatory approvals",
+        dealId: 2,
+        isComplete: false
+      },
+      {
+        title: "IP assignments registered",
+        dealId: 2,
+        isComplete: false
+      },
+      {
+        title: "Employee transitions",
+        dealId: 2,
+        isComplete: false
+      }
+    ];
+
+    for (const item of deal2Checklist) {
+      const itemId = this.currentClosingChecklistItemId++;
+      const now = new Date();
+      
+      const createdItem: ClosingChecklistItem = {
+        id: itemId,
+        title: item.title,
+        dealId: item.dealId,
+        isComplete: item.isComplete || false,
+        description: null,
+        dueDate: null,
+        assigneeId: null,
+        parentId: null,
+        createdAt: now,
+        updatedAt: now
+      };
+      
+      this.closingChecklist.set(itemId, createdItem);
+    }
+
+    // Sample closing checklist items for Deal 3 (HealthTech Series A)
+    const deal3Checklist = [
+      {
+        title: "Term sheet finalized",
+        dealId: 3,
+        isComplete: true
+      },
+      {
+        title: "Stock purchase agreement",
+        dealId: 3,
+        isComplete: false
+      },
+      {
+        title: "Investor rights agreement",
+        dealId: 3,
+        isComplete: false
+      },
+      {
+        title: "Voting agreement",
+        dealId: 3,
+        isComplete: false
+      },
+      {
+        title: "ROFR & Co-Sale agreement",
+        dealId: 3,
+        isComplete: false
+      },
+      {
+        title: "Company legal opinion",
+        dealId: 3,
+        isComplete: false
+      },
+      {
+        title: "Management rights letter",
+        dealId: 3,
+        isComplete: false
+      }
+    ];
+
+    for (const item of deal3Checklist) {
+      const itemId = this.currentClosingChecklistItemId++;
+      const now = new Date();
+      
+      const createdItem: ClosingChecklistItem = {
+        id: itemId,
+        title: item.title,
+        dealId: item.dealId,
+        isComplete: item.isComplete || false,
+        description: null,
+        dueDate: null,
+        assigneeId: null,
+        parentId: null,
+        createdAt: now,
+        updatedAt: now
+      };
+      
+      this.closingChecklist.set(itemId, createdItem);
+    }
+
+    console.log(`DEBUG - Added ${this.tasks.size} tasks and ${this.closingChecklist.size} checklist items`);
   }
 }
 
