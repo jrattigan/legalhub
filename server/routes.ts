@@ -36,15 +36,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Seed data endpoint - for development purposes
   app.post('/api/seed-data', async (req: Request, res: Response) => {
     try {
+      console.log('DEBUG - ⭐ SEED DATA ENDPOINT START ⭐');
       const { tasks, closingChecklistItems } = req.body;
       const results: { tasks: any[], closingChecklistItems: any[] } = { tasks: [], closingChecklistItems: [] };
       
-      console.log('Received seed data request:', {
+      console.log('DEBUG - Received seed data request:', {
         tasksCount: tasks?.length || 0,
         closingChecklistItemsCount: closingChecklistItems?.length || 0
       });
       
-      // Debug: Check the initial state of tasks Map
+      // Debug: Check the initial state of all Maps
+      console.log('DEBUG - 📊 STORAGE MAPS STATE');
+      console.log(`DEBUG - Tasks map size: ${storage['tasks'].size}`);
+      console.log(`DEBUG - Closing checklist map size: ${storage['closingChecklist'].size}`);
+      
       const initialTasks = await storage.getTasksByDeal(1);
       console.log('DEBUG - Initial tasks for deal 1:', initialTasks);
       

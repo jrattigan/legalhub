@@ -2066,16 +2066,23 @@ export class MemStorage implements IStorage {
   }
 
   async getTasksByDeal(dealId: number): Promise<Task[]> {
-    return Array.from(this.tasks.values()).filter(task => task.dealId === dealId);
+    const allTasks = Array.from(this.tasks.values());
+    console.log(`DEBUG - getTasksByDeal: Map size=${this.tasks.size}, all tasks:`, JSON.stringify(allTasks));
+    
+    const filteredTasks = allTasks.filter(task => task.dealId === dealId);
+    console.log(`DEBUG - getTasksByDeal: Filtered ${filteredTasks.length} tasks for dealId=${dealId}`);
+    
+    return filteredTasks;
   }
 
   async createTask(task: InsertTask): Promise<Task> {
-    console.log("Creating task with data:", JSON.stringify(task, null, 2));
+    console.log("DEBUG - Creating task with data:", JSON.stringify(task, null, 2));
+    console.log(`DEBUG - Current task map size before adding: ${this.tasks.size}`);
     
     // Ensure dealId is a number
     if (typeof task.dealId === 'string') {
       task.dealId = parseInt(task.dealId, 10);
-      console.log("Converted dealId from string to number:", task.dealId);
+      console.log("DEBUG - Converted dealId from string to number:", task.dealId);
     }
     
     const id = this.currentTaskId++;
@@ -2096,11 +2103,18 @@ export class MemStorage implements IStorage {
         attorneyId: task.attorneyId || null
       };
       
-      console.log("Task created successfully, storing with ID:", id);
+      console.log(`DEBUG - Task created successfully with ID ${id}, adding to map`);
       this.tasks.set(id, createdTask);
+      
+      // Verify task was added correctly
+      const verifyTask = this.tasks.get(id);
+      console.log(`DEBUG - Verification - task retrieved from map:`, 
+                verifyTask ? JSON.stringify(verifyTask) : "NOT FOUND!");
+      
+      console.log(`DEBUG - Current task map size after adding: ${this.tasks.size}`);
       return createdTask;
     } catch (error) {
-      console.error("Error creating task:", error);
+      console.error("ERROR - Failed creating task:", error);
       throw error;
     }
   }
