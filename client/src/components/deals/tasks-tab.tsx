@@ -362,34 +362,10 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     
     console.log(`Setting task ${task.id} status to ${newStatus}`);
     
-    // Update the task using direct fetch
-    fetch(`/api/tasks/${task.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus })
-    })
-    .then(res => {
-      console.log(`Response status from status toggle:`, res.status, res.ok);
-      if (!res.ok) {
-        throw new Error(`Server returned ${res.status}`);
-      }
-      return res.json();
-    })
-    .then(data => {
-      console.log("Task status update successful:", data);
-      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
-      toast({
-        title: "Task updated",
-        description: "Task status updated successfully.",
-      });
-    })
-    .catch(error => {
-      console.error("Error updating task status:", error);
-      toast({
-        title: "Failed to update task",
-        description: "There was an error updating the task status. Please try again.",
-        variant: "destructive"
-      });
+    // Update the task using updateTaskMutation
+    updateTaskMutation.mutate({
+      id: task.id,
+      task: { status: newStatus }
     });
   };
 
@@ -456,49 +432,33 @@ export default function TasksTab({ dealId }: TasksTabProps) {
         updatedTask.status = editingField.value;
         break;
       case 'assignee':
-        // Always explicitly set all assignee fields to null first to avoid conflicts
-        updatedTask.assigneeId = null;
-        updatedTask.lawFirmId = null;
-        updatedTask.attorneyId = null;
-        updatedTask.customAssigneeId = null;
+        // The AssigneePicker returns an object with the selected assignee ID fields
+        // We just need to use those values directly as they're already in the right format
         
         console.log("ASSIGNEE EDIT - Original editing field value:", editingField.value);
         
         if (editingField.value) {
-          // Set the appropriate field based on the type of assignee
-          if (editingField.value.type === 'user') {
-            const numId = Number(editingField.value.id);
-            updatedTask.assigneeId = numId;
-            console.log(`ASSIGNEE EDIT - Setting assigneeId to ${numId}`, {
-              original: editingField.value.id,
-              converted: numId,
-              type: typeof numId
-            });
-          } else if (editingField.value.type === 'lawFirm') {
-            const numId = Number(editingField.value.id);
-            updatedTask.lawFirmId = numId;
-            console.log(`ASSIGNEE EDIT - Setting lawFirmId to ${numId}`, {
-              original: editingField.value.id,
-              converted: numId,
-              type: typeof numId
-            });
-          } else if (editingField.value.type === 'attorney') {
-            const numId = Number(editingField.value.id);
-            updatedTask.attorneyId = numId;
-            console.log(`ASSIGNEE EDIT - Setting attorneyId to ${numId}`, {
-              original: editingField.value.id,
-              converted: numId,
-              type: typeof numId
-            });
-          } else if (editingField.value.type === 'customAssignee') {
-            const numId = Number(editingField.value.id);
-            updatedTask.customAssigneeId = numId;
-            console.log(`ASSIGNEE EDIT - Setting customAssigneeId to ${numId}`, {
-              original: editingField.value.id,
-              converted: numId,
-              type: typeof numId
-            });
+          // Reset all assignee fields first
+          updatedTask.assigneeId = null;
+          updatedTask.lawFirmId = null;
+          updatedTask.attorneyId = null;
+          updatedTask.customAssigneeId = null;
+          
+          // Now assign the selected fields
+          if (editingField.value.userId) {
+            updatedTask.assigneeId = Number(editingField.value.userId);
           }
+          if (editingField.value.lawFirmId) {
+            updatedTask.lawFirmId = Number(editingField.value.lawFirmId);
+          }
+          if (editingField.value.attorneyId) {
+            updatedTask.attorneyId = Number(editingField.value.attorneyId);
+          }
+          if (editingField.value.customAssigneeId) {
+            updatedTask.customAssigneeId = Number(editingField.value.customAssigneeId);
+          }
+          
+          console.log("ASSIGNEE EDIT - Final task update:", updatedTask);
         }
         break;
     }
@@ -638,27 +598,13 @@ export default function TasksTab({ dealId }: TasksTabProps) {
 
   // Helper to get the right assignee object for editing
   const getAssigneeObject = (task: Task) => {
-    if (task.assigneeId) {
-      const user = users.find(u => u.id === task.assigneeId);
-      return user ? { id: user.id, name: user.fullName, type: 'user' } : null;
-    }
-    
-    if (task.lawFirmId) {
-      const lawFirm = lawFirms.find(lf => lf.id === task.lawFirmId);
-      return lawFirm ? { id: lawFirm.id, name: lawFirm.name, type: 'lawFirm' } : null;
-    }
-    
-    if (task.attorneyId) {
-      const attorney = attorneys.find(a => a.id === task.attorneyId);
-      return attorney ? { id: attorney.id, name: attorney.name, type: 'attorney' } : null;
-    }
-    
-    if (task.customAssigneeId) {
-      const custom = customAssignees.find(ca => ca.id === task.customAssigneeId);
-      return custom ? { id: custom.id, name: custom.name, type: 'customAssignee' } : null;
-    }
-    
-    return null;
+    // Return the IDs directly in the format expected by AssigneePicker
+    return {
+      userId: task.assigneeId,
+      lawFirmId: task.lawFirmId,
+      attorneyId: task.attorneyId,
+      customAssigneeId: task.customAssigneeId
+    };
   };
 
   // Extract assignee fields for passing to component
