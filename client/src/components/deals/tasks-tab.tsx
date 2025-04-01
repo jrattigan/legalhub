@@ -447,12 +447,13 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     setEditingField(null);
   };
   
-  // Handle assignee selection - completely rebuilt to fix issues with external tasks
+  // Handle assignee selection - complete rebuild with additional debugging and strict typing
   const handleAssigneeSelection = (task: Task, assignee: any) => {
-    console.log("handleAssigneeSelection called with:", { taskId: task.id, taskType: task.taskType, assignee });
+    console.log("handleAssigneeSelection called with task:", task);
+    console.log("Assignee data:", assignee);
     
-    // Create a new task object with all assignee fields cleared
-    const updatedTask = {
+    // First clear all assignee fields to avoid any conflicts
+    const updatedTask: Task = {
       ...task,
       assigneeId: null,
       lawFirmId: null,
@@ -460,36 +461,50 @@ export default function TasksTab({ dealId }: TasksTabProps) {
       customAssigneeId: null
     };
     
-    console.log("Initial updatedTask with cleared assignee fields:", updatedTask);
-    
-    // Set the specific assignee field based on what was selected
-    if (assignee.userId !== undefined) {
-      updatedTask.assigneeId = assignee.userId ? Number(assignee.userId) : null;
-      console.log("Setting assigneeId to:", updatedTask.assigneeId);
+    // Set exactly one assignee field based on which type was provided
+    // Using strict conditions to ensure one and only one field is set
+    if (assignee.userId !== undefined && assignee.userId !== null) {
+      updatedTask.assigneeId = typeof assignee.userId === 'string' 
+        ? parseInt(assignee.userId, 10) 
+        : assignee.userId;
+      console.log(`Setting internal assignee (user): ${updatedTask.assigneeId}`);
     } 
-    
-    if (assignee.lawFirmId !== undefined) {
-      updatedTask.lawFirmId = assignee.lawFirmId ? Number(assignee.lawFirmId) : null;
-      console.log("Setting lawFirmId to:", updatedTask.lawFirmId);
+    else if (assignee.lawFirmId !== undefined && assignee.lawFirmId !== null) {
+      updatedTask.lawFirmId = typeof assignee.lawFirmId === 'string' 
+        ? parseInt(assignee.lawFirmId, 10) 
+        : assignee.lawFirmId;
+      console.log(`Setting external assignee (law firm): ${updatedTask.lawFirmId}`);
     } 
-    
-    if (assignee.attorneyId !== undefined) {
-      updatedTask.attorneyId = assignee.attorneyId ? Number(assignee.attorneyId) : null;
-      console.log("Setting attorneyId to:", updatedTask.attorneyId);
+    else if (assignee.attorneyId !== undefined && assignee.attorneyId !== null) {
+      updatedTask.attorneyId = typeof assignee.attorneyId === 'string' 
+        ? parseInt(assignee.attorneyId, 10) 
+        : assignee.attorneyId;
+      console.log(`Setting external assignee (attorney): ${updatedTask.attorneyId}`);
     } 
-    
-    if (assignee.customAssigneeId !== undefined) {
-      updatedTask.customAssigneeId = assignee.customAssigneeId ? Number(assignee.customAssigneeId) : null;
-      console.log("Setting customAssigneeId to:", updatedTask.customAssigneeId);
+    else if (assignee.customAssigneeId !== undefined && assignee.customAssigneeId !== null) {
+      updatedTask.customAssigneeId = typeof assignee.customAssigneeId === 'string' 
+        ? parseInt(assignee.customAssigneeId, 10) 
+        : assignee.customAssigneeId;
+      console.log(`Setting external assignee (custom): ${updatedTask.customAssigneeId}`);
+    }
+    else {
+      console.log("No valid assignee ID found in the assignee object");
     }
     
-    // Update the editing field value for consistency
+    // Update the editing field value for UI consistency
     setEditingField(prev => prev ? {...prev, value: assignee} : null);
     
-    // Save the updated task
-    console.log("Final task object to save:", updatedTask);
+    // Debug output of the finalized task data being sent
+    console.log("Final task object being saved:", {
+      id: updatedTask.id,
+      taskType: updatedTask.taskType,
+      assigneeId: updatedTask.assigneeId,
+      lawFirmId: updatedTask.lawFirmId,
+      attorneyId: updatedTask.attorneyId,
+      customAssigneeId: updatedTask.customAssigneeId
+    });
     
-    // Make the API call directly instead of using saveInlineEdit to ensure updates are applied
+    // Use direct API update to ensure changes are saved immediately
     updateTask(updatedTask);
   };
   
@@ -749,21 +764,27 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   const getTasksByType = (type: string) => {
     if (!tasks || tasks.length === 0) return [];
     
-    console.log(`Getting tasks for dealId=${dealId} and type=${type}`);
-    console.log("All tasks:", tasks);
+    console.log(`Getting tasks for dealId=${dealId} and type=${type} (strict comparison)`);
     
+    // Use strict equality to ensure we only match exact string values for taskType
     // First filter by dealId to ensure we only show tasks for the current deal
-    let filtered = tasks.filter((task: Task) => task.dealId === dealId);
-    console.log(`After dealId filter (${filtered.length} tasks):`, filtered);
+    let filtered = tasks.filter((task: Task) => {
+      // Ensure we're dealing with a number for dealId comparison
+      const taskDealId = typeof task.dealId === 'string' ? parseInt(task.dealId, 10) : task.dealId;
+      return taskDealId === dealId;
+    });
     
-    // Then filter by task type (internal or external)
-    filtered = filtered.filter((task: Task) => task.taskType === type);
-    console.log(`After taskType filter (${filtered.length} tasks):`, filtered);
+    // Then filter by taskType - using strict equality (===) to ensure only exact matches
+    filtered = filtered.filter((task: Task) => {
+      console.log(`Checking task ${task.id} with type "${task.taskType}" against requested "${type}"`);
+      return task.taskType === type;
+    });
+    
+    console.log(`FINAL FILTERED TASKS for type=${type}: `, filtered);
     
     // Apply status filter if present
     if (statusFilter) {
       filtered = filtered.filter((task: Task) => task.status === statusFilter);
-      console.log(`After status filter (${filtered.length} tasks):`, filtered);
     }
     
     return filtered;
