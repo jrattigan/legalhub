@@ -224,6 +224,50 @@ export class MemStorage implements IStorage {
     this.initializeSampleData();
   }
 
+  // Helper method to get realistic attorney headshots
+  private getAttorneyHeadshot(name: string): string {
+    // For female attorneys
+    if (name.toLowerCase().includes('rachel')) {
+      return "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80";
+    } else if (name.toLowerCase().includes('jodie')) {
+      return "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80";
+    } else if (name.toLowerCase().includes('heidi')) {
+      return "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80";
+    } else if (name.toLowerCase().includes('cindy')) {
+      return "https://images.unsplash.com/photo-1607746882042-944635dfe10e?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80";
+    } else if (name.toLowerCase().includes('fiona')) {
+      return "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80";
+    } 
+    // For male attorneys
+    else if (name.toLowerCase().includes('michael')) {
+      return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80";
+    } else if (name.toLowerCase().includes('david')) {
+      return "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80";
+    } else if (name.toLowerCase().includes('mark')) {
+      return "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80";
+    } else if (name.toLowerCase().includes('ivan')) {
+      return "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80";
+    } else if (name.toLowerCase().includes('samuel')) {
+      return "https://images.unsplash.com/photo-1560787313-5dff3307e257?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80";
+    } else if (name.toLowerCase().includes('greg')) {
+      return "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80";
+    } else if (name.toLowerCase().includes('james')) {
+      return "https://images.unsplash.com/photo-1552058544-f2b08422138a?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80";
+    } else if (name.toLowerCase().includes('ted')) {
+      return "https://images.unsplash.com/photo-1541647376583-8934aaf3448a?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80";
+    } else if (name.toLowerCase().includes('john')) {
+      return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80";
+    }
+    
+    // Default fallback headshots based on gender patterns in name
+    return name.toLowerCase().includes('a') && name.endsWith('a') || 
+           name.toLowerCase().includes('elle') || 
+           name.toLowerCase().includes('ina') ||
+           name.toLowerCase().includes('rie') ?
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80" : 
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80";
+  }
+
   // Initialize with sample data to have a working app on start
   private initializeSampleData() {
     console.log("DEBUG - Initializing sample data");
@@ -548,11 +592,7 @@ export class MemStorage implements IStorage {
             createdAt: new Date(),
             phone: attorney.phone || null,
             mobile: attorney.mobile || null,
-            photoUrl: attorney.name.toLowerCase().includes('rachel') || attorney.name.toLowerCase().includes('jodie') || 
-                     attorney.name.toLowerCase().includes('heidi') || attorney.name.toLowerCase().includes('cindy') || 
-                     attorney.name.toLowerCase().includes('fiona') ? 
-                     "https://randomuser.me/api/portraits/women/" + (attorneyId % 70) + ".jpg" : 
-                     "https://randomuser.me/api/portraits/men/" + (attorneyId % 70) + ".jpg"
+            photoUrl: this.getAttorneyHeadshot(attorney.name)
           };
           this.attorneys.set(attorneyId, createdAttorney);
           createdAttorneys[attorney.name] = createdAttorney;
