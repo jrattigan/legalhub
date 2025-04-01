@@ -448,47 +448,74 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   };
   
   // Handle assignee selection - complete rebuild with additional debugging and strict typing
+  // IMPROVED: Handle assignee selection with task type awareness
   const handleAssigneeSelection = (task: Task, assignee: any) => {
-    console.log("handleAssigneeSelection called with task:", task);
-    console.log("Assignee data:", assignee);
+    console.log("handleAssigneeSelection called for task type:", task.taskType);
+    console.log("Assignee data:", JSON.stringify(assignee, null, 2));
     
-    // First clear all assignee fields to avoid any conflicts
+    // Create a deep copy of the task to avoid direct mutation
     const updatedTask: Task = {
       ...task,
+      // Reset all assignee fields to null first
       assigneeId: null,
+      customAssigneeId: null,
       lawFirmId: null,
       attorneyId: null,
-      customAssigneeId: null
     };
     
-    // Set exactly one assignee field based on which type was provided
-    // Using strict conditions to ensure one and only one field is set
-    if (assignee.userId !== undefined && assignee.userId !== null) {
-      updatedTask.assigneeId = typeof assignee.userId === 'string' 
-        ? parseInt(assignee.userId, 10) 
-        : assignee.userId;
-      console.log(`Setting internal assignee (user): ${updatedTask.assigneeId}`);
+    // Handle internal and external tasks differently
+    if (task.taskType === "internal") {
+      // For internal tasks, we only use assigneeId (userId) and ignore other fields
+      if (assignee && assignee.userId !== undefined && assignee.userId !== null) {
+        console.log(`Setting internal assignee (user): ${assignee.userId}`);
+        updatedTask.assigneeId = typeof assignee.userId === 'string' 
+          ? parseInt(assignee.userId, 10) 
+          : assignee.userId;
+      }
     } 
-    else if (assignee.lawFirmId !== undefined && assignee.lawFirmId !== null) {
-      updatedTask.lawFirmId = typeof assignee.lawFirmId === 'string' 
-        ? parseInt(assignee.lawFirmId, 10) 
-        : assignee.lawFirmId;
-      console.log(`Setting external assignee (law firm): ${updatedTask.lawFirmId}`);
-    } 
-    else if (assignee.attorneyId !== undefined && assignee.attorneyId !== null) {
-      updatedTask.attorneyId = typeof assignee.attorneyId === 'string' 
-        ? parseInt(assignee.attorneyId, 10) 
-        : assignee.attorneyId;
-      console.log(`Setting external assignee (attorney): ${updatedTask.attorneyId}`);
-    } 
-    else if (assignee.customAssigneeId !== undefined && assignee.customAssigneeId !== null) {
-      updatedTask.customAssigneeId = typeof assignee.customAssigneeId === 'string' 
-        ? parseInt(assignee.customAssigneeId, 10) 
-        : assignee.customAssigneeId;
-      console.log(`Setting external assignee (custom): ${updatedTask.customAssigneeId}`);
-    }
-    else {
-      console.log("No valid assignee ID found in the assignee object");
+    else if (task.taskType === "external") {
+      // For external tasks, we need to handle multiple possible assignee types
+      
+      // Case 1: Custom assignee (like "Acme Corp Legal Dept")
+      if (assignee && assignee.customAssigneeId !== undefined && assignee.customAssigneeId !== null) {
+        console.log(`Setting external assignee (custom): ${assignee.customAssigneeId}`);
+        updatedTask.customAssigneeId = typeof assignee.customAssigneeId === 'string'
+          ? parseInt(assignee.customAssigneeId, 10)
+          : assignee.customAssigneeId;
+      } 
+      // Case 2: Attorney selected
+      else if (assignee && assignee.attorneyId !== undefined && assignee.attorneyId !== null) {
+        console.log(`Setting external assignee (attorney): ${assignee.attorneyId}`);
+        updatedTask.attorneyId = typeof assignee.attorneyId === 'string'
+          ? parseInt(assignee.attorneyId, 10)
+          : assignee.attorneyId;
+        
+        // When selecting an attorney, we should also set their law firm
+        if (assignee.lawFirmId !== undefined && assignee.lawFirmId !== null) {
+          // Use explicitly provided law firm
+          console.log(`Setting law firm from selection: ${assignee.lawFirmId}`);
+          updatedTask.lawFirmId = typeof assignee.lawFirmId === 'string' 
+            ? parseInt(assignee.lawFirmId, 10) 
+            : assignee.lawFirmId;
+        } else {
+          // Try to look up the law firm from the attorney data
+          const attorney = attorneys.find(a => a.id === updatedTask.attorneyId);
+          if (attorney && attorney.lawFirmId) {
+            console.log(`Auto-setting law firm from attorney record: ${attorney.lawFirmId}`);
+            updatedTask.lawFirmId = attorney.lawFirmId;
+          }
+        }
+      } 
+      // Case 3: Only law firm selected (no specific attorney)
+      else if (assignee && assignee.lawFirmId !== undefined && assignee.lawFirmId !== null) {
+        console.log(`Setting external assignee (law firm): ${assignee.lawFirmId}`);
+        updatedTask.lawFirmId = typeof assignee.lawFirmId === 'string' 
+          ? parseInt(assignee.lawFirmId, 10) 
+          : assignee.lawFirmId;
+      }
+      else {
+        console.log("No valid assignee ID found in the assignee object for external task");
+      }
     }
     
     // Update the editing field value for UI consistency
@@ -760,34 +787,54 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     }
   };
 
-  // Get tasks by type (internal or external) and by the current dealId
+  // COMPLETELY REWRITTEN: Get tasks by type (internal or external) for current deal
   const getTasksByType = (type: string) => {
     if (!tasks || tasks.length === 0) return [];
     
-    console.log(`Getting tasks for dealId=${dealId} and type=${type} (strict comparison)`);
+    // Clear debug logging to identify issue
+    console.log(`------- FILTERED TASKS DEBUG (dealId=${dealId}, type=${type}) -------`);
+    console.log(`Total tasks available: ${tasks.length}`);
     
-    // Use strict equality to ensure we only match exact string values for taskType
-    // First filter by dealId to ensure we only show tasks for the current deal
-    let filtered = tasks.filter((task: Task) => {
-      // Ensure we're dealing with a number for dealId comparison
+    // First get all tasks for this deal
+    const dealTasks = tasks.filter(task => {
       const taskDealId = typeof task.dealId === 'string' ? parseInt(task.dealId, 10) : task.dealId;
       return taskDealId === dealId;
     });
     
-    // Then filter by taskType - using strict equality (===) to ensure only exact matches
-    filtered = filtered.filter((task: Task) => {
-      console.log(`Checking task ${task.id} with type "${task.taskType}" against requested "${type}"`);
-      return task.taskType === type;
+    console.log(`Tasks for deal ${dealId}: ${dealTasks.length}`);
+    
+    // Strict type checking for task filtering
+    const typedTasks = dealTasks.filter(task => {
+      // Deep debug of each task's type for troubleshooting
+      console.log(JSON.stringify({
+        taskId: task.id,
+        taskName: task.name,
+        taskType: task.taskType,
+        requestedType: type,
+        isMatch: task.taskType === type,
+        // Include every field value for debugging
+        debugFields: {
+          assigneeId: task.assigneeId,
+          lawFirmId: task.lawFirmId,
+          attorneyId: task.attorneyId,
+          customAssigneeId: task.customAssigneeId
+        }
+      }));
+      
+      // Strict === comparison ensures proper filtering
+      return String(task.taskType) === String(type);
     });
     
-    console.log(`FINAL FILTERED TASKS for type=${type}: `, filtered);
+    console.log(`Tasks of type "${type}": ${typedTasks.length}`);
     
     // Apply status filter if present
     if (statusFilter) {
-      filtered = filtered.filter((task: Task) => task.status === statusFilter);
+      const statusFiltered = typedTasks.filter(task => task.status === statusFilter);
+      console.log(`After status filter "${statusFilter}": ${statusFiltered.length} tasks`);
+      return statusFiltered;
     }
     
-    return filtered;
+    return typedTasks;
   };
 
   // Helper to get assignee name for display
@@ -811,7 +858,7 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     return "Unassigned";
   };
 
-  // Helper to get the right assignee object for editing
+  // IMPROVED: Helper to get the right assignee object for editing
   const getAssigneeObject = (task: Task) => {
     // Return the IDs directly in the format expected by AssigneePicker
     // The component expects an object with only one of these IDs set
@@ -822,18 +869,43 @@ export default function TasksTab({ dealId }: TasksTabProps) {
       customAssigneeId?: number | null;
     } = {};
     
-    // Only set one ID based on precedence
-    if (task.assigneeId) {
+    console.log("Getting assignee object for task:", JSON.stringify({
+      taskId: task.id,
+      taskName: task.name,
+      taskType: task.taskType,
+      assigneeId: task.assigneeId,
+      lawFirmId: task.lawFirmId,
+      attorneyId: task.attorneyId,
+      customAssigneeId: task.customAssigneeId
+    }));
+    
+    // Logic based on task type to correctly map assignees
+    if (task.taskType === "internal") {
+      // For internal tasks, we only use assigneeId (userId)
       result.userId = task.assigneeId;
-    } else if (task.attorneyId) {
-      result.attorneyId = task.attorneyId;
-    } else if (task.lawFirmId) {
-      result.lawFirmId = task.lawFirmId;
-    } else if (task.customAssigneeId) {
-      result.customAssigneeId = task.customAssigneeId;
+    } else if (task.taskType === "external") {
+      // For external tasks, check all possible external assignee fields in order of precedence
+      if (task.customAssigneeId) {
+        result.customAssigneeId = task.customAssigneeId;
+      } else if (task.attorneyId) {
+        result.attorneyId = task.attorneyId;
+        
+        // If we have an attorney ID, we should also include the law firm ID
+        if (task.lawFirmId) {
+          result.lawFirmId = task.lawFirmId;
+        } else {
+          // Try to find the law firm ID from the attorney data
+          const attorney = attorneys.find(a => a.id === task.attorneyId);
+          if (attorney && attorney.lawFirmId) {
+            result.lawFirmId = attorney.lawFirmId;
+          }
+        }
+      } else if (task.lawFirmId) {
+        result.lawFirmId = task.lawFirmId;
+      }
     }
     
-    console.log("getAssigneeObject result:", result, "from task:", task);
+    console.log("Resolved assignee object:", result);
     return result;
   };
 
