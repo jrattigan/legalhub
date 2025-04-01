@@ -733,12 +733,17 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     }
   };
 
-  // Get tasks by type (internal or external)
+  // Get tasks by type (internal or external) and by the current dealId
   const getTasksByType = (type: string) => {
     if (!tasks || tasks.length === 0) return [];
     
-    let filtered = tasks.filter((task: Task) => task.taskType === type);
+    // First filter by dealId to ensure we only show tasks for the current deal
+    let filtered = tasks.filter((task: Task) => task.dealId === dealId);
     
+    // Then filter by task type (internal or external)
+    filtered = filtered.filter((task: Task) => task.taskType === type);
+    
+    // Apply status filter if present
     if (statusFilter) {
       filtered = filtered.filter((task: Task) => task.status === statusFilter);
     }
