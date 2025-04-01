@@ -257,12 +257,23 @@ export default function TasksTab({ dealId }: TasksTabProps) {
 
   // Update task mutation
   const updateTaskMutation = useMutation({
-    mutationFn: ({ id, task }: { id: number, task: any }) => apiRequest(`/api/tasks/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(task)
-    }).then(res => res.json()),
-    onSuccess: () => {
+    mutationFn: ({ id, task }: { id: number, task: any }) => {
+      console.log(`Sending task update request to /api/tasks/${id}:`, task);
+      return fetch(`/api/tasks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task)
+      })
+      .then(res => {
+        console.log(`Response status from task update:`, res.status);
+        if (!res.ok) {
+          throw new Error(`Server returned ${res.status}`);
+        }
+        return res.json();
+      });
+    },
+    onSuccess: (data) => {
+      console.log("Task update successful:", data);
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       toast({
         title: "Task updated",
@@ -349,9 +360,36 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   const handleTaskStatusToggle = (task: Task, completed: boolean) => {
     const newStatus = completed ? "completed" : "open";
     
-    updateTaskMutation.mutate({
-      id: task.id,
-      task: { status: newStatus }
+    console.log(`Setting task ${task.id} status to ${newStatus}`);
+    
+    // Update the task using direct fetch
+    fetch(`/api/tasks/${task.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    })
+    .then(res => {
+      console.log(`Response status from status toggle:`, res.status, res.ok);
+      if (!res.ok) {
+        throw new Error(`Server returned ${res.status}`);
+      }
+      return res.json();
+    })
+    .then(data => {
+      console.log("Task status update successful:", data);
+      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      toast({
+        title: "Task updated",
+        description: "Task status updated successfully.",
+      });
+    })
+    .catch(error => {
+      console.error("Error updating task status:", error);
+      toast({
+        title: "Failed to update task",
+        description: "There was an error updating the task status. Please try again.",
+        variant: "destructive"
+      });
     });
   };
 
@@ -406,35 +444,74 @@ export default function TasksTab({ dealId }: TasksTabProps) {
         updatedTask.description = editingField.value;
         break;
       case 'dueDate':
-        updatedTask.dueDate = editingField.value;
+        // Format the date to ensure it's sent correctly
+        // If it's already a string, we'll keep it as is
+        if (editingField.value instanceof Date) {
+          updatedTask.dueDate = editingField.value.toISOString();
+        } else {
+          updatedTask.dueDate = editingField.value;
+        }
         break;
       case 'status':
         updatedTask.status = editingField.value;
         break;
       case 'assignee':
-        // Clear all assignee fields
+        // Always explicitly set all assignee fields to null first
         updatedTask.assigneeId = null;
         updatedTask.lawFirmId = null;
         updatedTask.attorneyId = null;
         updatedTask.customAssigneeId = null;
         
-        // Set the appropriate field based on the type of assignee
-        if (editingField.value?.type === 'user') {
-          updatedTask.assigneeId = editingField.value.id;
-        } else if (editingField.value?.type === 'lawFirm') {
-          updatedTask.lawFirmId = editingField.value.id;
-        } else if (editingField.value?.type === 'attorney') {
-          updatedTask.attorneyId = editingField.value.id;
-        } else if (editingField.value?.type === 'customAssignee') {
-          updatedTask.customAssigneeId = editingField.value.id;
+        if (editingField.value) {
+          // Set the appropriate field based on the type of assignee
+          if (editingField.value.type === 'user') {
+            updatedTask.assigneeId = Number(editingField.value.id);
+          } else if (editingField.value.type === 'lawFirm') {
+            updatedTask.lawFirmId = Number(editingField.value.id);
+          } else if (editingField.value.type === 'attorney') {
+            updatedTask.attorneyId = Number(editingField.value.id);
+          } else if (editingField.value.type === 'customAssignee') {
+            updatedTask.customAssigneeId = Number(editingField.value.id);
+          }
         }
         break;
     }
     
+    console.log("Saving task update:", {
+      taskId: task.id,
+      updatedFields: updatedTask,
+      editingField,
+      fieldsBeingSent: JSON.stringify(updatedTask)
+    });
+    
     // Update the task
-    updateTaskMutation.mutate({
-      id: task.id,
-      task: updatedTask
+    fetch(`/api/tasks/${task.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedTask)
+    })
+    .then(res => {
+      console.log(`Response status from task update:`, res.status, res.ok);
+      if (!res.ok) {
+        throw new Error(`Server returned ${res.status}`);
+      }
+      return res.json();
+    })
+    .then(data => {
+      console.log("Task update successful:", data);
+      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      toast({
+        title: "Task updated",
+        description: "The task has been updated successfully.",
+      });
+    })
+    .catch(error => {
+      console.error("Error updating task:", error);
+      toast({
+        title: "Failed to update task",
+        description: "There was an error updating the task. Please try again.",
+        variant: "destructive"
+      });
     });
     
     // Exit editing mode
@@ -459,9 +536,36 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     const nextIndex = (currentIndex + 1) % statusOrder.length;
     const newStatus = statusOrder[nextIndex];
     
-    updateTaskMutation.mutate({
-      id: task.id,
-      task: { status: newStatus }
+    console.log(`Cycling task ${task.id} status from ${task.status} to ${newStatus}`);
+    
+    // Update the task using direct fetch
+    fetch(`/api/tasks/${task.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    })
+    .then(res => {
+      console.log(`Response status from cycle status:`, res.status, res.ok);
+      if (!res.ok) {
+        throw new Error(`Server returned ${res.status}`);
+      }
+      return res.json();
+    })
+    .then(data => {
+      console.log("Task status cycle successful:", data);
+      queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
+      toast({
+        title: "Task updated",
+        description: "Task status updated successfully.",
+      });
+    })
+    .catch(error => {
+      console.error("Error cycling task status:", error);
+      toast({
+        title: "Failed to update task",
+        description: "There was an error updating the task status. Please try again.",
+        variant: "destructive"
+      });
     });
   };
 
