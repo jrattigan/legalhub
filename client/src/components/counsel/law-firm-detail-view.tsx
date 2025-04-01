@@ -96,8 +96,8 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
       setNewAttorney({});
       setIsAddAttorneyOpen(false);
       
-      // Invalidate attorneys query to refetch
-      queryClient.invalidateQueries({ queryKey: ['/api/attorneys'] });
+      // Invalidate attorneys query to refetch - include lawFirmId to properly handle caching
+      queryClient.invalidateQueries({ queryKey: ['/api/attorneys', lawFirmId] });
       
       toast({
         title: "Attorney added",
@@ -154,8 +154,8 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
       setEditingAttorney(null);
       setIsEditAttorneyOpen(false);
       
-      // Invalidate attorneys query to refetch
-      queryClient.invalidateQueries({ queryKey: ['/api/attorneys'] });
+      // Invalidate attorneys query to refetch - include lawFirmId to properly handle caching
+      queryClient.invalidateQueries({ queryKey: ['/api/attorneys', lawFirmId] });
       
       toast({
         title: "Attorney updated",
@@ -264,9 +264,10 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
 
   // Fetch attorneys for this law firm
   const { data: attorneys, isLoading: attorneysLoading, error: attorneysError } = useQuery<Attorney[]>({
-    queryKey: ['/api/attorneys'],
+    queryKey: ['/api/attorneys', lawFirmId], // Include lawFirmId in the cache key
     queryFn: async () => {
       if (!lawFirmId) return [];
+      console.log(`Fetching attorneys for law firm: ${lawFirmId}`);
       const response = await fetch(`/api/law-firms/${lawFirmId}/attorneys`);
       if (!response.ok) {
         throw new Error('Failed to fetch attorneys');
@@ -680,26 +681,78 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <User className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
-                <h3 className="font-medium text-lg mb-2">No attorneys listed</h3>
-                <p className="text-neutral-500 mb-4 max-w-md mx-auto">
-                  There are no attorneys associated with this law firm yet.
+              <div className="flex flex-col items-center justify-center text-center py-8">
+                <User className="h-12 w-12 text-neutral-200 mb-3" />
+                <h3 className="text-neutral-500 mb-1">No Attorneys Added</h3>
+                <p className="text-sm text-neutral-400 mb-4 max-w-xs">
+                  There are no attorneys associated with this law firm yet. Click the button above to add a new attorney.
                 </p>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
-      
-      {/* Related deals card */}
-      {/* Edit Attorney Dialog - Always defined with consistent hooks */}
+
+      <div className="grid grid-cols-1 gap-6">
+        {/* Associated deals card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Associated Deals</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {deals && deals.length > 0 ? (
+              <div className="space-y-3">
+                {deals.map((deal) => (
+                  <Link key={deal.id} href={`/deal/${deal.id}`}>
+                    <div className="flex flex-col p-3 rounded-md border border-neutral-200 hover:border-primary/70 hover:bg-neutral-50 transition-colors cursor-pointer">
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-medium text-primary">{formatDealTitle(deal)}</h3>
+                        <Badge className={`ml-2 ${getStatusColor(deal.status)}`}>
+                          {deal.status || 'Unknown Status'}
+                        </Badge>
+                      </div>
+                      
+                      <div className="mt-1 text-sm text-neutral-500">
+                        <div className="flex items-center">
+                          <Calendar className="w-3.5 h-3.5 mr-1.5" />
+                          {deal.dueDate ? (
+                            <span>Due: {format(new Date(deal.dueDate), 'MMM d, yyyy')}</span>
+                          ) : (
+                            <span>No due date</span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="mt-2 flex justify-end">
+                        <div className="flex items-center text-primary text-xs font-medium">
+                          <span>View Deal</span>
+                          <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center py-8">
+                <FileText className="h-12 w-12 text-neutral-200 mb-3" />
+                <h3 className="text-neutral-500 mb-1">No Deals Associated</h3>
+                <p className="text-sm text-neutral-400 mb-4 max-w-xs">
+                  This law firm is not associated with any deals yet. Deals can be linked to this firm when creating or editing a deal.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Edit attorney dialog */}
       <Dialog open={isEditAttorneyOpen} onOpenChange={setIsEditAttorneyOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Attorney</DialogTitle>
             <DialogDescription>
-              Update attorney information for {editingAttorney?.name || 'this attorney'}
+              Update information for {editingAttorney?.name}.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditAttorney} className="space-y-4">
@@ -737,7 +790,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-phone">Work</Label>
+              <Label htmlFor="edit-phone">Work Phone</Label>
               <Input 
                 id="edit-phone" 
                 name="phone" 
@@ -748,7 +801,7 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-mobile">Mobile</Label>
+              <Label htmlFor="edit-mobile">Mobile Phone</Label>
               <Input 
                 id="edit-mobile" 
                 name="mobile" 
@@ -770,10 +823,10 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                   <Avatar>
                     <AvatarImage src={editingAttorney.photoUrl} alt="Preview" />
                     <AvatarFallback>
-                      {editingAttorney.name ? editingAttorney.name.charAt(0) : 'A'}
+                      {editingAttorney.initials || editingAttorney.name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-sm text-green-600">Photo uploaded</span>
+                  <span className="text-sm text-green-600">Current photo</span>
                 </div>
               )}
             </div>
@@ -796,55 +849,6 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
           </form>
         </DialogContent>
       </Dialog>
-      
-      {/* Related deals card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Deals</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {deals && deals.length > 0 ? (
-            <div className="space-y-4">
-              {deals.map((deal) => (
-                <div key={deal.id} className="p-4 border rounded-lg hover:border-primary transition-colors">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <Link href={`/deals/${deal.id}`}>
-                        <h3 className="font-medium text-lg hover:text-primary transition-colors">{formatDealTitle(deal)}</h3>
-                      </Link>
-                      <div className="text-sm text-neutral-500">
-                        {deal.description || 'No description provided'}
-                      </div>
-                    </div>
-                    <Badge className={getStatusColor(deal.status)}>
-                      {deal.status}
-                    </Badge>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 gap-3 mb-4 text-sm">
-                    {deal.dueDate && (
-                      <div className="flex items-center">
-                        <Calendar className="w-4 h-4 text-neutral-500 mr-2" />
-                        <span>Closing Date: {format(new Date(deal.dueDate), 'MMM d, yyyy')}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Removed button as deal title is now a link */}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <FileText className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
-              <h3 className="font-medium text-lg mb-2">No deals found</h3>
-              <p className="text-neutral-500 mb-4 max-w-md mx-auto">
-                This law firm is not currently assigned to any deals.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
