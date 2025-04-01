@@ -175,7 +175,22 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   // Fetch Tasks
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
     queryKey: ['/api/deals', dealId, 'tasks'],
-    queryFn: () => apiRequest(`/api/deals/${dealId}/tasks`).then(res => res.json()),
+    queryFn: () => {
+      console.log("Making GET request to /api/deals/" + dealId + "/tasks", "");
+      return apiRequest(`/api/deals/${dealId}/tasks`)
+        .then(res => {
+          console.log("Response from GET /api/deals/" + dealId + "/tasks:", res.status, res.statusText);
+          return res.json();
+        })
+        .catch(err => {
+          console.error("Error fetching tasks:", err);
+          throw err;
+        });
+    },
+    // Force refetch when component mounts to ensure up-to-date data
+    refetchOnMount: true,
+    // Increase stale time to reduce unnecessary refetches
+    staleTime: 5000,
   });
 
   // Fetch Users
@@ -388,7 +403,19 @@ export default function TasksTab({ dealId }: TasksTabProps) {
 
   // Handle editing mode
   const startEditing = (taskId: number, field: EditableField, value: any) => {
+    // If there's already an editing field, save it first
+    if (editingField && editingField.taskId !== taskId) {
+      const task = tasks.find((t: Task) => t.id === editingField.taskId);
+      if (task) {
+        saveInlineEdit(task);
+      }
+    }
+    
+    // Set new editing field
     setEditingField({ taskId, field, value });
+    
+    // Log the edit operation for debugging
+    console.log(`Starting edit for task ${taskId}, field: ${field}`, value);
     
     // Focus the input on next tick
     setTimeout(() => {
@@ -432,19 +459,19 @@ export default function TasksTab({ dealId }: TasksTabProps) {
         updatedTask.status = editingField.value;
         break;
       case 'assignee':
-        // The AssigneePicker returns an object with the selected assignee ID fields
-        // We just need to use those values directly as they're already in the right format
+        // Special handling for assignee field to prevent UI update issues
+        // We need to reset all assignee fields first, then set the selected one
         
         console.log("ASSIGNEE EDIT - Original editing field value:", editingField.value);
         
+        // Reset all assignee fields first
+        updatedTask.assigneeId = null;
+        updatedTask.lawFirmId = null;
+        updatedTask.attorneyId = null;
+        updatedTask.customAssigneeId = null;
+        
+        // Now set the correct field based on the selected assignee
         if (editingField.value) {
-          // Reset all assignee fields first
-          updatedTask.assigneeId = null;
-          updatedTask.lawFirmId = null;
-          updatedTask.attorneyId = null;
-          updatedTask.customAssigneeId = null;
-          
-          // Now assign the selected fields
           if (editingField.value.userId) {
             updatedTask.assigneeId = Number(editingField.value.userId);
           }
@@ -471,16 +498,16 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     });
     
     // Ensure we're sending numbers for IDs, not strings
-    if (updatedTask.assigneeId) updatedTask.assigneeId = Number(updatedTask.assigneeId);
-    if (updatedTask.lawFirmId) updatedTask.lawFirmId = Number(updatedTask.lawFirmId);
-    if (updatedTask.attorneyId) updatedTask.attorneyId = Number(updatedTask.attorneyId);
-    if (updatedTask.customAssigneeId) updatedTask.customAssigneeId = Number(updatedTask.customAssigneeId);
+    if (updatedTask.assigneeId !== null) updatedTask.assigneeId = Number(updatedTask.assigneeId);
+    if (updatedTask.lawFirmId !== null) updatedTask.lawFirmId = Number(updatedTask.lawFirmId);
+    if (updatedTask.attorneyId !== null) updatedTask.attorneyId = Number(updatedTask.attorneyId);
+    if (updatedTask.customAssigneeId !== null) updatedTask.customAssigneeId = Number(updatedTask.customAssigneeId);
     
-    // Clear editing state BEFORE making the API call for more responsive UI
+    // Clear editing state BEFORE making the API call to make UI more responsive
     const savedEditingField = {...editingField}; // Save a copy for error handling
     setEditingField(null);
     
-    // Make a direct fetch call instead of using the mutation
+    // Use direct fetch for immediate update
     fetch(`/api/tasks/${task.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -496,10 +523,10 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     .then(data => {
       console.log("Task update successful:", data);
       
-      // Force a refetch of the tasks data
+      // Force an immediate refetch of the tasks data to update UI
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       
-      // Show toast notification
+      // Show success toast
       toast({
         title: "Task updated",
         description: "The task has been updated successfully.",
@@ -508,12 +535,8 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     .catch(error => {
       console.error("Error updating task:", error);
       
-      // Restore editing state if there was an error
-      if (savedEditingField.field === 'assignee') {
-        // Don't restore editing state for assignee fields
-        // as they can be particularly problematic
-      } else {
-        // For other fields, restore the editing state
+      // Only restore editing state for non-assignee fields
+      if (savedEditingField.field !== 'assignee') {
         setEditingField(savedEditingField);
       }
       
@@ -660,6 +683,13 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   // Remove the global taskList variable and use getFilteredTaskList directly
   const getFilteredTaskList = (tabType: string) => {
     return getTasksByType(tabType);
+  };
+  
+  // Replace all setTimeout calls with direct saveInlineEdit calls
+  const replaceAllTimeoutCalls = () => {
+    // Search for all setTimeout calls in the component and replace them with direct calls
+    // This is just to document the change - actual replacements are done manually
+    console.log("All setTimeout calls for saveInlineEdit have been replaced with direct calls.");
   };
   
   // Get statistics for the active tab
@@ -910,7 +940,7 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                                   onAssigneeSelected={(assignee) => {
                                     setEditingField({...editingField, value: assignee});
                                     // Automatically save when an assignee is selected
-                                    setTimeout(() => saveInlineEdit(task), 100);
+                                    saveInlineEdit(task);
                                   }}
                                   onCustomAssigneeCreated={handleCreateCustomAssignee}
                                   taskType={task.taskType as 'internal' | 'external'}
@@ -964,7 +994,7 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                                       onSelect={(date) => {
                                         setEditingField({...editingField, value: date ? date.toISOString() : null});
                                         // Auto-save when date is selected
-                                        setTimeout(() => saveInlineEdit(task), 100);
+                                        saveInlineEdit(task);
                                       }}
                                     />
                                   </PopoverContent>
@@ -995,7 +1025,7 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                                   onValueChange={(value) => {
                                     setEditingField({...editingField, value});
                                     // Auto-save when status is changed
-                                    setTimeout(() => saveInlineEdit(task), 100);
+                                    saveInlineEdit(task);
                                   }}
                                 >
                                   <SelectTrigger className="h-8 text-xs">
@@ -1282,7 +1312,7 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                                   onAssigneeSelected={(assignee) => {
                                     setEditingField({...editingField, value: assignee});
                                     // Automatically save when an assignee is selected
-                                    setTimeout(() => saveInlineEdit(task), 100);
+                                    saveInlineEdit(task);
                                   }}
                                   onCustomAssigneeCreated={handleCreateCustomAssignee}
                                   taskType={task.taskType as 'internal' | 'external'}
@@ -1336,7 +1366,7 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                                       onSelect={(date) => {
                                         setEditingField({...editingField, value: date ? date.toISOString() : null});
                                         // Auto-save when date is selected
-                                        setTimeout(() => saveInlineEdit(task), 100);
+                                        saveInlineEdit(task);
                                       }}
                                     />
                                   </PopoverContent>
@@ -1367,7 +1397,7 @@ export default function TasksTab({ dealId }: TasksTabProps) {
                                   onValueChange={(value) => {
                                     setEditingField({...editingField, value});
                                     // Auto-save when status is changed
-                                    setTimeout(() => saveInlineEdit(task), 100);
+                                    saveInlineEdit(task);
                                   }}
                                 >
                                   <SelectTrigger className="h-8 text-xs">

@@ -202,16 +202,15 @@ export function AssigneePicker({
         };
     }
     
-    // Close the dropdown first for a more responsive feel
+    // Close the dropdown immediately for a more responsive feel
     setOpen(false);
     
-    // Then notify the parent component about the selection
+    // Log the selection details for debugging
     console.log("AssigneePicker: Selected assignee", assignee.type, assignee.id, "sending:", result);
     
-    // Small delay to ensure UI updates completely before callback
-    setTimeout(() => {
-      onAssigneeSelected(result);
-    }, 50);
+    // Immediately notify the parent component about the selection
+    // Removed the setTimeout to prevent race conditions and ensure immediate update
+    onAssigneeSelected(result);
   };
   
   // Render assignee item in dropdown
