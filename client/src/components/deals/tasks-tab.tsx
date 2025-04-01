@@ -611,12 +611,41 @@ export default function TasksTab({ dealId }: TasksTabProps) {
         updatedTask.description = editingField.value;
         break;
       case 'dueDate':
-        // Format the date to ensure it's sent correctly
-        if (editingField.value instanceof Date) {
+        // FIXED: Enhanced date handling to ensure format compatibility
+        console.log("Due date value type:", typeof editingField.value, editingField.value);
+        
+        if (editingField.value === null) {
+          // Handle null case (no date)
+          updatedTask.dueDate = null;
+        } else if (editingField.value instanceof Date) {
+          // Handle Date object
           updatedTask.dueDate = editingField.value.toISOString();
+          console.log(`Converted Date to ISO: ${updatedTask.dueDate}`);
+        } else if (typeof editingField.value === 'string') {
+          // Handle date string
+          try {
+            // Try to parse string to date and then to ISO
+            const dateObj = new Date(editingField.value);
+            if (!isNaN(dateObj.getTime())) {
+              updatedTask.dueDate = dateObj.toISOString();
+              console.log(`Parsed string date to ISO: ${updatedTask.dueDate}`);
+            } else {
+              // If we can't parse it as a date, use as is
+              updatedTask.dueDate = editingField.value;
+              console.log(`Using unparseable date string as is: ${updatedTask.dueDate}`);
+            }
+          } catch (e) {
+            // If any error, use as is
+            updatedTask.dueDate = editingField.value;
+            console.log(`Error parsing date, using as is: ${updatedTask.dueDate}`);
+          }
         } else {
+          // Handle any other case
           updatedTask.dueDate = editingField.value;
+          console.log(`Using date value as is: ${updatedTask.dueDate}`);
         }
+        
+        console.log("Final dueDate value:", updatedTask.dueDate);
         break;
       case 'status':
         updatedTask.status = editingField.value;
@@ -788,6 +817,7 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   };
 
   // COMPLETELY REWRITTEN: Get tasks by type (internal or external) for current deal
+  // FIXED: Improved task filtering with strict type checking
   const getTasksByType = (type: string) => {
     if (!tasks || tasks.length === 0) return [];
     
@@ -797,32 +827,34 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     
     // First get all tasks for this deal
     const dealTasks = tasks.filter(task => {
+      // Handle string or number deal IDs
       const taskDealId = typeof task.dealId === 'string' ? parseInt(task.dealId, 10) : task.dealId;
       return taskDealId === dealId;
     });
     
     console.log(`Tasks for deal ${dealId}: ${dealTasks.length}`);
     
-    // Strict type checking for task filtering
+    // Extra validation to ensure taskType field is correctly set 
+    dealTasks.forEach(task => {
+      if (!task.taskType) {
+        console.warn(`Task ${task.id} is missing taskType field!`, task);
+      }
+    });
+    
+    // Strict type checking for task filtering with better logging
     const typedTasks = dealTasks.filter(task => {
-      // Deep debug of each task's type for troubleshooting
-      console.log(JSON.stringify({
-        taskId: task.id,
-        taskName: task.name,
-        taskType: task.taskType,
-        requestedType: type,
-        isMatch: task.taskType === type,
-        // Include every field value for debugging
-        debugFields: {
-          assigneeId: task.assigneeId,
-          lawFirmId: task.lawFirmId,
-          attorneyId: task.attorneyId,
-          customAssigneeId: task.customAssigneeId
-        }
-      }));
+      // Normalize both values to strings for safer comparison
+      const normalizedTaskType = String(task.taskType || '').trim().toLowerCase();
+      const normalizedRequestedType = String(type || '').trim().toLowerCase();
       
-      // Strict === comparison ensures proper filtering
-      return String(task.taskType) === String(type);
+      const isMatch = normalizedTaskType === normalizedRequestedType;
+      
+      // Only log detailed info for mismatches to reduce noise
+      if (!isMatch) {
+        console.log(`Task ${task.id} "${task.name}" has type "${normalizedTaskType}" but requested "${normalizedRequestedType}"`);
+      }
+      
+      return isMatch;
     });
     
     console.log(`Tasks of type "${type}": ${typedTasks.length}`);
