@@ -643,6 +643,55 @@ export class MemStorage implements IStorage {
       bcvTeam: ["James Smith", "Aisha Patel"]
     };
     
+    const company4: InsertCompany = {
+      legalName: "NanoTech Industries Ltd.",
+      displayName: "NanoTech",
+      url: "https://nanotechindustries.com",
+      bcvTeam: ["Alice Rodriguez", "Tom Wilson"]
+    };
+    
+    const company5: InsertCompany = {
+      legalName: "Quantum Computing Systems",
+      displayName: "QuantumCS",
+      url: "https://quantumcs.tech",
+      bcvTeam: ["Nina Chen", "Robert Jones"]
+    };
+    
+    const company6: InsertCompany = {
+      legalName: "Sustainable Energy Partners",
+      displayName: "SustainEnergy",
+      url: "https://sustainenergy.org",
+      bcvTeam: ["Maria Santos", "John Davis"]
+    };
+    
+    const company7: InsertCompany = {
+      legalName: "Digital Finance Technologies",
+      displayName: "DigiFin",
+      url: "https://digifin.io",
+      bcvTeam: ["Alex Morgan", "Sophie Kim"]
+    };
+    
+    const company8: InsertCompany = {
+      legalName: "BioMedical Research Labs",
+      displayName: "BioMed Labs",
+      url: "https://biomedlabs.org",
+      bcvTeam: ["Daniel Park", "Emma Wilson"]
+    };
+
+    const company9: InsertCompany = {
+      legalName: "SpaceTech Innovations",
+      displayName: "SpaceTech",
+      url: "https://spacetech.io",
+      bcvTeam: ["Sam Rivera", "Julia Chen"]
+    };
+
+    const company10: InsertCompany = {
+      legalName: "Advanced Robotics Inc.",
+      displayName: "ARobotics",
+      url: "https://arobotics.com",
+      bcvTeam: ["Chris Taylor", "Michelle Lee"]
+    };
+    
     // Create companies directly for sample data
     const now4 = new Date();
     const companyId1 = this.currentCompanyId++;
@@ -677,6 +726,84 @@ export class MemStorage implements IStorage {
       bcvTeam: Array.isArray(company3.bcvTeam) ? company3.bcvTeam : []
     };
     this.companies.set(companyId3, createdCompany3);
+    
+    // Create additional companies (4-10)
+    const companyId4 = this.currentCompanyId++;
+    const createdCompany4: Company = {
+      ...company4,
+      id: companyId4,
+      createdAt: now4,
+      updatedAt: now4,
+      url: company4.url || null,
+      bcvTeam: Array.isArray(company4.bcvTeam) ? company4.bcvTeam : []
+    };
+    this.companies.set(companyId4, createdCompany4);
+    
+    const companyId5 = this.currentCompanyId++;
+    const createdCompany5: Company = {
+      ...company5,
+      id: companyId5,
+      createdAt: now4,
+      updatedAt: now4,
+      url: company5.url || null,
+      bcvTeam: Array.isArray(company5.bcvTeam) ? company5.bcvTeam : []
+    };
+    this.companies.set(companyId5, createdCompany5);
+    
+    const companyId6 = this.currentCompanyId++;
+    const createdCompany6: Company = {
+      ...company6,
+      id: companyId6,
+      createdAt: now4,
+      updatedAt: now4,
+      url: company6.url || null,
+      bcvTeam: Array.isArray(company6.bcvTeam) ? company6.bcvTeam : []
+    };
+    this.companies.set(companyId6, createdCompany6);
+    
+    const companyId7 = this.currentCompanyId++;
+    const createdCompany7: Company = {
+      ...company7,
+      id: companyId7,
+      createdAt: now4,
+      updatedAt: now4,
+      url: company7.url || null,
+      bcvTeam: Array.isArray(company7.bcvTeam) ? company7.bcvTeam : []
+    };
+    this.companies.set(companyId7, createdCompany7);
+    
+    const companyId8 = this.currentCompanyId++;
+    const createdCompany8: Company = {
+      ...company8,
+      id: companyId8,
+      createdAt: now4,
+      updatedAt: now4,
+      url: company8.url || null,
+      bcvTeam: Array.isArray(company8.bcvTeam) ? company8.bcvTeam : []
+    };
+    this.companies.set(companyId8, createdCompany8);
+    
+    const companyId9 = this.currentCompanyId++;
+    const createdCompany9: Company = {
+      ...company9,
+      id: companyId9,
+      createdAt: now4,
+      updatedAt: now4,
+      url: company9.url || null,
+      bcvTeam: Array.isArray(company9.bcvTeam) ? company9.bcvTeam : []
+    };
+    this.companies.set(companyId9, createdCompany9);
+    
+    const companyId10 = this.currentCompanyId++;
+    const createdCompany10: Company = {
+      ...company10,
+      id: companyId10,
+      createdAt: now4,
+      updatedAt: now4,
+      url: company10.url || null,
+      bcvTeam: Array.isArray(company10.bcvTeam) ? company10.bcvTeam : []
+    };
+    this.companies.set(companyId10, createdCompany10);
     
     // Get the organization name from settings
     const orgName = "Rogue Capital Ventures"; // Default in case not initialized yet
