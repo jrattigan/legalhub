@@ -1,0 +1,1210 @@
+
+<!DOCTYPE html>
+<!--[if IE 8]>         <html lang="en" class="no-js lt-ie9"> <![endif]-->
+<!--[if IE 9]>         <html lang="en" class="no-js lt-ie10"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html lang="en" class="no-js">
+<!--<![endif]-->
+<head>
+
+    
+
+<link rel="preload" href="/Content/base.css" as="style">
+<link rel="preload" href="/Content/main.css?v7" as="style">
+<link rel="preload" href="/Content/flags.css" as="style">
+<link rel="preload" href="/Scripts/vendor.js" as="script">
+<link rel="preload" href="/Scripts/respond.js" as="script">
+<link rel="preload" href="/Scripts/modernizr.js" as="script">
+<link rel="preload" href="/Scripts/plugins.js" as="script">
+<link rel="preload" href="/Scripts/main.js" as="script">
+<link rel="preload" href="/Scripts/others.js" as="script">
+<script src="https://apps.elfsight.com/p/platform.js" defer></script>
+<script src="/Scripts/vendor.js"></script>
+<script src="/Scripts/respond.js"></script>
+<script src="/Scripts/modernizr.js"></script>
+<script src="/Scripts/plugins.js"></script>
+<!-- Vulture web tracking -->
+<script type="text/javascript">
+    !function (r) { var i = document.createElement("img"); i.setAttribute("src", "//orrick.vuture.net/security/tracker.gif?referer=" + encodeURIComponent(r)) }(document.referrer);
+</script>
+
+
+
+<script src="/Scripts/main.js"></script>
+<script src="/Scripts/others.js"></script>
+
+    <!-- OneTrust Cookies Consent Notice start -->
+     <script type="text/javascript" src="https://cdn.cookielaw.org/consent/ab375dae-fe40-475c-8c81-e30ad37cd07a/OtAutoBlock.js"></script>
+    <script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" type="text/javascript" charset="UTF-8" data-domain-script="ab375dae-fe40-475c-8c81-e30ad37cd07a"></script>
+    <script type="text/javascript">
+        function OptanonWrapper() { }
+    </script>
+    <!-- OneTrust Cookies Consent Notice end -->
+
+
+
+
+
+
+    <!-- Google Tag Manager -->
+    <script>
+        (function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-W9KKXHZ');</script>
+    <!-- End Google Tag Manager -->
+
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <meta name="robots" content="NOINDEX, NOFOLLOW">
+<title>Error 404</title>
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="description" content="Error 404">
+<meta name="keywords">
+<meta property="og:title" content="Error 404" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.orrick.com/Error-404" />
+<meta property="og:image" itemprop="image primaryImageOfPage" content="https://media.orrick.com/Media%20Library/public/images/orrick-logo-social-media.jpg" />
+<meta property="og:description" content="" />
+<meta property="fallback" content="False" />
+<meta name="viewport" content="width=device-width, height=device-height">
+<link href="https://www.orrick.com/Error-404" rel="canonical">
+
+    <link rel="stylesheet" href="/Content/flags.css" />
+<link rel="stylesheet" href="/Content/base.css" />
+<link rel="stylesheet" href="/Content/main.css?v7" />
+
+
+    <script src="//players.brightcove.net/4686646076001/default_default/index.min.js"></script>
+
+
+    <sc:VisitorIdentification runat="server" />
+</head>
+<body>
+
+    
+    <div class="wrapper">
+        
+
+<header>
+    <nav class="navbar navbar-default topnav" role="navigation">
+
+        <script>
+
+    $(document).ready(function () {
+        $("button.vertical-nav").click(function () {
+            //.fadeToggle(); instead of fast??
+            $("div#vnav-container").toggle("fast");
+            $('#navbar-hamburger').toggleClass('hidden');
+            $('#navbar-close').toggleClass('hidden');
+            $('ul.mnav').toggleClass('hidden');
+        });
+        $('#navbar-close').click(function () {
+            //.fadeToggle(); instead of fast??
+            $("div#vnav-container").toggle("fast");
+            $('#navbar-close').toggleClass('hidden');
+            $('#navbar-hamburger').removeClass('hidden');
+            $('ul.mnav').removeClass('hidden');
+        });
+
+
+
+        $('.opensearch').click(function () {
+            $("div.bigsearchbar").toggle("fast");
+            $('div.bigsearchbar').toggleClass('mobilesearch');
+
+        });
+
+        $('.closeit').click(function () {
+            //.fadeToggle(); instead of fast??
+            $("div.hideit").hide("fast");
+        });
+    });
+
+    $(window).on('load', function () {
+        $('.vfly').on('click', function () {
+            var target = $(this).attr('rel');
+            $("#" + target).siblings("div").hide("fast");
+            $("#" + target).show("fast");
+
+        });
+
+    });
+
+</script>
+<script type="text/javascript">
+    $(document).on('click', '.vnav-list li', function () {
+        $(".vnav-list li").removeClass("active");
+        $(this).addClass("active");
+
+    });
+
+</script>
+
+
+<div class="col-sm-12">
+    <div class="container-fluid">
+        <div class="col-sm-1">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header hfix">
+                <div id="navbar-hamburger" class="">
+                    <button type="button" class="navbar-toggle vertical-nav collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false" style="display: block;">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+
+                <div id="navbar-close" class="hidden">
+                    <span class="glyphicon glyphicon-remove close-icon"></span>
+                </div>
+
+
+
+            </div><div class="smlogo pull-right"><a href="https://www.orrick.com"><span class="ico-Orrick-Grayscale"></span></a></div>
+
+
+
+        </div>
+
+        <div class="col-md-11">
+
+
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="navbar-collapse mobile-hide collapse" id="main-collapse-1" aria-expanded="false" style="height: 0px;">
+                <ul class="nav navbar-nav navbar-right">
+
+                                <li class=""><a target="" href="/en/People">People</a></li>
+                                <li class=""><a target="" href="/en/Practices">Practices</a></li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Insights <span class="caret"></span></a>
+                                <ul class="dropdown-menu insights-drop">
+                                    <li>
+                                        <div class="row insights-drop-container">
+                                                <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                                                    <li class="insight-drop-title">Insights</li>
+                                                            <li>
+                                                                <a target="" rel="" href="/Search?f=Technology%20%26%20Innovation&amp;t=insight">Technology & Innovation</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="_blank" rel="noopener noreferrer" href="/en/tech-studio/insights">Orrick Tech Studio</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/Search?f=Energy+%26+Infrastructure&amp;t=insight">Energy & Infrastructure</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/Search?f=Finance&amp;t=insight">Finance</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/Search?f=Life%20Sciences+%26+HealthTech&amp;t=insight">Life Sciences & HealthTech</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/Search?f=Litigation%20%26%20IP&amp;t=insight">Litigation & IP</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/Search?p=Strategic+Advisory+%26+Government+Enforcement+(SAGE)&amp;t=Insight">Strategic Advisory & Government Enforcement (SAGE)</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/en/Insights">All Insights</a>
+                                                            </li>
+                                                </ul>
+                                                <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                                                    <li class="insight-drop-title">Featured</li>
+                                                            <li>
+                                                                <a target="" rel="" href="/en/Insights/CFPB-Pause-Where-From-Here">CFPB Pause: Where From&nbsp;Here?</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/en/Insights/The-Download">The Download: Tech & Innovation Market Briefing</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="_blank" rel="noopener noreferrer" href="https://ai-law-center.orrick.com/">AI Law Center</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="_blank" rel="noopener noreferrer" href="https://onlinesafety.orrick.com/">Online Safety Law Center</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/en/Technology/Life-Sciences-Snapshots">Life Sciences Venture Capital Quarterly Report</a>
+                                                            </li>
+                                                </ul>
+                                                <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                                                    <li class="insight-drop-title">Channels</li>
+                                                            <li>
+                                                                <a target="" rel="" href="/en/Podcasts">Podcasts</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/en/Events">Events</a>
+                                                            </li>
+                                                </ul>
+
+
+
+
+                                        </div>
+                                    </li>
+                                </ul>
+                            </li>
+                                <li class=""><a target="" href="/en/Careers">Careers</a></li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">About <span class="caret"></span></a>
+                                <ul class="dropdown-menu insights-drop">
+                                    <li>
+                                        <div class="row insights-drop-container">
+                                                <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                                                    <li class="insight-drop-title">About</li>
+                                                            <li>
+                                                                <a target="" rel="" href="/en/About-Us">Who We Are</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/en/News">News</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/en/Locations">Locations</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/en/Innovation">Innovation</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/en/Innovation/AI-Adoption-at-Orrick">AI Adoption @Orrick</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/en/Community/Orrick-Alumni">Alumni</a>
+                                                            </li>
+                                                </ul>
+                                                <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                                                    <li class="insight-drop-title">Responsible Business</li>
+                                                            <li>
+                                                                <a target="_blank" rel="noopener noreferrer" href="https://www.veteranslegalcareerfair.com/">Veterans' Legal Career Fair</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/en/Community/Environmental-Sustainability">Environmental Sustainability</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/en/Community/Pro-Bono">Pro Bono</a>
+                                                            </li>
+                                                            <li>
+                                                                <a target="" rel="" href="/en/Community/Inclusion-and-Belonging">Inclusion & Belonging</a>
+                                                            </li>
+                                                </ul>
+
+
+
+
+                                        </div>
+                                    </li>
+                                </ul>
+                            </li>
+                                <li class=""><a target="_blank" href="/tech-studio">Orrick Tech Studio</a></li>
+
+                </ul>
+
+
+
+            </div><!-- /.navbar-collapse -->
+        </div><!-- /.container-fluid -->
+    </div>
+</div>
+
+<!-- /flyout nav list -->
+<div class="row row-eq-height" id="vnav-container" style="display: none;">
+    <div class="col-sm-3 vnav">
+        <ul class="nav  vnav-list nav-stacked">
+                        <li role="presentation" class="">
+                            <a class="vfly" rel="" href="/en/People">People</a>
+                        </li>
+                        <li role="presentation" class="">
+                            <a class="vfly" rel="" href="/en/Practices">Practices</a>
+                        </li>
+                        <li role="presentation" class="showInsight vlink">
+                            <a class="vfly" rel="insight-v-block" href="#">Insights</a>
+
+
+                        </li>
+                        <li role="presentation" class="">
+                            <a class="vfly" rel="" href="/en/Careers">Careers</a>
+                        </li>
+                        <li role="presentation" class="vlink">
+                            <a class="vfly" rel="About-v-block" href="#">About</a>
+
+
+                        </li>
+                        <li role="presentation" class="">
+                            <a class="vfly" rel="" href="/tech-studio">Orrick Tech Studio</a>
+                        </li>
+                    <li role="presentation">
+                        <a class="only-mobile" href=""></a>
+                    </li>
+                    <li role="presentation">
+                        <a class="only-mobile" href="/en/Technology">Technology &amp; Innovation</a>
+                    </li>
+                    <li role="presentation">
+                        <a class="only-mobile" href="/en/Energy-and-Infrastructure-Sector">Energy &amp; Infrastructure</a>
+                    </li>
+                    <li role="presentation">
+                        <a class="only-mobile" href="/en/Finance">Finance</a>
+                    </li>
+                    <li role="presentation">
+                        <a class="only-mobile" href="/en/Life-Sciences-and-HealthTech">Life Sciences &amp; HealthTech</a>
+                    </li>
+        </ul>
+
+
+    </div>
+
+    <!-- /flyout -->
+    <div>
+            <div class="col-sm-9 hideit" id="" style="display: none;">
+
+                <div class="row">
+                    <div class="col-sm-12 mobile-nav-header">
+                        <div class="twentyp">
+                            <a href="https://www.orrick.com" target="_blank" rel="noopener noreferrer" title="Opens in a new browser">
+                                <span class="ico-Orrick-Grayscale" aria-label="OrrickHome" aria-hidden="true"></span>
+                                <span class="sr-only">Orrick.com</span>
+                            </a>
+                        </div>
+
+                        <div class="sixtyp">&nbsp;</div>
+
+                        <div class="twentyp searchicon"><span class="input-group-btn"><button class="btn opensearch" id="open-search-987a0266-60ef-43d6-8e87-fe850aa111f8" type="button"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button></span></div>
+                    </div>
+                </div>
+                <form class="" autocomplete="off" action="/en/search" method="get">
+                    <div class="input-group bigsearchbar">
+                        <input style="" class="form-control" placeholder="TYPE TO SEARCH" id="siteSearch-c4de4bbd-cbc1-42a3-821e-4cbe0adf5ffa" data-id="search" name="q">
+                        <span class="input-group-btn">
+                            <button class="btn btn-bigsearchbar-close opensearch" type="button"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                            <button style="" type="submit" title="Submit" class="btn btn-bigsearchbar" value="submit" aria-label="Submit">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                        </span>
+
+
+                    </div>
+                </form>
+                <div class="box-padding">
+                    <h3 class="closeit"><span class="glyphicon glyphicon-menu-left" id="insights-mobile-close-13d2e6ff-8a98-4f64-87c3-848932800f00"></span> People</h3>
+                    <br>
+                    <div class="row">
+                            <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                            </ul>
+
+
+
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-9 hideit" id="" style="display: none;">
+
+                <div class="row">
+                    <div class="col-sm-12 mobile-nav-header">
+                        <div class="twentyp">
+                            <a href="https://www.orrick.com" target="_blank" rel="noopener noreferrer" title="Opens in a new browser">
+                                <span class="ico-Orrick-Grayscale" aria-label="OrrickHome" aria-hidden="true"></span>
+                                <span class="sr-only">Orrick.com</span>
+                            </a>
+                        </div>
+
+                        <div class="sixtyp">&nbsp;</div>
+
+                        <div class="twentyp searchicon"><span class="input-group-btn"><button class="btn opensearch" id="open-search-6a464bd4-8bf9-46c6-b249-4b9bf10db55e" type="button"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button></span></div>
+                    </div>
+                </div>
+                <form class="" autocomplete="off" action="/en/search" method="get">
+                    <div class="input-group bigsearchbar">
+                        <input style="" class="form-control" placeholder="TYPE TO SEARCH" id="siteSearch-c10d7bcc-f448-41cb-826a-42147d3b17c2" data-id="search" name="q">
+                        <span class="input-group-btn">
+                            <button class="btn btn-bigsearchbar-close opensearch" type="button"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                            <button style="" type="submit" title="Submit" class="btn btn-bigsearchbar" value="submit" aria-label="Submit">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                        </span>
+
+
+                    </div>
+                </form>
+                <div class="box-padding">
+                    <h3 class="closeit"><span class="glyphicon glyphicon-menu-left" id="insights-mobile-close-fd59d817-a85b-4ffb-9809-458de65e17ec"></span> Practices</h3>
+                    <br>
+                    <div class="row">
+                            <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                            </ul>
+
+
+
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-9 hideit" id="insight-v-block" style="display: none;">
+
+                <div class="row">
+                    <div class="col-sm-12 mobile-nav-header">
+                        <div class="twentyp">
+                            <a href="https://www.orrick.com" target="_blank" rel="noopener noreferrer" title="Opens in a new browser">
+                                <span class="ico-Orrick-Grayscale" aria-label="OrrickHome" aria-hidden="true"></span>
+                                <span class="sr-only">Orrick.com</span>
+                            </a>
+                        </div>
+
+                        <div class="sixtyp">&nbsp;</div>
+
+                        <div class="twentyp searchicon"><span class="input-group-btn"><button class="btn opensearch" id="open-search-e1247483-ae80-4792-b62b-f78b92d24d02" type="button"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button></span></div>
+                    </div>
+                </div>
+                <form class="" autocomplete="off" action="/en/search" method="get">
+                    <div class="input-group bigsearchbar">
+                        <input style="" class="form-control" placeholder="TYPE TO SEARCH" id="siteSearch-c11e4b9d-834a-41a2-8f50-1aa74fc26a2e" data-id="search" name="q">
+                        <span class="input-group-btn">
+                            <button class="btn btn-bigsearchbar-close opensearch" type="button"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                            <button style="" type="submit" title="Submit" class="btn btn-bigsearchbar" value="submit" aria-label="Submit">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                        </span>
+
+
+                    </div>
+                </form>
+                <div class="box-padding">
+                    <h3 class="closeit"><span class="glyphicon glyphicon-menu-left" id="insights-mobile-close-67ed5c15-5571-44db-9012-44c3dc3f9121"></span> Insights</h3>
+                    <br>
+                    <div class="row">
+                                <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                                    <li class="insight-drop-title">Insights</li>
+                                            <li>
+                                                <a target="" rel="" href="/Search?f=Technology%20%26%20Innovation&amp;t=insight">Technology & Innovation</a>
+                                            </li>
+                                            <li>
+                                                <a target="_blank" rel="noopener noreferrer" href="/en/tech-studio/insights">Orrick Tech Studio</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/Search?f=Energy+%26+Infrastructure&amp;t=insight">Energy & Infrastructure</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/Search?f=Finance&amp;t=insight">Finance</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/Search?f=Life%20Sciences+%26+HealthTech&amp;t=insight">Life Sciences & HealthTech</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/Search?f=Litigation%20%26%20IP&amp;t=insight">Litigation & IP</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/Search?p=Strategic+Advisory+%26+Government+Enforcement+(SAGE)&amp;t=Insight">Strategic Advisory & Government Enforcement (SAGE)</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/en/Insights">All Insights</a>
+                                            </li>
+                                </ul>
+                                <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                                    <li class="insight-drop-title">Featured</li>
+                                            <li>
+                                                <a target="" rel="" href="/en/Insights/CFPB-Pause-Where-From-Here">CFPB Pause: Where From&nbsp;Here?</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/en/Insights/The-Download">The Download: Tech & Innovation Market Briefing</a>
+                                            </li>
+                                            <li>
+                                                <a target="_blank" rel="noopener noreferrer" href="https://ai-law-center.orrick.com/">AI Law Center</a>
+                                            </li>
+                                            <li>
+                                                <a target="_blank" rel="noopener noreferrer" href="https://onlinesafety.orrick.com/">Online Safety Law Center</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/en/Technology/Life-Sciences-Snapshots">Life Sciences Venture Capital Quarterly Report</a>
+                                            </li>
+                                </ul>
+                                <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                                    <li class="insight-drop-title">Channels</li>
+                                            <li>
+                                                <a target="" rel="" href="/en/Podcasts">Podcasts</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/en/Events">Events</a>
+                                            </li>
+                                </ul>
+
+
+
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-9 hideit" id="" style="display: none;">
+
+                <div class="row">
+                    <div class="col-sm-12 mobile-nav-header">
+                        <div class="twentyp">
+                            <a href="https://www.orrick.com" target="_blank" rel="noopener noreferrer" title="Opens in a new browser">
+                                <span class="ico-Orrick-Grayscale" aria-label="OrrickHome" aria-hidden="true"></span>
+                                <span class="sr-only">Orrick.com</span>
+                            </a>
+                        </div>
+
+                        <div class="sixtyp">&nbsp;</div>
+
+                        <div class="twentyp searchicon"><span class="input-group-btn"><button class="btn opensearch" id="open-search-72fc2a5f-a22f-481f-9869-a0e0ce382f71" type="button"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button></span></div>
+                    </div>
+                </div>
+                <form class="" autocomplete="off" action="/en/search" method="get">
+                    <div class="input-group bigsearchbar">
+                        <input style="" class="form-control" placeholder="TYPE TO SEARCH" id="siteSearch-02b69274-166d-43a2-975d-d2fcf09f8e43" data-id="search" name="q">
+                        <span class="input-group-btn">
+                            <button class="btn btn-bigsearchbar-close opensearch" type="button"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                            <button style="" type="submit" title="Submit" class="btn btn-bigsearchbar" value="submit" aria-label="Submit">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                        </span>
+
+
+                    </div>
+                </form>
+                <div class="box-padding">
+                    <h3 class="closeit"><span class="glyphicon glyphicon-menu-left" id="insights-mobile-close-17631962-efd0-4251-acc7-e2e2c91c44af"></span> Careers</h3>
+                    <br>
+                    <div class="row">
+                            <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                            </ul>
+
+
+
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-9 hideit" id="About-v-block" style="display: none;">
+
+                <div class="row">
+                    <div class="col-sm-12 mobile-nav-header">
+                        <div class="twentyp">
+                            <a href="https://www.orrick.com" target="_blank" rel="noopener noreferrer" title="Opens in a new browser">
+                                <span class="ico-Orrick-Grayscale" aria-label="OrrickHome" aria-hidden="true"></span>
+                                <span class="sr-only">Orrick.com</span>
+                            </a>
+                        </div>
+
+                        <div class="sixtyp">&nbsp;</div>
+
+                        <div class="twentyp searchicon"><span class="input-group-btn"><button class="btn opensearch" id="open-search-827c92f3-0077-448a-98ba-cd5946ddd0d3" type="button"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button></span></div>
+                    </div>
+                </div>
+                <form class="" autocomplete="off" action="/en/search" method="get">
+                    <div class="input-group bigsearchbar">
+                        <input style="" class="form-control" placeholder="TYPE TO SEARCH" id="siteSearch-d1e98929-0ddc-45d8-85b5-1b8715c2c848" data-id="search" name="q">
+                        <span class="input-group-btn">
+                            <button class="btn btn-bigsearchbar-close opensearch" type="button"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                            <button style="" type="submit" title="Submit" class="btn btn-bigsearchbar" value="submit" aria-label="Submit">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                        </span>
+
+
+                    </div>
+                </form>
+                <div class="box-padding">
+                    <h3 class="closeit"><span class="glyphicon glyphicon-menu-left" id="insights-mobile-close-7418ed26-4350-4d41-b329-20f0bb11a917"></span> About</h3>
+                    <br>
+                    <div class="row">
+                                <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                                    <li class="insight-drop-title">About</li>
+                                            <li>
+                                                <a target="" rel="" href="/en/About-Us">Who We Are</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/en/News">News</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/en/Locations">Locations</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/en/Innovation">Innovation</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/en/Innovation/AI-Adoption-at-Orrick">AI Adoption @Orrick</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/en/Community/Orrick-Alumni">Alumni</a>
+                                            </li>
+                                </ul>
+                                <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                                    <li class="insight-drop-title">Responsible Business</li>
+                                            <li>
+                                                <a target="_blank" rel="noopener noreferrer" href="https://www.veteranslegalcareerfair.com/">Veterans' Legal Career Fair</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/en/Community/Environmental-Sustainability">Environmental Sustainability</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/en/Community/Pro-Bono">Pro Bono</a>
+                                            </li>
+                                            <li>
+                                                <a target="" rel="" href="/en/Community/Inclusion-and-Belonging">Inclusion & Belonging</a>
+                                            </li>
+                                </ul>
+
+
+
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-9 hideit" id="" style="display: none;">
+
+                <div class="row">
+                    <div class="col-sm-12 mobile-nav-header">
+                        <div class="twentyp">
+                            <a href="https://www.orrick.com" target="_blank" rel="noopener noreferrer" title="Opens in a new browser">
+                                <span class="ico-Orrick-Grayscale" aria-label="OrrickHome" aria-hidden="true"></span>
+                                <span class="sr-only">Orrick.com</span>
+                            </a>
+                        </div>
+
+                        <div class="sixtyp">&nbsp;</div>
+
+                        <div class="twentyp searchicon"><span class="input-group-btn"><button class="btn opensearch" id="open-search-26fc4bf1-1c16-44eb-a37a-6dfdb06d885a" type="button"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button></span></div>
+                    </div>
+                </div>
+                <form class="" autocomplete="off" action="/en/search" method="get">
+                    <div class="input-group bigsearchbar">
+                        <input style="" class="form-control" placeholder="TYPE TO SEARCH" id="siteSearch-ecd86cfc-fe18-47a3-962f-74304de2c8fb" data-id="search" name="q">
+                        <span class="input-group-btn">
+                            <button class="btn btn-bigsearchbar-close opensearch" type="button"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                            <button style="" type="submit" title="Submit" class="btn btn-bigsearchbar" value="submit" aria-label="Submit">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                        </span>
+
+
+                    </div>
+                </form>
+                <div class="box-padding">
+                    <h3 class="closeit"><span class="glyphicon glyphicon-menu-left" id="insights-mobile-close-cdd160f1-1a8b-4ab7-af93-831b43b64366"></span> Orrick Tech Studio</h3>
+                    <br>
+                    <div class="row">
+                            <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                            </ul>
+
+
+
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-9 hideit" id="" style="display: none;">
+
+                <div class="row">
+                    <div class="col-sm-12 mobile-nav-header">
+                        <div class="twentyp">
+                            <a href="https://www.orrick.com" target="_blank" rel="noopener noreferrer" title="Opens in a new browser">
+                                <span class="ico-Orrick-Grayscale" aria-label="OrrickHome" aria-hidden="true"></span>
+                                <span class="sr-only">Orrick.com</span>
+                            </a>
+                        </div>
+
+                        <div class="sixtyp">&nbsp;</div>
+
+                        <div class="twentyp searchicon"><span class="input-group-btn"><button class="btn opensearch" id="open-search-7237bfa0-696e-46d0-87ac-20b9c0f35d06" type="button"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button></span></div>
+                    </div>
+                </div>
+                <form class="" autocomplete="off" action="/en/search" method="get">
+                    <div class="input-group bigsearchbar">
+                        <input style="" class="form-control" placeholder="TYPE TO SEARCH" id="siteSearch-239fe246-3e10-4d7e-a28b-3613a15c0b38" data-id="search" name="q">
+                        <span class="input-group-btn">
+                            <button class="btn btn-bigsearchbar-close opensearch" type="button"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                            <button style="" type="submit" title="Submit" class="btn btn-bigsearchbar" value="submit" aria-label="Submit">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                        </span>
+
+
+                    </div>
+                </form>
+                <div class="box-padding">
+                    <h3 class="closeit"><span class="glyphicon glyphicon-menu-left" id="insights-mobile-close-9c8c83d9-5e5c-4e5a-8860-65c45eb3c68c"></span> </h3>
+                    <br>
+                    <div class="row">
+                            <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                            </ul>
+
+
+
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-9 hideit" id="" style="display: none;">
+
+                <div class="row">
+                    <div class="col-sm-12 mobile-nav-header">
+                        <div class="twentyp">
+                            <a href="https://www.orrick.com" target="_blank" rel="noopener noreferrer" title="Opens in a new browser">
+                                <span class="ico-Orrick-Grayscale" aria-label="OrrickHome" aria-hidden="true"></span>
+                                <span class="sr-only">Orrick.com</span>
+                            </a>
+                        </div>
+
+                        <div class="sixtyp">&nbsp;</div>
+
+                        <div class="twentyp searchicon"><span class="input-group-btn"><button class="btn opensearch" id="open-search-29ed9340-3e25-422d-acc9-adbd03933f60" type="button"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button></span></div>
+                    </div>
+                </div>
+                <form class="" autocomplete="off" action="/en/search" method="get">
+                    <div class="input-group bigsearchbar">
+                        <input style="" class="form-control" placeholder="TYPE TO SEARCH" id="siteSearch-826b8815-2c2c-45f8-bd42-c259cd43d119" data-id="search" name="q">
+                        <span class="input-group-btn">
+                            <button class="btn btn-bigsearchbar-close opensearch" type="button"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                            <button style="" type="submit" title="Submit" class="btn btn-bigsearchbar" value="submit" aria-label="Submit">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                        </span>
+
+
+                    </div>
+                </form>
+                <div class="box-padding">
+                    <h3 class="closeit"><span class="glyphicon glyphicon-menu-left" id="insights-mobile-close-a1cbd005-84b7-41d3-a674-f26cb34cf3ba"></span> Technology &amp; Innovation</h3>
+                    <br>
+                    <div class="row">
+                            <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                            </ul>
+
+
+
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-9 hideit" id="" style="display: none;">
+
+                <div class="row">
+                    <div class="col-sm-12 mobile-nav-header">
+                        <div class="twentyp">
+                            <a href="https://www.orrick.com" target="_blank" rel="noopener noreferrer" title="Opens in a new browser">
+                                <span class="ico-Orrick-Grayscale" aria-label="OrrickHome" aria-hidden="true"></span>
+                                <span class="sr-only">Orrick.com</span>
+                            </a>
+                        </div>
+
+                        <div class="sixtyp">&nbsp;</div>
+
+                        <div class="twentyp searchicon"><span class="input-group-btn"><button class="btn opensearch" id="open-search-dc8866a1-d2d5-458e-8d73-32a2b94fdb0c" type="button"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button></span></div>
+                    </div>
+                </div>
+                <form class="" autocomplete="off" action="/en/search" method="get">
+                    <div class="input-group bigsearchbar">
+                        <input style="" class="form-control" placeholder="TYPE TO SEARCH" id="siteSearch-d94d6ddd-0d02-4b0c-bf86-98ad2b39fb9c" data-id="search" name="q">
+                        <span class="input-group-btn">
+                            <button class="btn btn-bigsearchbar-close opensearch" type="button"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                            <button style="" type="submit" title="Submit" class="btn btn-bigsearchbar" value="submit" aria-label="Submit">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                        </span>
+
+
+                    </div>
+                </form>
+                <div class="box-padding">
+                    <h3 class="closeit"><span class="glyphicon glyphicon-menu-left" id="insights-mobile-close-68941de5-3b71-4f72-8d95-c799d5a1c0c2"></span> Energy &amp; Infrastructure</h3>
+                    <br>
+                    <div class="row">
+                            <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                            </ul>
+
+
+
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-9 hideit" id="" style="display: none;">
+
+                <div class="row">
+                    <div class="col-sm-12 mobile-nav-header">
+                        <div class="twentyp">
+                            <a href="https://www.orrick.com" target="_blank" rel="noopener noreferrer" title="Opens in a new browser">
+                                <span class="ico-Orrick-Grayscale" aria-label="OrrickHome" aria-hidden="true"></span>
+                                <span class="sr-only">Orrick.com</span>
+                            </a>
+                        </div>
+
+                        <div class="sixtyp">&nbsp;</div>
+
+                        <div class="twentyp searchicon"><span class="input-group-btn"><button class="btn opensearch" id="open-search-d7b8d0a9-5376-4aed-8eb4-7e73318873c5" type="button"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button></span></div>
+                    </div>
+                </div>
+                <form class="" autocomplete="off" action="/en/search" method="get">
+                    <div class="input-group bigsearchbar">
+                        <input style="" class="form-control" placeholder="TYPE TO SEARCH" id="siteSearch-b1e2b009-fdb5-4dde-8578-52bfa6bc32e4" data-id="search" name="q">
+                        <span class="input-group-btn">
+                            <button class="btn btn-bigsearchbar-close opensearch" type="button"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                            <button style="" type="submit" title="Submit" class="btn btn-bigsearchbar" value="submit" aria-label="Submit">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                        </span>
+
+
+                    </div>
+                </form>
+                <div class="box-padding">
+                    <h3 class="closeit"><span class="glyphicon glyphicon-menu-left" id="insights-mobile-close-7b37e218-1361-453a-b2f6-1cb9cdd4750a"></span> Finance</h3>
+                    <br>
+                    <div class="row">
+                            <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                            </ul>
+
+
+
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-9 hideit" id="" style="display: none;">
+
+                <div class="row">
+                    <div class="col-sm-12 mobile-nav-header">
+                        <div class="twentyp">
+                            <a href="https://www.orrick.com" target="_blank" rel="noopener noreferrer" title="Opens in a new browser">
+                                <span class="ico-Orrick-Grayscale" aria-label="OrrickHome" aria-hidden="true"></span>
+                                <span class="sr-only">Orrick.com</span>
+                            </a>
+                        </div>
+
+                        <div class="sixtyp">&nbsp;</div>
+
+                        <div class="twentyp searchicon"><span class="input-group-btn"><button class="btn opensearch" id="open-search-83703d34-268a-4e9d-9972-584f8838c0e2" type="button"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button></span></div>
+                    </div>
+                </div>
+                <form class="" autocomplete="off" action="/en/search" method="get">
+                    <div class="input-group bigsearchbar">
+                        <input style="" class="form-control" placeholder="TYPE TO SEARCH" id="siteSearch-8e84d55c-7aaa-484a-9b7f-8ecdddf3ba7f" data-id="search" name="q">
+                        <span class="input-group-btn">
+                            <button class="btn btn-bigsearchbar-close opensearch" type="button"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                            <button style="" type="submit" title="Submit" class="btn btn-bigsearchbar" value="submit" aria-label="Submit">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                        </span>
+
+
+                    </div>
+                </form>
+                <div class="box-padding">
+                    <h3 class="closeit"><span class="glyphicon glyphicon-menu-left" id="insights-mobile-close-87d0a150-fa10-4503-83ba-3309d014461d"></span> Life Sciences &amp; HealthTech</h3>
+                    <br>
+                    <div class="row">
+                            <ul class="list-unstyled insight-drop col-sm-4 col-xs-12">
+                            </ul>
+
+
+
+
+
+                    </div>
+                </div>
+            </div>
+    </div>
+
+</div>
+
+<script>
+    $('.expedition-info-link').on('click', function () {
+        $('span', this).toggleClass('glyphicon-chevron-right glyphicon-menu-down');
+    });</script>
+
+    </nav>
+    <div class="container">
+        <div class="row">
+            
+        </div>
+    </div>
+    <nav class="navbar navbar-default flatnav">
+        <!-- Sector Nav -->
+        <div class="sector-nav">
+                <div class="navbar-header sector-brand">
+                <a class="navbar-brand" href="/">
+                    <img src="https://media.orrick.com/Media%20Library/public/svg%20files/orrick-logo-rgb.svg" alt="Orrick logo"/>
+                </a>
+
+    </div>
+
+
+
+<div class="pull-left" id="flatnavcontainer">
+        <ul class="nav navbar-nav flatbarlinks">
+                <li class="dropdown">
+                    <a href="/en/Technology">Technology &amp; Innovation</a>
+                </li>
+                <li class="dropdown">
+                    <a href="/en/Energy-and-Infrastructure-Sector">Energy &amp; Infrastructure</a>
+                </li>
+                <li class="dropdown">
+                    <a href="/en/Finance">Finance</a>
+                </li>
+                <li class="dropdown">
+                    <a href="/en/Life-Sciences-and-HealthTech">Life Sciences &amp; HealthTech</a>
+                </li>
+        </ul>
+
+
+
+
+</div><!-- /.navbar-collapse -->
+
+<form class="navbar-form pull-right form-inline" autocomplete="off" action="/en/search" method="get">
+    <div class="row form-group flatbarlinks-form">
+        <div class="sector-input col-sm-6 pull-right">
+            <label class="sr-only" for="siteSearch">Search entire site</label>
+            <div class="input-group fixwidth">
+
+                <input class="form-control tint-1 tweak" placeholder="Search for..." id="siteSearch-52a996cd-c889-4323-8b3a-61ce81a93f97" data-id="search" name="q">
+                <span class="input-group-btn">
+                    <span class="sr-only">Submit</span>
+                    <button  type="submit" title="Submit" class="btn btn-search tint-1" value="submit" aria-label="Submit"><span class="ico-digital-magnifying-glass"></span></button>
+                </span>
+
+            </div>
+
+        </div>
+
+        
+        <!-- new placeholder for language selector.-->
+    </div>
+</form>
+        </div><!-- /.container-fluid -->
+    </nav>
+
+    <div>
+        <div class="row">
+            <div class="row msearch">
+    <div class="col-xs- col-sm-6">
+        <div class="form-group tmobile">
+            <form autocomplete="off" action="/Search" method="get">
+                <label class="sr-only" for="mobileTopSearch">Search entire site</label>
+                <div class="input-group">
+                    <input class="form-control" name="q" placeholder="Search for..." aria-label="search entire site" id="mobileTopSearch">
+                    <span class="input-group-btn">
+                        <button type="submit" title="Submit" class="btn btn-search" aria-label="Submit"><span class="ico-digital-magnifying-glass" aria-hidden="true" aria-label="Submit"></span></button>
+                    </span>
+                </div>
+            </form>
+        </div>
+    </div>
+</div><div class="row msearch">
+    <div class="col-xs- col-sm-6">
+        <div class="form-group tmobile">
+            <form autocomplete="off" action="/Search" method="get">
+                <label class="sr-only" for="mobileTopSearch">Search entire site</label>
+                <div class="input-group">
+                    <input class="form-control" name="q" placeholder="Search for..." aria-label="search entire site" id="mobileTopSearch">
+                    <span class="input-group-btn">
+                        <button type="submit" title="Submit" class="btn btn-search" aria-label="Submit"><span class="ico-digital-magnifying-glass" aria-hidden="true" aria-label="Submit"></span></button>
+                    </span>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+        </div>
+    </div>
+</header>
+
+
+
+
+<section class="section-major">
+    <div class="container">
+        <div class="hero hero-minor">
+            <p class="text-green"><strong>Error 404</strong></p>
+            <div class="block">
+                    <h2>Page Not Found</h2>
+
+                
+            </div>
+        </div>
+
+        <div class="block text-dark-blue lazyloaded" data-expand="-40">
+            <div class="editor-wrapper">
+                <p>We could not locate the information you are seeking based on the URL provided. The page that you requested may be temporarily unavailable, moved or taken off of&nbsp;<a href="/">Orrick.com</a>.</p>
+<p><strong>Please try the following:
+</strong></p>
+<ul class="list">
+    <li>Check the Web address that you entered to make sure it&nbsp;is&nbsp;correct. </li>
+    <li>Use the site&rsquo;s top navigation bar. </li>
+    <li>Enter a term or keyword into our search field above.</li>
+    <li>Use your browser&rsquo;s back button to return to the previous page. </li>
+</ul>
+<p>If you think this was an error on our part, please <a href="/cdn-cgi/l/email-protection#0671636467626b6f68466974746f656d2865696b">let us know</a>.</p>
+            </div>
+                <ul class="btn-holder">
+                </ul>
+        </div>
+    </div>
+</section>
+<footer class="tint-2">
+    <div class="footer-top">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs- col-sm-8">
+                    <ul class="social-media">
+        <li>
+            <a href="http://www.linkedin.com/company/orrick-herrington-&amp;-sutcliffe-llp" target="_blank" rel="noopener noreferrer" title="Opens in a new browser">
+                <span class="ico-digital-linkedin" aria-label="Linkedin" aria-hidden="true"></span>
+                <span class="sr-only">Linkedin</span>
+            </a>
+        </li>
+        <li>
+            <a href="https://twitter.com/Orrick" target="_blank" rel="noopener noreferrer" title="Opens in a new browser">
+                <span class="ico-digital-twitter" aria-label="Twitter" aria-hidden="true"></span>
+                <span class="sr-only">Twitter</span>
+            </a>
+        </li>
+        <li>
+            <a href="https://www.facebook.com/Orrick" target="_blank" rel="noopener noreferrer" title="Opens in a new browser">
+                <span class="ico-digital-facebook" aria-label="Facebook" aria-hidden="true"></span>
+                <span class="sr-only">Facebook</span>
+            </a>
+        </li>
+        <li>
+            <a href="https://www.instagram.com/orrickcareers/" target="_blank" rel="noopener noreferrer" title="Opens in a new browser">
+                <span class="ico-digital-instagram" aria-label="Instagram" aria-hidden="true"></span>
+                <span class="sr-only">Instagram</span>
+            </a>
+        </li>
+</ul>
+
+                </div>
+                <div class="language-selector-mobile">
+                    
+                </div>
+                <div class="col-xs- col-sm-4">
+                    
+
+
+<div class="form-group footertopsearch">
+    <form autocomplete="off" action="/Search" method="get">
+        <label class="sr-only" for="footerTopSearch">Search entire site</label>
+        <div class="input-group">
+            <input class="form-control" name="q" placeholder="Search entire site" aria-label="Search entire site" id="footerTopSearch">
+            <span class="input-group-btn">
+                <button type="submit" title="Submit" class="btn btn-search" aria-label="Keyword"><span class="ico-digital-magnifying-glass" aria-hidden="true" aria-label="search button"></span></button>
+            </span>
+        </div>
+    </form>
+</div>
+                </div>
+            </div>
+        </div>
+    </div>
+   
+    <div class="footer-bottom">
+        <div class="container">
+            <ul>
+        <li><a href="/en/Legal-Notices">Legal Notices</a></li>
+        <li><a href="/en/Privacy-Notice">Privacy Notice</a></li>
+        <li><a href="/en/Cookie-Notice">Cookie Notice</a></li>
+        <li><a href="/en/Attorney-Advertising">Attorney Advertising</a></li>
+        <li><a href="/en/Secure-Login">Secure Login</a></li>
+</ul>
+
+<div style="padding-bottom: 94px;">
+<p style="padding-left: 8px;">&copy; 2025 Orrick, Herrington &amp; Sutcliffe LLP. All rights reserved.</p>
+<ul>
+    <li><a href="/Locations/Austin">Austin</a></li>
+    <li><a href="/Locations/China">Beijing</a></li>
+    <li><a href="/Locations/Boston">Boston</a></li>
+    <li><a href="/Locations/Belgium">Brussels</a></li>
+    <li><a href="/Locations/Chicago">Chicago</a></li>
+    <li><a href="/Locations/Germany"> D&uuml;sseldorf</a></li>
+    <li><a href="/Locations/Switzerland">Geneva</a></li>
+    <li><a href="/Locations/Houston">Houston</a></li>
+    <li><a href="/Locations/United-Kingdom">London</a></li>
+    <li><a href="/Locations/Los-Angeles">Los Angeles</a></li>
+    <li><a href="/Locations/Italy">Milan</a></li>
+    <li><a href="/Locations/Germany">Munich</a></li>
+    <li><a href="/Locations/New-York">New York</a></li>
+    <li><a href="/Locations/Orange-County">Orange County</a></li>
+    <li><a href="/Locations/France">Paris</a></li>
+    <li><a href="/Locations/Portland">Portland</a></li>
+    <li><a href="/Locations/Italy">Rome</a></li>
+    <li><a href="/Locations/Sacramento">Sacramento</a></li>
+    <li><a href="/Locations/Bay-Area-San-Francisco-and-Silicon-Valley">San Francisco</a></li>
+    <li><a href="/Locations/Santa-Monica">Santa Monica</a></li>
+    <li><a href="/Locations/Seattle">Seattle</a></li>
+    <li><a href="/Locations/Bay-Area-San-Francisco-and-Silicon-Valley">Silicon Valley</a></li>
+    <li><a href="/Locations/Singapore">Singapore</a></li>
+    <li><a href="/Locations/Japan">Tokyo</a></li>
+    <li><a href="/Locations/Washington-DC"> Washington, D.C.</a></li>
+    <li><a href="/Locations/Wheeling"> Wheeling, W.V. (GOIC)</a></li>
+</ul>
+</div>
+
+        </div>
+    </div>
+</footer><div class="modal fade disclaimer" id="emailDisclaimer" tabindex="-1" role="dialog" aria-labelledby="emailDisclaimerLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                    <h4 class="modal-title" id="emailDisclaimerLabel"><span style="color: #333447;">Please read before sending e-mail.</span></h4>
+
+                <div class="editor-wrapper"><p><span style="color: #333447;">Please do not include any confidential, secret or otherwise sensitive information concerning any potential or actual legal matter in this e-mail message. Unsolicited e-mails do not create an attorney-client relationship and confidential or secret information included in such e-mails cannot be protected from disclosure. Orrick does not have a duty or a legal obligation to keep confidential any information that you provide to us. Also, please note that our attorneys do not seek to practice law in any jurisdiction in which they are not properly authorized to do so.</span></p>
+<p><span style="color: #333447;">By clicking "OK" below, you understand and agree that Orrick will have no duty to keep confidential any information you provide.</span></p></div>
+                <ul class="btn-holder btn-static text-center">
+                    <li><a class="btn btn-rightarrow btn-icon accept" href="#">OK<span class="ico-digital-goto"></span></a></li>
+                    <li><a class="btn btn-rightarrow btn-icon" href="#">Cancel<span class="ico-digital-goto"></span></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div><div class="container">
+    <div class="row">
+        <div class="col-md-4 pull-right toplanguage">
+            
+        </div>
+    </div>
+</div>
+<div class="container-fluid toplang"></div>
+
+
+    </div>
+    
+
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W9KKXHZ"
+                height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="text/javascript">
+    /*<![CDATA[*/
+    (function () {
+        var sz = document.createElement('script'); sz.type = 'text/javascript'; sz.async = true;
+        sz.src = '//siteimproveanalytics.com/js/siteanalyze_6975.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(sz, s);
+    })();
+    /*]]>*/
+</script>
+<script type="text/javascript">_linkedin_data_partner_id = "212137";</script>
+<script type="text/javascript">(function () { var s = document.getElementsByTagName("script")[0]; var b = document.createElement("script"); b.type = "text/javascript"; b.async = true; b.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js"; s.parentNode.insertBefore(b, s); })();</script>
+<noscript> <img height="1" width="1" style="display:none;" alt="" src="https://dc.ads.linkedin.com/collect/?pid=212137&fmt=gif" /> </noscript>
+
+    
+</body>
+</html>
