@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
@@ -51,40 +51,57 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
     }
   }, [lawFirmId, isMobile]);
   
-  // Save scroll position on scroll
+  // Define a function to get the scroll container
+  const getScrollContainer = useCallback(() => {
+    if (!scrollAreaRef.current) return null;
+    return scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+  }, []);
+
+  // Save scroll position on scroll with debounce
   useEffect(() => {
     const handleScroll = () => {
-      if (scrollAreaRef.current) {
-        const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-        if (scrollContainer && scrollContainer.scrollTop > 0) {
-          localStorage.setItem('lawFirmsScrollPosition', scrollContainer.scrollTop.toString());
-        }
+      const scrollContainer = getScrollContainer();
+      if (scrollContainer && scrollContainer.scrollTop > 0) {
+        const position = scrollContainer.scrollTop;
+        localStorage.setItem('lawFirmsScrollPosition', position.toString());
+        setScrollPosition(position); // Update state to track current position
       }
     };
 
-    // Get the scroll viewport element and attach the scroll event listener
-    const scrollContainer = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+    const scrollContainer = getScrollContainer();
     if (scrollContainer) {
+      // Add the event listener
       scrollContainer.addEventListener('scroll', handleScroll);
       return () => scrollContainer.removeEventListener('scroll', handleScroll);
     }
-  }, [scrollAreaRef.current]); // Only re-attach when the ref changes
+  }, [getScrollContainer]);
 
-  // Restore scroll position once after initial load
+  // Restore scroll position after law firms load and DOM updates
   useEffect(() => {
-    if (!lawFirmsLoading && scrollAreaRef.current) {
+    if (lawFirmsLoading) return; // Don't restore while loading
+    
+    const restoreScroll = () => {
+      const scrollContainer = getScrollContainer();
+      if (!scrollContainer) return;
+
       const savedPosition = localStorage.getItem('lawFirmsScrollPosition');
       if (savedPosition) {
-        const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-        if (scrollContainer) {
-          // Use requestAnimationFrame to ensure the DOM is ready
+        // Use multiple RAF calls to ensure the DOM is fully rendered
+        requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             scrollContainer.scrollTop = parseInt(savedPosition, 10);
           });
-        }
+        });
       }
-    }
-  }, [lawFirmsLoading]);
+    };
+
+    // Small delay to ensure all DOM elements are fully rendered
+    const timer = setTimeout(() => {
+      restoreScroll();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [lawFirmsLoading, getScrollContainer, lawFirmId]);
   
   // Navigate to law firm detail
   const navigateToLawFirm = (firmId: number) => {
@@ -108,7 +125,10 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
   // Law firm mutation
   const lawFirmMutation = useMutation({
     mutationFn: async (data: z.infer<typeof lawFirmSchema>) => {
-      const response = await apiRequest('POST', '/api/law-firms', data);
+      const response = await apiRequest('/api/law-firms', { 
+        method: 'POST',
+        data: data
+      });
       return response.json();
     },
     onSuccess: (data) => {
@@ -171,21 +191,18 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
 
   // Save scroll position before navigating to a new firm
   const saveScrollPositionAndNavigate = (firmId: number) => {
-    if (scrollAreaRef.current) {
-      setScrollPosition(scrollAreaRef.current.scrollTop);
+    // Save the scroll position before navigation
+    const scrollContainer = getScrollContainer();
+    if (scrollContainer) {
+      const position = scrollContainer.scrollTop;
+      localStorage.setItem('lawFirmsScrollPosition', position.toString());
+      setScrollPosition(position);
     }
     navigate(`/counsel/${firmId}`);
     if (isMobile) {
       setSidebarOpen(false);
     }
   };
-  
-  // Restore scroll position when component mounts or updates
-  useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollPosition;
-    }
-  }, [scrollPosition, lawFirms]);
   
   // Sidebar content component to reuse in both desktop and mobile
   const SidebarContent = () => (
