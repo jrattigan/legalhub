@@ -28,119 +28,150 @@ const formatPhoneNumber = (phone: string): string => {
   
   // Format consistently as (XXX) XXX-XXXX for 10-digit numbers
   if (digitsOnly.length === 10) {
-    return `(${digitsOnly.substring(0, 3)}) ${digitsOnly.substring(3, 6)}-${digitsOnly.substring(6)}`;
+    return `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3, 6)}-${digitsOnly.slice(6)}`;
   }
   
-  // Return the original if not 10 digits
+  // Return original format if not a standard 10-digit number
   return phone;
 };
 
+// Helper function to format deal titles in a consistent way
+const formatDealTitle = (deal: Deal) => {
+  return deal.title || 'Untitled Deal';
+};
+
+// Status color helper
+const getStatusColor = (status: string | null | undefined) => {
+  if (!status) return 'bg-gray-100 text-gray-500';
+  
+  const statusLower = status.toLowerCase();
+  
+  if (statusLower.includes('completed') || statusLower.includes('closed')) {
+    return 'bg-green-100 text-green-700';
+  } else if (statusLower.includes('in progress') || statusLower.includes('active')) {
+    return 'bg-blue-100 text-blue-700';
+  } else if (statusLower.includes('pending') || statusLower.includes('waiting')) {
+    return 'bg-amber-100 text-amber-700';
+  } else if (statusLower.includes('canceled') || statusLower.includes('cancelled') || statusLower.includes('terminated')) {
+    return 'bg-red-100 text-red-700';
+  }
+  
+  return 'bg-gray-100 text-gray-700';
+};
+
 interface LawFirmDetailViewProps {
-  lawFirmId: number | null; // Allow null for initial state
+  firmId: number;
 }
 
-export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps) {
+export function LawFirmDetailView({ firmId }: LawFirmDetailViewProps) {
+  const { toast } = useToast();
   const [isAddAttorneyOpen, setIsAddAttorneyOpen] = useState(false);
   const [isEditAttorneyOpen, setIsEditAttorneyOpen] = useState(false);
-  const [isEditLawFirmOpen, setIsEditLawFirmOpen] = useState(false);
-  const [newAttorney, setNewAttorney] = useState<Partial<InsertAttorney>>({});
   const [editingAttorney, setEditingAttorney] = useState<Attorney | null>(null);
-  const [editingLawFirm, setEditingLawFirm] = useState<LawFirm | null>(null);
-  const { toast } = useToast();
+  const [newAttorney, setNewAttorney] = useState<Partial<InsertAttorney>>({
+    name: '',
+    position: '',
+    email: '',
+    phone: '',
+    initials: '',
+    avatarColor: '#cbd5e1',
+  });
   const isMobile = useIsMobile();
   
-  // Create attorney mutation
+  // Fetch law firm data
+  const { data: lawFirm, isLoading: isLoadingFirm } = useQuery({
+    queryKey: ['/api/law-firms', firmId],
+    queryFn: async () => {
+      const response = await fetch(`/api/law-firms/${firmId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch law firm data');
+      }
+      return response.json() as Promise<LawFirm>;
+    },
+  });
+
+  // Fetch attorneys for this law firm
+  const { data: attorneys, isLoading: isLoadingAttorneys } = useQuery({
+    queryKey: ['/api/law-firms', firmId, 'attorneys'],
+    queryFn: async () => {
+      const response = await fetch(`/api/law-firms/${firmId}/attorneys`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch attorneys');
+      }
+      return response.json() as Promise<Attorney[]>;
+    },
+  });
+
+  // Fetch deals associated with this law firm
+  const { data: deals, isLoading: isLoadingDeals } = useQuery({
+    queryKey: ['/api/law-firms', firmId, 'deals'],
+    queryFn: async () => {
+      const response = await fetch(`/api/law-firms/${firmId}/deals`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch deals');
+      }
+      return response.json() as Promise<Deal[]>;
+    },
+  });
+
+  // Add attorney mutation
   const addAttorneyMutation = useMutation({
-    mutationFn: async (attorney: Partial<InsertAttorney>) => {
-      if (!lawFirmId) throw new Error("Law firm ID is required");
-      
-      // Format phone numbers before saving to ensure consistency in the database
-      let formattedPhone = attorney.phone;
-      let formattedMobile = attorney.mobile;
-      
-      if (attorney.phone) {
-        formattedPhone = formatPhoneNumber(attorney.phone);
-      }
-      
-      if (attorney.mobile) {
-        formattedMobile = formatPhoneNumber(attorney.mobile);
-      }
-      
-      const payload = {
-        ...attorney,
-        phone: formattedPhone,
-        mobile: formattedMobile,
-        lawFirmId,
-        // Generate random color for avatar if not provided
-        avatarColor: attorney.avatarColor || `#${Math.floor(Math.random()*16777215).toString(16)}`,
-        // Generate initials if not provided
-        initials: attorney.initials || attorney.name?.split(' ').map(n => n[0]).join('') || 'XX'
-      };
-      
-      const response = await fetch(`/api/attorneys`, {
+    mutationFn: async (attorney: InsertAttorney) => {
+      const response = await fetch(`/api/law-firms/${firmId}/attorneys`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(attorney),
       });
       
       if (!response.ok) {
-        throw new Error('Failed to create attorney');
+        throw new Error('Failed to add attorney');
       }
       
       return response.json();
     },
     onSuccess: () => {
-      // Reset form
-      setNewAttorney({});
+      // Reset the form
+      setNewAttorney({
+        name: '',
+        position: '',
+        email: '',
+        phone: '',
+        initials: '',
+        avatarColor: '#cbd5e1',
+      });
+      
+      // Close the dialog
       setIsAddAttorneyOpen(false);
       
-      // Invalidate attorneys query to refetch - include lawFirmId to properly handle caching
-      queryClient.invalidateQueries({ queryKey: ['/api/attorneys', lawFirmId] });
-      
+      // Show success toast
       toast({
-        title: "Attorney added",
+        title: "Attorney Added",
         description: "The attorney has been successfully added to this law firm.",
       });
+      
+      // Invalidate the query to refetch attorneys
+      queryClient.invalidateQueries({ queryKey: ['/api/law-firms', firmId, 'attorneys'] });
     },
     onError: (error) => {
       toast({
+        title: "Error",
+        description: `Failed to add attorney: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
-        title: "Failed to add attorney",
-        description: error.message || "An error occurred while adding the attorney. Please try again.",
       });
-    }
+    },
   });
-  
+
   // Update attorney mutation
   const updateAttorneyMutation = useMutation({
     mutationFn: async (attorney: Attorney) => {
-      // Format phone numbers before saving to ensure consistency in the database
-      let formattedPhone = attorney.phone;
-      let formattedMobile = attorney.mobile;
-      
-      if (attorney.phone) {
-        formattedPhone = formatPhoneNumber(attorney.phone);
-      }
-      
-      if (attorney.mobile) {
-        formattedMobile = formatPhoneNumber(attorney.mobile);
-      }
-      
       const response = await fetch(`/api/attorneys/${attorney.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: attorney.name,
-          position: attorney.position,
-          email: attorney.email,
-          phone: formattedPhone,
-          mobile: formattedMobile,
-          photoUrl: attorney.photoUrl
-        }),
+        body: JSON.stringify(attorney),
       });
       
       if (!response.ok) {
@@ -150,488 +181,275 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
       return response.json();
     },
     onSuccess: () => {
-      // Reset form and close dialog
-      setEditingAttorney(null);
+      // Close the dialog
       setIsEditAttorneyOpen(false);
       
-      // Invalidate attorneys query to refetch - include lawFirmId to properly handle caching
-      queryClient.invalidateQueries({ queryKey: ['/api/attorneys', lawFirmId] });
+      // Reset the editing attorney
+      setEditingAttorney(null);
       
+      // Show success toast
       toast({
-        title: "Attorney updated",
+        title: "Attorney Updated",
         description: "The attorney information has been successfully updated.",
       });
+      
+      // Invalidate the query to refetch attorneys
+      queryClient.invalidateQueries({ queryKey: ['/api/law-firms', firmId, 'attorneys'] });
     },
     onError: (error) => {
       toast({
+        title: "Error",
+        description: `Failed to update attorney: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
-        title: "Failed to update attorney",
-        description: error.message || "An error occurred while updating the attorney. Please try again.",
       });
-    }
+    },
   });
-  
-  // Handle edit input change
-  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditingAttorney(prev => {
-      if (!prev) return null;
-      return { ...prev, [name]: value };
-    });
-  };
-  
-  // Submit edit attorney form
-  const handleEditAttorney = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingAttorney) return;
+
+  // Calculate initials from name
+  const calculateInitials = (name: string): string => {
+    if (!name) return '';
     
-    if (!editingAttorney.name || !editingAttorney.email) {
-      toast({
-        variant: "destructive",
-        title: "Missing information",
-        description: "Attorney name and email are required.",
-      });
-      return;
+    const nameParts = name.trim().split(/\s+/);
+    if (nameParts.length === 1) {
+      return nameParts[0].charAt(0).toUpperCase();
     }
     
-    updateAttorneyMutation.mutate(editingAttorney);
+    return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
   };
-  
+
+  // Handle input change for new attorney
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setNewAttorney(prev => ({ ...prev, [name]: value }));
+    
+    // If name is changing, recalculate initials
+    if (name === 'name') {
+      setNewAttorney((prev) => ({
+        ...prev,
+        [name]: value,
+        initials: calculateInitials(value),
+      }));
+    } else {
+      setNewAttorney((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
-  
+
+  // Handle input change for editing attorney
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    
+    if (!editingAttorney) return;
+    
+    // If name is changing, recalculate initials
+    if (name === 'name') {
+      setEditingAttorney({
+        ...editingAttorney,
+        [name]: value,
+        initials: calculateInitials(value),
+      });
+    } else {
+      setEditingAttorney({
+        ...editingAttorney,
+        [name]: value,
+      });
+    }
+  };
+
   // Handle photo upload for new attorney
   const handlePhotoUpload = async (file: File) => {
     try {
-      const base64 = await convertFileToBase64(file);
-      setNewAttorney(prev => ({ ...prev, photoUrl: base64 }));
+      const photoUrl = await convertFileToBase64(file);
+      setNewAttorney((prev) => ({
+        ...prev,
+        photoUrl,
+      }));
     } catch (error) {
       toast({
+        title: "Upload Error",
+        description: "Failed to process the photo. Please try a different image.",
         variant: "destructive",
-        title: "Failed to upload photo",
-        description: "There was an error processing the image. Please try again.",
       });
     }
   };
-  
-  // Handle photo upload for edit attorney
+
+  // Handle photo upload for editing attorney
   const handleEditPhotoUpload = async (file: File) => {
+    if (!editingAttorney) return;
+    
     try {
-      const base64 = await convertFileToBase64(file);
-      setEditingAttorney(prev => {
-        if (!prev) return null;
-        return { ...prev, photoUrl: base64 };
+      const photoUrl = await convertFileToBase64(file);
+      setEditingAttorney({
+        ...editingAttorney,
+        photoUrl,
       });
     } catch (error) {
       toast({
+        title: "Upload Error",
+        description: "Failed to process the photo. Please try a different image.",
         variant: "destructive",
-        title: "Failed to upload photo",
-        description: "There was an error processing the image. Please try again.",
       });
     }
   };
-  
-  const handleAddAttorney = (e: React.FormEvent) => {
+
+  // Handle form submission for adding new attorney
+  const handleAddAttorney = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Make sure we have required fields
     if (!newAttorney.name || !newAttorney.email) {
       toast({
+        title: "Missing Fields",
+        description: "Please fill out all required fields.",
         variant: "destructive",
-        title: "Missing information",
-        description: "Attorney name and email are required.",
       });
       return;
     }
     
-    addAttorneyMutation.mutate(newAttorney);
+    // Add the law firm ID to the attorney data
+    const attorneyData: InsertAttorney = {
+      ...newAttorney as Required<InsertAttorney>,
+      lawFirmId: firmId,
+    };
+    
+    // Submit the data using the mutation
+    addAttorneyMutation.mutate(attorneyData);
   };
-  
-  // Fetch law firm details
-  const { data: lawFirm, isLoading: lawFirmLoading, error: lawFirmError } = useQuery<LawFirm>({
-    queryKey: ['/api/law-firms', lawFirmId],
-    queryFn: async () => {
-      if (!lawFirmId) return null;
-      const response = await fetch(`/api/law-firms/${lawFirmId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch law firm details');
-      }
-      return response.json();
-    },
-    enabled: !!lawFirmId,
-    retry: 1,
-  });
 
-  // Fetch attorneys for this law firm
-  const { data: attorneys, isLoading: attorneysLoading, error: attorneysError } = useQuery<Attorney[]>({
-    queryKey: ['/api/attorneys', lawFirmId], // Include lawFirmId in the cache key
-    queryFn: async () => {
-      if (!lawFirmId) return [];
-      console.log(`Fetching attorneys for law firm: ${lawFirmId}`);
-      const response = await fetch(`/api/law-firms/${lawFirmId}/attorneys`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch attorneys');
-      }
-      return response.json();
-    },
-    enabled: !!lawFirmId,
-    retry: 1,
-  });
-  
-  // Fetch deals for this law firm
-  const { data: deals, isLoading: dealsLoading, error: dealsError } = useQuery<Deal[]>({
-    queryKey: ['/api/deals/law-firm', lawFirmId],
-    queryFn: async () => {
-      if (!lawFirmId) return [];
-      const response = await fetch(`/api/law-firms/${lawFirmId}/deals`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch deals');
-      }
-      return response.json();
-    },
-    enabled: !!lawFirmId,
-    retry: 1,
-  });
+  // Handle form submission for editing attorney
+  const handleEditAttorney = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingAttorney || !editingAttorney.name || !editingAttorney.email) {
+      toast({
+        title: "Missing Fields",
+        description: "Please fill out all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Submit the updated data
+    updateAttorneyMutation.mutate(editingAttorney);
+  };
 
-  // Handle loading state
-  if (lawFirmLoading || attorneysLoading || dealsLoading) {
+  // Loading state
+  if (isLoadingFirm) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      <div className="flex justify-center items-center min-h-[200px]">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-neutral-500">Loading law firm information...</p>
         </div>
       </div>
     );
   }
 
-  // Handle error state
-  if (lawFirmError || attorneysError || dealsError) {
-    return (
-      <div className="p-6">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
-            Failed to load law firm details. Please try again later.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  // Handle no law firm selected
+  // Error state - law firm not found
   if (!lawFirm) {
     return (
-      <div className="p-6 flex flex-col items-center justify-center h-full text-center">
-        <Building className="h-16 w-16 text-neutral-300 mb-4" />
-        <h2 className="text-xl font-medium mb-2">No Law Firm Selected</h2>
-        <p className="text-neutral-500 max-w-md">
-          Please select a law firm from the list to view its details, associated attorneys, and deals.
-        </p>
-      </div>
+      <Alert variant="destructive" className="mb-6">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>
+          Could not find the requested law firm. It may have been deleted or you may not have permission to view it.
+        </AlertDescription>
+      </Alert>
     );
   }
 
-  // Helper function to format deal title
-  const formatDealTitle = (deal: Deal) => {
-    const companyName = deal.companyName || 'Unnamed Company';
-    const title = deal.title || 'Untitled Deal';
-    return `${companyName} - ${title}`;
-  };
-
-  // Get status badge color based on deal status
-  const getStatusColor = (status: string | null | undefined) => {
-    if (!status) return 'bg-neutral-100 text-neutral-800';
-    
-    switch (status.toLowerCase()) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'closed':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-neutral-100 text-neutral-800';
-    }
-  };
-  
-  // Using the formatPhoneNumber utility function defined at the top of the file
-  
-  // Handle law firm input change
-  const handleLawFirmInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditingLawFirm(prev => {
-      if (!prev) return null;
-      return { ...prev, [name]: value };
-    });
-  };
-  
-  // Update law firm mutation
-  const updateLawFirmMutation = useMutation({
-    mutationFn: async (lawFirm: LawFirm) => {
-      const response = await fetch(`/api/law-firms/${lawFirm.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: lawFirm.name,
-          specialty: lawFirm.specialty
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update law firm');
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      // Reset form and close dialog
-      setEditingLawFirm(null);
-      setIsEditLawFirmOpen(false);
-      
-      // Invalidate law firms query to refetch
-      queryClient.invalidateQueries({ queryKey: ['/api/law-firms'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/law-firms', lawFirmId] });
-      
-      toast({
-        title: "Law firm updated",
-        description: "The law firm information has been successfully updated.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Failed to update law firm",
-        description: error.message || "An error occurred while updating the law firm. Please try again.",
-      });
-    }
-  });
-  
-  // Submit edit law firm form
-  const handleEditLawFirm = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingLawFirm) return;
-    
-    if (!editingLawFirm.name) {
-      toast({
-        variant: "destructive",
-        title: "Missing information",
-        description: "Law firm name is required.",
-      });
-      return;
-    }
-    
-    updateLawFirmMutation.mutate(editingLawFirm);
-  };
-
   return (
-    <div className="p-6">
-      {/* Law firm header with edit button */}
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">{lawFirm.name}</h1>
-          <p className="text-neutral-500 text-sm">
-            <span className="inline-flex items-center">
-              <Briefcase className="w-4 h-4 mr-2" />
-              {lawFirm.specialty}
-            </span>
-          </p>
-        </div>
-        <Dialog open={isEditLawFirmOpen} onOpenChange={setIsEditLawFirmOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="h-9 w-9"
-              onClick={() => setEditingLawFirm(lawFirm)}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Edit Law Firm</DialogTitle>
-              <DialogDescription>
-                Update information for {editingLawFirm?.name}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleEditLawFirm} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-lawfirm-name">Name</Label>
-                <Input 
-                  id="edit-lawfirm-name" 
-                  name="name" 
-                  value={editingLawFirm?.name || ''} 
-                  onChange={handleLawFirmInputChange} 
-                  placeholder="Smith & Partners LLP" 
-                  required 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-lawfirm-specialty">Specialty</Label>
-                <Input 
-                  id="edit-lawfirm-specialty" 
-                  name="specialty" 
-                  value={editingLawFirm?.specialty || ''} 
-                  onChange={handleLawFirmInputChange} 
-                  placeholder="Corporate Securities" 
-                />
-              </div>
-              <DialogFooter className="mt-6">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsEditLawFirmOpen(false)}
-                  disabled={updateLawFirmMutation.isPending}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={updateLawFirmMutation.isPending || !editingLawFirm?.name}
-                >
-                  {updateLawFirmMutation.isPending ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 mb-6">
-        {/* Associated attorneys card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+    <div className="space-y-8">
+      {/* Law firm overview card */}
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-start mb-4">
             <div>
-              <CardTitle className="text-lg">Attorneys</CardTitle>
+              <CardTitle className="text-2xl mb-1">{lawFirm.name}</CardTitle>
+              <CardDescription className="text-base">{lawFirm.specialty}</CardDescription>
             </div>
-            <Dialog open={isAddAttorneyOpen} onOpenChange={setIsAddAttorneyOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="ml-auto">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Add New
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Add New Attorney</DialogTitle>
-                  <DialogDescription>
-                    Add a new attorney to {lawFirm.name}. Fill in the information below.
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleAddAttorney} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input 
-                      id="name" 
-                      name="name" 
-                      value={newAttorney.name || ''} 
-                      onChange={handleInputChange} 
-                      placeholder="John Smith" 
-                      required 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="position">Position</Label>
-                    <Input 
-                      id="position" 
-                      name="position" 
-                      value={newAttorney.position || ''} 
-                      onChange={handleInputChange} 
-                      placeholder="Partner" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input 
-                      id="email" 
-                      name="email" 
-                      type="email" 
-                      value={newAttorney.email || ''} 
-                      onChange={handleInputChange} 
-                      placeholder="john.smith@example.com" 
-                      required 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Work</Label>
-                    <Input 
-                      id="phone" 
-                      name="phone" 
-                      type="tel" 
-                      value={newAttorney.phone || ''} 
-                      onChange={handleInputChange} 
-                      placeholder="(555) 123-4567" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="mobile">Mobile</Label>
-                    <Input 
-                      id="mobile" 
-                      name="mobile" 
-                      type="tel" 
-                      value={newAttorney.mobile || ''} 
-                      onChange={handleInputChange} 
-                      placeholder="(555) 123-4567" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="photo">Photo</Label>
-                    <PhotoUpload 
-                      onUpload={handlePhotoUpload}
-                      accept="image/*"
-                      maxSizeInMB={2}
-                    />
-                    {newAttorney.photoUrl && (
-                      <div className="mt-2 flex items-center space-x-2">
-                        <Avatar>
-                          <AvatarImage src={newAttorney.photoUrl} alt="Preview" />
-                          <AvatarFallback>
-                            {newAttorney.name ? newAttorney.name.charAt(0) : 'A'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm text-green-600">Photo uploaded</span>
-                      </div>
-                    )}
-                  </div>
-                  <DialogFooter className="mt-6">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setIsAddAttorneyOpen(false)}
-                      disabled={addAttorneyMutation.isPending}
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      disabled={addAttorneyMutation.isPending || !newAttorney.name || !newAttorney.email}
-                    >
-                      {addAttorneyMutation.isPending ? 'Adding...' : 'Add Attorney'}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center">
+              <Mail className="h-5 w-5 text-neutral-500 mr-3" />
+              <div>
+                <div className="text-sm text-neutral-500 mb-1">Email</div>
+                <a href={`mailto:${lawFirm.email}`} className="text-primary hover:underline">
+                  {lawFirm.email}
+                </a>
+              </div>
+            </div>
+
+            <div className="flex items-center">
+              <Phone className="h-5 w-5 text-neutral-500 mr-3" />
+              <div>
+                <div className="text-sm text-neutral-500 mb-1">Phone</div>
+                <a href={`tel:${lawFirm.phone}`} className="hover:underline">
+                  {formatPhoneNumber(lawFirm.phone)}
+                </a>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Attorneys section */}
+      <div className="grid grid-cols-1 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg">Attorneys</CardTitle>
+            <Button
+              size="sm" 
+              onClick={() => setIsAddAttorneyOpen(true)}
+              variant="outline"
+              className="h-8"
+            >
+              <UserPlus className="h-4 w-4 mr-1" />
+              Add Attorney
+            </Button>
           </CardHeader>
-          <CardContent>
-            {attorneys && attorneys.length > 0 ? (
+          <CardContent className="pt-6">
+            {isLoadingAttorneys ? (
+              <div className="flex justify-center py-6">
+                <div className="animate-spin h-6 w-6 border-4 border-primary border-t-transparent rounded-full"></div>
+              </div>
+            ) : attorneys && attorneys.length > 0 ? (
               <div className="space-y-4">
                 {attorneys.map((attorney) => (
                   <div key={attorney.id} className="flex items-start p-3 rounded-md border border-neutral-200">
-                    <Avatar className="h-10 w-10 mr-4">
-                      {attorney.photoUrl ? (
-                        <AvatarImage src={attorney.photoUrl} alt={attorney.name} />
-                      ) : (
-                        <AvatarFallback 
-                          style={{ backgroundColor: attorney.avatarColor || '#cbd5e1' }}
-                        >
-                          {attorney.initials || attorney.name.charAt(0)}
-                        </AvatarFallback>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Avatar className="h-10 w-10 mr-4 cursor-pointer hover:opacity-90 transition-opacity">
+                          {attorney.photoUrl ? (
+                            <AvatarImage src={attorney.photoUrl} alt={attorney.name} />
+                          ) : (
+                            <AvatarFallback 
+                              style={{ backgroundColor: attorney.avatarColor || '#cbd5e1' }}
+                            >
+                              {attorney.initials || attorney.name.charAt(0)}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                      </DialogTrigger>
+                      {attorney.photoUrl && (
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>{attorney.name}</DialogTitle>
+                            <DialogDescription>{attorney.position}</DialogDescription>
+                          </DialogHeader>
+                          <div className="flex items-center justify-center py-4">
+                            <img 
+                              src={attorney.photoUrl} 
+                              alt={attorney.name} 
+                              className="max-h-[400px] max-w-full rounded-md object-cover" 
+                            />
+                          </div>
+                        </DialogContent>
                       )}
-                    </Avatar>
+                    </Dialog>
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
                         <div>
@@ -820,13 +638,30 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
               />
               {editingAttorney?.photoUrl && (
                 <div className="mt-2 flex items-center space-x-2">
-                  <Avatar>
-                    <AvatarImage src={editingAttorney.photoUrl} alt="Preview" />
-                    <AvatarFallback>
-                      {editingAttorney.initials || editingAttorney.name.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm text-green-600">Current photo</span>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Avatar className="cursor-pointer hover:opacity-90 transition-opacity">
+                        <AvatarImage src={editingAttorney.photoUrl} alt="Preview" />
+                        <AvatarFallback>
+                          {editingAttorney.initials || editingAttorney.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>{editingAttorney.name}</DialogTitle>
+                        <DialogDescription>{editingAttorney.position}</DialogDescription>
+                      </DialogHeader>
+                      <div className="flex items-center justify-center py-4">
+                        <img 
+                          src={editingAttorney.photoUrl} 
+                          alt={editingAttorney.name} 
+                          className="max-h-[400px] max-w-full rounded-md object-cover" 
+                        />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <span className="text-sm text-green-600">Current photo (click to enlarge)</span>
                 </div>
               )}
             </div>
@@ -844,6 +679,110 @@ export default function LawFirmDetailView({ lawFirmId }: LawFirmDetailViewProps)
                 disabled={updateAttorneyMutation.isPending || !editingAttorney?.name || !editingAttorney?.email}
               >
                 {updateAttorneyMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add attorney dialog */}
+      <Dialog open={isAddAttorneyOpen} onOpenChange={setIsAddAttorneyOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add New Attorney</DialogTitle>
+            <DialogDescription>
+              Add a new attorney to {lawFirm.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddAttorney} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input 
+                id="name" 
+                name="name" 
+                value={newAttorney.name} 
+                onChange={handleInputChange} 
+                placeholder="John Smith" 
+                required 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="position">Position</Label>
+              <Input 
+                id="position" 
+                name="position" 
+                value={newAttorney.position} 
+                onChange={handleInputChange} 
+                placeholder="Partner" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                name="email" 
+                type="email" 
+                value={newAttorney.email} 
+                onChange={handleInputChange} 
+                placeholder="john.smith@example.com" 
+                required 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Work Phone</Label>
+              <Input 
+                id="phone" 
+                name="phone" 
+                type="tel" 
+                value={newAttorney.phone} 
+                onChange={handleInputChange} 
+                placeholder="(555) 123-4567" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="mobile">Mobile Phone</Label>
+              <Input 
+                id="mobile" 
+                name="mobile" 
+                type="tel" 
+                value={newAttorney.mobile || ''} 
+                onChange={handleInputChange} 
+                placeholder="(555) 123-4567" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="photo">Photo</Label>
+              <PhotoUpload 
+                onUpload={handlePhotoUpload}
+                accept="image/*"
+                maxSizeInMB={2}
+              />
+              {newAttorney.photoUrl && (
+                <div className="mt-2 flex items-center space-x-2">
+                  <Avatar>
+                    <AvatarImage src={newAttorney.photoUrl} alt="Preview" />
+                    <AvatarFallback>
+                      {newAttorney.initials || (newAttorney.name ? newAttorney.name.charAt(0) : 'A')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm text-green-600">Photo uploaded</span>
+                </div>
+              )}
+            </div>
+            <DialogFooter className="mt-6">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsAddAttorneyOpen(false)}
+                disabled={addAttorneyMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={addAttorneyMutation.isPending || !newAttorney.name || !newAttorney.email}
+              >
+                {addAttorneyMutation.isPending ? 'Adding...' : 'Add Attorney'}
               </Button>
             </DialogFooter>
           </form>
