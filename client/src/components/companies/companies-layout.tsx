@@ -16,6 +16,7 @@ import { Building2, Search, PlusCircle, Menu, ArrowLeft } from "lucide-react";
 import AppLayout from "@/components/layout/app-layout";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useScroll } from "@/context/scroll-context";
 
 // Define the schema for company creation form
 const companyFormSchema = z.object({
@@ -68,19 +69,23 @@ export default function CompaniesLayout({ children }: CompaniesLayoutProps) {
     }
   }, [companyId, isMobile]);
   
+  // Use the scroll context for scroll position management
+  const { saveScrollPosition, getScrollPosition } = useScroll();
+  const SCROLL_KEY = 'companies-list';
+  
   // Define a function to get the scroll container
   const getScrollContainer = useCallback(() => {
     if (!scrollAreaRef.current) return null;
     return scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
   }, []);
 
-  // Save scroll position on scroll with debounce
+  // Save scroll position on scroll
   useEffect(() => {
     const handleScroll = () => {
       const scrollContainer = getScrollContainer();
       if (scrollContainer && scrollContainer.scrollTop > 0) {
         const position = scrollContainer.scrollTop;
-        localStorage.setItem('companiesScrollPosition', position.toString());
+        saveScrollPosition(SCROLL_KEY, position);
         setScrollPosition(position); // Update state to track current position
       }
     };
@@ -91,7 +96,7 @@ export default function CompaniesLayout({ children }: CompaniesLayoutProps) {
       scrollContainer.addEventListener('scroll', handleScroll);
       return () => scrollContainer.removeEventListener('scroll', handleScroll);
     }
-  }, [getScrollContainer]);
+  }, [getScrollContainer, saveScrollPosition]);
 
   // Restore scroll position after companies load and DOM updates
   useEffect(() => {
@@ -101,24 +106,17 @@ export default function CompaniesLayout({ children }: CompaniesLayoutProps) {
       const scrollContainer = getScrollContainer();
       if (!scrollContainer) return;
 
-      const savedPosition = localStorage.getItem('companiesScrollPosition');
+      const savedPosition = getScrollPosition(SCROLL_KEY);
       if (savedPosition) {
-        // Use multiple RAF calls to ensure the DOM is fully rendered
+        // Use requestAnimationFrame to ensure the DOM is ready
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            scrollContainer.scrollTop = parseInt(savedPosition, 10);
-          });
+          scrollContainer.scrollTop = savedPosition;
         });
       }
     };
 
-    // Small delay to ensure all DOM elements are fully rendered
-    const timer = setTimeout(() => {
-      restoreScroll();
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [companiesLoading, getScrollContainer, companyId]);
+    restoreScroll();
+  }, [companiesLoading, getScrollContainer, getScrollPosition, companyId]);
   
   // Navigate to company detail
   const navigateToCompany = (companyId: number) => {
@@ -208,12 +206,12 @@ export default function CompaniesLayout({ children }: CompaniesLayoutProps) {
   // Save scroll position before navigating to a new company
   const navigateAndSaveScroll = (companyId: number) => {
     // Save the scroll position before navigation
-    if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer) {
-        localStorage.setItem('companiesScrollPosition', scrollContainer.scrollTop.toString());
-      }
+    const scrollContainer = getScrollContainer();
+    if (scrollContainer) {
+      saveScrollPosition(SCROLL_KEY, scrollContainer.scrollTop);
     }
+    
+    // Navigate to company detail
     navigate(`/companies/${companyId}`);
     if (isMobile) {
       setSidebarOpen(false);
