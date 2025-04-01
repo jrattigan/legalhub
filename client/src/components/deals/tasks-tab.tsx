@@ -26,6 +26,7 @@ import {
   MenuIcon,
   Clock
 } from "lucide-react";
+import { FundLoadingSkeleton, TaskLoadingSkeleton } from "@/components/ui/fund-loading-skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -916,6 +917,24 @@ export function TasksTab({ dealId }: TasksTabProps) {
       }
     }
   }, [currentTask?.attorneyId, attorneys]);
+  
+  // Check if any data is loading
+  const isDataLoading = tasksLoading || usersLoading || lawFirmsLoading || 
+                       (selectedLawFirm && attorneysLoading) || customAssigneesLoading;
+
+  // Render a loading skeleton while data is being fetched
+  if (isDataLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="mb-6">
+          <FundLoadingSkeleton variant="contract" size="md" />
+          <div className="mt-6">
+            <TaskLoadingSkeleton count={5} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

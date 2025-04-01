@@ -16,6 +16,7 @@ import {
   Circle,
   CheckCircle
 } from 'lucide-react';
+import { FundLoadingSkeleton, ChecklistLoadingSkeleton } from '@/components/ui/fund-loading-skeleton';
 import { apiRequest } from '@/lib/queryClient';
 import { format } from 'date-fns';
 import {
@@ -396,7 +397,16 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
   };
 
   if (isLoading) {
-    return <div className="p-6">Loading closing checklist...</div>;
+    return (
+      <div className="p-6">
+        <div className="mb-6">
+          <FundLoadingSkeleton variant="contract" size="md" />
+          <div className="mt-6">
+            <ChecklistLoadingSkeleton count={6} />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
