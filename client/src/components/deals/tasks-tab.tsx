@@ -476,6 +476,10 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     if (updatedTask.attorneyId) updatedTask.attorneyId = Number(updatedTask.attorneyId);
     if (updatedTask.customAssigneeId) updatedTask.customAssigneeId = Number(updatedTask.customAssigneeId);
     
+    // Clear editing state BEFORE making the API call for more responsive UI
+    const savedEditingField = {...editingField}; // Save a copy for error handling
+    setEditingField(null);
+    
     // Make a direct fetch call instead of using the mutation
     fetch(`/api/tasks/${task.id}`, {
       method: 'PATCH',
@@ -495,9 +499,6 @@ export default function TasksTab({ dealId }: TasksTabProps) {
       // Force a refetch of the tasks data
       queryClient.invalidateQueries({ queryKey: ['/api/deals', dealId, 'tasks'] });
       
-      // Clear editing state before refetching to avoid UI flicker
-      setEditingField(null);
-      
       // Show toast notification
       toast({
         title: "Task updated",
@@ -506,13 +507,21 @@ export default function TasksTab({ dealId }: TasksTabProps) {
     })
     .catch(error => {
       console.error("Error updating task:", error);
+      
+      // Restore editing state if there was an error
+      if (savedEditingField.field === 'assignee') {
+        // Don't restore editing state for assignee fields
+        // as they can be particularly problematic
+      } else {
+        // For other fields, restore the editing state
+        setEditingField(savedEditingField);
+      }
+      
       toast({
         title: "Failed to update task",
         description: "There was an error updating the task. Please try again.",
         variant: "destructive"
       });
-      // Still clear editing state even on error
-      setEditingField(null);
     });
   };
 

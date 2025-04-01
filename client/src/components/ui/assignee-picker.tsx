@@ -158,41 +158,60 @@ export function AssigneePicker({
   
   // Handle selecting an assignee
   const handleSelectAssignee = (assignee: Assignee) => {
+    let result;
+    
     switch (assignee.type) {
       case 'user':
-        onAssigneeSelected({ 
+        result = { 
           userId: assignee.id,
           attorneyId: null,
           lawFirmId: null,
           customAssigneeId: null
-        });
+        };
         break;
       case 'attorney':
-        onAssigneeSelected({ 
+        result = { 
           userId: null,
           attorneyId: assignee.id,
           lawFirmId: null,
           customAssigneeId: null
-        });
+        };
         break;
       case 'lawFirm':
-        onAssigneeSelected({ 
+        result = { 
           userId: null,
           attorneyId: null,
           lawFirmId: assignee.id,
           customAssigneeId: null
-        });
+        };
         break;
       case 'custom':
-        onAssigneeSelected({ 
+        result = { 
           userId: null,
           attorneyId: null,
           lawFirmId: null,
           customAssigneeId: assignee.id
-        });
+        };
         break;
+      default:
+        result = {
+          userId: null,
+          attorneyId: null,
+          lawFirmId: null,
+          customAssigneeId: null
+        };
     }
+    
+    // Close the dropdown first for a more responsive feel
     setOpen(false);
+    
+    // Then notify the parent component about the selection
+    console.log("AssigneePicker: Selected assignee", assignee.type, assignee.id, "sending:", result);
+    
+    // Small delay to ensure UI updates completely before callback
+    setTimeout(() => {
+      onAssigneeSelected(result);
+    }, 50);
   };
   
   // Render assignee item in dropdown
