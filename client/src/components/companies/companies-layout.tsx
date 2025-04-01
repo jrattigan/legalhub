@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
@@ -52,6 +52,8 @@ export default function CompaniesLayout({ children }: CompaniesLayoutProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
   
   // Fetch companies data
   const { data: companies, isLoading: companiesLoading } = useQuery<Company[]>({
@@ -65,6 +67,37 @@ export default function CompaniesLayout({ children }: CompaniesLayoutProps) {
       setSidebarOpen(false);
     }
   }, [companyId, isMobile]);
+  
+  // Save scroll position when selecting a company
+  useEffect(() => {
+    const scrollableElement = document.querySelector('.companies-scrollarea .scrollbar-thumb-y');
+    if (scrollableElement) {
+      const observer = new ResizeObserver(() => {
+        const container = document.querySelector('.companies-scrollarea');
+        if (container) {
+          const scrollTop = container.scrollTop;
+          if (scrollTop > 0) {
+            setScrollPosition(scrollTop);
+          }
+        }
+      });
+      
+      observer.observe(scrollableElement);
+      return () => observer.disconnect();
+    }
+  }, [companyId]);
+  
+  // Restore scroll position after component mounts or after navigation
+  useEffect(() => {
+    if (scrollPosition > 0 && !companiesLoading) {
+      const scrollContainer = document.querySelector('.companies-scrollarea');
+      if (scrollContainer) {
+        setTimeout(() => {
+          scrollContainer.scrollTop = scrollPosition;
+        }, 100);
+      }
+    }
+  }, [scrollPosition, companiesLoading]);
 
   // Form setup for creating a new company
   const form = useForm<CompanyFormValues>({
@@ -242,7 +275,7 @@ export default function CompaniesLayout({ children }: CompaniesLayoutProps) {
       </div>
       
       {/* Scrollable companies list */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 companies-scrollarea" ref={scrollAreaRef}>
         <div className="space-y-0.5 p-2">
           {filteredCompanies?.map((company) => (
             <div

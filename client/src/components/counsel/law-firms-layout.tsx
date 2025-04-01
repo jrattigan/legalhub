@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
@@ -35,6 +35,8 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
   
   // Fetch law firms data
   const { data: lawFirms, isLoading: lawFirmsLoading } = useQuery<LawFirm[]>({
@@ -48,6 +50,37 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
       setSidebarOpen(false);
     }
   }, [lawFirmId, isMobile]);
+  
+  // Save scroll position when selecting a law firm
+  useEffect(() => {
+    const scrollableElement = document.querySelector('.law-firms-scrollarea .scrollbar-thumb-y');
+    if (scrollableElement) {
+      const observer = new ResizeObserver(() => {
+        const container = document.querySelector('.law-firms-scrollarea');
+        if (container) {
+          const scrollTop = container.scrollTop;
+          if (scrollTop > 0) {
+            setScrollPosition(scrollTop);
+          }
+        }
+      });
+      
+      observer.observe(scrollableElement);
+      return () => observer.disconnect();
+    }
+  }, [lawFirmId]);
+  
+  // Restore scroll position after component mounts or after navigation
+  useEffect(() => {
+    if (scrollPosition > 0 && !lawFirmsLoading) {
+      const scrollContainer = document.querySelector('.law-firms-scrollarea');
+      if (scrollContainer) {
+        setTimeout(() => {
+          scrollContainer.scrollTop = scrollPosition;
+        }, 100);
+      }
+    }
+  }, [scrollPosition, lawFirmsLoading]);
 
   // Form setup for creating a new law firm
   const form = useForm<LawFirmFormValues>({
@@ -233,7 +266,7 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
       </div>
       
       {/* Scrollable law firms list */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 law-firms-scrollarea" ref={scrollAreaRef}>
         <div className="space-y-0.5 p-2">
           {filteredLawFirms?.map((firm) => (
             <div
