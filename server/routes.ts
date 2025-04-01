@@ -39,18 +39,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { tasks, closingChecklistItems } = req.body;
       const results: { tasks: any[], closingChecklistItems: any[] } = { tasks: [], closingChecklistItems: [] };
       
+      console.log('Received seed data request:', {
+        tasksCount: tasks?.length || 0,
+        closingChecklistItemsCount: closingChecklistItems?.length || 0
+      });
+      
       // Add tasks
       if (tasks && Array.isArray(tasks)) {
         for (const task of tasks) {
-          // Ensure dealId is a number
-          const taskData = {
-            ...task,
-            dealId: typeof task.dealId === 'number' ? task.dealId : parseInt(String(task.dealId)),
-            // Parse date if it's a string
-            dueDate: task.dueDate ? new Date(task.dueDate) : null
-          };
-          
           try {
+            // Ensure dealId is a number and cast all fields to correct types
+            const taskData = {
+              name: String(task.name),
+              dealId: typeof task.dealId === 'number' ? task.dealId : parseInt(String(task.dealId), 10),
+              taskType: String(task.taskType),
+              description: task.description ? String(task.description) : null,
+              dueDate: task.dueDate ? new Date(task.dueDate) : null,
+              status: task.status ? String(task.status) : 'open',
+              assigneeId: task.assigneeId ? Number(task.assigneeId) : null,
+              customAssigneeId: task.customAssigneeId ? Number(task.customAssigneeId) : null,
+              lawFirmId: task.lawFirmId ? Number(task.lawFirmId) : null,
+              attorneyId: task.attorneyId ? Number(task.attorneyId) : null
+            };
+            
+            console.log('Processed task data:', taskData);
             const createdTask = await storage.createTask(taskData);
             results.tasks.push(createdTask);
           } catch (taskError) {
@@ -62,15 +74,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add closing checklist items
       if (closingChecklistItems && Array.isArray(closingChecklistItems)) {
         for (const item of closingChecklistItems) {
-          // Ensure dealId is a number
-          const itemData = {
-            ...item,
-            dealId: typeof item.dealId === 'number' ? item.dealId : parseInt(String(item.dealId)),
-            // Parse date if it's a string
-            dueDate: item.dueDate ? new Date(item.dueDate) : null
-          };
-          
           try {
+            // Cast all fields to correct types
+            const itemData = {
+              title: String(item.title),
+              dealId: typeof item.dealId === 'number' ? item.dealId : parseInt(String(item.dealId), 10),
+              description: item.description ? String(item.description) : null,
+              isCompleted: Boolean(item.isCompleted),
+              parentId: item.parentId !== undefined ? 
+                (item.parentId === null ? null : Number(item.parentId)) : null,
+              position: typeof item.position === 'number' ? item.position : parseInt(String(item.position), 10),
+              dueDate: item.dueDate ? new Date(item.dueDate) : null,
+              assigneeId: item.assigneeId ? Number(item.assigneeId) : null
+            };
+            
+            console.log('Processed checklist item data:', itemData);
             const createdItem = await storage.createClosingChecklistItem(itemData);
             results.closingChecklistItems.push(createdItem);
           } catch (itemError) {
@@ -81,11 +99,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       return res.status(201).json({
         message: 'Sample data added successfully',
-        results
+        tasksAdded: results.tasks.length,
+        checklistItemsAdded: results.closingChecklistItems.length
       });
     } catch (error) {
       console.error('Error seeding data:', error);
-      return res.status(500).json({ error: 'Failed to seed data', details: String(error) });
+      return res.status(500).json({ 
+        error: 'Failed to seed data', 
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
