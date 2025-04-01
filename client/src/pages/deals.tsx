@@ -306,6 +306,8 @@ export default function Deals() {
         }
       ];
       
+      console.log('DEBUG - Sending seed data request with tasks:', JSON.stringify(sampleTasks));
+      
       // Make the API call directly
       const response = await fetch('/api/seed-data', {
         method: 'POST',
@@ -319,11 +321,17 @@ export default function Deals() {
       });
       
       if (!response.ok) {
-        throw new Error(`Server responded with status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('DEBUG - Error response from seed endpoint:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`Server responded with status: ${response.status} - ${errorText}`);
       }
       
       const result = await response.json();
-      console.log("Seed data response:", result);
+      console.log("DEBUG - Seed data response:", result);
       
       // Refetch data to show new items
       refetchDeals();

@@ -44,6 +44,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         closingChecklistItemsCount: closingChecklistItems?.length || 0
       });
       
+      // Debug: Check the initial state of tasks Map
+      const initialTasks = await storage.getTasksByDeal(1);
+      console.log('DEBUG - Initial tasks for deal 1:', initialTasks);
+      
       // Add tasks
       if (tasks && Array.isArray(tasks)) {
         for (const task of tasks) {
@@ -62,11 +66,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               attorneyId: task.attorneyId ? Number(task.attorneyId) : null
             };
             
-            console.log('Processed task data:', taskData);
+            console.log('DEBUG - Creating task with data:', JSON.stringify(taskData, null, 2));
             const createdTask = await storage.createTask(taskData);
+            console.log('DEBUG - Task created successfully:', JSON.stringify(createdTask, null, 2));
             results.tasks.push(createdTask);
           } catch (taskError) {
-            console.error('Error creating task:', taskError);
+            console.error('ERROR - Failed to create task:', taskError);
           }
         }
       }
@@ -97,13 +102,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      return res.status(201).json({
+      // Debug: Check the final state of tasks Map after adding seed data
+      const finalTasks = await storage.getTasksByDeal(1);
+      console.log('DEBUG - Final tasks for deal 1 after seeding:', finalTasks);
+      
+      // Prepare response
+      const response = {
         message: 'Sample data added successfully',
         tasksAdded: results.tasks.length,
         checklistItemsAdded: results.closingChecklistItems.length
-      });
+      };
+      
+      console.log('DEBUG - Seed data operation completed:', response);
+      return res.status(201).json(response);
     } catch (error) {
-      console.error('Error seeding data:', error);
+      console.error('ERROR - Failed to seed data:', error);
       return res.status(500).json({ 
         error: 'Failed to seed data', 
         details: error instanceof Error ? error.message : String(error)
