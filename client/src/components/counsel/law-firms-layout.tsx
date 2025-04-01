@@ -102,11 +102,13 @@ export default function LawFirmsLayout({ children }: LawFirmsLayoutProps) {
     lawFirmMutation.mutate(data);
   };
 
-  // Filter law firms based on search query
-  const filteredLawFirms = lawFirms?.filter(firm => 
-    firm.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    firm.specialty.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter law firms based on search query and sort alphabetically by name
+  const filteredLawFirms = lawFirms
+    ?.filter(firm => 
+      firm.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      firm.specialty.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   // Loading state
   if (lawFirmsLoading) {
