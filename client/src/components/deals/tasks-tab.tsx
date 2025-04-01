@@ -599,12 +599,27 @@ export default function TasksTab({ dealId }: TasksTabProps) {
   // Helper to get the right assignee object for editing
   const getAssigneeObject = (task: Task) => {
     // Return the IDs directly in the format expected by AssigneePicker
-    return {
-      userId: task.assigneeId,
-      lawFirmId: task.lawFirmId,
-      attorneyId: task.attorneyId,
-      customAssigneeId: task.customAssigneeId
-    };
+    // The component expects an object with only one of these IDs set
+    const result: {
+      userId?: number | null;
+      lawFirmId?: number | null;
+      attorneyId?: number | null;
+      customAssigneeId?: number | null;
+    } = {};
+    
+    // Only set one ID based on precedence
+    if (task.assigneeId) {
+      result.userId = task.assigneeId;
+    } else if (task.attorneyId) {
+      result.attorneyId = task.attorneyId;
+    } else if (task.lawFirmId) {
+      result.lawFirmId = task.lawFirmId;
+    } else if (task.customAssigneeId) {
+      result.customAssigneeId = task.customAssigneeId;
+    }
+    
+    console.log("getAssigneeObject result:", result, "from task:", task);
+    return result;
   };
 
   // Extract assignee fields for passing to component
