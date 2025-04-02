@@ -53,10 +53,17 @@ export default function WorkingGroupCard({
   const [selectedLeadInvestor, setSelectedLeadInvestor] = useState<string>(leadInvestor || '');
   const [teamMembers, setTeamMembers] = useState<string[]>(bcvTeam || []);
   const [selectedTeamMembers, setSelectedTeamMembers] = useState<number[]>([]);
-  const [selectedInvestorCounsel, setSelectedInvestorCounsel] = useState<number | null>(investorCounsel[0]?.lawFirm.id || null);
-  const [selectedInvestorAttorney, setSelectedInvestorAttorney] = useState<number | null>(investorCounsel[0]?.attorney?.id || null);
-  const [selectedCompanyCounsel, setSelectedCompanyCounsel] = useState<number | null>(companyCounsel[0]?.lawFirm.id || null);
-  const [selectedCompanyAttorney, setSelectedCompanyAttorney] = useState<number | null>(companyCounsel[0]?.attorney?.id || null);
+  
+  // Multi-entry counsel selections
+  const [selectedInvestorCounsel, setSelectedInvestorCounsel] = useState<number | null>(null);
+  const [selectedInvestorAttorney, setSelectedInvestorAttorney] = useState<number | null>(null);
+  const [selectedCompanyCounsel, setSelectedCompanyCounsel] = useState<number | null>(null);
+  const [selectedCompanyAttorney, setSelectedCompanyAttorney] = useState<number | null>(null);
+  
+  // Selected counsel entries to add
+  const [selectedInvestorCounsels, setSelectedInvestorCounsels] = useState<Array<{lawFirmId: number, attorneyId: number | null}>>([]);
+  const [selectedCompanyCounsels, setSelectedCompanyCounsels] = useState<Array<{lawFirmId: number, attorneyId: number | null}>>([]);
+  
   const [selectedUser, setSelectedUser] = useState<string>('');
   
   // Fetch lead investors data
@@ -116,11 +123,29 @@ export default function WorkingGroupCard({
       
       setSelectedTeamMembers(selectedIds);
     } else if (section === 'investorCounsel') {
-      setSelectedInvestorCounsel(investorCounsel[0]?.lawFirm.id || null);
-      setSelectedInvestorAttorney(investorCounsel[0]?.attorney?.id || null);
+      // Reset to empty state for new selection
+      setSelectedInvestorCounsel(null);
+      setSelectedInvestorAttorney(null);
+      
+      // Initialize with existing counsel
+      const existingCounsels = investorCounsel.map(item => ({
+        lawFirmId: item.lawFirm.id,
+        attorneyId: item.attorney?.id || null
+      }));
+      
+      setSelectedInvestorCounsels(existingCounsels);
     } else if (section === 'companyCounsel') {
-      setSelectedCompanyCounsel(companyCounsel[0]?.lawFirm.id || null);
-      setSelectedCompanyAttorney(companyCounsel[0]?.attorney?.id || null);
+      // Reset to empty state for new selection
+      setSelectedCompanyCounsel(null);
+      setSelectedCompanyAttorney(null);
+      
+      // Initialize with existing counsel
+      const existingCounsels = companyCounsel.map(item => ({
+        lawFirmId: item.lawFirm.id,
+        attorneyId: item.attorney?.id || null
+      }));
+      
+      setSelectedCompanyCounsels(existingCounsels);
     }
     
     setEditingSection(section);
@@ -219,6 +244,88 @@ export default function WorkingGroupCard({
       throw error;
     }
   };
+  
+  // Function to replace all counsel entries of a specific role
+  const replaceCounsel = async (role: string, counselEntries: Array<{lawFirmId: number, attorneyId: number | null}>) => {
+    try {
+      // Create payload with entries and role
+      const payload = {
+        dealId,
+        role,
+        entries: counselEntries,
+        operation: 'replace' // Signal that we want to replace all existing entries
+      };
+      
+      console.log(`Replacing ${role} counsel with:`, payload);
+      
+      const response = await fetch(`/api/deal-counsels/replace`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server response error:', errorText);
+        throw new Error(`Failed to replace counsel: ${response.status} ${response.statusText}`);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error(`Error replacing ${role} counsel:`, error);
+      throw error;
+    }
+  };
+  
+  // Function to add a counsel entry to the selected list
+  const addCounselEntry = (isInvestor: boolean) => {
+    if (isInvestor) {
+      if (selectedInvestorCounsel) {
+        // Add to selected investor counsels
+        setSelectedInvestorCounsels([
+          ...selectedInvestorCounsels,
+          {
+            lawFirmId: selectedInvestorCounsel,
+            attorneyId: selectedInvestorAttorney
+          }
+        ]);
+        
+        // Reset selection fields
+        setSelectedInvestorCounsel(null);
+        setSelectedInvestorAttorney(null);
+      }
+    } else {
+      if (selectedCompanyCounsel) {
+        // Add to selected company counsels
+        setSelectedCompanyCounsels([
+          ...selectedCompanyCounsels,
+          {
+            lawFirmId: selectedCompanyCounsel,
+            attorneyId: selectedCompanyAttorney
+          }
+        ]);
+        
+        // Reset selection fields
+        setSelectedCompanyCounsel(null);
+        setSelectedCompanyAttorney(null);
+      }
+    }
+  };
+  
+  // Function to remove a counsel entry from the selected list
+  const removeCounselEntry = (isInvestor: boolean, index: number) => {
+    if (isInvestor) {
+      const updatedCounsels = [...selectedInvestorCounsels];
+      updatedCounsels.splice(index, 1);
+      setSelectedInvestorCounsels(updatedCounsels);
+    } else {
+      const updatedCounsels = [...selectedCompanyCounsels];
+      updatedCounsels.splice(index, 1);
+      setSelectedCompanyCounsels(updatedCounsels);
+    }
+  };
 
   // Handle save changes based on the section being edited
   const handleSaveChanges = async () => {
@@ -242,36 +349,32 @@ export default function WorkingGroupCard({
         console.log('Investment team update result:', result);
       } 
       else if (editingSection === 'investorCounsel') {
-        if (selectedInvestorCounsel) {
-          console.log('Updating investor counsel to law firm ID:', selectedInvestorCounsel);
+        // Check if we have the currently selected counsel entry to add to the list
+        if (selectedInvestorCounsel && !selectedInvestorCounsels.some(item => item.lawFirmId === selectedInvestorCounsel)) {
+          addCounselEntry(true);
+        }
+        
+        if (selectedInvestorCounsels.length > 0) {
+          console.log('Updating investor counsel with entries:', selectedInvestorCounsels);
           
-          // Create the investor counsel data
-          const counselData = {
-            lawFirmId: parseInt(selectedInvestorCounsel.toString()),
-            role: 'Lead Counsel',
-            attorneyId: selectedInvestorAttorney ? parseInt(selectedInvestorAttorney.toString()) : null
-          };
-          
-          console.log('Sending investor counsel update with data:', counselData);
-          const result = await updateCounsel(counselData);
+          // Replace all investor counsel entries
+          const result = await replaceCounsel('Lead Counsel', selectedInvestorCounsels);
           console.log('Investor counsel update result:', result);
         } else {
           console.log('No investor counsel selected, skipping update');
         }
       } 
       else if (editingSection === 'companyCounsel') {
-        if (selectedCompanyCounsel) {
-          console.log('Updating company counsel to law firm ID:', selectedCompanyCounsel);
+        // Check if we have the currently selected counsel entry to add to the list
+        if (selectedCompanyCounsel && !selectedCompanyCounsels.some(item => item.lawFirmId === selectedCompanyCounsel)) {
+          addCounselEntry(false);
+        }
+        
+        if (selectedCompanyCounsels.length > 0) {
+          console.log('Updating company counsel with entries:', selectedCompanyCounsels);
           
-          // Create the company counsel data
-          const counselData = {
-            lawFirmId: parseInt(selectedCompanyCounsel.toString()),
-            role: 'Supporting',
-            attorneyId: selectedCompanyAttorney ? parseInt(selectedCompanyAttorney.toString()) : null
-          };
-          
-          console.log('Sending company counsel update with data:', counselData);
-          const result = await updateCounsel(counselData);
+          // Replace all company counsel entries
+          const result = await replaceCounsel('Supporting', selectedCompanyCounsels);
           console.log('Company counsel update result:', result);
         } else {
           console.log('No company counsel selected, skipping update');
@@ -604,49 +707,114 @@ export default function WorkingGroupCard({
               
               {/* Investor Counsel Form */}
               {editingSection === 'investorCounsel' && (
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  {/* Selected counsels section */}
                   <div className="space-y-2">
-                    <Label htmlFor="investorCounsel">Law Firm</Label>
-                    <Select 
-                      value={selectedInvestorCounsel?.toString() || ''} 
-                      onValueChange={(value) => setSelectedInvestorCounsel(parseInt(value))}
-                    >
-                      <SelectTrigger id="investorCounsel">
-                        <SelectValue placeholder="Select law firm" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {lawFirms.filter(firm => 
-                          [1, 3, 5, 8, 9, 10].includes(firm.id)
-                        ).map((firm) => (
-                          <SelectItem key={firm.id} value={firm.id.toString()}>
-                            {firm.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Selected Investor Counsel</Label>
+                    <div className="border rounded-md p-2 space-y-2 max-h-[150px] overflow-y-auto">
+                      {selectedInvestorCounsels.length > 0 ? (
+                        <>
+                          {selectedInvestorCounsels.map((entry, index) => {
+                            const lawFirm = lawFirms.find(f => f.id === entry.lawFirmId);
+                            const attorney = investorAttorneys.find(a => a.id === entry.attorneyId);
+                            
+                            return (
+                              <div key={index} className="flex items-center justify-between p-2 border rounded-md bg-neutral-50">
+                                <div>
+                                  <div className="font-medium">{lawFirm?.name}</div>
+                                  {attorney && (
+                                    <div className="flex items-center mt-1">
+                                      <Avatar className="h-5 w-5 mr-1" style={{ backgroundColor: attorney.avatarColor }}>
+                                        <AvatarFallback>{attorney.initials}</AvatarFallback>
+                                      </Avatar>
+                                      <div className="text-xs">{attorney.name}</div>
+                                    </div>
+                                  )}
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-7 w-7"
+                                  onClick={() => removeCounselEntry(true, index)}
+                                >
+                                  <X className="h-4 w-4 text-neutral-500" />
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </>
+                      ) : (
+                        <div className="text-xs text-neutral-500 italic p-2">No investor counsel selected. Add at least one law firm below.</div>
+                      )}
+                    </div>
                   </div>
-                  
-                  {selectedInvestorCounsel && (
+                
+                  {/* Add new counsel section */}
+                  <div className="space-y-4 border-t pt-4">
+                    <h4 className="text-sm font-medium">Add New Counsel</h4>
+                    
                     <div className="space-y-2">
-                      <Label htmlFor="investorAttorney">Attorney</Label>
+                      <Label htmlFor="investorCounsel">Law Firm</Label>
                       <Select 
-                        value={selectedInvestorAttorney?.toString() || ''} 
-                        onValueChange={(value) => setSelectedInvestorAttorney(parseInt(value))}
+                        value={selectedInvestorCounsel?.toString() || ''} 
+                        onValueChange={(value) => setSelectedInvestorCounsel(parseInt(value))}
                       >
-                        <SelectTrigger id="investorAttorney">
-                          <SelectValue placeholder="Select attorney (optional)" />
+                        <SelectTrigger id="investorCounsel">
+                          <SelectValue placeholder="Select law firm" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="0">None</SelectItem>
-                          {investorAttorneys.map((attorney) => (
-                            <SelectItem key={attorney.id} value={attorney.id.toString()}>
-                              {attorney.name} - {attorney.position}
+                          {lawFirms.filter(firm => 
+                            [1, 3, 5, 8, 9, 10].includes(firm.id)
+                          ).map((firm) => (
+                            <SelectItem key={firm.id} value={firm.id.toString()}>
+                              {firm.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
-                  )}
+                    
+                    {selectedInvestorCounsel && (
+                      <div className="space-y-2">
+                        <Label htmlFor="investorAttorney">Attorney</Label>
+                        <Select 
+                          value={selectedInvestorAttorney?.toString() || ''} 
+                          onValueChange={(value) => {
+                            if (value === "0") {
+                              setSelectedInvestorAttorney(null);
+                            } else {
+                              setSelectedInvestorAttorney(parseInt(value));
+                            }
+                          }}
+                        >
+                          <SelectTrigger id="investorAttorney">
+                            <SelectValue placeholder="Select attorney (optional)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">None</SelectItem>
+                            {investorAttorneys.map((attorney) => (
+                              <SelectItem key={attorney.id} value={attorney.id.toString()}>
+                                {attorney.name} - {attorney.position}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    
+                    {selectedInvestorCounsel && (
+                      <Button
+                        onClick={() => addCounselEntry(true)}
+                        type="button"
+                        className="mt-2"
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add to Selection
+                      </Button>
+                    )}
+                  </div>
                   
                   {selectedInvestorAttorney && (
                     <div className="p-3 rounded-md border border-neutral-100 bg-neutral-50">
@@ -668,49 +836,114 @@ export default function WorkingGroupCard({
               
               {/* Company Counsel Form */}
               {editingSection === 'companyCounsel' && (
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  {/* Selected counsels section */}
                   <div className="space-y-2">
-                    <Label htmlFor="companyCounsel">Law Firm</Label>
-                    <Select 
-                      value={selectedCompanyCounsel?.toString() || ''} 
-                      onValueChange={(value) => setSelectedCompanyCounsel(parseInt(value))}
-                    >
-                      <SelectTrigger id="companyCounsel">
-                        <SelectValue placeholder="Select law firm" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {lawFirms.filter(firm => 
-                          [2, 4, 6, 7].includes(firm.id)
-                        ).map((firm) => (
-                          <SelectItem key={firm.id} value={firm.id.toString()}>
-                            {firm.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Selected Company Counsel</Label>
+                    <div className="border rounded-md p-2 space-y-2 max-h-[150px] overflow-y-auto">
+                      {selectedCompanyCounsels.length > 0 ? (
+                        <>
+                          {selectedCompanyCounsels.map((entry, index) => {
+                            const lawFirm = lawFirms.find(f => f.id === entry.lawFirmId);
+                            const attorney = companyAttorneys.find(a => a.id === entry.attorneyId);
+                            
+                            return (
+                              <div key={index} className="flex items-center justify-between p-2 border rounded-md bg-neutral-50">
+                                <div>
+                                  <div className="font-medium">{lawFirm?.name}</div>
+                                  {attorney && (
+                                    <div className="flex items-center mt-1">
+                                      <Avatar className="h-5 w-5 mr-1" style={{ backgroundColor: attorney.avatarColor }}>
+                                        <AvatarFallback>{attorney.initials}</AvatarFallback>
+                                      </Avatar>
+                                      <div className="text-xs">{attorney.name}</div>
+                                    </div>
+                                  )}
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-7 w-7"
+                                  onClick={() => removeCounselEntry(false, index)}
+                                >
+                                  <X className="h-4 w-4 text-neutral-500" />
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </>
+                      ) : (
+                        <div className="text-xs text-neutral-500 italic p-2">No company counsel selected. Add at least one law firm below.</div>
+                      )}
+                    </div>
                   </div>
-                  
-                  {selectedCompanyCounsel && (
+                
+                  {/* Add new counsel section */}
+                  <div className="space-y-4 border-t pt-4">
+                    <h4 className="text-sm font-medium">Add New Counsel</h4>
+                    
                     <div className="space-y-2">
-                      <Label htmlFor="companyAttorney">Attorney</Label>
+                      <Label htmlFor="companyCounsel">Law Firm</Label>
                       <Select 
-                        value={selectedCompanyAttorney?.toString() || ''} 
-                        onValueChange={(value) => setSelectedCompanyAttorney(parseInt(value))}
+                        value={selectedCompanyCounsel?.toString() || ''} 
+                        onValueChange={(value) => setSelectedCompanyCounsel(parseInt(value))}
                       >
-                        <SelectTrigger id="companyAttorney">
-                          <SelectValue placeholder="Select attorney (optional)" />
+                        <SelectTrigger id="companyCounsel">
+                          <SelectValue placeholder="Select law firm" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="0">None</SelectItem>
-                          {companyAttorneys.map((attorney) => (
-                            <SelectItem key={attorney.id} value={attorney.id.toString()}>
-                              {attorney.name} - {attorney.position}
+                          {lawFirms.filter(firm => 
+                            [2, 4, 6, 7].includes(firm.id)
+                          ).map((firm) => (
+                            <SelectItem key={firm.id} value={firm.id.toString()}>
+                              {firm.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
-                  )}
+                    
+                    {selectedCompanyCounsel && (
+                      <div className="space-y-2">
+                        <Label htmlFor="companyAttorney">Attorney</Label>
+                        <Select 
+                          value={selectedCompanyAttorney?.toString() || ''} 
+                          onValueChange={(value) => {
+                            if (value === "0") {
+                              setSelectedCompanyAttorney(null);
+                            } else {
+                              setSelectedCompanyAttorney(parseInt(value));
+                            }
+                          }}
+                        >
+                          <SelectTrigger id="companyAttorney">
+                            <SelectValue placeholder="Select attorney (optional)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">None</SelectItem>
+                            {companyAttorneys.map((attorney) => (
+                              <SelectItem key={attorney.id} value={attorney.id.toString()}>
+                                {attorney.name} - {attorney.position}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    
+                    {selectedCompanyCounsel && (
+                      <Button
+                        onClick={() => addCounselEntry(false)}
+                        type="button"
+                        className="mt-2"
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add to Selection
+                      </Button>
+                    )}
+                  </div>
                   
                   {selectedCompanyAttorney && (
                     <div className="p-3 rounded-md border border-neutral-100 bg-neutral-50">
