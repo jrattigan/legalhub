@@ -133,6 +133,7 @@ export default function WorkingGroupCard({
   // Function to update counsel
   const updateCounsel = async (data: any) => {
     try {
+      console.log("Sending counsel update:", data);
       const response = await fetch(`/api/deals/${dealId}/counsel`, {
         method: 'POST', // Using POST for simplicity, would be PATCH/PUT in a real app
         headers: {
@@ -142,10 +143,22 @@ export default function WorkingGroupCard({
       });
       
       if (!response.ok) {
-        throw new Error('Failed to update counsel');
+        const errorText = await response.text();
+        console.error('Server response error:', errorText);
+        throw new Error(`Failed to update counsel: ${response.status} ${response.statusText}`);
       }
       
-      return await response.json();
+      // For empty responses, just return success
+      if (response.headers.get('content-length') === '0') {
+        return { success: true };
+      }
+      
+      try {
+        return await response.json();
+      } catch (parseError) {
+        console.log('Response was not JSON, but request succeeded');
+        return { success: true };
+      }
     } catch (error) {
       console.error('Error updating counsel:', error);
       throw error;
@@ -155,32 +168,55 @@ export default function WorkingGroupCard({
   // Handle save changes based on the section being edited
   const handleSaveChanges = async () => {
     try {
+      console.log('Saving changes for section:', editingSection);
+      
       if (editingSection === 'leadInvestor') {
-        await updateDeal({ leadInvestor: selectedLeadInvestor });
+        console.log('Updating lead investor to:', selectedLeadInvestor);
+        const result = await updateDeal({ leadInvestor: selectedLeadInvestor });
+        console.log('Lead investor update result:', result);
       } 
       else if (editingSection === 'investmentTeam') {
-        await updateCompany({ bcvTeam: teamMembers });
+        console.log('Updating investment team to:', teamMembers);
+        const result = await updateCompany({ bcvTeam: teamMembers });
+        console.log('Investment team update result:', result);
       } 
       else if (editingSection === 'investorCounsel') {
         if (selectedInvestorCounsel) {
-          // Remove existing investor counsel first (in a real app, we'd use PATCH or PUT)
-          // Then add the new one
-          await updateCounsel({
-            lawFirmId: selectedInvestorCounsel,
+          console.log('Updating investor counsel to law firm ID:', selectedInvestorCounsel);
+          
+          // Create the investor counsel data
+          const counselData = {
+            lawFirmId: parseInt(selectedInvestorCounsel.toString()),
             role: 'Lead Counsel'
-          });
+          };
+          
+          console.log('Sending investor counsel update with data:', counselData);
+          const result = await updateCounsel(counselData);
+          console.log('Investor counsel update result:', result);
+        } else {
+          console.log('No investor counsel selected, skipping update');
         }
       } 
       else if (editingSection === 'companyCounsel') {
         if (selectedCompanyCounsel) {
-          await updateCounsel({
-            lawFirmId: selectedCompanyCounsel,
+          console.log('Updating company counsel to law firm ID:', selectedCompanyCounsel);
+          
+          // Create the company counsel data
+          const counselData = {
+            lawFirmId: parseInt(selectedCompanyCounsel.toString()),
             role: 'Supporting'
-          });
+          };
+          
+          console.log('Sending company counsel update with data:', counselData);
+          const result = await updateCounsel(counselData);
+          console.log('Company counsel update result:', result);
+        } else {
+          console.log('No company counsel selected, skipping update');
         }
       }
       
       // Refresh all data
+      console.log('Updates successful, refreshing data');
       onRefreshData();
       handleCloseDialog();
     } catch (error) {
