@@ -154,7 +154,10 @@ export default function WorkingGroupCard({
   // Function to update company
   const updateCompany = async (data: any) => {
     try {
-      const response = await fetch(`/api/companies/1`, { // Assuming company ID is 1
+      if (!deal?.companyId) {
+        throw new Error('Company ID is not available');
+      }
+      const response = await fetch(`/api/companies/${deal.companyId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -632,7 +635,7 @@ export default function WorkingGroupCard({
                           <SelectValue placeholder="Select attorney (optional)" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="0">None</SelectItem>
                           {investorAttorneys.map((attorney) => (
                             <SelectItem key={attorney.id} value={attorney.id.toString()}>
                               {attorney.name} - {attorney.position}
@@ -696,7 +699,7 @@ export default function WorkingGroupCard({
                           <SelectValue placeholder="Select attorney (optional)" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="0">None</SelectItem>
                           {companyAttorneys.map((attorney) => (
                             <SelectItem key={attorney.id} value={attorney.id.toString()}>
                               {attorney.name} - {attorney.position}
