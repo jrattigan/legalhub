@@ -1,9 +1,19 @@
 import React, { useState } from 'react';
-import { Building, User, Users, Mail, Phone, Edit, Plus } from 'lucide-react';
+import { Building, User, Users, Mail, Phone, Edit, Plus, X, Check, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LawFirm, Attorney } from '@shared/schema';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { useQuery } from '@tanstack/react-query';
 
 interface WorkingGroupCardProps {
   counsel: {
@@ -36,8 +46,74 @@ export default function WorkingGroupCard({
   const investorCounsel = counsel.filter(item => item.lawFirm.id === 1);
   const companyCounsel = counsel.filter(item => item.lawFirm.id === 3);
   
-  // State for edit dialog
+  // State for edit dialog and form values
   const [editingSection, setEditingSection] = useState<EditSectionType>(null);
+  const [selectedLeadInvestor, setSelectedLeadInvestor] = useState<string>(leadInvestor || '');
+  const [teamMembers, setTeamMembers] = useState<string[]>(bcvTeam || []);
+  const [newTeamMember, setNewTeamMember] = useState<string>('');
+  const [selectedInvestorCounsel, setSelectedInvestorCounsel] = useState<number | null>(investorCounsel[0]?.lawFirm.id || null);
+  const [selectedCompanyCounsel, setSelectedCompanyCounsel] = useState<number | null>(companyCounsel[0]?.lawFirm.id || null);
+  
+  // Fetch lead investors data
+  const { data: leadInvestors = [] } = useQuery<string[]>({
+    queryKey: ['/api/lead-investors'],
+  });
+  
+  // Fetch law firms data
+  const { data: lawFirms = [] } = useQuery<LawFirm[]>({
+    queryKey: ['/api/law-firms'],
+  });
+  
+  // Initialize dialog form data when opened
+  const handleEdit = (section: EditSectionType) => {
+    // Reset form data based on current values
+    if (section === 'leadInvestor') {
+      setSelectedLeadInvestor(leadInvestor || '');
+    } else if (section === 'investmentTeam') {
+      setTeamMembers([...bcvTeam]);
+      setNewTeamMember('');
+    } else if (section === 'investorCounsel') {
+      setSelectedInvestorCounsel(investorCounsel[0]?.lawFirm.id || null);
+    } else if (section === 'companyCounsel') {
+      setSelectedCompanyCounsel(companyCounsel[0]?.lawFirm.id || null);
+    }
+    
+    setEditingSection(section);
+  };
+  
+  // Close the dialog
+  const handleCloseDialog = () => {
+    setEditingSection(null);
+  };
+  
+  // Handle save changes
+  const handleSaveChanges = async () => {
+    // In a real implementation, these would make API calls to update the data
+    // For now, we'll simulate success and close the dialog
+    
+    // TODO: Make actual API calls to update the data
+    
+    // Mock a successful update by calling onRefreshData
+    setTimeout(() => {
+      onRefreshData();
+      handleCloseDialog();
+    }, 500);
+  };
+  
+  // Handle add new team member
+  const handleAddTeamMember = () => {
+    if (newTeamMember.trim()) {
+      setTeamMembers([...teamMembers, newTeamMember.trim()]);
+      setNewTeamMember('');
+    }
+  };
+  
+  // Handle remove team member
+  const handleRemoveTeamMember = (index: number) => {
+    const updatedMembers = [...teamMembers];
+    updatedMembers.splice(index, 1);
+    setTeamMembers(updatedMembers);
+  };
   
   // Dialog title mapping
   const dialogTitles = {
@@ -45,16 +121,6 @@ export default function WorkingGroupCard({
     investmentTeam: "Edit Investment Team",
     investorCounsel: "Edit Investor Counsel",
     companyCounsel: "Edit Company Counsel"
-  };
-  
-  // Handle edit button click
-  const handleEdit = (section: EditSectionType) => {
-    setEditingSection(section);
-  };
-  
-  // Close the dialog
-  const handleCloseDialog = () => {
-    setEditingSection(null);
   };
 
   return (
@@ -254,15 +320,137 @@ export default function WorkingGroupCard({
             </DialogHeader>
             
             <div className="py-4">
-              {/* Dialog content placeholder - would be implemented with form fields for each section */}
-              <p className="text-sm text-neutral-500">
-                Edit functionality for {editingSection} would include appropriate form fields here.
-              </p>
+              {/* Lead Investor Form */}
+              {editingSection === 'leadInvestor' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="leadInvestor">Lead Investor</Label>
+                    <Select 
+                      value={selectedLeadInvestor} 
+                      onValueChange={setSelectedLeadInvestor}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select lead investor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {leadInvestors.map((investor) => (
+                          <SelectItem key={investor} value={investor}>
+                            {investor}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+              
+              {/* Investment Team Form */}
+              {editingSection === 'investmentTeam' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Current Team Members</Label>
+                    {teamMembers.length > 0 ? (
+                      <div className="space-y-2 p-3 border rounded-md">
+                        {teamMembers.map((member, index) => (
+                          <div key={index} className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <Avatar className="h-6 w-6 bg-primary-light mr-2">
+                                <AvatarFallback>{member.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm">{member}</span>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-7 w-7" 
+                              onClick={() => handleRemoveTeamMember(index)}
+                            >
+                              <X className="h-4 w-4 text-neutral-500" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-neutral-500 italic">No team members added yet</div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="newTeamMember">Add Team Member</Label>
+                    <div className="flex space-x-2">
+                      <Input 
+                        id="newTeamMember"
+                        placeholder="Full name" 
+                        value={newTeamMember}
+                        onChange={(e) => setNewTeamMember(e.target.value)}
+                      />
+                      <Button 
+                        type="button" 
+                        onClick={handleAddTeamMember}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Investor Counsel Form */}
+              {editingSection === 'investorCounsel' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="investorCounsel">Investor Counsel</Label>
+                    <Select 
+                      value={selectedInvestorCounsel?.toString() || ''} 
+                      onValueChange={(value) => setSelectedInvestorCounsel(parseInt(value))}
+                    >
+                      <SelectTrigger id="investorCounsel">
+                        <SelectValue placeholder="Select law firm" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {lawFirms.filter(firm => 
+                          [1, 3, 5, 8, 9, 10].includes(firm.id)
+                        ).map((firm) => (
+                          <SelectItem key={firm.id} value={firm.id.toString()}>
+                            {firm.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+              
+              {/* Company Counsel Form */}
+              {editingSection === 'companyCounsel' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="companyCounsel">Company Counsel</Label>
+                    <Select 
+                      value={selectedCompanyCounsel?.toString() || ''} 
+                      onValueChange={(value) => setSelectedCompanyCounsel(parseInt(value))}
+                    >
+                      <SelectTrigger id="companyCounsel">
+                        <SelectValue placeholder="Select law firm" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {lawFirms.filter(firm => 
+                          [2, 4, 6, 7].includes(firm.id)
+                        ).map((firm) => (
+                          <SelectItem key={firm.id} value={firm.id.toString()}>
+                            {firm.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
             </div>
             
             <DialogFooter>
               <Button variant="outline" onClick={handleCloseDialog}>Cancel</Button>
-              <Button onClick={handleCloseDialog}>Save changes</Button>
+              <Button onClick={handleSaveChanges}>Save changes</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
