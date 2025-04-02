@@ -985,9 +985,7 @@ export default function WorkingGroupCardFixed({
                           <SelectValue placeholder="Select law firm" />
                         </SelectTrigger>
                         <SelectContent>
-                          {lawFirms.filter(firm => 
-                            [1, 3, 5, 8, 9, 10].includes(firm.id)
-                          ).map((firm) => (
+                          {lawFirms.map((firm) => (
                             <SelectItem key={firm.id} value={firm.id.toString()}>
                               {firm.name}
                             </SelectItem>
@@ -1131,9 +1129,7 @@ export default function WorkingGroupCardFixed({
                           <SelectValue placeholder="Select law firm" />
                         </SelectTrigger>
                         <SelectContent>
-                          {lawFirms.filter(firm => 
-                            [2, 4, 6, 7].includes(firm.id)
-                          ).map((firm) => (
+                          {lawFirms.map((firm) => (
                             <SelectItem key={firm.id} value={firm.id.toString()}>
                               {firm.name}
                             </SelectItem>
