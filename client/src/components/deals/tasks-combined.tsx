@@ -708,36 +708,20 @@ export default function TasksCombined({ dealId }: TasksCombinedProps) {
           )}
         </div>
         
-        {/* Actions Column */}
+        {/* Delete Button */}
         <div className="col-span-2 flex items-center justify-end">
-          <div className="flex items-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => cycleTaskStatus(task)}
-                >
-                  <Timer className="h-4 w-4 mr-2" />
-                  Cycle Status
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    if (window.confirm('Are you sure you want to delete this task?')) {
-                      deleteTaskMutation.mutate(task.id);
-                    }
-                  }}
-                  className="text-destructive"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+            onClick={() => {
+              if (window.confirm('Are you sure you want to delete this task?')) {
+                deleteTaskMutation.mutate(task.id);
+              }
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     );
@@ -783,7 +767,7 @@ export default function TasksCombined({ dealId }: TasksCombinedProps) {
               <div className="col-span-4">Task Name</div>
               <div className="col-span-3">Due Date</div>
               <div className="col-span-2">Assignee</div>
-              <div className="col-span-2">Actions</div>
+              <div className="col-span-2"></div>
             </div>
             <div className="divide-y divide-border">
               {tasks.map(task => (
