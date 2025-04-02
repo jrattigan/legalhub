@@ -1475,24 +1475,8 @@ export default function DealDetail({
                 </div>
               )}
             </div>
-            {/* Company Information */}
-            {renderCompanyInfo()}
-            {/* Lead Investor Information */}
-            {renderLeadInvestorInfo()}
-            {renderInvestmentTeam()}
           </div>
           <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center space-x-2'}`}>
-            {!isMobile && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-sm"
-                onClick={() => setActiveTab('timeline')}
-              >
-                <Eye className="h-4 w-4 mr-1" />
-                Timeline
-              </Button>
-            )}
             <Button 
               variant="outline" 
               size="sm" 
