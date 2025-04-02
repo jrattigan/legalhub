@@ -494,20 +494,18 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
                 
                 return (
                   <div key={item.id}>
-                    <div className="group px-4 py-3 hover:bg-muted/50 transition-colors">
+                    <div className={`group px-4 py-3 hover:bg-muted/50 transition-colors ${
+                      item.isComplete ? 'opacity-75' : ''
+                    }`}>
                       <div className="flex items-center">
                         <div className="flex-none mr-3">
-                          {item.isComplete ? (
-                            <CheckCircle 
-                              className="h-5 w-5 text-primary cursor-pointer" 
-                              onClick={() => handleToggleComplete(item.id, item.isComplete)}
-                            />
-                          ) : (
-                            <Circle 
-                              className="h-5 w-5 text-muted-foreground hover:text-primary cursor-pointer" 
-                              onClick={() => handleToggleComplete(item.id, item.isComplete)}
-                            />
-                          )}
+                          <Checkbox
+                            id={`checklist-${item.id}-completed`}
+                            checked={item.isComplete}
+                            onCheckedChange={(checked) => {
+                              handleToggleComplete(item.id, item.isComplete);
+                            }}
+                          />
                         </div>
 
                         <div className="flex-1 min-w-0">
@@ -585,21 +583,19 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
                         {subItems.map((subItem: ClosingChecklistItem) => (
                           <div 
                             key={subItem.id} 
-                            className="group border-t border-border/50 px-4 py-3 pl-10 hover:bg-muted/50 transition-colors"
+                            className={`group border-t border-border/50 px-4 py-3 pl-10 hover:bg-muted/50 transition-colors ${
+                              subItem.isComplete ? 'opacity-75' : ''
+                            }`}
                           >
                             <div className="flex items-center">
                               <div className="flex-none mr-3">
-                                {subItem.isComplete ? (
-                                  <CheckCircle 
-                                    className="h-5 w-5 text-primary cursor-pointer" 
-                                    onClick={() => handleToggleComplete(subItem.id, subItem.isComplete)}
-                                  />
-                                ) : (
-                                  <Circle 
-                                    className="h-5 w-5 text-muted-foreground hover:text-primary cursor-pointer" 
-                                    onClick={() => handleToggleComplete(subItem.id, subItem.isComplete)}
-                                  />
-                                )}
+                                <Checkbox
+                                  id={`checklist-${subItem.id}-completed`}
+                                  checked={subItem.isComplete}
+                                  onCheckedChange={(checked) => {
+                                    handleToggleComplete(subItem.id, subItem.isComplete);
+                                  }}
+                                />
                               </div>
 
                               <div className="flex-1 min-w-0">
