@@ -56,6 +56,7 @@ import DocumentCard from './document-card';
 // TaskCard removed
 import IssueCard from './issue-card';
 import CounselCard from './counsel-card';
+import WorkingGroupCard from './working-group-card';
 import TimelineCard from './timeline-card';
 import AllocationsTab from './allocations-tab';
 import TasksCombined from './tasks-combined';
@@ -1840,8 +1841,15 @@ export default function DealDetail({
                   </Button>
                 </div>
                 
-                {/* Outside Counsel Card */}
-                <CounselCard counsel={counsel} onRefreshData={onRefreshData} preview={true} dealId={deal.id} />
+                {/* Working Group Card */}
+                <WorkingGroupCard 
+                  counsel={counsel} 
+                  dealId={deal.id} 
+                  companyName={deal.companyName}
+                  bcvTeam={companyDetails?.bcvTeam || []}
+                  leadInvestor={deal.leadInvestor}
+                  onRefreshData={onRefreshData} 
+                />
                 
                 {/* Timeline Card */}
                 <TimelineCard events={timelineEvents} onRefreshData={onRefreshData} preview={true} />
@@ -2128,7 +2136,14 @@ export default function DealDetail({
                   </div>
                 </div>
                 
-                <CounselCard counsel={counsel} onRefreshData={onRefreshData} preview={false} dealId={deal.id} />
+                <WorkingGroupCard 
+                  counsel={counsel} 
+                  dealId={deal.id} 
+                  companyName={deal.companyName}
+                  bcvTeam={companyDetails?.bcvTeam || []}
+                  leadInvestor={deal.leadInvestor}
+                  onRefreshData={onRefreshData} 
+                />
               </div>
             )}
             
@@ -2401,8 +2416,15 @@ export default function DealDetail({
               </div>
             </div>
             
-            {/* Outside Counsel Card */}
-            <CounselCard counsel={counsel} onRefreshData={onRefreshData} preview={true} dealId={deal.id} />
+            {/* Working Group Card */}
+            <WorkingGroupCard 
+              counsel={counsel} 
+              dealId={deal.id} 
+              companyName={deal.companyName}
+              bcvTeam={companyDetails?.bcvTeam || []}
+              leadInvestor={deal.leadInvestor}
+              onRefreshData={onRefreshData} 
+            />
             
             {/* Timeline Card */}
             <TimelineCard events={timelineEvents} onRefreshData={onRefreshData} preview={true} />
