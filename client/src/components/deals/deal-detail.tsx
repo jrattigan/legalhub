@@ -257,6 +257,10 @@ export default function DealDetail({
   // Query to fetch all users for team assignment
   const { data: allUsers = [] } = useQuery<User[]>({
     queryKey: ['/api/users'],
+    queryFn: async () => {
+      const response = await apiRequest('/api/users');
+      return response as User[];
+    },
     refetchOnWindowFocus: false
   });
   

@@ -1,7 +1,23 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import React from "react";
-import type { Task } from "../../types";
 import { getInitials } from "@/lib/utils";
+
+// Define the Task interface
+interface Task {
+  id: number;
+  name: string;
+  description: string | null;
+  dealId: number;
+  dueDate: string | null;
+  assigneeId: number | null;
+  customAssigneeId: number | null;
+  lawFirmId: number | null;
+  attorneyId: number | null;
+  taskType: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 // Define the types here as well to avoid module resolution issues
 interface User {
