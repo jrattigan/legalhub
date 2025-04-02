@@ -86,18 +86,107 @@ export default function WorkingGroupCard({
     setEditingSection(null);
   };
   
-  // Handle save changes
+  // Function to update deal with lead investor
+  const updateDeal = async (data: any) => {
+    try {
+      const response = await fetch(`/api/deals/${dealId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update deal');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating deal:', error);
+      throw error;
+    }
+  };
+  
+  // Function to update company
+  const updateCompany = async (data: any) => {
+    try {
+      const response = await fetch(`/api/companies/1`, { // Assuming company ID is 1
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update company');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating company:', error);
+      throw error;
+    }
+  };
+  
+  // Function to update counsel
+  const updateCounsel = async (data: any) => {
+    try {
+      const response = await fetch(`/api/deals/${dealId}/counsel`, {
+        method: 'POST', // Using POST for simplicity, would be PATCH/PUT in a real app
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update counsel');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating counsel:', error);
+      throw error;
+    }
+  };
+
+  // Handle save changes based on the section being edited
   const handleSaveChanges = async () => {
-    // In a real implementation, these would make API calls to update the data
-    // For now, we'll simulate success and close the dialog
-    
-    // TODO: Make actual API calls to update the data
-    
-    // Mock a successful update by calling onRefreshData
-    setTimeout(() => {
+    try {
+      if (editingSection === 'leadInvestor') {
+        await updateDeal({ leadInvestor: selectedLeadInvestor });
+      } 
+      else if (editingSection === 'investmentTeam') {
+        await updateCompany({ bcvTeam: teamMembers });
+      } 
+      else if (editingSection === 'investorCounsel') {
+        if (selectedInvestorCounsel) {
+          // Remove existing investor counsel first (in a real app, we'd use PATCH or PUT)
+          // Then add the new one
+          await updateCounsel({
+            lawFirmId: selectedInvestorCounsel,
+            role: 'Lead Counsel'
+          });
+        }
+      } 
+      else if (editingSection === 'companyCounsel') {
+        if (selectedCompanyCounsel) {
+          await updateCounsel({
+            lawFirmId: selectedCompanyCounsel,
+            role: 'Supporting'
+          });
+        }
+      }
+      
+      // Refresh all data
       onRefreshData();
       handleCloseDialog();
-    }, 500);
+    } catch (error) {
+      console.error('Error updating data:', error);
+      // In a real app, we would show an error toast here
+    }
   };
   
   // Handle add new team member
