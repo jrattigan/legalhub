@@ -40,6 +40,19 @@ export default function WorkingGroupCard({
       </div>
       
       <div className="space-y-4">
+        {/* Lead Investor Section */}
+        {leadInvestor && (
+          <div>
+            <h3 className="text-sm font-medium text-neutral-700 mb-2 flex items-center">
+              <Building className="h-4 w-4 mr-1.5 text-neutral-500" />
+              Lead Investor
+            </h3>
+            <div className="p-3 rounded-md border border-neutral-200 bg-neutral-50">
+              <div className="font-medium">{leadInvestor}</div>
+            </div>
+          </div>
+        )}
+        
         {/* Investment Team Section */}
         <div>
           <h3 className="text-sm font-medium text-neutral-700 mb-2 flex items-center">
@@ -47,15 +60,8 @@ export default function WorkingGroupCard({
             Investment Team
           </h3>
           <div className="p-3 rounded-md border border-neutral-200 bg-neutral-50">
-            {leadInvestor && (
-              <div className="mb-2">
-                <div className="font-medium">{leadInvestor}</div>
-                <div className="text-xs text-neutral-500 mt-0.5">Lead Investor</div>
-              </div>
-            )}
-            
             {bcvTeam.length > 0 ? (
-              <div className="mt-3">
+              <div>
                 <div className="text-sm font-medium mb-1">Deal Team</div>
                 <div className="space-y-2">
                   {bcvTeam.map((member, index) => (
