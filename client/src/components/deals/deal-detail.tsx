@@ -1466,14 +1466,7 @@ export default function DealDetail({
                 </div>
               )}
               
-              {deal.amount && (
-                <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-2">
-                    <DollarSign className="h-4 w-4 text-primary" />
-                  </div>
-                  <span className="font-medium">{deal.amount}</span>
-                </div>
-              )}
+
             </div>
           </div>
           <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center space-x-2'}`}>
