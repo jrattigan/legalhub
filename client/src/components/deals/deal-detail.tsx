@@ -171,7 +171,7 @@ export default function DealDetail({
   };
 
   // Fetch all law firms from the API
-  const { data: allLawFirms = [] } = useQuery<LawFirm[]>({
+  const { data: lawFirmsData = [] } = useQuery<LawFirm[]>({
     queryKey: ['/api/law-firms'],
     queryFn: async () => {
       const response = await fetch('/api/law-firms');
@@ -182,6 +182,9 @@ export default function DealDetail({
       return Array.isArray(data) ? data : [];
     }
   });
+  
+  // Ensure law firms data is always an array
+  const allLawFirms = Array.isArray(lawFirmsData) ? lawFirmsData : [];
   
   // Fetch unique lead investor names for autocomplete with staleTime: 0 to ensure fresh data
   const { data: leadInvestors = [] } = useQuery({
@@ -262,8 +265,12 @@ export default function DealDetail({
   const { data: allUsers = [] } = useQuery<User[]>({
     queryKey: ['/api/users'],
     queryFn: async () => {
-      const response = await apiRequest('/api/users');
-      return response as User[];
+      const response = await fetch('/api/users');
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     },
     refetchOnWindowFocus: false
   });
@@ -301,7 +308,20 @@ export default function DealDetail({
       };
       
       console.log('API Payload:', apiPayload);
-      return await apiRequest('PATCH', `/api/deals/${deal.id}`, apiPayload);
+      // Use fetch instead of apiRequest to avoid type issues
+      const response = await fetch(`/api/deals/${deal.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(apiPayload)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API call failed with status: ${response.status}`);
+      }
+      
+      return await response.json();
     },
     onSuccess: () => {
       // Invalidate both combined data and the main deals list to ensure all views are updated
@@ -330,7 +350,18 @@ export default function DealDetail({
   // Mutation to delete deal
   const deleteDealMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest('DELETE', `/api/deals/${deal.id}`);
+      const response = await fetch(`/api/deals/${deal.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API call failed with status: ${response.status}`);
+      }
+      
+      return await response.json();
     },
     onSuccess: () => {
       // Invalidate all relevant queries
@@ -581,8 +612,14 @@ export default function DealDetail({
       setIsTermSheetUploading(true);
       
       // Update the deal with the term sheet data
-      const response = await apiRequest('PATCH', `/api/deals/${deal.id}`, {
-        termSheetUrl: fileData.fileContent
+      const response = await fetch(`/api/deals/${deal.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          termSheetUrl: fileData.fileContent
+        })
       });
       
       if (!response.ok) {
@@ -864,7 +901,7 @@ export default function DealDetail({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      {allLawFirms.map((firm: LawFirmOption) => (
+                      {lawFirmOptions.map((firm: LawFirmOption) => (
                         <SelectItem key={firm.id} value={firm.name}>
                           {firm.name}
                         </SelectItem>
