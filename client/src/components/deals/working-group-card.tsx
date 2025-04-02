@@ -26,12 +26,17 @@ export default function WorkingGroupCard({
   leadInvestor,
   onRefreshData 
 }: WorkingGroupCardProps) {
-  // Filter counsel by roles
+  // Filter counsel for Company Counsel
   const companyCounsel = counsel.filter(item => 
-    item.role === 'Lead Counsel' && item.lawFirm.specialty.includes('Company'));
+    item.lawFirm.specialty.includes('Company') || 
+    item.lawFirm.specialty.includes('Technology') ||
+    item.lawFirm.specialty.includes('Emerging'));
   
+  // Filter counsel for Investor Counsel 
   const investorCounsel = counsel.filter(item => 
-    item.role === 'Lead Counsel' && item.lawFirm.specialty.includes('Investor'));
+    item.lawFirm.specialty.includes('Investor') || 
+    item.lawFirm.specialty.includes('Venture') || 
+    item.lawFirm.specialty.includes('Capital'));
 
   return (
     <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-2">
@@ -162,37 +167,6 @@ export default function WorkingGroupCard({
             </div>
           )}
         </div>
-        
-        {/* Other Supporting Counsel */}
-        {counsel.filter(item => item.role !== 'Lead Counsel').length > 0 && (
-          <div>
-            <h3 className="text-sm font-medium text-neutral-700 mb-2 flex items-center">
-              <Building className="h-4 w-4 mr-1.5 text-neutral-500" />
-              Supporting Counsel
-            </h3>
-            
-            <div className="p-3 rounded-md border border-neutral-200 bg-neutral-50">
-              {counsel.filter(item => item.role !== 'Lead Counsel').map((item) => (
-                <div key={item.id} className="mb-3 last:mb-0">
-                  <div className="font-medium">{item.lawFirm.name}</div>
-                  <div className="text-xs text-neutral-500 mt-0.5">{item.role}</div>
-                  
-                  {item.attorney && (
-                    <div className="mt-2 flex items-center">
-                      <Avatar className="h-6 w-6" style={{ backgroundColor: item.attorney.avatarColor }}>
-                        <AvatarFallback>{item.attorney.initials}</AvatarFallback>
-                      </Avatar>
-                      <div className="ml-2">
-                        <div className="text-sm font-medium">{item.attorney.name}</div>
-                        <div className="text-xs text-neutral-500">{item.attorney.position}</div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
