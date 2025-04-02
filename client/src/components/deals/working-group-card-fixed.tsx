@@ -72,7 +72,7 @@ export default function WorkingGroupCardFixed({
   companyId,
   companyName,
   bcvTeam = [],
-  leadInvestor = null,
+  leadInvestor = '',
   onRefreshData
 }: WorkingGroupCardProps) {
   // Split counsel by role
@@ -80,7 +80,7 @@ export default function WorkingGroupCardFixed({
   const companyCounsel = counsel.filter(c => c.role === 'Supporting');
   
   // State for edit dialog and form values
-  const [editingSection, setEditingSection] = useState<EditSectionType>(null);
+  const [editingSection, setEditingSection] = useState<EditSectionType | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [selectedLeadInvestor, setSelectedLeadInvestor] = useState<string>(leadInvestor || '');
   const [teamMembers, setTeamMembers] = useState<string[]>(bcvTeam || []);
@@ -463,6 +463,9 @@ export default function WorkingGroupCardFixed({
         console.log('Updating investment team to:', teamNames);
         const result = await updateCompany({ bcvTeam: teamNames });
         console.log('Investment team update result:', result);
+        
+        // Update local state to immediately reflect changes
+        setTeamMembers(teamNames);
       } 
       else if (editingSection === 'investorCounsel') {
         // Add the current selection if not already in the list
@@ -811,7 +814,7 @@ export default function WorkingGroupCardFixed({
       {/* Edit Dialog */}
       {isDialogOpen && editingSection && (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>{dialogTitles[editingSection]}</DialogTitle>
             </DialogHeader>
