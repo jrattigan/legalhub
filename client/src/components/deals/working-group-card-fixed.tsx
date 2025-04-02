@@ -310,6 +310,20 @@ export default function WorkingGroupCardFixed({
       };
       
       console.log(`Replacing ${role} counsel with:`, payload);
+      console.log(`Raw entries:`, entries);
+      
+      // Debug log to verify the entries have the correct format
+      if (entries.length > 0) {
+        entries.forEach((entry, index) => {
+          console.log(`Entry ${index}:`, entry);
+          console.log(`  lawFirmId: ${entry.lawFirmId} (${typeof entry.lawFirmId})`);
+          console.log(`  attorneyId: ${entry.attorneyId} (${typeof entry.attorneyId})`);
+          
+          // Check if lawFirmId exists in the lawFirms array
+          const lawFirm = lawFirms.find(firm => firm.id === entry.lawFirmId);
+          console.log(`  Law firm found: ${lawFirm ? 'Yes' : 'No'}, name: ${lawFirm ? lawFirm.name : 'Unknown'}`);
+        });
+      }
       
       const response = await fetch(`/api/deal-counsels/replace`, {
         method: 'POST',
@@ -319,13 +333,20 @@ export default function WorkingGroupCardFixed({
         body: JSON.stringify(payload),
       });
       
+      // Log raw response for debugging
+      console.log(`Response status:`, response.status);
+      console.log(`Response status text:`, response.statusText);
+      
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Server response error:', errorText);
         throw new Error(`Failed to replace counsel: ${response.status} ${response.statusText}`);
       }
       
-      return { success: true };
+      const result = await response.json();
+      console.log(`Success replacing ${role} counsel, server response:`, result);
+      
+      return result;
     } catch (error) {
       console.error(`Error replacing ${role} counsel:`, error);
       throw error;
@@ -527,9 +548,37 @@ export default function WorkingGroupCardFixed({
           addCounselEntry(true);
         }
         
-        console.log('Updating investor counsel with entries:', investorCounselEntries);
-        const result = await replaceCounsel('Lead Counsel', investorCounselEntries);
+        // Make a copy of the entries to ensure we're using the latest state
+        const currentInvestorCounselEntries = [...investorCounselEntries];
+        
+        console.log('Updating investor counsel with entries:', currentInvestorCounselEntries);
+        
+        // Validate entry data before sending
+        const validEntries = currentInvestorCounselEntries.map(entry => {
+          // Ensure lawFirmId is a number
+          const lawFirmId = typeof entry.lawFirmId === 'number' ? 
+            entry.lawFirmId : parseInt(String(entry.lawFirmId));
+          
+          // Ensure attorneyId is either null or a number
+          let attorneyId = entry.attorneyId;
+          if (attorneyId !== null && typeof attorneyId !== 'number') {
+            attorneyId = parseInt(String(attorneyId));
+          }
+          
+          return {
+            lawFirmId,
+            attorneyId
+          };
+        }).filter(entry => !isNaN(entry.lawFirmId));
+        
+        console.log('Validated investor counsel entries:', validEntries);
+        
+        // Now send the validated entries
+        const result = await replaceCounsel('Lead Counsel', validEntries);
         console.log('Investor counsel update result:', result);
+        
+        // Update local state with validated entries
+        setInvestorCounselEntries(validEntries);
       } 
       else if (editingSection === 'companyCounsel') {
         // Add the current selection if not already in the list
@@ -539,9 +588,37 @@ export default function WorkingGroupCardFixed({
           addCounselEntry(false);
         }
         
-        console.log('Updating company counsel with entries:', companyCounselEntries);
-        const result = await replaceCounsel('Supporting', companyCounselEntries);
+        // Make a copy of the entries to ensure we're using the latest state
+        const currentCompanyCounselEntries = [...companyCounselEntries];
+        
+        console.log('Updating company counsel with entries:', currentCompanyCounselEntries);
+        
+        // Validate entry data before sending
+        const validEntries = currentCompanyCounselEntries.map(entry => {
+          // Ensure lawFirmId is a number
+          const lawFirmId = typeof entry.lawFirmId === 'number' ? 
+            entry.lawFirmId : parseInt(String(entry.lawFirmId));
+          
+          // Ensure attorneyId is either null or a number
+          let attorneyId = entry.attorneyId;
+          if (attorneyId !== null && typeof attorneyId !== 'number') {
+            attorneyId = parseInt(String(attorneyId));
+          }
+          
+          return {
+            lawFirmId,
+            attorneyId
+          };
+        }).filter(entry => !isNaN(entry.lawFirmId));
+        
+        console.log('Validated company counsel entries:', validEntries);
+        
+        // Now send the validated entries
+        const result = await replaceCounsel('Supporting', validEntries);
         console.log('Company counsel update result:', result);
+        
+        // Update local state with validated entries
+        setCompanyCounselEntries(validEntries);
       }
       
       // Close dialog and refresh data
