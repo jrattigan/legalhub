@@ -164,21 +164,32 @@ export default function WorkingGroupCardFixed({
     if (section === 'leadInvestor') {
       setSelectedLeadInvestor(leadInvestor || '');
     } else if (section === 'investmentTeam') {
-      // Initialize the direct team member names
+      // First get the full list of team members
       setTeamMembers([...bcvTeam]);
       
-      // Map BCV team members to user IDs if possible
-      const selectedIds = bcvTeam
-        .map(name => {
-          const user = users.find(user => user.fullName === name);
-          return user ? user.id : null;
-        })
-        .filter(id => id !== null) as number[];
+      // Separate into system users and custom (external) team members
+      const systemUserIds: number[] = [];
+      const customMembers: string[] = [];
       
-      console.log('Mapped team members to IDs:', selectedIds, 'from names:', bcvTeam);
-      setSelectedTeamMembers(selectedIds);
+      // Process each BCV team member
+      bcvTeam.forEach(name => {
+        const user = users.find(user => user.fullName === name);
+        if (user) {
+          // This is a system user, add to IDs list
+          systemUserIds.push(user.id);
+        } else {
+          // This is a custom external member, add to custom list
+          customMembers.push(name);
+        }
+      });
       
-      // If no IDs were found, we'll rely on direct name selection for the UI
+      console.log('System user IDs:', systemUserIds);
+      console.log('Custom members:', customMembers);
+      
+      // Set state for both types of team members
+      setSelectedTeamMembers(systemUserIds);
+      
+      // teamMembers already has all members (both system and custom)
     } else if (section === 'investorCounsel') {
       // Reset the form state
       setSelectedInvestorLawFirmId(null);
@@ -461,24 +472,31 @@ export default function WorkingGroupCardFixed({
         console.log('Lead investor update result:', result);
       } 
       else if (editingSection === 'investmentTeam') {
-        // We're using selectedTeamMembers for the direct UI interaction
-        // But for the API call, we use the names directly
-        console.log('Selected team members (IDs):', selectedTeamMembers);
+        // For Investment Team, we need to combine both selected team member IDs
+        // and any custom team members added directly
+
+        // Get names from selected user IDs
+        const selectedTeamNames = selectedTeamMembers
+          .map(userId => {
+            const user = users.find(u => u.id === userId);
+            return user ? user.fullName : '';
+          })
+          .filter(name => name !== '');
         
-        // Either use the selected IDs to get names or use direct name selections
-        const teamNames = selectedTeamMembers.length > 0 
-          ? selectedTeamMembers.map(userId => {
-              const user = users.find(u => u.id === userId);
-              return user ? user.fullName : '';
-            }).filter(name => name !== '')
-          : teamMembers; // Fallback to direct name selection
+        // Get custom team members (those that don't exist in the users list)
+        const customTeamMembers = teamMembers.filter(name => 
+          !users.some(u => u.fullName === name)
+        );
         
-        console.log('Updating investment team to:', teamNames);
-        const result = await updateCompany({ bcvTeam: teamNames });
+        // Combine both lists
+        const combinedTeamNames = [...selectedTeamNames, ...customTeamMembers];
+        
+        console.log('Updating investment team with combined list:', combinedTeamNames);
+        const result = await updateCompany({ bcvTeam: combinedTeamNames });
         console.log('Investment team update result:', result);
         
         // Update local state to immediately reflect changes
-        setTeamMembers(teamNames);
+        setTeamMembers(combinedTeamNames);
       } 
       else if (editingSection === 'investorCounsel') {
         // Add the current selection if not already in the list
