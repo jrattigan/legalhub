@@ -658,7 +658,7 @@ export default function DealDetail({
     enabled: !!deal.companyId,
   });
   
-  // Render company information with its counsel
+  // Render company information
   const renderCompanyInfo = () => {
     // Debug: Print deal object to console to see available properties
     console.log("Deal object in renderCompanyInfo:", deal);
@@ -672,19 +672,6 @@ export default function DealDetail({
             Company: {companyDetails?.legalName || deal.companyName}
           </span>
         </div>
-        {/* Find company counsel from the counsel array */}
-        {counsel.filter(c => c.role.includes("Company") || c.role === "Supporting").length > 0 && (
-          <div className="flex items-center ml-5 mt-0.5">
-            <span>
-              Company Counsel: {
-                counsel
-                  .filter(c => c.role.includes("Company") || c.role === "Supporting")
-                  .map(c => `${c.lawFirm.name}${c.attorney ? ` (${c.attorney.name})` : ''}`)
-                  .join(", ")
-              }
-            </span>
-          </div>
-        )}
         {/* Data Room Link */}
         {deal.dataRoomUrl && (
           <div className="flex items-center mt-1">
