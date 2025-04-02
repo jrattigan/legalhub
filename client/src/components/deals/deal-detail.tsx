@@ -1447,7 +1447,7 @@ export default function DealDetail({
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-2">
                   <Building className="h-4 w-4 text-primary" />
                 </div>
-                <a href={`/companies/${deal.companyId}`} className="text-primary hover:underline font-medium">{deal.companyName}</a>
+                <a href={`/companies/${deal.companyId}`} className="text-primary hover:underline font-medium">{companyDetails?.legalName || deal.companyName}</a>
               </div>
               
               {deal.dueDate && (
