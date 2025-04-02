@@ -81,6 +81,7 @@ export default function WorkingGroupCardFixed({
   
   // State for edit dialog and form values
   const [editingSection, setEditingSection] = useState<EditSectionType>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [selectedLeadInvestor, setSelectedLeadInvestor] = useState<string>(leadInvestor || '');
   const [teamMembers, setTeamMembers] = useState<string[]>(bcvTeam || []);
   const [selectedTeamMembers, setSelectedTeamMembers] = useState<number[]>([]);
@@ -227,11 +228,13 @@ export default function WorkingGroupCardFixed({
     }
     
     setEditingSection(section);
+    setIsDialogOpen(true);
   };
   
   // Close the dialog
   const handleCloseDialog = () => {
     setEditingSection(null);
+    setIsDialogOpen(false);
   };
   
   // Function to update deal with lead investor
@@ -486,16 +489,15 @@ export default function WorkingGroupCardFixed({
         console.log('Company counsel update result:', result);
       }
       
-      // Refresh all data
-      console.log('Updates successful, refreshing data');
-      onRefreshData();
+      // Close dialog and refresh data
       handleCloseDialog();
+      onRefreshData();
     } catch (error) {
-      console.error('Error updating data:', error);
+      console.error('Error saving changes:', error);
     }
   };
   
-  // Handle selection of team member from dropdown
+  // Handle selecting team member by ID
   const handleSelectTeamMember = (userId: string) => {
     const id = parseInt(userId);
     // Toggle selection
@@ -599,9 +601,9 @@ export default function WorkingGroupCardFixed({
             </div>
             <div className="p-3 rounded-md border border-neutral-200 bg-neutral-50">
               {leadInvestor ? (
-                <div className="font-medium">{leadInvestor}</div>
+                <div className="text-sm">{leadInvestor}</div>
               ) : (
-                <div className="text-xs text-neutral-500 italic">No lead investor assigned</div>
+                <div className="text-sm text-neutral-500 italic">No lead investor assigned</div>
               )}
             </div>
           </div>
@@ -619,24 +621,29 @@ export default function WorkingGroupCardFixed({
                 className="h-7 text-xs" 
                 onClick={() => handleEdit('investmentTeam')}
               >
-                {bcvTeam.length > 0 ? <Edit className="h-3.5 w-3.5 mr-1" /> : <Plus className="h-3.5 w-3.5 mr-1" />}
-                {bcvTeam.length > 0 ? "Edit" : "Add"}
+                {bcvTeam && bcvTeam.length > 0 ? <Edit className="h-3.5 w-3.5 mr-1" /> : <Plus className="h-3.5 w-3.5 mr-1" />}
+                {bcvTeam && bcvTeam.length > 0 ? "Edit" : "Add"}
               </Button>
             </div>
             <div className="p-3 rounded-md border border-neutral-200 bg-neutral-50">
-              {bcvTeam.length > 0 ? (
+              {bcvTeam && bcvTeam.length > 0 ? (
                 <div className="space-y-2">
-                  {bcvTeam.map((member, index) => (
-                    <div key={index} className="flex items-center">
-                      <Avatar className="h-6 w-6 bg-primary-light">
-                        <AvatarFallback>{member.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <div className="ml-2 text-sm">{member}</div>
-                    </div>
-                  ))}
+                  {bcvTeam.map((member, index) => {
+                    const user = users.find(u => u.fullName === member);
+                    return (
+                      <div key={`team-${index}`} className="flex items-center">
+                        {user && (
+                          <Avatar className="h-6 w-6 mr-2" style={{ backgroundColor: user.avatarColor }}>
+                            <AvatarFallback>{user.initials}</AvatarFallback>
+                          </Avatar>
+                        )}
+                        <div className="text-sm">{member}</div>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
-                <div className="text-xs text-neutral-500 italic">No investment team assigned</div>
+                <div className="text-sm text-neutral-500 italic">No investment team members assigned</div>
               )}
             </div>
           </div>
@@ -680,9 +687,9 @@ export default function WorkingGroupCardFixed({
                   
                   // Render each law firm group
                   return Object.values(lawFirmGroups).map((group, index) => (
-                    <div key={`firm-${group.lawFirm.id}-${index}`} className="mb-4 last:mb-0">
+                    <div key={`firm-${group.lawFirm.id}-${index}`}>
+                      {index > 0 && <Separator className="my-3" />}
                       <div className="font-medium">{group.lawFirm.name}</div>
-                      <div className="text-xs text-neutral-500 mt-0.5">{group.lawFirm.specialty}</div>
                       
                       {group.attorneys.length > 0 ? (
                         <div className="mt-2 space-y-2">
@@ -759,9 +766,9 @@ export default function WorkingGroupCardFixed({
                   
                   // Render each law firm group
                   return Object.values(lawFirmGroups).map((group, index) => (
-                    <div key={`firm-${group.lawFirm.id}-${index}`} className="mb-4 last:mb-0">
+                    <div key={`firm-${group.lawFirm.id}-${index}`}>
+                      {index > 0 && <Separator className="my-3" />}
                       <div className="font-medium">{group.lawFirm.name}</div>
-                      <div className="text-xs text-neutral-500 mt-0.5">{group.lawFirm.specialty}</div>
                       
                       {group.attorneys.length > 0 ? (
                         <div className="mt-2 space-y-2">
@@ -802,33 +809,36 @@ export default function WorkingGroupCardFixed({
       </div>
       
       {/* Edit Dialog */}
-      {editingSection && (
-        <Dialog open={!!editingSection} onOpenChange={handleCloseDialog}>
-          <DialogContent className="sm:max-w-[500px]">
+      {isDialogOpen && editingSection && (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>{dialogTitles[editingSection]}</DialogTitle>
             </DialogHeader>
             
-            <div className="py-4">
+            <div className="space-y-4 py-2">
               {/* Lead Investor Form */}
               {editingSection === 'leadInvestor' && (
                 <div className="space-y-4">
-                  <Label htmlFor="leadInvestor">Lead Investor</Label>
-                  <Select 
-                    value={selectedLeadInvestor} 
-                    onValueChange={setSelectedLeadInvestor}
-                  >
-                    <SelectTrigger id="leadInvestor">
-                      <SelectValue placeholder="Select lead investor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {leadInvestors.map((investor) => (
-                        <SelectItem key={investor} value={investor}>
-                          {investor}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div>
+                    <Label htmlFor="leadInvestor">Lead Investor</Label>
+                    <Select
+                      value={selectedLeadInvestor}
+                      onValueChange={setSelectedLeadInvestor}
+                    >
+                      <SelectTrigger id="leadInvestor">
+                        <SelectValue placeholder="Select lead investor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">None</SelectItem>
+                        {leadInvestors.map((investor, index) => (
+                          <SelectItem key={index} value={investor}>
+                            {investor}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               )}
               
@@ -836,16 +846,16 @@ export default function WorkingGroupCardFixed({
               {editingSection === 'investmentTeam' && (
                 <div className="space-y-4">
                   <div>
-                    <Label>Currently Selected Team Members</Label>
-                    <div className="border rounded-md p-2 mt-2">
+                    <Label>Selected Team Members</Label>
+                    <div className="border rounded-md p-2 mt-1">
                       {selectedTeamMembers.length > 0 ? (
-                        <div className="space-y-2">
-                          {selectedTeamMembers.map((userId, index) => {
+                        <div className="space-y-1">
+                          {selectedTeamMembers.map(userId => {
                             const user = users.find(u => u.id === userId);
                             if (!user) return null;
                             
                             return (
-                              <div key={userId} className="flex items-center justify-between">
+                              <div key={userId} className="flex justify-between items-center py-1 px-2 rounded-sm bg-neutral-100">
                                 <div className="flex items-center">
                                   <Avatar className="h-6 w-6" style={{ backgroundColor: user.avatarColor }}>
                                     <AvatarFallback>{user.initials}</AvatarFallback>
@@ -1032,7 +1042,7 @@ export default function WorkingGroupCardFixed({
                       >
                         <Plus className="h-4 w-4 mr-1" />
                         {selectedInvestorAttorneyId ? 'Add Attorney' : 'Add Law Firm Without Attorney'}
-                      </Button>
+                      </Button> 
                     )}
                   </div>
                 </div>
