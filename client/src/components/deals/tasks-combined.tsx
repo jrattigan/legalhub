@@ -646,7 +646,9 @@ export default function TasksCombined({ dealId }: TasksCombinedProps) {
             </div>
           ) : (
             <div 
-              className="flex items-center cursor-pointer hover:text-primary"
+              className={`flex items-center cursor-pointer hover:text-primary ${
+                isCompleted ? 'line-through text-muted-foreground' : ''
+              }`}
               onClick={() => startEditing(
                 task.id, 
                 'dueDate', 
@@ -686,7 +688,9 @@ export default function TasksCombined({ dealId }: TasksCombinedProps) {
             </div>
           ) : (
             <div 
-              className="flex items-center gap-2 cursor-pointer hover:text-primary"
+              className={`flex items-center gap-2 cursor-pointer hover:text-primary ${
+                isCompleted ? 'line-through text-muted-foreground' : ''
+              }`}
               onClick={() => startEditing(
                 task.id, 
                 'assignee',
