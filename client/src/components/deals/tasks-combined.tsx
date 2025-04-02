@@ -220,24 +220,45 @@ export default function TasksCombined({ dealId }: TasksCombinedProps) {
   const { data: lawFirms = [] } = useQuery<LawFirm[]>({
     queryKey: ['/api/law-firms'],
     queryFn: async () => {
-      const response = await apiRequest('/api/law-firms');
-      return response as LawFirm[];
+      try {
+        const response = await fetch('/api/law-firms');
+        const data = await response.json();
+        console.log("Law firms from API:", data);
+        return data as LawFirm[];
+      } catch (error) {
+        console.error("Error fetching law firms:", error);
+        return [];
+      }
     },
   });
   
   const { data: attorneys = [] } = useQuery<Attorney[]>({
     queryKey: ['/api/attorneys'],
     queryFn: async () => {
-      const response = await apiRequest('/api/attorneys');
-      return response as Attorney[];
+      try {
+        const response = await fetch('/api/attorneys');
+        const data = await response.json();
+        console.log("Attorneys from API:", data);
+        return data as Attorney[];
+      } catch (error) {
+        console.error("Error fetching attorneys:", error);
+        return [];
+      }
     },
   });
   
   const { data: customAssignees = [] } = useQuery<CustomAssignee[]>({
     queryKey: ['/api/custom-assignees'],
     queryFn: async () => {
-      const response = await apiRequest('/api/custom-assignees');
-      return response as CustomAssignee[];
+      try {
+        const response = await fetch('/api/custom-assignees');
+        const data = await response.json();
+        console.log("Custom assignees from API:", data);
+        return data as CustomAssignee[];
+      } catch (error) {
+        console.error("Error fetching custom assignees:", error);
+        return [];
+      }
     },
   });
   

@@ -61,9 +61,21 @@ export function AssigneePicker({
   const [newAssigneeName, setNewAssigneeName] = useState('');
   const [isAddingNew, setIsAddingNew] = useState(false);
   
+  // Ensure all data is available as arrays
+  const usersArray = Array.isArray(users) ? users : [];
+  const attorneysArray = Array.isArray(attorneys) ? attorneys : [];
+  const lawFirmsArray = Array.isArray(lawFirms) ? lawFirms : [];
+  const customAssigneesArray = Array.isArray(customAssignees) ? customAssignees : [];
+
+  // Add debugging logs to see what's coming in
+  console.log("AssigneePicker received users:", users);
+  console.log("AssigneePicker received attorneys:", attorneys);
+  console.log("AssigneePicker received lawFirms:", lawFirms);
+  console.log("AssigneePicker received customAssignees:", customAssignees);
+  
   // Convert data to a common assignee format for display
   const allAssignees: Assignee[] = [
-    ...users.map(user => ({
+    ...usersArray.map(user => ({
       id: user.id,
       fullName: user.fullName,
       email: user.email,
@@ -71,7 +83,7 @@ export function AssigneePicker({
       avatarColor: user.avatarColor,
       type: 'user' as const
     })),
-    ...attorneys.map(attorney => ({
+    ...attorneysArray.map(attorney => ({
       id: attorney.id,
       name: attorney.name,
       email: attorney.email,
@@ -80,13 +92,13 @@ export function AssigneePicker({
       photoUrl: attorney.photoUrl,
       type: 'attorney' as const
     })),
-    ...lawFirms.map(lawFirm => ({
+    ...lawFirmsArray.map(lawFirm => ({
       id: lawFirm.id,
       name: lawFirm.name,
       email: lawFirm.email || '',
       type: 'lawFirm' as const
     })),
-    ...customAssignees.map(custom => ({
+    ...customAssigneesArray.map(custom => ({
       id: custom.id,
       name: custom.name,
       type: 'custom' as const
@@ -115,22 +127,25 @@ export function AssigneePicker({
   
   // Get the currently selected assignee details
   const getSelectedAssignee = () => {
+    // Ensure selectedAssignee is not null or undefined
+    if (!selectedAssignee) return null;
+    
     const { userId, attorneyId, lawFirmId, customAssigneeId } = selectedAssignee;
     
-    if (userId) {
-      return users.find(u => u.id === userId);
+    if (userId && Array.isArray(usersArray)) {
+      return usersArray.find(u => u.id === userId);
     }
     
-    if (attorneyId) {
-      return attorneys.find(a => a.id === attorneyId);
+    if (attorneyId && Array.isArray(attorneysArray)) {
+      return attorneysArray.find(a => a.id === attorneyId);
     }
     
-    if (lawFirmId) {
-      return lawFirms.find(l => l.id === lawFirmId);
+    if (lawFirmId && Array.isArray(lawFirmsArray)) {
+      return lawFirmsArray.find(l => l.id === lawFirmId);
     }
     
-    if (customAssigneeId) {
-      return customAssignees.find(c => c.id === customAssigneeId);
+    if (customAssigneeId && Array.isArray(customAssigneesArray)) {
+      return customAssigneesArray.find(c => c.id === customAssigneeId);
     }
     
     return null;
@@ -215,11 +230,13 @@ export function AssigneePicker({
   
   // Render assignee item in dropdown
   const renderAssigneeItem = (assignee: Assignee) => {
-    const isSelected = 
+    // Safely check if selectedAssignee exists before accessing its properties
+    const isSelected = selectedAssignee ? (
       (assignee.type === 'user' && selectedAssignee.userId === assignee.id) ||
       (assignee.type === 'attorney' && selectedAssignee.attorneyId === assignee.id) ||
       (assignee.type === 'lawFirm' && selectedAssignee.lawFirmId === assignee.id) ||
-      (assignee.type === 'custom' && selectedAssignee.customAssigneeId === assignee.id);
+      (assignee.type === 'custom' && selectedAssignee.customAssigneeId === assignee.id)
+    ) : false;
     
     return (
       <div 
@@ -270,14 +287,14 @@ export function AssigneePicker({
           disabled={disabled}
         >
           <AssigneeAvatar
-            userId={selectedAssignee.userId}
-            attorneyId={selectedAssignee.attorneyId}
-            lawFirmId={selectedAssignee.lawFirmId}
-            customAssigneeId={selectedAssignee.customAssigneeId}
-            users={users}
-            attorneys={attorneys}
-            lawFirms={lawFirms}
-            customAssignees={customAssignees}
+            userId={selectedAssignee?.userId}
+            attorneyId={selectedAssignee?.attorneyId}
+            lawFirmId={selectedAssignee?.lawFirmId}
+            customAssigneeId={selectedAssignee?.customAssigneeId}
+            users={usersArray}
+            attorneys={attorneysArray}
+            lawFirms={lawFirmsArray}
+            customAssignees={customAssigneesArray}
             size="sm"
           />
         </Button>
