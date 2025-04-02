@@ -26,30 +26,11 @@ export default function WorkingGroupCard({
   leadInvestor,
   onRefreshData 
 }: WorkingGroupCardProps) {
-  // First, let's manually categorize each law firm based on its exact specialty
-  const investorCounselFirms = [
-    "Emerging Companies & Venture Capital",
-    "Venture Capital & Emerging Companies",
-    "Corporate & Capital Markets",
-    "Emerging Growth & Venture Capital"
-  ];
-  
-  const companyCounselFirms = [
-    "Corporate & Securities Law",
-    "Technology & Life Sciences", 
-    "Technology Companies Group",
-    "Corporate Finance"
-  ];
-  
-  // Filter counsel specifically for Company Counsel only
-  const companyCounsel = counsel.filter(item => 
-    companyCounselFirms.includes(item.lawFirm.specialty)
-  );
-  
-  // Filter counsel specifically for Investor Counsel only
-  const investorCounsel = counsel.filter(item => 
-    investorCounselFirms.includes(item.lawFirm.specialty)
-  );
+  // Split the counsel into investor and company counsel
+  // For demo purposes, we'll treat Cooley LLP as investor counsel
+  // and Gunderson Dettmer as company counsel
+  const investorCounsel = counsel.filter(item => item.lawFirm.id === 1);
+  const companyCounsel = counsel.filter(item => item.lawFirm.id === 3);
 
   return (
     <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-2">
