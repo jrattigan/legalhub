@@ -515,32 +515,57 @@ export default function WorkingGroupCard({
             
             {investorCounsel.length > 0 ? (
               <div className="p-3 rounded-md border border-neutral-200 bg-neutral-50">
-                {investorCounsel.map((item) => (
-                  <div key={item.id}>
-                    <div className="font-medium">{item.lawFirm.name}</div>
-                    <div className="text-xs text-neutral-500 mt-0.5">{item.lawFirm.specialty}</div>
-                    
-                    {item.attorney && (
-                      <div className="mt-3 flex items-center">
-                        <Avatar className="h-6 w-6" style={{ backgroundColor: item.attorney.avatarColor }}>
-                          <AvatarFallback>{item.attorney.initials}</AvatarFallback>
-                        </Avatar>
-                        <div className="ml-2">
-                          <div className="text-sm font-medium">{item.attorney.name}</div>
-                          <div className="text-xs text-neutral-500">{item.attorney.position}</div>
+                {/* Group items by law firm */}
+                {(() => {
+                  // Group counsel by law firm ID
+                  const lawFirmGroups = investorCounsel.reduce((groups, item) => {
+                    const firmId = item.lawFirm.id;
+                    if (!groups[firmId]) {
+                      groups[firmId] = {
+                        lawFirm: item.lawFirm,
+                        attorneys: []
+                      };
+                    }
+                    if (item.attorney) {
+                      groups[firmId].attorneys.push(item.attorney);
+                    }
+                    return groups;
+                  }, {} as Record<number, { lawFirm: LawFirm, attorneys: Attorney[] }>);
+                  
+                  // Render each law firm group
+                  return Object.values(lawFirmGroups).map((group, index) => (
+                    <div key={`firm-${group.lawFirm.id}-${index}`} className="mb-4 last:mb-0">
+                      <div className="font-medium">{group.lawFirm.name}</div>
+                      <div className="text-xs text-neutral-500 mt-0.5">{group.lawFirm.specialty}</div>
+                      
+                      {group.attorneys.length > 0 ? (
+                        <div className="mt-2 space-y-2">
+                          {group.attorneys.map((attorney, idx) => (
+                            <div key={`attorney-${attorney.id}-${idx}`} className="mt-3 flex items-center">
+                              <Avatar className="h-6 w-6" style={{ backgroundColor: attorney.avatarColor }}>
+                                <AvatarFallback>{attorney.initials}</AvatarFallback>
+                              </Avatar>
+                              <div className="ml-2">
+                                <div className="text-sm font-medium">{attorney.name}</div>
+                                <div className="text-xs text-neutral-500">{attorney.position}</div>
+                              </div>
+                              <div className="ml-auto flex space-x-2">
+                                <Button variant="ghost" size="icon" className="h-7 w-7">
+                                  <Mail className="h-3.5 w-3.5 text-neutral-400 hover:text-neutral-700" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7">
+                                  <Phone className="h-3.5 w-3.5 text-neutral-400 hover:text-neutral-700" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                        <div className="ml-auto flex space-x-2">
-                          <Button variant="ghost" size="icon" className="h-7 w-7">
-                            <Mail className="h-3.5 w-3.5 text-neutral-400 hover:text-neutral-700" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7">
-                            <Phone className="h-3.5 w-3.5 text-neutral-400 hover:text-neutral-700" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      ) : (
+                        <div className="mt-2 text-xs text-neutral-500 italic">No attorneys specified</div>
+                      )}
+                    </div>
+                  ));
+                })()}
               </div>
             ) : (
               <div className="p-3 rounded-md border border-neutral-200 bg-neutral-50">
@@ -569,32 +594,57 @@ export default function WorkingGroupCard({
             
             {companyCounsel.length > 0 ? (
               <div className="p-3 rounded-md border border-neutral-200 bg-neutral-50">
-                {companyCounsel.map((item) => (
-                  <div key={item.id}>
-                    <div className="font-medium">{item.lawFirm.name}</div>
-                    <div className="text-xs text-neutral-500 mt-0.5">{item.lawFirm.specialty}</div>
-                    
-                    {item.attorney && (
-                      <div className="mt-3 flex items-center">
-                        <Avatar className="h-6 w-6" style={{ backgroundColor: item.attorney.avatarColor }}>
-                          <AvatarFallback>{item.attorney.initials}</AvatarFallback>
-                        </Avatar>
-                        <div className="ml-2">
-                          <div className="text-sm font-medium">{item.attorney.name}</div>
-                          <div className="text-xs text-neutral-500">{item.attorney.position}</div>
+                {/* Group items by law firm */}
+                {(() => {
+                  // Group counsel by law firm ID
+                  const lawFirmGroups = companyCounsel.reduce((groups, item) => {
+                    const firmId = item.lawFirm.id;
+                    if (!groups[firmId]) {
+                      groups[firmId] = {
+                        lawFirm: item.lawFirm,
+                        attorneys: []
+                      };
+                    }
+                    if (item.attorney) {
+                      groups[firmId].attorneys.push(item.attorney);
+                    }
+                    return groups;
+                  }, {} as Record<number, { lawFirm: LawFirm, attorneys: Attorney[] }>);
+                  
+                  // Render each law firm group
+                  return Object.values(lawFirmGroups).map((group, index) => (
+                    <div key={`firm-${group.lawFirm.id}-${index}`} className="mb-4 last:mb-0">
+                      <div className="font-medium">{group.lawFirm.name}</div>
+                      <div className="text-xs text-neutral-500 mt-0.5">{group.lawFirm.specialty}</div>
+                      
+                      {group.attorneys.length > 0 ? (
+                        <div className="mt-2 space-y-2">
+                          {group.attorneys.map((attorney, idx) => (
+                            <div key={`attorney-${attorney.id}-${idx}`} className="mt-3 flex items-center">
+                              <Avatar className="h-6 w-6" style={{ backgroundColor: attorney.avatarColor }}>
+                                <AvatarFallback>{attorney.initials}</AvatarFallback>
+                              </Avatar>
+                              <div className="ml-2">
+                                <div className="text-sm font-medium">{attorney.name}</div>
+                                <div className="text-xs text-neutral-500">{attorney.position}</div>
+                              </div>
+                              <div className="ml-auto flex space-x-2">
+                                <Button variant="ghost" size="icon" className="h-7 w-7">
+                                  <Mail className="h-3.5 w-3.5 text-neutral-400 hover:text-neutral-700" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7">
+                                  <Phone className="h-3.5 w-3.5 text-neutral-400 hover:text-neutral-700" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                        <div className="ml-auto flex space-x-2">
-                          <Button variant="ghost" size="icon" className="h-7 w-7">
-                            <Mail className="h-3.5 w-3.5 text-neutral-400 hover:text-neutral-700" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7">
-                            <Phone className="h-3.5 w-3.5 text-neutral-400 hover:text-neutral-700" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      ) : (
+                        <div className="mt-2 text-xs text-neutral-500 italic">No attorneys specified</div>
+                      )}
+                    </div>
+                  ));
+                })()}
               </div>
             ) : (
               <div className="p-3 rounded-md border border-neutral-200 bg-neutral-50">
@@ -723,34 +773,85 @@ export default function WorkingGroupCard({
                     <div className="border rounded-md p-2 space-y-2 max-h-[150px] overflow-y-auto">
                       {selectedInvestorCounsels.length > 0 ? (
                         <>
-                          {selectedInvestorCounsels.map((entry, index) => {
-                            const lawFirm = lawFirms.find(f => f.id === entry.lawFirmId);
-                            const attorney = investorAttorneys.find(a => a.id === entry.attorneyId);
+                          {/* Group by law firm ID for display */}
+                          {(() => {
+                            // Group selected counsels by law firm ID
+                            const lawFirmGroups = selectedInvestorCounsels.reduce((groups, entry) => {
+                              if (!groups[entry.lawFirmId]) {
+                                groups[entry.lawFirmId] = {
+                                  lawFirmId: entry.lawFirmId,
+                                  attorneys: []
+                                };
+                              }
+                              if (entry.attorneyId) {
+                                groups[entry.lawFirmId].attorneys.push(entry.attorneyId);
+                              }
+                              return groups;
+                            }, {} as Record<number, { lawFirmId: number, attorneys: number[] }>);
                             
-                            return (
-                              <div key={index} className="flex items-center justify-between p-2 border rounded-md bg-neutral-50">
-                                <div>
-                                  <div className="font-medium">{lawFirm?.name}</div>
-                                  {attorney && (
-                                    <div className="flex items-center mt-1">
-                                      <Avatar className="h-5 w-5 mr-1" style={{ backgroundColor: attorney.avatarColor }}>
-                                        <AvatarFallback>{attorney.initials}</AvatarFallback>
-                                      </Avatar>
-                                      <div className="text-xs">{attorney.name}</div>
+                            // Render each law firm group
+                            return Object.entries(lawFirmGroups).map(([firmId, group], groupIndex) => {
+                              const lawFirm = lawFirms.find(f => f.id === parseInt(firmId));
+                              
+                              return (
+                                <div key={`group-${firmId}-${groupIndex}`} className="p-2 border rounded-md bg-neutral-50 mb-2">
+                                  <div className="flex justify-between items-center">
+                                    <div className="font-medium">{lawFirm?.name}</div>
+                                    {/* Only show delete if no attorneys are associated */}
+                                    {group.attorneys.length === 0 && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-7 w-7"
+                                        onClick={() => {
+                                          // Find the index of the entry with this law firm and no attorney
+                                          const entryIndex = selectedInvestorCounsels.findIndex(
+                                            e => e.lawFirmId === parseInt(firmId) && !e.attorneyId
+                                          );
+                                          if (entryIndex >= 0) {
+                                            removeCounselEntry(true, entryIndex);
+                                          }
+                                        }}
+                                      >
+                                        <X className="h-4 w-4 text-neutral-500" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Show attorneys if any */}
+                                  {group.attorneys.length > 0 ? (
+                                    <div className="mt-1 space-y-1">
+                                      {group.attorneys.map((attorneyId, idx) => {
+                                        const attorney = investorAttorneys.find(a => a.id === attorneyId);
+                                        const entryIndex = selectedInvestorCounsels.findIndex(
+                                          e => e.lawFirmId === parseInt(firmId) && e.attorneyId === attorneyId
+                                        );
+                                        
+                                        return attorney ? (
+                                          <div key={`attorney-${attorneyId}-${idx}`} className="flex items-center justify-between mt-1">
+                                            <div className="flex items-center">
+                                              <Avatar className="h-5 w-5 mr-1" style={{ backgroundColor: attorney.avatarColor }}>
+                                                <AvatarFallback>{attorney.initials}</AvatarFallback>
+                                              </Avatar>
+                                              <div className="text-xs">{attorney.name}</div>
+                                            </div>
+                                            <Button 
+                                              variant="ghost" 
+                                              size="icon" 
+                                              className="h-6 w-6"
+                                              onClick={() => removeCounselEntry(true, entryIndex)}
+                                            >
+                                              <X className="h-3.5 w-3.5 text-neutral-500" />
+                                            </Button>
+                                          </div>
+                                        ) : null;
+                                      })}
                                     </div>
-                                  )}
+                                  ) : null}
                                 </div>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-7 w-7"
-                                  onClick={() => removeCounselEntry(true, index)}
-                                >
-                                  <X className="h-4 w-4 text-neutral-500" />
-                                </Button>
-                              </div>
-                            );
-                          })}
+                              );
+                            });
+                          })()}
                         </>
                       ) : (
                         <div className="text-xs text-neutral-500 italic p-2">No investor counsel selected. Add at least one law firm below.</div>
@@ -859,34 +960,85 @@ export default function WorkingGroupCard({
                     <div className="border rounded-md p-2 space-y-2 max-h-[150px] overflow-y-auto">
                       {selectedCompanyCounsels.length > 0 ? (
                         <>
-                          {selectedCompanyCounsels.map((entry, index) => {
-                            const lawFirm = lawFirms.find(f => f.id === entry.lawFirmId);
-                            const attorney = companyAttorneys.find(a => a.id === entry.attorneyId);
+                          {/* Group by law firm ID for display */}
+                          {(() => {
+                            // Group selected counsels by law firm ID
+                            const lawFirmGroups = selectedCompanyCounsels.reduce((groups, entry) => {
+                              if (!groups[entry.lawFirmId]) {
+                                groups[entry.lawFirmId] = {
+                                  lawFirmId: entry.lawFirmId,
+                                  attorneys: []
+                                };
+                              }
+                              if (entry.attorneyId) {
+                                groups[entry.lawFirmId].attorneys.push(entry.attorneyId);
+                              }
+                              return groups;
+                            }, {} as Record<number, { lawFirmId: number, attorneys: number[] }>);
                             
-                            return (
-                              <div key={index} className="flex items-center justify-between p-2 border rounded-md bg-neutral-50">
-                                <div>
-                                  <div className="font-medium">{lawFirm?.name}</div>
-                                  {attorney && (
-                                    <div className="flex items-center mt-1">
-                                      <Avatar className="h-5 w-5 mr-1" style={{ backgroundColor: attorney.avatarColor }}>
-                                        <AvatarFallback>{attorney.initials}</AvatarFallback>
-                                      </Avatar>
-                                      <div className="text-xs">{attorney.name}</div>
+                            // Render each law firm group
+                            return Object.entries(lawFirmGroups).map(([firmId, group], groupIndex) => {
+                              const lawFirm = lawFirms.find(f => f.id === parseInt(firmId));
+                              
+                              return (
+                                <div key={`group-${firmId}-${groupIndex}`} className="p-2 border rounded-md bg-neutral-50 mb-2">
+                                  <div className="flex justify-between items-center">
+                                    <div className="font-medium">{lawFirm?.name}</div>
+                                    {/* Only show delete if no attorneys are associated */}
+                                    {group.attorneys.length === 0 && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-7 w-7"
+                                        onClick={() => {
+                                          // Find the index of the entry with this law firm and no attorney
+                                          const entryIndex = selectedCompanyCounsels.findIndex(
+                                            e => e.lawFirmId === parseInt(firmId) && !e.attorneyId
+                                          );
+                                          if (entryIndex >= 0) {
+                                            removeCounselEntry(false, entryIndex);
+                                          }
+                                        }}
+                                      >
+                                        <X className="h-4 w-4 text-neutral-500" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Show attorneys if any */}
+                                  {group.attorneys.length > 0 ? (
+                                    <div className="mt-1 space-y-1">
+                                      {group.attorneys.map((attorneyId, idx) => {
+                                        const attorney = companyAttorneys.find(a => a.id === attorneyId);
+                                        const entryIndex = selectedCompanyCounsels.findIndex(
+                                          e => e.lawFirmId === parseInt(firmId) && e.attorneyId === attorneyId
+                                        );
+                                        
+                                        return attorney ? (
+                                          <div key={`attorney-${attorneyId}-${idx}`} className="flex items-center justify-between mt-1">
+                                            <div className="flex items-center">
+                                              <Avatar className="h-5 w-5 mr-1" style={{ backgroundColor: attorney.avatarColor }}>
+                                                <AvatarFallback>{attorney.initials}</AvatarFallback>
+                                              </Avatar>
+                                              <div className="text-xs">{attorney.name}</div>
+                                            </div>
+                                            <Button 
+                                              variant="ghost" 
+                                              size="icon" 
+                                              className="h-6 w-6"
+                                              onClick={() => removeCounselEntry(false, entryIndex)}
+                                            >
+                                              <X className="h-3.5 w-3.5 text-neutral-500" />
+                                            </Button>
+                                          </div>
+                                        ) : null;
+                                      })}
                                     </div>
-                                  )}
+                                  ) : null}
                                 </div>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-7 w-7"
-                                  onClick={() => removeCounselEntry(false, index)}
-                                >
-                                  <X className="h-4 w-4 text-neutral-500" />
-                                </Button>
-                              </div>
-                            );
-                          })}
+                              );
+                            });
+                          })()}
                         </>
                       ) : (
                         <div className="text-xs text-neutral-500 italic p-2">No company counsel selected. Add at least one law firm below.</div>
