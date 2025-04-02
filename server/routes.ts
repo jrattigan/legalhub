@@ -1087,6 +1087,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/deal-counsels", async (req, res) => {
     try {
       const validatedData = insertDealCounselSchema.parse(req.body);
+      
+      // Get existing counsels for this deal with the same role
+      const existingCounsels = await storage.getDealCounsels(validatedData.dealId);
+      const sameRoleCounsels = existingCounsels.filter(c => c.role === validatedData.role);
+      
+      // Delete existing counsels with the same role
+      for (const counsel of sameRoleCounsels) {
+        await storage.deleteDealCounsel(counsel.id);
+      }
+      
+      // Create the new counsel
       const counsel = await storage.createDealCounsel(validatedData);
       res.status(201).json(counsel);
     } catch (error) {

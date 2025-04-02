@@ -24,6 +24,7 @@ interface WorkingGroupCardProps {
     role: string;
   }[];
   dealId: number;
+  companyId: number;
   companyName: string;
   bcvTeam?: string[];
   leadInvestor?: string;
@@ -36,6 +37,7 @@ type EditSectionType = 'leadInvestor' | 'investmentTeam' | 'investorCounsel' | '
 export default function WorkingGroupCard({ 
   counsel, 
   dealId, 
+  companyId,
   companyName,
   bcvTeam = [],
   leadInvestor,
@@ -154,10 +156,10 @@ export default function WorkingGroupCard({
   // Function to update company
   const updateCompany = async (data: any) => {
     try {
-      if (!deal?.companyId) {
+      if (!companyId) {
         throw new Error('Company ID is not available');
       }
-      const response = await fetch(`/api/companies/${deal.companyId}`, {
+      const response = await fetch(`/api/companies/${companyId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

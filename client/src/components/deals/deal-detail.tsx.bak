@@ -1715,8 +1715,7 @@ export default function DealDetail({
                 </div>
                 
                 {/* Issues Summary Card */}
-                <IssueCard issues={issues} onRefreshData={onRefreshData} preview={true} dealId={deal.id}
-                  companyId={deal.companyId} />
+                <IssueCard issues={issues} onRefreshData={onRefreshData} preview={true} dealId={deal.id} />
                 
                 {/* Documents Card */}
                 <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-1 md:col-span-2">
@@ -1829,7 +1828,6 @@ export default function DealDetail({
                         onRefreshData={onRefreshData} 
                         preview={true}
                         dealId={deal.id}
-                  companyId={deal.companyId}
                       />
                     ))}
                   </div>
@@ -1846,8 +1844,7 @@ export default function DealDetail({
                 {/* Working Group Card */}
                 <WorkingGroupCard 
                   counsel={counsel} 
-                  dealId={deal.id}
-                  companyId={deal.companyId} 
+                  dealId={deal.id} 
                   companyName={deal.companyName}
                   bcvTeam={companyDetails?.bcvTeam || []}
                   leadInvestor={deal.leadInvestor}
@@ -1970,7 +1967,6 @@ export default function DealDetail({
                       onRefreshData={onRefreshData} 
                       preview={false}
                       dealId={deal.id}
-                  companyId={deal.companyId}
                     />
                   ))}
                   
@@ -2043,8 +2039,7 @@ export default function DealDetail({
             )}
             
             {activeTab === 'issues' && (
-              <IssueCard issues={issues} onRefreshData={onRefreshData} preview={false} dealId={deal.id}
-                  companyId={deal.companyId} />
+              <IssueCard issues={issues} onRefreshData={onRefreshData} preview={false} dealId={deal.id} />
             )}
             
             {activeTab === 'team' && (
@@ -2143,8 +2138,7 @@ export default function DealDetail({
                 
                 <WorkingGroupCard 
                   counsel={counsel} 
-                  dealId={deal.id}
-                  companyId={deal.companyId} 
+                  dealId={deal.id} 
                   companyName={deal.companyName}
                   bcvTeam={companyDetails?.bcvTeam || []}
                   leadInvestor={deal.leadInvestor}
@@ -2159,8 +2153,7 @@ export default function DealDetail({
                   <h2 className="font-medium text-neutral-800">Fund Allocations</h2>
                 </div>
                 {/* Import and use the AllocationsTab component */}
-                <AllocationsTab dealId={deal.id}
-                  companyId={deal.companyId} onRefreshData={onRefreshData} />
+                <AllocationsTab dealId={deal.id} onRefreshData={onRefreshData} />
               </div>
             )}
             
@@ -2426,8 +2419,7 @@ export default function DealDetail({
             {/* Working Group Card */}
             <WorkingGroupCard 
               counsel={counsel} 
-              dealId={deal.id}
-              companyId={deal.companyId} 
+              dealId={deal.id} 
               companyName={deal.companyName}
               bcvTeam={companyDetails?.bcvTeam || []}
               leadInvestor={deal.leadInvestor}
@@ -2550,7 +2542,6 @@ export default function DealDetail({
                   onRefreshData={onRefreshData} 
                   preview={false}
                   dealId={deal.id}
-                  companyId={deal.companyId}
                 />
               ))}
               
@@ -2624,21 +2615,18 @@ export default function DealDetail({
         
 
         <TabsContent value="issues" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'issues' ? 'block' : 'none'}}>
-          <IssueCard issues={issues} onRefreshData={onRefreshData} preview={false} dealId={deal.id}
-                  companyId={deal.companyId} />
+          <IssueCard issues={issues} onRefreshData={onRefreshData} preview={false} dealId={deal.id} />
         </TabsContent>
         
         <TabsContent value="tasks" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'tasks' ? 'block' : 'none'}}>
           <div className="p-6">
             {/* Task management interface with internal and external sections */}
-            <TasksCombined dealId={deal.id}
-                  companyId={deal.companyId} />
+            <TasksCombined dealId={deal.id} />
           </div>
         </TabsContent>
         
         <TabsContent value="closing-checklist" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'closing-checklist' ? 'block' : 'none'}}>
-          <ClosingChecklistTab dealId={deal.id}
-                  companyId={deal.companyId} />
+          <ClosingChecklistTab dealId={deal.id} />
         </TabsContent>
         
         <TabsContent value="team" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'team' ? 'block' : 'none'}}>
@@ -2735,8 +2723,7 @@ export default function DealDetail({
               </div>
             </div>
             
-            <CounselCard counsel={counsel} onRefreshData={onRefreshData} preview={false} dealId={deal.id}
-                  companyId={deal.companyId} />
+            <CounselCard counsel={counsel} onRefreshData={onRefreshData} preview={false} dealId={deal.id} />
           </div>
         </TabsContent>
         
@@ -2746,8 +2733,7 @@ export default function DealDetail({
               <h2 className="font-medium text-neutral-800">Fund Allocations</h2>
             </div>
             {/* Import and use the AllocationsTab component */}
-            <AllocationsTab dealId={deal.id}
-                  companyId={deal.companyId} onRefreshData={onRefreshData} />
+            <AllocationsTab dealId={deal.id} onRefreshData={onRefreshData} />
           </div>
         </TabsContent>
         
