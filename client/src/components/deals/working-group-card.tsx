@@ -797,25 +797,29 @@ export default function WorkingGroupCard({
                                 <div key={`group-${firmId}-${groupIndex}`} className="p-2 border rounded-md bg-neutral-50 mb-2">
                                   <div className="flex justify-between items-center">
                                     <div className="font-medium">{lawFirm?.name}</div>
-                                    {/* Only show delete if no attorneys are associated */}
-                                    {group.attorneys.length === 0 && (
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-7 w-7"
-                                        onClick={() => {
-                                          // Find the index of the entry with this law firm and no attorney
-                                          const entryIndex = selectedInvestorCounsels.findIndex(
-                                            e => e.lawFirmId === parseInt(firmId) && !e.attorneyId
-                                          );
-                                          if (entryIndex >= 0) {
-                                            removeCounselEntry(true, entryIndex);
-                                          }
-                                        }}
-                                      >
-                                        <X className="h-4 w-4 text-neutral-500" />
-                                      </Button>
-                                    )}
+                                    {/* Show delete button for law firm regardless of attorneys */}
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-7 w-7"
+                                      onClick={() => {
+                                        // Find all entries with this law firm and remove them
+                                        const entriesToRemove = selectedInvestorCounsels
+                                          .map((e, idx) => e.lawFirmId === parseInt(firmId) ? idx : -1)
+                                          .filter(idx => idx !== -1)
+                                          .sort((a, b) => b - a); // Sort in descending order to remove from end first
+                                        
+                                        // Remove each entry one by one
+                                        const updatedCounsels = [...selectedInvestorCounsels];
+                                        entriesToRemove.forEach(idx => {
+                                          updatedCounsels.splice(idx, 1);
+                                        });
+                                        
+                                        setSelectedInvestorCounsels(updatedCounsels);
+                                      }}
+                                    >
+                                      <X className="h-4 w-4 text-neutral-500" />
+                                    </Button>
                                   </div>
                                   
                                   {/* Show attorneys if any */}
@@ -984,25 +988,29 @@ export default function WorkingGroupCard({
                                 <div key={`group-${firmId}-${groupIndex}`} className="p-2 border rounded-md bg-neutral-50 mb-2">
                                   <div className="flex justify-between items-center">
                                     <div className="font-medium">{lawFirm?.name}</div>
-                                    {/* Only show delete if no attorneys are associated */}
-                                    {group.attorneys.length === 0 && (
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-7 w-7"
-                                        onClick={() => {
-                                          // Find the index of the entry with this law firm and no attorney
-                                          const entryIndex = selectedCompanyCounsels.findIndex(
-                                            e => e.lawFirmId === parseInt(firmId) && !e.attorneyId
-                                          );
-                                          if (entryIndex >= 0) {
-                                            removeCounselEntry(false, entryIndex);
-                                          }
-                                        }}
-                                      >
-                                        <X className="h-4 w-4 text-neutral-500" />
-                                      </Button>
-                                    )}
+                                    {/* Show delete button for law firm regardless of attorneys */}
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-7 w-7"
+                                      onClick={() => {
+                                        // Find all entries with this law firm and remove them
+                                        const entriesToRemove = selectedCompanyCounsels
+                                          .map((e, idx) => e.lawFirmId === parseInt(firmId) ? idx : -1)
+                                          .filter(idx => idx !== -1)
+                                          .sort((a, b) => b - a); // Sort in descending order to remove from end first
+                                        
+                                        // Remove each entry one by one
+                                        const updatedCounsels = [...selectedCompanyCounsels];
+                                        entriesToRemove.forEach(idx => {
+                                          updatedCounsels.splice(idx, 1);
+                                        });
+                                        
+                                        setSelectedCompanyCounsels(updatedCounsels);
+                                      }}
+                                    >
+                                      <X className="h-4 w-4 text-neutral-500" />
+                                    </Button>
                                   </div>
                                   
                                   {/* Show attorneys if any */}
