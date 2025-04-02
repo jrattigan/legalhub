@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Building, User, Users, Mail, Phone, Edit, Plus, X, Check, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LawFirm, Attorney } from '@shared/schema';
+import { LawFirm, Attorney, User as UserType } from '@shared/schema';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface WorkingGroupCardProps {
   counsel: {
@@ -41,18 +42,20 @@ export default function WorkingGroupCard({
   onRefreshData 
 }: WorkingGroupCardProps) {
   // Split the counsel into investor and company counsel
-  // For demo purposes, we'll treat Cooley LLP as investor counsel
-  // and Gunderson Dettmer as company counsel
-  const investorCounsel = counsel.filter(item => item.lawFirm.id === 1);
-  const companyCounsel = counsel.filter(item => item.lawFirm.id === 3);
+  // Using role to differentiate between investor and company counsel
+  const investorCounsel = counsel.filter(item => item.role === 'Lead Counsel');
+  const companyCounsel = counsel.filter(item => item.role === 'Supporting');
   
   // State for edit dialog and form values
   const [editingSection, setEditingSection] = useState<EditSectionType>(null);
   const [selectedLeadInvestor, setSelectedLeadInvestor] = useState<string>(leadInvestor || '');
   const [teamMembers, setTeamMembers] = useState<string[]>(bcvTeam || []);
-  const [newTeamMember, setNewTeamMember] = useState<string>('');
+  const [selectedTeamMembers, setSelectedTeamMembers] = useState<number[]>([]);
   const [selectedInvestorCounsel, setSelectedInvestorCounsel] = useState<number | null>(investorCounsel[0]?.lawFirm.id || null);
+  const [selectedInvestorAttorney, setSelectedInvestorAttorney] = useState<number | null>(investorCounsel[0]?.attorney?.id || null);
   const [selectedCompanyCounsel, setSelectedCompanyCounsel] = useState<number | null>(companyCounsel[0]?.lawFirm.id || null);
+  const [selectedCompanyAttorney, setSelectedCompanyAttorney] = useState<number | null>(companyCounsel[0]?.attorney?.id || null);
+  const [selectedUser, setSelectedUser] = useState<string>('');
   
   // Fetch lead investors data
   const { data: leadInvestors = [] } = useQuery<string[]>({
@@ -64,6 +67,35 @@ export default function WorkingGroupCard({
     queryKey: ['/api/law-firms'],
   });
   
+  // Fetch attorneys data for selected law firms
+  const { data: investorAttorneys = [], refetch: refetchInvestorAttorneys } = useQuery<Attorney[]>({
+    queryKey: [`/api/law-firms/${selectedInvestorCounsel}/attorneys`],
+    enabled: selectedInvestorCounsel !== null,
+  });
+  
+  const { data: companyAttorneys = [], refetch: refetchCompanyAttorneys } = useQuery<Attorney[]>({
+    queryKey: [`/api/law-firms/${selectedCompanyCounsel}/attorneys`],
+    enabled: selectedCompanyCounsel !== null,
+  });
+  
+  // Fetch users data for the investment team
+  const { data: users = [] } = useQuery<UserType[]>({
+    queryKey: ['/api/users'],
+  });
+  
+  // Update attorney lists when law firm selection changes
+  useEffect(() => {
+    if (selectedInvestorCounsel !== null) {
+      refetchInvestorAttorneys();
+    }
+  }, [selectedInvestorCounsel, refetchInvestorAttorneys]);
+  
+  useEffect(() => {
+    if (selectedCompanyCounsel !== null) {
+      refetchCompanyAttorneys();
+    }
+  }, [selectedCompanyCounsel, refetchCompanyAttorneys]);
+  
   // Initialize dialog form data when opened
   const handleEdit = (section: EditSectionType) => {
     // Reset form data based on current values
@@ -71,11 +103,22 @@ export default function WorkingGroupCard({
       setSelectedLeadInvestor(leadInvestor || '');
     } else if (section === 'investmentTeam') {
       setTeamMembers([...bcvTeam]);
-      setNewTeamMember('');
+      
+      // Map BCV team members to user IDs if possible
+      const selectedIds = bcvTeam
+        .map(name => {
+          const user = users.find(user => user.fullName === name);
+          return user ? user.id : null;
+        })
+        .filter(id => id !== null) as number[];
+      
+      setSelectedTeamMembers(selectedIds);
     } else if (section === 'investorCounsel') {
       setSelectedInvestorCounsel(investorCounsel[0]?.lawFirm.id || null);
+      setSelectedInvestorAttorney(investorCounsel[0]?.attorney?.id || null);
     } else if (section === 'companyCounsel') {
       setSelectedCompanyCounsel(companyCounsel[0]?.lawFirm.id || null);
+      setSelectedCompanyAttorney(companyCounsel[0]?.attorney?.id || null);
     }
     
     setEditingSection(section);
@@ -183,8 +226,14 @@ export default function WorkingGroupCard({
         console.log('Lead investor update result:', result);
       } 
       else if (editingSection === 'investmentTeam') {
-        console.log('Updating investment team to:', teamMembers);
-        const result = await updateCompany({ bcvTeam: teamMembers });
+        // Convert selected user IDs back to names
+        const teamNames = selectedTeamMembers.map(userId => {
+          const user = users.find(u => u.id === userId);
+          return user ? user.fullName : '';
+        }).filter(name => name !== '');
+        
+        console.log('Updating investment team to:', teamNames);
+        const result = await updateCompany({ bcvTeam: teamNames });
         console.log('Investment team update result:', result);
       } 
       else if (editingSection === 'investorCounsel') {
@@ -194,7 +243,8 @@ export default function WorkingGroupCard({
           // Create the investor counsel data
           const counselData = {
             lawFirmId: parseInt(selectedInvestorCounsel.toString()),
-            role: 'Lead Counsel'
+            role: 'Lead Counsel',
+            attorneyId: selectedInvestorAttorney ? parseInt(selectedInvestorAttorney.toString()) : null
           };
           
           console.log('Sending investor counsel update with data:', counselData);
@@ -211,7 +261,8 @@ export default function WorkingGroupCard({
           // Create the company counsel data
           const counselData = {
             lawFirmId: parseInt(selectedCompanyCounsel.toString()),
-            role: 'Supporting'
+            role: 'Supporting',
+            attorneyId: selectedCompanyAttorney ? parseInt(selectedCompanyAttorney.toString()) : null
           };
           
           console.log('Sending company counsel update with data:', counselData);
@@ -232,11 +283,14 @@ export default function WorkingGroupCard({
     }
   };
   
-  // Handle add new team member
-  const handleAddTeamMember = () => {
-    if (newTeamMember.trim()) {
-      setTeamMembers([...teamMembers, newTeamMember.trim()]);
-      setNewTeamMember('');
+  // Handle selection of team member from dropdown
+  const handleSelectTeamMember = (userId: string) => {
+    const id = parseInt(userId);
+    // Toggle selection
+    if (selectedTeamMembers.includes(id)) {
+      setSelectedTeamMembers(selectedTeamMembers.filter(memberId => memberId !== id));
+    } else {
+      setSelectedTeamMembers([...selectedTeamMembers, id]);
     }
   };
   
@@ -480,48 +534,64 @@ export default function WorkingGroupCard({
               {editingSection === 'investmentTeam' && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Current Team Members</Label>
-                    {teamMembers.length > 0 ? (
-                      <div className="space-y-2 p-3 border rounded-md">
-                        {teamMembers.map((member, index) => (
-                          <div key={index} className="flex items-center justify-between">
-                            <div className="flex items-center">
-                              <Avatar className="h-6 w-6 bg-primary-light mr-2">
-                                <AvatarFallback>{member.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm">{member}</span>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-7 w-7" 
-                              onClick={() => handleRemoveTeamMember(index)}
-                            >
-                              <X className="h-4 w-4 text-neutral-500" />
-                            </Button>
+                    <Label>Select Investment Team Members</Label>
+                    <div className="space-y-2 p-3 border rounded-md max-h-[250px] overflow-y-auto">
+                      {users.map((user) => (
+                        <div key={user.id} className="flex items-center space-x-2 py-1 hover:bg-neutral-50">
+                          <Checkbox 
+                            id={`user-${user.id}`} 
+                            checked={selectedTeamMembers.includes(user.id)}
+                            onCheckedChange={() => handleSelectTeamMember(user.id.toString())}
+                          />
+                          <div className="flex items-center">
+                            <Avatar className="h-6 w-6 mr-2" style={{backgroundColor: user.avatarColor || '#888'}}>
+                              <AvatarFallback>{user.initials || user.fullName?.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                            </Avatar>
+                            <Label htmlFor={`user-${user.id}`} className="text-sm cursor-pointer">
+                              {user.fullName}
+                              <span className="text-xs text-neutral-500 block">{user.role}</span>
+                            </Label>
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-xs text-neutral-500 italic">No team members added yet</div>
-                    )}
+                        </div>
+                      ))}
+                      {users.length === 0 && (
+                        <div className="text-xs text-neutral-500 italic">No users available</div>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="newTeamMember">Add Team Member</Label>
-                    <div className="flex space-x-2">
-                      <Input 
-                        id="newTeamMember"
-                        placeholder="Full name" 
-                        value={newTeamMember}
-                        onChange={(e) => setNewTeamMember(e.target.value)}
-                      />
-                      <Button 
-                        type="button" 
-                        onClick={handleAddTeamMember}
-                      >
-                        Add
-                      </Button>
+                    <Label>Selected Team Members</Label>
+                    <div className="p-3 border rounded-md">
+                      {selectedTeamMembers.length > 0 ? (
+                        <div className="space-y-2">
+                          {selectedTeamMembers.map((userId) => {
+                            const user = users.find(u => u.id === userId);
+                            if (!user) return null;
+                            
+                            return (
+                              <div key={userId} className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                  <Avatar className="h-6 w-6 mr-2" style={{backgroundColor: user.avatarColor || '#888'}}>
+                                    <AvatarFallback>{user.initials || user.fullName?.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-sm">{user.fullName}</span>
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-7 w-7" 
+                                  onClick={() => handleSelectTeamMember(userId.toString())}
+                                >
+                                  <X className="h-4 w-4 text-neutral-500" />
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-neutral-500 italic">No team members selected</div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -531,7 +601,7 @@ export default function WorkingGroupCard({
               {editingSection === 'investorCounsel' && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="investorCounsel">Investor Counsel</Label>
+                    <Label htmlFor="investorCounsel">Law Firm</Label>
                     <Select 
                       value={selectedInvestorCounsel?.toString() || ''} 
                       onValueChange={(value) => setSelectedInvestorCounsel(parseInt(value))}
@@ -550,6 +620,44 @@ export default function WorkingGroupCard({
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  {selectedInvestorCounsel && (
+                    <div className="space-y-2">
+                      <Label htmlFor="investorAttorney">Attorney</Label>
+                      <Select 
+                        value={selectedInvestorAttorney?.toString() || ''} 
+                        onValueChange={(value) => setSelectedInvestorAttorney(parseInt(value))}
+                      >
+                        <SelectTrigger id="investorAttorney">
+                          <SelectValue placeholder="Select attorney (optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {investorAttorneys.map((attorney) => (
+                            <SelectItem key={attorney.id} value={attorney.id.toString()}>
+                              {attorney.name} - {attorney.position}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  
+                  {selectedInvestorAttorney && (
+                    <div className="p-3 rounded-md border border-neutral-100 bg-neutral-50">
+                      {investorAttorneys.filter(a => a.id === selectedInvestorAttorney).map((attorney) => (
+                        <div key={attorney.id} className="flex items-center">
+                          <Avatar className="h-8 w-8" style={{ backgroundColor: attorney.avatarColor }}>
+                            <AvatarFallback>{attorney.initials}</AvatarFallback>
+                          </Avatar>
+                          <div className="ml-2">
+                            <div className="text-sm font-medium">{attorney.name}</div>
+                            <div className="text-xs text-neutral-500">{attorney.email}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
               
@@ -557,7 +665,7 @@ export default function WorkingGroupCard({
               {editingSection === 'companyCounsel' && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="companyCounsel">Company Counsel</Label>
+                    <Label htmlFor="companyCounsel">Law Firm</Label>
                     <Select 
                       value={selectedCompanyCounsel?.toString() || ''} 
                       onValueChange={(value) => setSelectedCompanyCounsel(parseInt(value))}
@@ -576,6 +684,44 @@ export default function WorkingGroupCard({
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  {selectedCompanyCounsel && (
+                    <div className="space-y-2">
+                      <Label htmlFor="companyAttorney">Attorney</Label>
+                      <Select 
+                        value={selectedCompanyAttorney?.toString() || ''} 
+                        onValueChange={(value) => setSelectedCompanyAttorney(parseInt(value))}
+                      >
+                        <SelectTrigger id="companyAttorney">
+                          <SelectValue placeholder="Select attorney (optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {companyAttorneys.map((attorney) => (
+                            <SelectItem key={attorney.id} value={attorney.id.toString()}>
+                              {attorney.name} - {attorney.position}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  
+                  {selectedCompanyAttorney && (
+                    <div className="p-3 rounded-md border border-neutral-100 bg-neutral-50">
+                      {companyAttorneys.filter(a => a.id === selectedCompanyAttorney).map((attorney) => (
+                        <div key={attorney.id} className="flex items-center">
+                          <Avatar className="h-8 w-8" style={{ backgroundColor: attorney.avatarColor }}>
+                            <AvatarFallback>{attorney.initials}</AvatarFallback>
+                          </Avatar>
+                          <div className="ml-2">
+                            <div className="text-sm font-medium">{attorney.name}</div>
+                            <div className="text-xs text-neutral-500">{attorney.email}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
