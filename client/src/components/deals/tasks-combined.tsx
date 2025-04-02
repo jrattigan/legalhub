@@ -559,8 +559,22 @@ export default function TasksCombined({ dealId }: TasksCombinedProps) {
           isCompleted ? 'opacity-75' : ''
         }`}
       >
+        {/* Checkbox (moved to the beginning) */}
+        <div className="col-span-1 flex items-center">
+          <Checkbox
+            id={`task-${task.id}-completed`}
+            checked={task.status === "completed"}
+            onCheckedChange={(checked) => {
+              const updatedTask = { 
+                ...task, 
+                status: checked ? "completed" : "open" 
+              };
+              updateTask(updatedTask);
+            }}
+          />
+        </div>
         {/* Task Name Column */}
-        <div className="col-span-5">
+        <div className="col-span-4">
           <div className="space-y-1">
             {isEditingName ? (
               <div className="editing-controls">
@@ -694,29 +708,8 @@ export default function TasksCombined({ dealId }: TasksCombinedProps) {
           )}
         </div>
         
-        {/* Completion Status Checkbox */}
-        <div className="col-span-2 flex items-center justify-between">
-          <div className="flex items-center">
-            <Checkbox
-              id={`task-${task.id}-completed`}
-              checked={task.status === "completed"}
-              onCheckedChange={(checked) => {
-                const updatedTask = { 
-                  ...task, 
-                  status: checked ? "completed" : "open" 
-                };
-                updateTask(updatedTask);
-              }}
-              className="mr-2"
-            />
-            <label
-              htmlFor={`task-${task.id}-completed`}
-              className="text-sm cursor-pointer"
-            >
-              {task.status === "completed" ? "Completed" : "Open"}
-            </label>
-          </div>
-          
+        {/* Actions Column */}
+        <div className="col-span-2 flex items-center justify-end">
           <div className="flex items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -786,10 +779,11 @@ export default function TasksCombined({ dealId }: TasksCombinedProps) {
         ) : (
           <div className="border-t border-border">
             <div className="grid grid-cols-12 gap-2 bg-muted px-4 py-2 text-xs font-medium text-muted-foreground">
-              <div className="col-span-5">Task Name</div>
+              <div className="col-span-1"></div>
+              <div className="col-span-4">Task Name</div>
               <div className="col-span-3">Due Date</div>
               <div className="col-span-2">Assignee</div>
-              <div className="col-span-2">Completed</div>
+              <div className="col-span-2">Actions</div>
             </div>
             <div className="divide-y divide-border">
               {tasks.map(task => (
