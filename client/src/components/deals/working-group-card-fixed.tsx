@@ -164,6 +164,7 @@ export default function WorkingGroupCardFixed({
     if (section === 'leadInvestor') {
       setSelectedLeadInvestor(leadInvestor || '');
     } else if (section === 'investmentTeam') {
+      // Initialize the direct team member names
       setTeamMembers([...bcvTeam]);
       
       // Map BCV team members to user IDs if possible
@@ -174,7 +175,10 @@ export default function WorkingGroupCardFixed({
         })
         .filter(id => id !== null) as number[];
       
+      console.log('Mapped team members to IDs:', selectedIds, 'from names:', bcvTeam);
       setSelectedTeamMembers(selectedIds);
+      
+      // If no IDs were found, we'll rely on direct name selection for the UI
     } else if (section === 'investorCounsel') {
       // Reset the form state
       setSelectedInvestorLawFirmId(null);
@@ -457,11 +461,17 @@ export default function WorkingGroupCardFixed({
         console.log('Lead investor update result:', result);
       } 
       else if (editingSection === 'investmentTeam') {
-        // Convert selected user IDs back to names
-        const teamNames = selectedTeamMembers.map(userId => {
-          const user = users.find(u => u.id === userId);
-          return user ? user.fullName : '';
-        }).filter(name => name !== '');
+        // We're using selectedTeamMembers for the direct UI interaction
+        // But for the API call, we use the names directly
+        console.log('Selected team members (IDs):', selectedTeamMembers);
+        
+        // Either use the selected IDs to get names or use direct name selections
+        const teamNames = selectedTeamMembers.length > 0 
+          ? selectedTeamMembers.map(userId => {
+              const user = users.find(u => u.id === userId);
+              return user ? user.fullName : '';
+            }).filter(name => name !== '')
+          : teamMembers; // Fallback to direct name selection
         
         console.log('Updating investment team to:', teamNames);
         const result = await updateCompany({ bcvTeam: teamNames });
@@ -852,7 +862,7 @@ export default function WorkingGroupCardFixed({
               {editingSection === 'investmentTeam' && (
                 <div className="space-y-4">
                   <div>
-                    <Label>Selected Team Members</Label>
+                    <Label>Selected Team Members from Directory</Label>
                     <div className="border rounded-md p-2 mt-1">
                       {selectedTeamMembers.length > 0 ? (
                         <div className="space-y-1">
@@ -881,13 +891,13 @@ export default function WorkingGroupCardFixed({
                           })}
                         </div>
                       ) : (
-                        <div className="text-xs text-neutral-500 italic p-2">No team members selected</div>
+                        <div className="text-xs text-neutral-500 italic p-2">No team members selected from directory</div>
                       )}
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="teamMember">Add Team Member</Label>
+                    <Label htmlFor="teamMember">Add Team Member from Directory</Label>
                     <Select
                       value={selectedUser}
                       onValueChange={(value) => {
@@ -907,6 +917,65 @@ export default function WorkingGroupCardFixed({
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  {/* Custom team member section */}
+                  <div className="space-y-2">
+                    <Label htmlFor="customTeamMember">Add Custom Team Member</Label>
+                    <div className="flex items-center space-x-2">
+                      <Input 
+                        id="customTeamMember"
+                        placeholder="Enter name (external team member)"
+                        className="flex-1"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                            setTeamMembers([...teamMembers, e.currentTarget.value.trim()]);
+                            e.currentTarget.value = '';
+                          }
+                        }}
+                      />
+                      <Button 
+                        type="button"
+                        size="sm"
+                        onClick={() => {
+                          const input = document.getElementById('customTeamMember') as HTMLInputElement;
+                          if (input && input.value.trim()) {
+                            setTeamMembers([...teamMembers, input.value.trim()]);
+                            input.value = '';
+                          }
+                        }}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                    <p className="text-xs text-neutral-500">For team members not in the directory</p>
+                  </div>
+                  
+                  {/* Display custom team members */}
+                  {teamMembers.filter(name => !users.some(u => u.fullName === name)).length > 0 && (
+                    <div>
+                      <Label>Custom Team Members</Label>
+                      <div className="border rounded-md p-2 mt-1">
+                        <div className="space-y-1">
+                          {teamMembers
+                            .filter(name => !users.some(u => u.fullName === name))
+                            .map((name, index) => (
+                              <div key={`custom-${index}`} className="flex justify-between items-center py-1 px-2 rounded-sm bg-neutral-100">
+                                <div className="text-sm">{name}</div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-6 w-6"
+                                  onClick={() => handleRemoveTeamMember(teamMembers.indexOf(name))}
+                                >
+                                  <X className="h-3.5 w-3.5 text-neutral-500" />
+                                </Button>
+                              </div>
+                            ))
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               
