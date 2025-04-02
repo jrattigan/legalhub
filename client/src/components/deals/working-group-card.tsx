@@ -252,7 +252,7 @@ export default function WorkingGroupCard({
       const payload = {
         dealId,
         role,
-        entries: counselEntries
+        entries: counselEntries.length > 0 ? counselEntries : [] // Ensure we send an empty array if no entries
       };
       
       console.log(`Replacing ${role} counsel with:`, payload);
@@ -282,32 +282,48 @@ export default function WorkingGroupCard({
   const addCounselEntry = (isInvestor: boolean) => {
     if (isInvestor) {
       if (selectedInvestorCounsel) {
-        // Add to selected investor counsels
-        setSelectedInvestorCounsels([
-          ...selectedInvestorCounsels,
-          {
-            lawFirmId: selectedInvestorCounsel,
-            attorneyId: selectedInvestorAttorney
-          }
-        ]);
+        // Check if this exact combination already exists
+        const alreadyExists = selectedInvestorCounsels.some(entry => 
+          entry.lawFirmId === selectedInvestorCounsel && 
+          entry.attorneyId === selectedInvestorAttorney
+        );
         
-        // Reset selection fields
-        setSelectedInvestorCounsel(null);
+        if (!alreadyExists) {
+          // Add to selected investor counsels
+          setSelectedInvestorCounsels([
+            ...selectedInvestorCounsels,
+            {
+              lawFirmId: selectedInvestorCounsel,
+              attorneyId: selectedInvestorAttorney
+            }
+          ]);
+        }
+        
+        // Only reset attorney selection, keep the law firm selected
+        // This allows adding multiple attorneys from the same firm
         setSelectedInvestorAttorney(null);
       }
     } else {
       if (selectedCompanyCounsel) {
-        // Add to selected company counsels
-        setSelectedCompanyCounsels([
-          ...selectedCompanyCounsels,
-          {
-            lawFirmId: selectedCompanyCounsel,
-            attorneyId: selectedCompanyAttorney
-          }
-        ]);
+        // Check if this exact combination already exists
+        const alreadyExists = selectedCompanyCounsels.some(entry => 
+          entry.lawFirmId === selectedCompanyCounsel && 
+          entry.attorneyId === selectedCompanyAttorney
+        );
         
-        // Reset selection fields
-        setSelectedCompanyCounsel(null);
+        if (!alreadyExists) {
+          // Add to selected company counsels
+          setSelectedCompanyCounsels([
+            ...selectedCompanyCounsels,
+            {
+              lawFirmId: selectedCompanyCounsel,
+              attorneyId: selectedCompanyAttorney
+            }
+          ]);
+        }
+        
+        // Only reset attorney selection, keep the law firm selected
+        // This allows adding multiple attorneys from the same firm
         setSelectedCompanyAttorney(null);
       }
     }
@@ -349,35 +365,29 @@ export default function WorkingGroupCard({
       } 
       else if (editingSection === 'investorCounsel') {
         // Check if we have the currently selected counsel entry to add to the list
-        if (selectedInvestorCounsel && !selectedInvestorCounsels.some(item => item.lawFirmId === selectedInvestorCounsel)) {
+        if (selectedInvestorCounsel && !selectedInvestorCounsels.some(item => 
+            item.lawFirmId === selectedInvestorCounsel && 
+            item.attorneyId === selectedInvestorAttorney)) {
           addCounselEntry(true);
         }
         
-        if (selectedInvestorCounsels.length > 0) {
-          console.log('Updating investor counsel with entries:', selectedInvestorCounsels);
-          
-          // Replace all investor counsel entries
-          const result = await replaceCounsel('Lead Counsel', selectedInvestorCounsels);
-          console.log('Investor counsel update result:', result);
-        } else {
-          console.log('No investor counsel selected, skipping update');
-        }
+        // Always call replaceCounsel to either update with new values or clear existing ones
+        console.log('Updating investor counsel with entries:', selectedInvestorCounsels);
+        const result = await replaceCounsel('Lead Counsel', selectedInvestorCounsels);
+        console.log('Investor counsel update result:', result);
       } 
       else if (editingSection === 'companyCounsel') {
         // Check if we have the currently selected counsel entry to add to the list
-        if (selectedCompanyCounsel && !selectedCompanyCounsels.some(item => item.lawFirmId === selectedCompanyCounsel)) {
+        if (selectedCompanyCounsel && !selectedCompanyCounsels.some(item => 
+            item.lawFirmId === selectedCompanyCounsel && 
+            item.attorneyId === selectedCompanyAttorney)) {
           addCounselEntry(false);
         }
         
-        if (selectedCompanyCounsels.length > 0) {
-          console.log('Updating company counsel with entries:', selectedCompanyCounsels);
-          
-          // Replace all company counsel entries
-          const result = await replaceCounsel('Supporting', selectedCompanyCounsels);
-          console.log('Company counsel update result:', result);
-        } else {
-          console.log('No company counsel selected, skipping update');
-        }
+        // Always call replaceCounsel to either update with new values or clear existing ones
+        console.log('Updating company counsel with entries:', selectedCompanyCounsels);
+        const result = await replaceCounsel('Supporting', selectedCompanyCounsels);
+        console.log('Company counsel update result:', result);
       }
       
       // Refresh all data
@@ -810,8 +820,15 @@ export default function WorkingGroupCard({
                         size="sm"
                       >
                         <Plus className="h-4 w-4 mr-1" />
-                        Add to Selection
+                        {selectedInvestorAttorney ? 'Add Attorney' : 'Add Law Firm Without Attorney'}
                       </Button>
+                    )}
+                    
+                    {selectedInvestorCounsel && selectedInvestorAttorney && (
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        You can add multiple attorneys from the same law firm by selecting another attorney 
+                        and clicking "Add Attorney" again.
+                      </div>
                     )}
                   </div>
                   
@@ -939,8 +956,15 @@ export default function WorkingGroupCard({
                         size="sm"
                       >
                         <Plus className="h-4 w-4 mr-1" />
-                        Add to Selection
+                        {selectedCompanyAttorney ? 'Add Attorney' : 'Add Law Firm Without Attorney'}
                       </Button>
+                    )}
+                    
+                    {selectedCompanyCounsel && selectedCompanyAttorney && (
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        You can add multiple attorneys from the same law firm by selecting another attorney 
+                        and clicking "Add Attorney" again.
+                      </div>
                     )}
                   </div>
                   
