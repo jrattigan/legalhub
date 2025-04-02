@@ -54,6 +54,7 @@ import { Progress } from "@/components/ui/progress";
 import { AssigneePicker } from "@/components/ui/assignee-picker";
 import { TaskStatusBadge } from "@/components/ui/status-badge";
 import { AssigneeAvatar } from "@/components/ui/assignee-avatar";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Interfaces and Types
 interface TasksCombinedProps {
@@ -549,11 +550,14 @@ export default function TasksCombined({ dealId }: TasksCombinedProps) {
     const isEditingDate = isEditingField && editingField.field === 'dueDate';
     const isEditingStatus = isEditingField && editingField.field === 'status';
     const isEditingAssignee = isEditingField && editingField.field === 'assignee';
+    const isCompleted = task.status === "completed";
     
     return (
       <div 
         key={task.id} 
-        className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-muted/50"
+        className={`grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-muted/50 ${
+          isCompleted ? 'opacity-75' : ''
+        }`}
       >
         {/* Task Name Column */}
         <div className="col-span-5">
@@ -574,7 +578,9 @@ export default function TasksCombined({ dealId }: TasksCombinedProps) {
               </div>
             ) : (
               <div 
-                className="font-medium cursor-pointer hover:text-primary"
+                className={`font-medium cursor-pointer hover:text-primary ${
+                  isCompleted ? 'line-through text-muted-foreground' : ''
+                }`}
                 onClick={() => startEditing(task.id, 'name', task.name)}
               >
                 {task.name}
@@ -598,7 +604,9 @@ export default function TasksCombined({ dealId }: TasksCombinedProps) {
               </div>
             ) : (
               <div 
-                className="text-sm text-muted-foreground cursor-pointer hover:text-foreground"
+                className={`text-sm text-muted-foreground cursor-pointer hover:text-foreground ${
+                  isCompleted ? 'line-through' : ''
+                }`}
                 onClick={() => startEditing(task.id, 'description', task.description || '')}
               >
                 {task.description || 
@@ -686,43 +694,28 @@ export default function TasksCombined({ dealId }: TasksCombinedProps) {
           )}
         </div>
         
-        {/* Status Column */}
+        {/* Completion Status Checkbox */}
         <div className="col-span-2 flex items-center justify-between">
-          {isEditingStatus ? (
-            <div className="w-full max-w-[150px] editing-controls">
-              <Select
-                value={editingField?.value || 'open'}
-                onValueChange={(value) => {
-                  setEditingField({
-                    ...editingField!,
-                    value
-                  });
-                  
-                  // Automatically save when a status is selected
-                  const updatedTask = { ...task, status: value };
-                  updateTask(updatedTask);
-                  setEditingField(null);
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="open">To Do</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          ) : (
-            <div
-              className="cursor-pointer"
-              onClick={() => startEditing(task.id, 'status', task.status)}
+          <div className="flex items-center">
+            <Checkbox
+              id={`task-${task.id}-completed`}
+              checked={task.status === "completed"}
+              onCheckedChange={(checked) => {
+                const updatedTask = { 
+                  ...task, 
+                  status: checked ? "completed" : "open" 
+                };
+                updateTask(updatedTask);
+              }}
+              className="mr-2"
+            />
+            <label
+              htmlFor={`task-${task.id}-completed`}
+              className="text-sm cursor-pointer"
             >
-              <TaskStatusBadge status={task.status} />
-            </div>
-          )}
+              {task.status === "completed" ? "Completed" : "Open"}
+            </label>
+          </div>
           
           <div className="flex items-center">
             <DropdownMenu>
@@ -796,7 +789,7 @@ export default function TasksCombined({ dealId }: TasksCombinedProps) {
               <div className="col-span-5">Task Name</div>
               <div className="col-span-3">Due Date</div>
               <div className="col-span-2">Assignee</div>
-              <div className="col-span-2">Status</div>
+              <div className="col-span-2">Completed</div>
             </div>
             <div className="divide-y divide-border">
               {tasks.map(task => (
