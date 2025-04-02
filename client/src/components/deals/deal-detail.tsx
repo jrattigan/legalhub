@@ -867,103 +867,9 @@ export default function DealDetail({
                 </div>
               </div>
               
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="companyCounsel" className="text-right">
-                  Company Counsel
-                </Label>
-                <div className="col-span-3">
-                  <Select
-                    value={editDealForm.companyCounsel}
-                    onValueChange={(value) => {
-                      // Reset selected attorneys when law firm changes
-                      setSelectedCompanyAttorneys([]);
-                      setEditDealForm({
-                        ...editDealForm,
-                        companyCounsel: value,
-                        companyAttorneys: []
-                      });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a law firm" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {lawFirmOptions.map((firm: LawFirmOption) => (
-                        <SelectItem key={firm.id} value={firm.name}>
-                          {firm.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              {/* Company counsel section removed */}
               
-              {/* Company attorneys selection - only shown if a company counsel is selected */}
-              {editDealForm.companyCounsel && editDealForm.companyCounsel !== "none" && (
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label htmlFor="companyAttorneys" className="text-right pt-2">
-                    Company Attorneys
-                  </Label>
-                  <div className="col-span-3">
-                    {/* Find the selected law firm to get its attorneys */}
-                    {(() => {
-                      const selectedFirm = lawFirmOptions.find(firm => firm.name === editDealForm.companyCounsel);
-                      
-                      if (!selectedFirm || selectedFirm.attorneys.length === 0) {
-                        return (
-                          <div className="text-sm text-neutral-500 italic">
-                            No attorneys available for this law firm
-                          </div>
-                        );
-                      }
-                      
-                      return (
-                        <div className="space-y-2">
-                          {/* Attorney checkboxes */}
-                          {selectedFirm.attorneys.map(attorney => (
-                            <div key={attorney.id} className="flex items-center space-x-2">
-                              <Checkbox 
-                                id={`attorney-${attorney.id}`}
-                                checked={selectedCompanyAttorneys.includes(attorney.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedCompanyAttorneys([...selectedCompanyAttorneys, attorney.id]);
-                                  } else {
-                                    setSelectedCompanyAttorneys(
-                                      selectedCompanyAttorneys.filter(id => id !== attorney.id)
-                                    );
-                                  }
-                                }}
-                              />
-                              <Label 
-                                htmlFor={`attorney-${attorney.id}`}
-                                className="text-sm font-normal cursor-pointer"
-                              >
-                                {attorney.name}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </div>
-              )}
-              
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="amount" className="text-right">
-                  Amount
-                </Label>
-                <Input
-                  id="amount"
-                  name="amount"
-                  value={editDealForm.amount}
-                  onChange={handleFormChange}
-                  className="col-span-3"
-                  placeholder="$0.00"
-                />
-              </div>
+              {/* Amount field removed */}
               
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="dataRoomUrl" className="text-right">
@@ -979,145 +885,7 @@ export default function DealDetail({
                 />
               </div>
               
-              {/* Team Members Section */}
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label className="text-right pt-2">
-                  Team Members
-                </Label>
-                <div className="col-span-3 space-y-3">
-                  {teamMembers.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {[...teamMembers].sort((a, b) => {
-                        if (a.role === 'Lead') return -1;
-                        if (b.role === 'Lead') return 1;
-                        return 0;
-                      }).map((member, index) => {
-                        const user = member.user;
-                        const isLead = member.role === 'Lead';
-                        return (
-                          <div 
-                            key={index}
-                            className={`flex items-center px-2 py-1 ${
-                              isLead 
-                                ? 'bg-primary/10 border-primary/30 border rounded-full' 
-                                : 'bg-neutral-100'
-                            } rounded-md group relative`}
-                          >
-                            <div
-                              className={`h-6 w-6 rounded-full mr-1.5 flex items-center justify-center text-white text-xs font-medium`}
-                              style={{ backgroundColor: user.avatarColor }}
-                            >
-                              {user.initials}
-                            </div>
-                            <span className="text-sm font-medium">{user.fullName}</span>
-                            {isLead && (
-                              <span className="ml-1 text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">Lead</span>
-                            )}
-                            <button
-                              type="button"
-                              className="ml-1 p-1 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700"
-                              onClick={() => {
-                                // Remove this member
-                                setTeamMembers(teamMembers.filter((_, i) => i !== index));
-                              }}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-neutral-500 italic">No team members assigned</div>
-                  )}
-                  
-                  {/* Add member UI */}
-                  <div className="flex items-center gap-2">
-                    <Select 
-                      onValueChange={(value) => {
-                        const userId = parseInt(value);
-                        const user = allUsers.find((u) => u.id === userId);
-                        
-                        // Check if user is already in team members
-                        if (teamMembers.some(member => member.userId === userId)) {
-                          toast({
-                            title: "User already added",
-                            description: "This user is already part of the team.",
-                            variant: "destructive"
-                          });
-                          return;
-                        }
-                        
-                        if (user) {
-                          setTeamMembers([
-                            ...teamMembers,
-                            {
-                              userId: user.id,
-                              role: 'Member',
-                              user: {
-                                id: user.id,
-                                fullName: user.fullName,
-                                initials: user.initials,
-                                avatarColor: user.avatarColor
-                              }
-                            }
-                          ]);
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Add team member" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.isArray(allUsers) && allUsers.map((user: any) => (
-                          <SelectItem key={user.id} value={user.id.toString()}>
-                            <div className="flex items-center">
-                              <div
-                                className="h-5 w-5 rounded-full mr-2 flex items-center justify-center text-white text-xs font-medium"
-                                style={{ backgroundColor: user.avatarColor }}
-                              >
-                                {user.initials}
-                              </div>
-                              {user.fullName}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Promote to lead */}
-                  {teamMembers.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <Label className="shrink-0">Lead Member:</Label>
-                      <Select
-                        onValueChange={(value) => {
-                          const userId = parseInt(value);
-                          // Update role for this user to 'Lead' and others to 'Member'
-                          setTeamMembers(
-                            teamMembers.map(member => ({
-                              ...member,
-                              role: member.userId === userId ? 'Lead' : 'Member'
-                            }))
-                          );
-                        }}
-                        value={teamMembers.find(m => m.role === 'Lead')?.userId.toString()}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select lead member" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {teamMembers.map(member => (
-                            <SelectItem key={member.userId} value={member.userId.toString()}>
-                              {member.user.fullName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </div>
-              </div>
+              {/* Team Members Section removed */}
               
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="status" className="text-right">
@@ -1132,11 +900,10 @@ export default function DealDetail({
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="on-hold">On Hold</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
+                    <SelectItem value="dead">Dead</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1176,157 +943,7 @@ export default function DealDetail({
                 </div>
               </div>
               
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="leadInvestor" className="text-right">
-                  Lead Investor
-                </Label>
-                <div className="col-span-3 relative">
-                  <div className="flex items-center">
-                    <Input
-                      id="leadInvestor"
-                      name="leadInvestor"
-                      value={editDealForm.leadInvestor}
-                      onChange={(e) => {
-                        console.log("Lead investor changed to:", e.target.value);
-                        handleFormChange(e);
-                      }}
-                      onFocus={() => {
-                        console.log("Lead investor field focused");
-                        console.log("Lead investors available:", leadInvestors);
-                        console.log("Current datalist values:", 
-                          document.querySelectorAll('#lead-investors-list option')
-                        );
-                      }}
-                      className="w-full pr-10"
-                      placeholder={organizationName || "Lead Investor Name"}
-                      list="lead-investors-list"
-                      autoComplete="off"
-                    />
-                    {/* Show a default option for the organization name */}
-                    <button 
-                      type="button"
-                      className="absolute right-2 text-gray-500 hover:text-gray-700 h-8 w-8 inline-flex items-center justify-center"
-                      onClick={() => {
-                        setEditDealForm({
-                          ...editDealForm,
-                          leadInvestor: organizationName,
-                          leadInvestorCounsel: ''
-                        });
-                        setSelectedAttorneys([]);
-                      }}
-                      title="Set as organization"
-                    >
-                      <Building className="h-4 w-4" />
-                    </button>
-                  </div>
-                  {/* Native HTML datalist for suggestions */}
-                  <datalist id="lead-investors-list">
-                    {/* Always include the organization as an option */}
-                    <option value={organizationName} />
-                    {/* Include all other lead investors from the API */}
-                    {Array.isArray(leadInvestors) ? (
-                      leadInvestors
-                        .filter((investor: string) => investor !== organizationName)
-                        .map((investor: string, index: number) => (
-                          <option key={index} value={investor} />
-                        ))
-                    ) : (
-                      <>
-                        <option value="Sequoia Capital" />
-                        <option value="Andreessen Horowitz" />
-                        <option value="Benchmark Capital" />
-                        <option value="Accel Partners" />
-                        <option value="Kleiner Perkins" />
-                      </>
-                    )}
-                  </datalist>
-                </div>
-              </div>
-              
-              {/* Only show Lead Investor Counsel if organization is not the lead investor */}
-              {editDealForm.leadInvestor !== organizationName && (
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="leadInvestorCounsel" className="text-right">
-                    Lead Investor Counsel
-                  </Label>
-                  <div className="col-span-3">
-                    {/* Law Firm Selector - Only shows firms involved in this deal */}
-                    <Select 
-                      name="leadInvestorCounsel" 
-                      value={editDealForm.leadInvestorCounsel}
-                      onValueChange={(value) => {
-                        // Reset selected attorneys when law firm changes
-                        setSelectedAttorneys([]);
-                        setEditDealForm({
-                          ...editDealForm, 
-                          leadInvestorCounsel: value,
-                          leadInvestorAttorneys: []
-                        });
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a law firm" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {lawFirmOptions.map(firm => (
-                          <SelectItem key={firm.id} value={firm.name}>{firm.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-              
-              {/* Only show attorney selection if a law firm is selected and NOT the organization */}
-              {editDealForm.leadInvestorCounsel && editDealForm.leadInvestor !== organizationName && (
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label htmlFor="attorneys" className="text-right pt-2">
-                    Attorneys
-                  </Label>
-                  <div className="col-span-3">
-                    {/* Get attorneys for the selected law firm */}
-                    {(() => {
-                      const selectedFirm = lawFirmOptions.find(f => f.name === editDealForm.leadInvestorCounsel);
-                      
-                      if (selectedFirm && selectedFirm.attorneys.length > 0) {
-                        return (
-                          <div className="flex flex-col space-y-2">
-                            {selectedFirm.attorneys.map(attorney => (
-                              <div key={attorney.id} className="flex items-center space-x-2">
-                                <input
-                                  type="checkbox"
-                                  id={`attorney-${attorney.id}`}
-                                  checked={selectedAttorneys.includes(attorney.id)}
-                                  onChange={(e) => {
-                                    const newValue = e.target.checked;
-                                    if (newValue) {
-                                      // Add attorney ID to the selected list
-                                      const newSelectedAttorneys = [...selectedAttorneys, attorney.id];
-                                      setSelectedAttorneys(newSelectedAttorneys);
-                                    } else {
-                                      // Remove attorney ID from the selected list
-                                      const newSelectedAttorneys = selectedAttorneys.filter(id => id !== attorney.id);
-                                      setSelectedAttorneys(newSelectedAttorneys);
-                                    }
-                                  }}
-                                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                />
-                                <label htmlFor={`attorney-${attorney.id}`} className="text-sm">
-                                  {attorney.name} ({attorney.role})
-                                </label>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      } else {
-                        return (
-                          <p className="text-sm text-neutral-500">No attorneys available for this law firm.</p>
-                        );
-                      }
-                    })()}
-                  </div>
-                </div>
-              )}
+              {/* Lead investor and counsel fields removed */}
             </div>
             <DialogFooter>
               <Button 
@@ -1419,9 +1036,10 @@ export default function DealDetail({
       </Dialog>
       
       <div className={`border-b border-neutral-200 px-6 py-5 ${
-          deal.status === 'urgent' ? 'bg-red-50' : 
-          deal.status === 'in-progress' ? 'bg-blue-50' : 
-          deal.status === 'completed' ? 'bg-green-50' : 
+          deal.status === 'active' ? 'bg-blue-50' : 
+          deal.status === 'on-hold' ? 'bg-yellow-50' : 
+          deal.status === 'closed' ? 'bg-green-50' : 
+          deal.status === 'dead' ? 'bg-red-50' : 
           'bg-white'
         }`}>
         <div className="flex justify-between items-start md:items-center">
@@ -1429,15 +1047,16 @@ export default function DealDetail({
             <div className="flex items-center">
               <h1 className="font-semibold text-xl md:text-2xl text-neutral-800 mr-3">{formatDealTitle(deal)}</h1>
               <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                deal.status === 'urgent' ? 'bg-red-100 text-red-800' : 
-                deal.status === 'in-progress' ? 'bg-blue-100 text-blue-800' : 
-                deal.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                deal.status === 'active' ? 'bg-blue-100 text-blue-800' : 
+                deal.status === 'on-hold' ? 'bg-yellow-100 text-yellow-800' : 
+                deal.status === 'closed' ? 'bg-green-100 text-green-800' : 
+                deal.status === 'dead' ? 'bg-red-100 text-red-800' : 
                 'bg-neutral-100 text-neutral-800'
               }`}>
-                {deal.status === 'completed' ? 'Completed' :
-                deal.status === 'in-progress' ? 'In Progress' :
-                deal.status === 'urgent' ? 'Urgent' :
-                deal.status === 'draft' ? 'Draft' :
+                {deal.status === 'active' ? 'Active' :
+                deal.status === 'on-hold' ? 'On Hold' :
+                deal.status === 'closed' ? 'Closed' :
+                deal.status === 'dead' ? 'Dead' :
                 deal.status.charAt(0).toUpperCase() + deal.status.slice(1)}
               </div>
             </div>
@@ -1596,18 +1215,20 @@ export default function DealDetail({
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
                       <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white ${
-                        deal.status === 'completed' ? 'bg-secondary' :
-                        deal.status === 'urgent' ? 'bg-destructive' :
-                        'bg-warning'
+                        deal.status === 'active' ? 'bg-blue-500' :
+                        deal.status === 'on-hold' ? 'bg-yellow-500' :
+                        deal.status === 'closed' ? 'bg-green-500' : 
+                        deal.status === 'dead' ? 'bg-red-500' :
+                        'bg-gray-500'
                       }`}>
                         <Calendar className="h-5 w-5" />
                       </div>
                       <div className="ml-3">
                         <div className="font-medium text-neutral-800">
-                          {deal.status === 'completed' ? 'Completed' :
-                          deal.status === 'in-progress' ? 'In Progress' :
-                          deal.status === 'urgent' ? 'Urgent' :
-                          deal.status === 'draft' ? 'Draft' :
+                          {deal.status === 'active' ? 'Active' :
+                          deal.status === 'on-hold' ? 'On Hold' :
+                          deal.status === 'closed' ? 'Closed' :
+                          deal.status === 'dead' ? 'Dead' :
                           deal.status.charAt(0).toUpperCase() + deal.status.slice(1)}
                         </div>
                         <div className="text-xs text-neutral-500">Updated 2 days ago</div>
