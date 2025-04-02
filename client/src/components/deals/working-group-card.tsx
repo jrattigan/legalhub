@@ -133,13 +133,20 @@ export default function WorkingGroupCard({
   // Function to update counsel
   const updateCounsel = async (data: any) => {
     try {
-      console.log("Sending counsel update:", data);
-      const response = await fetch(`/api/deals/${dealId}/counsel`, {
-        method: 'POST', // Using POST for simplicity, would be PATCH/PUT in a real app
+      // Add the dealId to the data
+      const counselData = {
+        ...data,
+        dealId: dealId
+      };
+      
+      console.log("Sending counsel update to /api/deal-counsels:", counselData);
+      
+      const response = await fetch(`/api/deal-counsels`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(counselData),
       });
       
       if (!response.ok) {
