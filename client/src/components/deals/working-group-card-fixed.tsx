@@ -361,13 +361,69 @@ export default function WorkingGroupCardFixed({
   // Remove counsel entry at specific index
   const removeCounselEntry = (isInvestor: boolean, index: number) => {
     if (isInvestor) {
-      const updated = [...investorCounselEntries];
-      updated.splice(index, 1);
-      setInvestorCounselEntries(updated);
+      const entry = investorCounselEntries[index];
+      // If this is an attorney (not just a law firm entry), only remove this specific attorney
+      if (entry.attorneyId !== null) {
+        const updated = [...investorCounselEntries];
+        updated.splice(index, 1);
+        
+        // Check if there are other entries with this law firm
+        const hasOtherAttorneysFromSameFirm = updated.some(e => 
+          e.lawFirmId === entry.lawFirmId && e.attorneyId !== null
+        );
+        
+        // If no other attorneys from this firm and no law firm-only entry exists
+        const hasLawFirmEntry = updated.some(e => 
+          e.lawFirmId === entry.lawFirmId && e.attorneyId === null
+        );
+        
+        // If no other attorneys from this law firm and no law firm entry exists,
+        // add a law firm entry without attorney
+        if (!hasOtherAttorneysFromSameFirm && !hasLawFirmEntry) {
+          updated.push({
+            lawFirmId: entry.lawFirmId,
+            attorneyId: null
+          });
+        }
+        
+        setInvestorCounselEntries(updated);
+      } else {
+        // If it's a law firm entry (no attorney), remove the law firm and all its attorneys
+        const updated = investorCounselEntries.filter(e => e.lawFirmId !== entry.lawFirmId);
+        setInvestorCounselEntries(updated);
+      }
     } else {
-      const updated = [...companyCounselEntries];
-      updated.splice(index, 1);
-      setCompanyCounselEntries(updated);
+      const entry = companyCounselEntries[index];
+      // If this is an attorney (not just a law firm entry), only remove this specific attorney
+      if (entry.attorneyId !== null) {
+        const updated = [...companyCounselEntries];
+        updated.splice(index, 1);
+        
+        // Check if there are other entries with this law firm
+        const hasOtherAttorneysFromSameFirm = updated.some(e => 
+          e.lawFirmId === entry.lawFirmId && e.attorneyId !== null
+        );
+        
+        // Check if law firm entry exists
+        const hasLawFirmEntry = updated.some(e => 
+          e.lawFirmId === entry.lawFirmId && e.attorneyId === null
+        );
+        
+        // If no other attorneys from this law firm and no law firm entry exists,
+        // add a law firm entry without attorney
+        if (!hasOtherAttorneysFromSameFirm && !hasLawFirmEntry) {
+          updated.push({
+            lawFirmId: entry.lawFirmId,
+            attorneyId: null
+          });
+        }
+        
+        setCompanyCounselEntries(updated);
+      } else {
+        // If it's a law firm entry (no attorney), remove the law firm and all its attorneys
+        const updated = companyCounselEntries.filter(e => e.lawFirmId !== entry.lawFirmId);
+        setCompanyCounselEntries(updated);
+      }
     }
   };
   
