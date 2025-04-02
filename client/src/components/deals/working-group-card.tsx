@@ -391,6 +391,21 @@ export default function WorkingGroupCard({
       setSelectedCompanyCounsels(updatedCounsels);
     }
   };
+  
+  // Function to remove all entries for a specific law firm
+  const removeLawFirmEntries = (isInvestor: boolean, lawFirmId: number) => {
+    if (isInvestor) {
+      const updatedCounsels = selectedInvestorCounsels.filter(entry => 
+        entry.lawFirmId !== lawFirmId
+      );
+      setSelectedInvestorCounsels(updatedCounsels);
+    } else {
+      const updatedCounsels = selectedCompanyCounsels.filter(entry => 
+        entry.lawFirmId !== lawFirmId
+      );
+      setSelectedCompanyCounsels(updatedCounsels);
+    }
+  };
 
   // Handle save changes based on the section being edited
   const handleSaveChanges = async () => {
@@ -852,21 +867,7 @@ export default function WorkingGroupCard({
                                       variant="ghost" 
                                       size="icon" 
                                       className="h-7 w-7"
-                                      onClick={() => {
-                                        // Find all entries with this law firm and remove them
-                                        const entriesToRemove = selectedInvestorCounsels
-                                          .map((e, idx) => e.lawFirmId === parseInt(firmId) ? idx : -1)
-                                          .filter(idx => idx !== -1)
-                                          .sort((a, b) => b - a); // Sort in descending order to remove from end first
-                                        
-                                        // Remove each entry one by one
-                                        const updatedCounsels = [...selectedInvestorCounsels];
-                                        entriesToRemove.forEach(idx => {
-                                          updatedCounsels.splice(idx, 1);
-                                        });
-                                        
-                                        setSelectedInvestorCounsels(updatedCounsels);
-                                      }}
+                                      onClick={() => removeLawFirmEntries(true, parseInt(firmId))}
                                     >
                                       <X className="h-4 w-4 text-neutral-500" />
                                     </Button>
@@ -1043,21 +1044,7 @@ export default function WorkingGroupCard({
                                       variant="ghost" 
                                       size="icon" 
                                       className="h-7 w-7"
-                                      onClick={() => {
-                                        // Find all entries with this law firm and remove them
-                                        const entriesToRemove = selectedCompanyCounsels
-                                          .map((e, idx) => e.lawFirmId === parseInt(firmId) ? idx : -1)
-                                          .filter(idx => idx !== -1)
-                                          .sort((a, b) => b - a); // Sort in descending order to remove from end first
-                                        
-                                        // Remove each entry one by one
-                                        const updatedCounsels = [...selectedCompanyCounsels];
-                                        entriesToRemove.forEach(idx => {
-                                          updatedCounsels.splice(idx, 1);
-                                        });
-                                        
-                                        setSelectedCompanyCounsels(updatedCounsels);
-                                      }}
+                                      onClick={() => removeLawFirmEntries(false, parseInt(firmId))}
                                     >
                                       <X className="h-4 w-4 text-neutral-500" />
                                     </Button>
