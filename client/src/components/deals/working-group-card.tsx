@@ -26,17 +26,28 @@ export default function WorkingGroupCard({
   leadInvestor,
   onRefreshData 
 }: WorkingGroupCardProps) {
-  // Filter counsel for Company Counsel
-  const companyCounsel = counsel.filter(item => 
-    item.lawFirm.specialty.includes('Company') || 
-    item.lawFirm.specialty.includes('Technology') ||
-    item.lawFirm.specialty.includes('Emerging'));
+  // Filter counsel specifically for Company Counsel only
+  const companyCounsel = counsel.filter(item => {
+    // Check if the law firm specialty explicitly mentions "Company" or company-related terms
+    // but doesn't contain investor-specific terms
+    return (
+      (item.lawFirm.specialty.includes('Company') || 
+       item.lawFirm.specialty.includes('Technology') ||
+       item.lawFirm.specialty.includes('Corporate & Securities')) &&
+      !item.lawFirm.specialty.includes('Venture Capital') &&
+      !item.lawFirm.specialty.includes('Investor')
+    );
+  });
   
-  // Filter counsel for Investor Counsel 
-  const investorCounsel = counsel.filter(item => 
-    item.lawFirm.specialty.includes('Investor') || 
-    item.lawFirm.specialty.includes('Venture') || 
-    item.lawFirm.specialty.includes('Capital'));
+  // Filter counsel specifically for Investor Counsel only
+  const investorCounsel = counsel.filter(item => {
+    // Check if the law firm specialty explicitly mentions "Investor", "Venture", or "Capital"
+    return (
+      item.lawFirm.specialty.includes('Investor') || 
+      item.lawFirm.specialty.includes('Venture Capital') || 
+      item.lawFirm.specialty.includes('Capital Markets')
+    );
+  });
 
   return (
     <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-2">
