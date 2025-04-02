@@ -1,4 +1,14 @@
-// Define interfaces for the application
+// Define all common types used across the application
+
+export interface User {
+  id: number;
+  username: string;
+  fullName: string;
+  initials: string;
+  email: string;
+  role: string;
+  avatarColor: string;
+}
 
 export interface Task {
   id: number;
@@ -14,16 +24,6 @@ export interface Task {
   status: string;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface User {
-  id: number;
-  username: string;
-  fullName: string;
-  initials: string;
-  email: string;
-  role: string;
-  avatarColor: string;
 }
 
 export interface LawFirm {
@@ -55,59 +55,76 @@ export interface CustomAssignee {
   createdAt: string;
 }
 
-export interface Deal {
-  id: number;
-  name: string;
-  type: string;
-  status: string;
-  companyId: number;
-  amount: number;
-  valuation: number | null;
-  leadInvestor: string | null;
-  closingDate: string | null;
-  createdAt: string;
-  updatedAt: string;
-  description: string | null;
-}
-
 export interface Company {
   id: number;
   legalName: string;
   displayName: string;
-  website: string | null;
-  industry: string;
-  foundedYear: number;
-  logo: string | null;
+  url: string | null;
+  bcvTeam: string[];
   createdAt: string;
+  updatedAt: string;
 }
 
-export interface Issue {
+export interface Deal {
   id: number;
   title: string;
-  description: string;
+  description: string | null;
+  dealId?: string;
+  companyId: number;
+  companyName: string;
+  amount: string | null;
   status: string;
-  priority: string;
+  dueDate: string | null;
+  isCommitted?: boolean;
+  leadInvestor: string;
+  leadInvestorCounsel?: string | null;
+  dataRoomUrl?: string | null;
+  termSheetUrl?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeamMember {
+  userId: number;
+  role: string;
+  user: User;
+}
+
+export interface DealCounsel {
+  role: string;
+  lawFirm: LawFirm;
+  attorney: Attorney | null;
+}
+
+export interface LawFirmOption {
+  id: number;
+  name: string;
+  attorneys: { id: number; name: string; role: string }[];
+}
+
+export interface Allocation {
   dealId: number;
+  fundId: number;
+  investmentAmount: string;
+  equityPercentage: string | null;
+  createdAt: string;
+  updatedAt: string;
+  fund: {
+    id: number;
+    name: string;
+    description: string;
+  };
+}
+
+export interface ClosingChecklistItem {
+  id: number;
+  title: string;
+  description: string | null;
+  dealId: number;
+  isComplete: boolean;
+  dueDate: string | null;
   assigneeId: number | null;
+  parentId: number | null;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface Document {
-  id: number;
-  filename: string;
-  dealId: number;
-  documentType: string;
-  versions: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface TimelineEvent {
-  id: number;
-  dealId: number;
-  eventType: string;
-  description: string;
-  timestamp: string;
-  userId: number | null;
 }

@@ -1,63 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import React from "react";
+import { Task, User, LawFirm, Attorney, CustomAssignee } from "@/types";
 import { getInitials } from "@/lib/utils";
-
-// Define the Task interface
-interface Task {
-  id: number;
-  name: string;
-  description: string | null;
-  dealId: number;
-  dueDate: string | null;
-  assigneeId: number | null;
-  customAssigneeId: number | null;
-  lawFirmId: number | null;
-  attorneyId: number | null;
-  taskType: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Define the types here as well to avoid module resolution issues
-interface User {
-  id: number;
-  username: string;
-  fullName: string;
-  initials: string;
-  email: string;
-  role: string;
-  avatarColor: string;
-}
-
-interface LawFirm {
-  id: number;
-  name: string;
-  specialty: string;
-  email: string | null;
-  phone: string | null;
-  createdAt: string;
-}
-
-interface Attorney {
-  id: number;
-  lawFirmId: number;
-  name: string;
-  position: string;
-  email: string;
-  phone: string | null;
-  mobile: string | null;
-  initials: string;
-  avatarColor: string;
-  photoUrl: string | null;
-  createdAt: string;
-}
-
-interface CustomAssignee {
-  id: number;
-  name: string;
-  createdAt: string;
-}
 
 export interface AssigneeAvatarProps {
   task: Task;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { User, LawFirm, Attorney, Company, Deal, LawFirmOption, TeamMember, DealCounsel } from '@/types';
 import { 
   Calendar, Edit, MoreHorizontal, Eye, Filter, Download, Share2, 
   Trash2, Clock, Plus, File, CheckSquare, AlertCircle as Alert, Users,
@@ -47,7 +48,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CompanySelect } from '@/components/ui/company-select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Deal, User, Document, Issue, LawFirm, Attorney, TimelineEvent, Company } from '@shared/schema';
+import { Document, Issue, TimelineEvent } from '@shared/schema';
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatDealTitle } from '@/lib/deal-title-formatter';
 import { convertFileToBase64, getFileExtension } from '@/lib/file-helpers';
@@ -170,14 +171,15 @@ export default function DealDetail({
   };
 
   // Fetch all law firms from the API
-  const { data: allLawFirms = [] } = useQuery({
+  const { data: allLawFirms = [] } = useQuery<LawFirm[]>({
     queryKey: ['/api/law-firms'],
     queryFn: async () => {
       const response = await fetch('/api/law-firms');
       if (!response.ok) {
         throw new Error('Failed to fetch law firms');
       }
-      return response.json();
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     }
   });
   
@@ -223,14 +225,16 @@ export default function DealDetail({
   });
   
   // Create law firm options from all available law firms
-  const lawFirmOptions: LawFirmOption[] = allLawFirms.map((firm: any) => {
-    return {
-      id: firm.id,
-      name: firm.name,
-      // Add attorneys that are associated with this deal if any
-      attorneys: dealCounselByFirm.get(firm.id) || []
-    };
-  });
+  const lawFirmOptions: LawFirmOption[] = Array.isArray(allLawFirms) 
+    ? allLawFirms.map((firm: any) => {
+        return {
+          id: firm.id,
+          name: firm.name,
+          // Add attorneys that are associated with this deal if any
+          attorneys: dealCounselByFirm.get(firm.id) || []
+        };
+      })
+    : [];
   
   // Selected law firm attorneys 
   const [selectedAttorneys, setSelectedAttorneys] = useState<number[]>([]);
@@ -1040,7 +1044,7 @@ export default function DealDetail({
                         <SelectValue placeholder="Add team member" />
                       </SelectTrigger>
                       <SelectContent>
-                        {allUsers.map((user: any) => (
+                        {Array.isArray(allUsers) && allUsers.map((user: any) => (
                           <SelectItem key={user.id} value={user.id.toString()}>
                             <div className="flex items-center">
                               <div
