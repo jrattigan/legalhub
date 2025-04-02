@@ -62,12 +62,21 @@ export default function DealDetailPage() {
   // Function to refresh all data
   const refreshData = () => {
     if (dealId) {
+      // Refresh deal data
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/users`] });
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/documents`] });
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/issues`] });
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/counsel`] });
       queryClient.invalidateQueries({ queryKey: [`/api/deals/${dealId}/timeline`] });
+      
+      // Also refresh company data since we might have updated company fields (like bcvTeam)
+      if (deal?.companyId) {
+        queryClient.invalidateQueries({ queryKey: [`/api/companies/${deal.companyId}`] });
+      }
+      
+      // Refresh global lists to ensure data consistency
+      queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
     }
   };
   

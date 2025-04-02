@@ -475,6 +475,10 @@ export default function WorkingGroupCardFixed({
         // For Investment Team, we need to combine both selected team member IDs
         // and any custom team members added directly
 
+        console.log('Current bcvTeam (from props):', bcvTeam);
+        console.log('Current teamMembers (state):', teamMembers);
+        console.log('Current selectedTeamMembers (IDs):', selectedTeamMembers);
+
         // Get names from selected user IDs
         const selectedTeamNames = selectedTeamMembers
           .map(userId => {
@@ -483,20 +487,37 @@ export default function WorkingGroupCardFixed({
           })
           .filter(name => name !== '');
         
+        console.log('Team members from directory (by ID):', selectedTeamNames);
+        
         // Get custom team members (those that don't exist in the users list)
         const customTeamMembers = teamMembers.filter(name => 
           !users.some(u => u.fullName === name)
         );
         
+        console.log('Custom team members (not in directory):', customTeamMembers);
+        
         // Combine both lists
         const combinedTeamNames = [...selectedTeamNames, ...customTeamMembers];
         
-        console.log('Updating investment team with combined list:', combinedTeamNames);
-        const result = await updateCompany({ bcvTeam: combinedTeamNames });
-        console.log('Investment team update result:', result);
+        console.log('Final combined team names to save:', combinedTeamNames);
         
-        // Update local state to immediately reflect changes
-        setTeamMembers(combinedTeamNames);
+        try {
+          // Update the company with the combined team members
+          const result = await updateCompany({ bcvTeam: combinedTeamNames });
+          console.log('Investment team update API result:', result);
+          
+          // Log the current state to verify update was successful
+          const companyData = await fetch(`/api/companies/${companyId}`).then(r => r.json());
+          console.log('Freshly fetched company data after update:', companyData);
+          
+          // Update local state to immediately reflect changes
+          setTeamMembers(combinedTeamNames);
+          
+          // Force state refresh
+          onRefreshData();
+        } catch (error) {
+          console.error('Error updating investment team:', error);
+        }
       } 
       else if (editingSection === 'investorCounsel') {
         // Add the current selection if not already in the list
