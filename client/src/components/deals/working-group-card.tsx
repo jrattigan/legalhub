@@ -252,8 +252,7 @@ export default function WorkingGroupCard({
       const payload = {
         dealId,
         role,
-        entries: counselEntries,
-        operation: 'replace' // Signal that we want to replace all existing entries
+        entries: counselEntries
       };
       
       console.log(`Replacing ${role} counsel with:`, payload);

@@ -1107,6 +1107,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create deal counsel" });
     }
   });
+  
+  // Handle replacing multiple counsel entries for a deal
+  app.post("/api/deal-counsels/replace", async (req, res) => {
+    try {
+      // Validate required fields
+      const { dealId, role, entries } = req.body;
+      
+      if (!dealId || !role || !Array.isArray(entries)) {
+        return res.status(400).json({ message: "Missing required fields: dealId, role, entries (array)" });
+      }
+      
+      // Get existing counsels for this deal with the same role
+      const existingCounsels = await storage.getDealCounsels(dealId);
+      const sameRoleCounsels = existingCounsels.filter(c => c.role === role);
+      
+      // Delete existing counsels with the same role
+      for (const counsel of sameRoleCounsels) {
+        await storage.deleteDealCounsel(counsel.id);
+      }
+      
+      // Create new counsel entries
+      const createdCounsels = [];
+      for (const entry of entries) {
+        const counselData = {
+          dealId,
+          role,
+          lawFirmId: entry.lawFirmId,
+          attorneyId: entry.attorneyId
+        };
+        
+        const counsel = await storage.createDealCounsel(counselData);
+        createdCounsels.push(counsel);
+      }
+      
+      res.status(201).json({ success: true, counsels: createdCounsels });
+    } catch (error) {
+      console.error("Error replacing deal counsels:", error);
+      res.status(500).json({ message: "Failed to replace deal counsels" });
+    }
+  });
 
   // Timeline API
   app.get("/api/deals/:id/timeline", async (req, res) => {
