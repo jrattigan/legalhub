@@ -123,27 +123,77 @@ export default function WorkingGroupCard({
       
       setSelectedTeamMembers(selectedIds);
     } else if (section === 'investorCounsel') {
-      // Reset to empty state for new selection
+      // Reset selection dropdowns for new entries
       setSelectedInvestorCounsel(null);
       setSelectedInvestorAttorney(null);
       
-      // Initialize with existing counsel
-      const existingCounsels = investorCounsel.map(item => ({
-        lawFirmId: item.lawFirm.id,
-        attorneyId: item.attorney?.id || null
-      }));
+      // Map existing counsel to our internal state format, including duplicate law firms when
+      // there are multiple attorneys from the same firm
+      const existingCounsels: Array<{lawFirmId: number, attorneyId: number | null}> = [];
+      
+      // First, add all law firms (with no attorney) to ensure each is represented
+      const uniqueLawFirmIds = new Set(investorCounsel.map(item => item.lawFirm.id));
+      uniqueLawFirmIds.forEach(firmId => {
+        // Check if this law firm has any attorneys
+        const hasAttorneys = investorCounsel.some(item => 
+          item.lawFirm.id === firmId && item.attorney?.id
+        );
+        
+        // If no attorneys, add the law firm entry
+        if (!hasAttorneys) {
+          existingCounsels.push({
+            lawFirmId: firmId,
+            attorneyId: null
+          });
+        }
+      });
+      
+      // Then add entries for each attorney
+      investorCounsel.forEach(item => {
+        if (item.attorney?.id) {
+          existingCounsels.push({
+            lawFirmId: item.lawFirm.id,
+            attorneyId: item.attorney.id
+          });
+        }
+      });
       
       setSelectedInvestorCounsels(existingCounsels);
     } else if (section === 'companyCounsel') {
-      // Reset to empty state for new selection
+      // Reset selection dropdowns for new entries
       setSelectedCompanyCounsel(null);
       setSelectedCompanyAttorney(null);
       
-      // Initialize with existing counsel
-      const existingCounsels = companyCounsel.map(item => ({
-        lawFirmId: item.lawFirm.id,
-        attorneyId: item.attorney?.id || null
-      }));
+      // Map existing counsel to our internal state format, including duplicate law firms when
+      // there are multiple attorneys from the same firm
+      const existingCounsels: Array<{lawFirmId: number, attorneyId: number | null}> = [];
+      
+      // First, add all law firms (with no attorney) to ensure each is represented
+      const uniqueLawFirmIds = new Set(companyCounsel.map(item => item.lawFirm.id));
+      uniqueLawFirmIds.forEach(firmId => {
+        // Check if this law firm has any attorneys
+        const hasAttorneys = companyCounsel.some(item => 
+          item.lawFirm.id === firmId && item.attorney?.id
+        );
+        
+        // If no attorneys, add the law firm entry
+        if (!hasAttorneys) {
+          existingCounsels.push({
+            lawFirmId: firmId,
+            attorneyId: null
+          });
+        }
+      });
+      
+      // Then add entries for each attorney
+      companyCounsel.forEach(item => {
+        if (item.attorney?.id) {
+          existingCounsels.push({
+            lawFirmId: item.lawFirm.id,
+            attorneyId: item.attorney.id
+          });
+        }
+      });
       
       setSelectedCompanyCounsels(existingCounsels);
     }
