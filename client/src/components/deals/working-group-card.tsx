@@ -61,18 +61,15 @@ export default function WorkingGroupCard({
           </h3>
           <div className="p-3 rounded-md border border-neutral-200 bg-neutral-50">
             {bcvTeam.length > 0 ? (
-              <div>
-                <div className="text-sm font-medium mb-1">Deal Team</div>
-                <div className="space-y-2">
-                  {bcvTeam.map((member, index) => (
-                    <div key={index} className="flex items-center">
-                      <Avatar className="h-6 w-6 bg-primary-light">
-                        <AvatarFallback>{member.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <div className="ml-2 text-sm">{member}</div>
-                    </div>
-                  ))}
-                </div>
+              <div className="space-y-2">
+                {bcvTeam.map((member, index) => (
+                  <div key={index} className="flex items-center">
+                    <Avatar className="h-6 w-6 bg-primary-light">
+                      <AvatarFallback>{member.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <div className="ml-2 text-sm">{member}</div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="text-xs text-neutral-500 italic">No investment team assigned</div>
