@@ -76,15 +76,21 @@ export default function WorkingGroupCard({
     queryKey: ['/api/law-firms'],
   });
   
-  // Fetch attorneys data for selected law firms
+  // Fetch attorneys data for selected law firms - key by law firm ID to keep data across selection changes
   const { data: investorAttorneys = [], refetch: refetchInvestorAttorneys } = useQuery<Attorney[]>({
     queryKey: [`/api/law-firms/${selectedInvestorCounsel}/attorneys`],
     enabled: selectedInvestorCounsel !== null,
+    onSuccess: (data) => {
+      console.log(`Loaded ${data.length} attorneys for investor law firm ${selectedInvestorCounsel}:`, data);
+    },
   });
   
   const { data: companyAttorneys = [], refetch: refetchCompanyAttorneys } = useQuery<Attorney[]>({
     queryKey: [`/api/law-firms/${selectedCompanyCounsel}/attorneys`],
     enabled: selectedCompanyCounsel !== null,
+    onSuccess: (data) => {
+      console.log(`Loaded ${data.length} attorneys for company law firm ${selectedCompanyCounsel}:`, data);
+    },
   });
   
   // Fetch users data for the investment team

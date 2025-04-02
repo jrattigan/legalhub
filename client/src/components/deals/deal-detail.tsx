@@ -56,7 +56,7 @@ import DocumentCard from './document-card';
 // TaskCard removed
 import IssueCard from './issue-card';
 import CounselCard from './counsel-card';
-import WorkingGroupCard from './working-group-card';
+import WorkingGroupCardFixed from './working-group-card-fixed';
 import TimelineCard from './timeline-card';
 import AllocationsTab from './allocations-tab';
 import TasksCombined from './tasks-combined';
@@ -1844,7 +1844,7 @@ export default function DealDetail({
                 </div>
                 
                 {/* Working Group Card */}
-                <WorkingGroupCard 
+                <WorkingGroupCardFixed 
                   counsel={counsel} 
                   dealId={deal.id}
                   companyId={deal.companyId} 
@@ -2141,7 +2141,7 @@ export default function DealDetail({
                   </div>
                 </div>
                 
-                <WorkingGroupCard 
+                <WorkingGroupCardFixed 
                   counsel={counsel} 
                   dealId={deal.id}
                   companyId={deal.companyId} 
@@ -2424,7 +2424,7 @@ export default function DealDetail({
             </div>
             
             {/* Working Group Card */}
-            <WorkingGroupCard 
+            <WorkingGroupCardFixed 
               counsel={counsel} 
               dealId={deal.id}
               companyId={deal.companyId} 
