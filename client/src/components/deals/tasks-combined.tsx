@@ -190,16 +190,30 @@ export default function TasksCombined({ dealId }: TasksCombinedProps) {
   const { data: tasks = [], isLoading: tasksLoading } = useQuery<Task[]>({
     queryKey: ['/api/deals', dealId, 'tasks'],
     queryFn: async () => {
-      const response = await apiRequest(`/api/deals/${dealId}/tasks`);
-      return response as Task[];
+      try {
+        const response = await fetch(`/api/deals/${dealId}/tasks`);
+        const data = await response.json();
+        console.log("Tasks from API (using fetch):", data);
+        return data as Task[];
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+        return [];
+      }
     },
   });
   
   const { data: users = [] } = useQuery<User[]>({
     queryKey: ['/api/users'],
     queryFn: async () => {
-      const response = await apiRequest('/api/users');
-      return response as User[];
+      try {
+        const response = await fetch('/api/users');
+        const data = await response.json();
+        console.log("Users from API:", data);
+        return data as User[];
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        return [];
+      }
     },
   });
   
