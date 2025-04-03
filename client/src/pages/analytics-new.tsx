@@ -1,76 +1,77 @@
 import React, { useState } from 'react';
+import AppLayout from '@/components/layout/app-layout';
 import { useQuery } from '@tanstack/react-query';
-import { format, parseISO, subMonths } from 'date-fns';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer, 
-  BarChart, 
+import { subMonths, format } from 'date-fns';
+import {
+  BarChart3,
+  ArrowUpRight,
+  ArrowDownRight,
+  BarChart as BarChartIcon,
+  Activity,
+  Clock,
+  FileDown,
+  Calendar
+} from 'lucide-react';
+import {
+  BarChart,
   Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
-  Scatter,
+  Area,
+  Line,
+  ComposedChart,
   ScatterChart,
   ZAxis,
-  ComposedChart,
-  Area
 } from 'recharts';
-import { 
-  BarChart3, 
-  BarChart as BarChartIcon, 
-  PieChart as PieChartIcon, 
-  LineChart as LineChartIcon, 
-  Activity, 
-  Download, 
-  Calendar,
-  Clock,
-  ArrowUpRight,
-  ArrowDownRight,
-  Filter,
-  FileDown
-} from 'lucide-react';
-import AppLayout from '@/components/layout/app-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+// Using lucide-react Calendar icon instead of radix-ui
+import { DateRange } from 'react-day-picker';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Select, 
-  SelectContent, 
-  SelectGroup, 
-  SelectItem, 
-  SelectLabel, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { DateRange } from 'react-day-picker';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// Type definitions for analytics data
+// Analytics Data Types
 interface DealPipelineStats {
   totalDeals: number;
   byStatus: { [key: string]: number };
@@ -749,7 +750,7 @@ export default function AnalyticsDashboard() {
           )}
           
           {/* Performance Tab Content */}
-          <TabsContent value="performance">
+          {activeTab === "performance" && (
             <div className="grid grid-cols-1 gap-6">
               <Card>
                 <CardHeader>
@@ -838,10 +839,10 @@ export default function AnalyticsDashboard() {
                 </Card>
               </div>
             </div>
-          </TabsContent>
+          )}
           
           {/* Predictions Tab Content */}
-          <TabsContent value="predictions">
+          {activeTab === "predictions" && (
             <div className="grid grid-cols-1 gap-6">
               <Card>
                 <CardHeader>
@@ -913,318 +914,123 @@ export default function AnalyticsDashboard() {
                   </Table>
                 </CardContent>
               </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Predictive Factors Analysis</CardTitle>
-                  <CardDescription>Key factors influencing deal completion</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                      <CartesianGrid />
-                      <XAxis 
-                        type="number" 
-                        dataKey="completionProbability" 
-                        name="Completion Probability" 
-                        unit="%" 
-                        domain={[0, 100]}
-                      />
-                      <YAxis 
-                        type="number" 
-                        dataKey="estimatedDaysToClose" 
-                        name="Days to Close" 
-                        label={{ value: 'Estimated Days to Close', angle: -90, position: 'insideLeft' }}
-                      />
-                      <ZAxis 
-                        type="number" 
-                        dataKey="dealId" 
-                        range={[100, 1000]} 
-                        name="Deal ID" 
-                      />
-                      <Tooltip 
-                        cursor={{ strokeDasharray: '3 3' }}
-                        formatter={(value, name, props) => {
-                          if (name === 'Completion Probability') return [`${value}%`, name];
-                          if (name === 'Days to Close') return [`${value} days`, name];
-                          return [value, name];
-                        }}
-                        content={({ active, payload }) => {
-                          if (active && payload && payload.length) {
-                            const deal = sortedPredictions.find(
-                              p => p.dealId === payload[0].payload.dealId
-                            );
-                            
-                            if (!deal) return null;
-                            
-                            return (
-                              <div className="bg-white p-2 border rounded shadow-sm">
-                                <p className="font-medium">{deal.title}</p>
-                                <p>Status: <span className="capitalize">{deal.currentStatus}</span></p>
-                                <p>Probability: {deal.completionProbability}%</p>
-                                <p>Est. Days: {deal.estimatedDaysToClose}</p>
-                              </div>
-                            );
-                          }
-                          
-                          return null;
-                        }}
-                      />
-                      <Scatter 
-                        name="Deals" 
-                        data={sortedPredictions} 
-                        fill="#0F62FE"
-                      />
-                    </ScatterChart>
-                  </ResponsiveContainer>
-                </CardContent>
-                <CardFooter className="text-sm text-neutral-600">
-                  Each point represents a deal. Position indicates completion probability and estimated time to close.
-                </CardFooter>
-              </Card>
             </div>
-          </TabsContent>
+          )}
           
           {/* Report Builder Tab Content */}
-          <TabsContent value="reports">
-            <Card>
-              <CardHeader>
-                <CardTitle>Custom Report Builder</CardTitle>
-                <CardDescription>Create and save custom analytics reports</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col space-y-8">
-                  <div className="flex flex-col space-y-2">
-                    <h3 className="text-lg font-medium">Report Dimensions</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="border rounded-md p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium">Time Period</span>
-                          <Filter className="h-4 w-4 text-neutral-500" />
+          {activeTab === "reports" && (
+            <div className="grid grid-cols-1 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Report Generator</CardTitle>
+                  <CardDescription>Create and download customized analytics reports</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col gap-6">
+                    <div className="flex flex-col gap-3">
+                      <h3 className="text-lg font-medium">Report Settings</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox" 
+                            id="include-pipeline" 
+                            defaultChecked 
+                            className="h-4 w-4 rounded border-gray-300 text-indigo-600"
+                          />
+                          <label htmlFor="include-pipeline" className="text-sm font-medium text-gray-700">
+                            Include Pipeline Statistics
+                          </label>
                         </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="period-monthly" defaultChecked />
-                            <label htmlFor="period-monthly" className="text-sm">Monthly</label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="period-quarterly" />
-                            <label htmlFor="period-quarterly" className="text-sm">Quarterly</label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="period-yearly" />
-                            <label htmlFor="period-yearly" className="text-sm">Yearly</label>
-                          </div>
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox" 
+                            id="include-performance" 
+                            defaultChecked 
+                            className="h-4 w-4 rounded border-gray-300 text-indigo-600"
+                          />
+                          <label htmlFor="include-performance" className="text-sm font-medium text-gray-700">
+                            Include Performance Metrics
+                          </label>
                         </div>
-                      </div>
-                      
-                      <div className="border rounded-md p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium">Deal Properties</span>
-                          <Filter className="h-4 w-4 text-neutral-500" />
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox" 
+                            id="include-predictions" 
+                            defaultChecked 
+                            className="h-4 w-4 rounded border-gray-300 text-indigo-600"
+                          />
+                          <label htmlFor="include-predictions" className="text-sm font-medium text-gray-700">
+                            Include Predictions
+                          </label>
                         </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="prop-type" defaultChecked />
-                            <label htmlFor="prop-type" className="text-sm">Deal Type</label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="prop-status" defaultChecked />
-                            <label htmlFor="prop-status" className="text-sm">Status</label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="prop-amount" />
-                            <label htmlFor="prop-amount" className="text-sm">Deal Amount</label>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="border rounded-md p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium">Team Metrics</span>
-                          <Filter className="h-4 w-4 text-neutral-500" />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="team-assignee" defaultChecked />
-                            <label htmlFor="team-assignee" className="text-sm">Assigned To</label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="team-counsel" />
-                            <label htmlFor="team-counsel" className="text-sm">Outside Counsel</label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="team-activity" />
-                            <label htmlFor="team-activity" className="text-sm">Activity Level</label>
-                          </div>
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox" 
+                            id="include-charts" 
+                            defaultChecked 
+                            className="h-4 w-4 rounded border-gray-300 text-indigo-600"
+                          />
+                          <label htmlFor="include-charts" className="text-sm font-medium text-gray-700">
+                            Include Charts and Visualizations
+                          </label>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex flex-col space-y-2">
-                    <h3 className="text-lg font-medium">Report Metrics</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="border rounded-md p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium">Performance Metrics</span>
-                          <Filter className="h-4 w-4 text-neutral-500" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="metric-success-rate" defaultChecked />
-                            <label htmlFor="metric-success-rate" className="text-sm">Success Rate</label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="metric-time-to-close" defaultChecked />
-                            <label htmlFor="metric-time-to-close" className="text-sm">Time to Close</label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="metric-document-count" />
-                            <label htmlFor="metric-document-count" className="text-sm">Document Count</label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="metric-stage-time" />
-                            <label htmlFor="metric-stage-time" className="text-sm">Time in Stage</label>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="border rounded-md p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium">Visualization Types</span>
-                          <Filter className="h-4 w-4 text-neutral-500" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="viz-bar" defaultChecked />
-                            <label htmlFor="viz-bar" className="text-sm">Bar Charts</label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="viz-line" defaultChecked />
-                            <label htmlFor="viz-line" className="text-sm">Line Charts</label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="viz-pie" />
-                            <label htmlFor="viz-pie" className="text-sm">Pie Charts</label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" id="viz-table" defaultChecked />
-                            <label htmlFor="viz-table" className="text-sm">Data Tables</label>
-                          </div>
-                        </div>
+                    
+                    <div className="flex flex-col gap-3">
+                      <h3 className="text-lg font-medium">Output Options</h3>
+                      <div className="flex gap-4">
+                        <Button onClick={() => {
+                          toast({
+                            title: "Generating report",
+                            description: "Please wait while we prepare your report...",
+                          });
+                          
+                          setTimeout(() => {
+                            toast({
+                              title: "Report ready",
+                              description: "Your report has been generated and is ready for download.",
+                              action: (
+                                <ToastAction altText="Download" onClick={() => {
+                                  // Create a sample PDF-like blob
+                                  const reportContent = `
+                                  Deal Analytics Report
+                                  Generated on: ${new Date().toLocaleString()}
+                                  
+                                  Summary:
+                                  - Total deals: ${analyticsData?.pipelineStats.totalDeals || 0}
+                                  - Success rate: ${analyticsData?.performanceMetrics.successRate || 0}%
+                                  - Average time to close: ${analyticsData?.performanceMetrics.averageTimeToClose || 0} days
+                                  
+                                  Deal Status Breakdown:
+                                  ${Object.entries(analyticsData?.pipelineStats.byStatus || {}).map(([status, count]) => 
+                                    `- ${status}: ${count} deals`).join('\n')}
+                                  `;
+                                  
+                                  const blob = new Blob([reportContent], { type: 'text/plain' });
+                                  const url = URL.createObjectURL(blob);
+                                  const a = document.createElement('a');
+                                  a.href = url;
+                                  a.download = `deal-analytics-report-${new Date().toISOString().split('T')[0]}.txt`;
+                                  document.body.appendChild(a);
+                                  a.click();
+                                  document.body.removeChild(a);
+                                  URL.revokeObjectURL(url);
+                                }}>
+                                  Download
+                                </ToastAction>
+                              ),
+                            });
+                          }, 2000);
+                        }}>Generate Report</Button>
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="flex flex-col space-y-2">
-                    <h3 className="text-lg font-medium">Saved Reports</h3>
-                    <div className="border rounded-md">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Report Name</TableHead>
-                            <TableHead>Created</TableHead>
-                            <TableHead>Last Run</TableHead>
-                            <TableHead>Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell className="font-medium">Monthly Deal Performance</TableCell>
-                            <TableCell>Apr 1, 2025</TableCell>
-                            <TableCell>Apr 3, 2025</TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="outline">Run</Button>
-                                <Button size="sm" variant="outline">Edit</Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell className="font-medium">Counsel Efficiency Analysis</TableCell>
-                            <TableCell>Mar 15, 2025</TableCell>
-                            <TableCell>Apr 2, 2025</TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="outline">Run</Button>
-                                <Button size="sm" variant="outline">Edit</Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell className="font-medium">Deal Type Comparison</TableCell>
-                            <TableCell>Feb 28, 2025</TableCell>
-                            <TableCell>Mar 30, 2025</TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="outline">Run</Button>
-                                <Button size="sm" variant="outline">Edit</Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => {
-                      toast({
-                        title: "Report template saved",
-                        description: "Your custom report template has been saved successfully.",
-                      });
-                    }}>Save Report Template</Button>
-                    <Button onClick={() => {
-                      toast({
-                        title: "Generating report...",
-                        description: "Your report is being generated. It will be available for download shortly.",
-                      });
-                      
-                      // Simulate report generation with a delay
-                      setTimeout(() => {
-                        toast({
-                          title: "Report ready",
-                          description: "Your report has been generated and is ready for download.",
-                          action: (
-                            <ToastAction altText="Download" onClick={() => {
-                              // Create a sample PDF-like blob
-                              const reportContent = `
-                              Deal Analytics Report
-                              Generated on: ${new Date().toLocaleString()}
-                              
-                              Summary:
-                              - Total deals: ${analyticsData?.pipelineStats.totalDeals || 0}
-                              - Success rate: ${analyticsData?.performanceMetrics.successRate || 0}%
-                              - Average time to close: ${analyticsData?.performanceMetrics.averageTimeToClose || 0} days
-                              
-                              Deal Status Breakdown:
-                              ${Object.entries(analyticsData?.pipelineStats.byStatus || {}).map(([status, count]) => 
-                                `- ${status}: ${count} deals`).join('\n')}
-                              `;
-                              
-                              const blob = new Blob([reportContent], { type: 'text/plain' });
-                              const url = URL.createObjectURL(blob);
-                              const a = document.createElement('a');
-                              a.href = url;
-                              a.download = `deal-analytics-report-${new Date().toISOString().split('T')[0]}.txt`;
-                              document.body.appendChild(a);
-                              a.click();
-                              document.body.removeChild(a);
-                              URL.revokeObjectURL(url);
-                            }}>
-                              Download
-                            </ToastAction>
-                          ),
-                        });
-                      }, 2000);
-                    }}>Generate Report</Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
       </div>
     </AppLayout>
   );
