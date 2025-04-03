@@ -1,7 +1,7 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { format } from "date-fns";
+import { format, parseISO, subMonths } from "date-fns";
 import { z } from "zod";
 import {
   insertDealSchema,
@@ -25,6 +25,12 @@ import {
   closingChecklist,
 } from "@shared/schema";
 import { createInsertSchema } from "drizzle-zod";
+import { 
+  getAllAnalytics, 
+  getDealPipelineStats, 
+  getPerformanceMetrics, 
+  getPredictiveAnalytics 
+} from "./analytics";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint for Replit
@@ -154,6 +160,200 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to fetch combined data' });
     }
   });
+  
+  // Analytics endpoints
+  
+  // Get comprehensive analytics data
+  app.get('/api/analytics', async (req: Request, res: Response) => {
+    try {
+      console.log('Fetching comprehensive analytics data');
+      
+      // Parse filter parameters
+      const filters: {
+        dateFrom?: Date;
+        dateTo?: Date;
+        dealTypes?: string[];
+        responsibleParties?: string[];
+      } = {};
+      
+      if (req.query.dateFrom && typeof req.query.dateFrom === 'string') {
+        filters.dateFrom = parseISO(req.query.dateFrom);
+      } else {
+        // Default to last 6 months if not specified
+        filters.dateFrom = subMonths(new Date(), 6);
+      }
+      
+      if (req.query.dateTo && typeof req.query.dateTo === 'string') {
+        filters.dateTo = parseISO(req.query.dateTo);
+      }
+      
+      if (req.query.dealTypes && typeof req.query.dealTypes === 'string') {
+        filters.dealTypes = req.query.dealTypes.split(',');
+      }
+      
+      if (req.query.responsibleParties && typeof req.query.responsibleParties === 'string') {
+        filters.responsibleParties = req.query.responsibleParties.split(',');
+      }
+      
+      const analyticsData = await getAllAnalytics(storage, filters);
+      
+      res.json(analyticsData);
+    } catch (error) {
+      console.error('Error fetching analytics data:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch analytics data',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Get deal pipeline statistics
+  app.get('/api/analytics/pipeline', async (req: Request, res: Response) => {
+    try {
+      // Parse filter parameters
+      const filters: {
+        dateFrom?: Date;
+        dateTo?: Date;
+        dealTypes?: string[];
+      } = {};
+      
+      if (req.query.dateFrom && typeof req.query.dateFrom === 'string') {
+        filters.dateFrom = parseISO(req.query.dateFrom);
+      }
+      
+      if (req.query.dateTo && typeof req.query.dateTo === 'string') {
+        filters.dateTo = parseISO(req.query.dateTo);
+      }
+      
+      if (req.query.dealTypes && typeof req.query.dealTypes === 'string') {
+        filters.dealTypes = req.query.dealTypes.split(',');
+      }
+      
+      const pipelineStats = await getDealPipelineStats(storage, filters);
+      
+      res.json(pipelineStats);
+    } catch (error) {
+      console.error('Error fetching pipeline statistics:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch pipeline statistics',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Get performance metrics
+  app.get('/api/analytics/performance', async (req: Request, res: Response) => {
+    try {
+      // Parse filter parameters
+      const filters: {
+        dateFrom?: Date;
+        dateTo?: Date;
+        dealTypes?: string[];
+        responsibleParties?: string[];
+      } = {};
+      
+      if (req.query.dateFrom && typeof req.query.dateFrom === 'string') {
+        filters.dateFrom = parseISO(req.query.dateFrom);
+      }
+      
+      if (req.query.dateTo && typeof req.query.dateTo === 'string') {
+        filters.dateTo = parseISO(req.query.dateTo);
+      }
+      
+      if (req.query.dealTypes && typeof req.query.dealTypes === 'string') {
+        filters.dealTypes = req.query.dealTypes.split(',');
+      }
+      
+      if (req.query.responsibleParties && typeof req.query.responsibleParties === 'string') {
+        filters.responsibleParties = req.query.responsibleParties.split(',');
+      }
+      
+      const performanceMetrics = await getPerformanceMetrics(storage, filters);
+      
+      res.json(performanceMetrics);
+    } catch (error) {
+      console.error('Error fetching performance metrics:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch performance metrics',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Get predictive analytics
+  app.get('/api/analytics/predictions', async (req: Request, res: Response) => {
+    try {
+      const predictions = await getPredictiveAnalytics(storage);
+      
+      res.json(predictions);
+    } catch (error) {
+      console.error('Error fetching predictive analytics:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch predictive analytics',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Export analytics data
+  app.get('/api/analytics/export', async (req: Request, res: Response) => {
+    try {
+      // Parse filter parameters (same as /api/analytics endpoint)
+      const filters: {
+        dateFrom?: Date;
+        dateTo?: Date;
+        dealTypes?: string[];
+        responsibleParties?: string[];
+      } = {};
+      
+      if (req.query.dateFrom && typeof req.query.dateFrom === 'string') {
+        filters.dateFrom = parseISO(req.query.dateFrom);
+      } else {
+        // Default to last 6 months if not specified
+        filters.dateFrom = subMonths(new Date(), 6);
+      }
+      
+      if (req.query.dateTo && typeof req.query.dateTo === 'string') {
+        filters.dateTo = parseISO(req.query.dateTo);
+      }
+      
+      if (req.query.dealTypes && typeof req.query.dealTypes === 'string') {
+        filters.dealTypes = req.query.dealTypes.split(',');
+      }
+      
+      if (req.query.responsibleParties && typeof req.query.responsibleParties === 'string') {
+        filters.responsibleParties = req.query.responsibleParties.split(',');
+      }
+      
+      // Get the format (pdf or excel)
+      const format = req.query.format === 'pdf' ? 'pdf' : 'excel';
+      
+      // For now, we'll just return the same data as the analytics endpoint
+      // In a real application, this would format the data differently or use a library to generate the file
+      const analyticsData = await getAllAnalytics(storage, filters);
+      
+      if (format === 'pdf') {
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', 'attachment; filename="analytics-export.json"');
+      } else {
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', 'attachment; filename="analytics-export.json"');
+      }
+      
+      res.json({
+        exportFormat: format,
+        exportTimestamp: new Date().toISOString(),
+        data: analyticsData
+      });
+    } catch (error) {
+      console.error('Error exporting analytics data:', error);
+      res.status(500).json({ 
+        error: 'Failed to export analytics data',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   const httpServer = createServer(app);
 
   // Users API

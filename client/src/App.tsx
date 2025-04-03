@@ -12,6 +12,7 @@ import DealDetailPage from "@/pages/deal-detail";
 import Documents from "@/pages/documents";
 import Counsel from "@/pages/counsel";
 import Reports from "@/pages/reports";
+import Analytics from "@/pages/analytics";
 import Companies from "@/pages/companies";
 import Settings from "@/pages/settings";
 import CompaniesList from "@/components/companies/companies-list";
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/documents" component={Documents} />
       <Route path="/counsel" component={Counsel} />
       <Route path="/counsel/:id" component={Counsel} />
+      <Route path="/analytics" component={Analytics} />
       <Route path="/reports" component={Reports} />
       <Route path="/settings" component={Settings} />
       {/* Iframe content routes */}
