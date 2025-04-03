@@ -123,6 +123,12 @@ export default function AnalyticsDashboard() {
   const [selectedDealType, setSelectedDealType] = useState<string>('all');
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>('6m');
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // Explicitly handle tab changes
+  const handleTabChange = (value: string) => {
+    console.log("Tab changed to:", value);
+    setActiveTab(value);
+  };
 
   // Helper function to format date range for API requests
   const formatDateParam = (date: Date | undefined): string | undefined => {
@@ -437,13 +443,13 @@ export default function AnalyticsDashboard() {
         </div>
         
         {/* Analytics Tabs */}
-        <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <Tabs defaultValue="overview" value={activeTab} onValueChange={handleTabChange} className="mb-6">
           <TabsList className="mb-4">
-            <TabsTrigger value="overview" onClick={() => setActiveTab("overview")}>Overview</TabsTrigger>
-            <TabsTrigger value="dealPipeline" onClick={() => setActiveTab("dealPipeline")}>Deal Pipeline</TabsTrigger>
-            <TabsTrigger value="performance" onClick={() => setActiveTab("performance")}>Performance</TabsTrigger>
-            <TabsTrigger value="predictions" onClick={() => setActiveTab("predictions")}>Predictions</TabsTrigger>
-            <TabsTrigger value="reports" onClick={() => setActiveTab("reports")}>Report Builder</TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="dealPipeline">Deal Pipeline</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
+            <TabsTrigger value="predictions">Predictions</TabsTrigger>
+            <TabsTrigger value="reports">Report Builder</TabsTrigger>
           </TabsList>
           
           {/* Overview Tab Content */}
