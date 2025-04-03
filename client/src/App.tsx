@@ -11,7 +11,6 @@ import NewDeal from "@/pages/new-deal";
 import DealDetailPage from "@/pages/deal-detail";
 import Documents from "@/pages/documents";
 import Counsel from "@/pages/counsel";
-import Reports from "@/pages/reports";
 import AnalyticsNew from "@/pages/analytics-new";
 import Companies from "@/pages/companies";
 import Settings from "@/pages/settings";
@@ -32,7 +31,6 @@ function Router() {
       <Route path="/counsel" component={Counsel} />
       <Route path="/counsel/:id" component={Counsel} />
       <Route path="/analytics" component={AnalyticsNew} />
-      <Route path="/reports" component={Reports} />
       <Route path="/settings" component={Settings} />
       {/* Iframe content routes */}
       <Route path="/companies-list" component={CompaniesList} />
