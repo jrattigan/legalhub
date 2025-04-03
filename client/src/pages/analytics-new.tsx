@@ -486,16 +486,7 @@ export default function AnalyticsDashboard() {
             >
               Predictions
             </button>
-            <button
-              className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ${
-                activeTab === "reports" 
-                  ? "bg-background text-foreground shadow-sm" 
-                  : ""
-              }`}
-              onClick={() => handleTabChange("reports")}
-            >
-              Report Builder
-            </button>
+
           </div>
           
           {/* Overview Tab Content */}
