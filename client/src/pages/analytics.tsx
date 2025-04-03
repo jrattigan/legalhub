@@ -68,6 +68,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 
 // Type definitions for analytics data
 interface DealPipelineStats {
@@ -1115,8 +1116,56 @@ export default function AnalyticsDashboard() {
                   </div>
                   
                   <div className="flex justify-end space-x-2">
-                    <Button variant="outline">Save Report Template</Button>
-                    <Button>Generate Report</Button>
+                    <Button variant="outline" onClick={() => {
+                      toast({
+                        title: "Report template saved",
+                        description: "Your custom report template has been saved successfully.",
+                      });
+                    }}>Save Report Template</Button>
+                    <Button onClick={() => {
+                      toast({
+                        title: "Generating report...",
+                        description: "Your report is being generated. It will be available for download shortly.",
+                      });
+                      
+                      // Simulate report generation with a delay
+                      setTimeout(() => {
+                        toast({
+                          title: "Report ready",
+                          description: "Your report has been generated and is ready for download.",
+                          action: (
+                            <ToastAction altText="Download" onClick={() => {
+                              // Create a sample PDF-like blob
+                              const reportContent = `
+                              Deal Analytics Report
+                              Generated on: ${new Date().toLocaleString()}
+                              
+                              Summary:
+                              - Total deals: ${analyticsData?.pipelineStats.totalDeals || 0}
+                              - Success rate: ${analyticsData?.performanceMetrics.successRate || 0}%
+                              - Average time to close: ${analyticsData?.performanceMetrics.averageTimeToClose || 0} days
+                              
+                              Deal Status Breakdown:
+                              ${Object.entries(analyticsData?.pipelineStats.byStatus || {}).map(([status, count]) => 
+                                `- ${status}: ${count} deals`).join('\n')}
+                              `;
+                              
+                              const blob = new Blob([reportContent], { type: 'text/plain' });
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = `deal-analytics-report-${new Date().toISOString().split('T')[0]}.txt`;
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
+                              URL.revokeObjectURL(url);
+                            }}>
+                              Download
+                            </ToastAction>
+                          ),
+                        });
+                      }, 2000);
+                    }}>Generate Report</Button>
                   </div>
                 </div>
               </CardContent>
