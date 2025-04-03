@@ -124,7 +124,7 @@ export default function AnalyticsDashboard() {
   const [selectedDealType, setSelectedDealType] = useState<string>('all');
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>('6m');
   const [activeTab, setActiveTab] = useState('overview');
-  
+
   // Explicitly handle tab changes
   const handleTabChange = (value: string) => {
     console.log("Tab changed to:", value);
@@ -154,21 +154,21 @@ export default function AnalyticsDashboard() {
     // Build the export URL with all filters
     const baseUrl = '/api/analytics/export';
     const params = new URLSearchParams();
-    
+
     if (dateRange?.from) {
       params.append('dateFrom', formatDateParam(dateRange.from)!);
     }
-    
+
     if (dateRange?.to) {
       params.append('dateTo', formatDateParam(dateRange.to)!);
     }
-    
+
     if (selectedDealType !== 'all') {
       params.append('dealTypes', selectedDealType);
     }
-    
+
     params.append('format', format);
-    
+
     // Create and download via a hidden link
     const url = `${baseUrl}?${params.toString()}`;
     const a = document.createElement('a');
@@ -177,7 +177,7 @@ export default function AnalyticsDashboard() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    
+
     toast({
       title: "Export initiated",
       description: `Your ${format.toUpperCase()} export has started. The file will download shortly.`,
@@ -188,7 +188,7 @@ export default function AnalyticsDashboard() {
   const handleTimeframeChange = (timeframe: string) => {
     setSelectedTimeframe(timeframe);
     const now = new Date();
-    
+
     switch (timeframe) {
       case '1m':
         setDateRange({ from: subMonths(now, 1), to: now });
@@ -223,7 +223,7 @@ export default function AnalyticsDashboard() {
   // Prepare chart data from API response
   const prepareStatusData = () => {
     if (!analyticsData?.pipelineStats.byStatus) return [];
-    
+
     return Object.entries(analyticsData.pipelineStats.byStatus).map(([status, count]) => ({
       name: status.charAt(0).toUpperCase() + status.slice(1),
       value: count,
@@ -233,7 +233,7 @@ export default function AnalyticsDashboard() {
 
   const prepareTimelineData = () => {
     if (!analyticsData?.performanceMetrics.byTimeRange) return [];
-    
+
     return analyticsData.performanceMetrics.byTimeRange.map(item => ({
       name: item.period,
       started: item.dealsStarted,
@@ -245,7 +245,7 @@ export default function AnalyticsDashboard() {
 
   const prepareDealTypeData = () => {
     if (!analyticsData?.performanceMetrics.byDealType) return [];
-    
+
     return Object.entries(analyticsData.performanceMetrics.byDealType).map(([type, metrics]) => ({
       name: type,
       successRate: Number(metrics.successRate.toFixed(1)),
@@ -270,7 +270,7 @@ export default function AnalyticsDashboard() {
               <Skeleton className="h-10 w-32" />
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             {[...Array(4)].map((_, i) => (
               <Card key={i}>
@@ -282,7 +282,7 @@ export default function AnalyticsDashboard() {
               </Card>
             ))}
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <Card>
               <CardHeader>
@@ -334,7 +334,7 @@ export default function AnalyticsDashboard() {
         {/* Header with filters and export */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h1 className="text-2xl font-bold text-neutral-800">Analytics Dashboard</h1>
-          
+
           <div className="flex flex-wrap gap-2">
             {/* Date Range Filter */}
             <Popover>
@@ -404,7 +404,7 @@ export default function AnalyticsDashboard() {
                 />
               </PopoverContent>
             </Popover>
-            
+
             {/* Deal Type Filter */}
             <Select value={selectedDealType} onValueChange={setSelectedDealType}>
               <SelectTrigger className="w-[180px]">
@@ -420,7 +420,7 @@ export default function AnalyticsDashboard() {
                 </SelectGroup>
               </SelectContent>
             </Select>
-            
+
             {/* Export Buttons */}
             <div className="flex gap-1">
               <Button 
@@ -442,7 +442,7 @@ export default function AnalyticsDashboard() {
             </div>
           </div>
         </div>
-        
+
         {/* Analytics Tabs - Using custom tabs implementation */}
         <div className="mb-6">
           <div className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground mb-4">
@@ -488,7 +488,7 @@ export default function AnalyticsDashboard() {
             </button>
 
           </div>
-          
+
           {/* Overview Tab Content */}
           {activeTab === "overview" && (
             <>
@@ -509,7 +509,7 @@ export default function AnalyticsDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex justify-between items-start">
@@ -526,7 +526,7 @@ export default function AnalyticsDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex justify-between items-start">
@@ -543,7 +543,7 @@ export default function AnalyticsDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex justify-between items-start">
@@ -561,7 +561,7 @@ export default function AnalyticsDashboard() {
                   </CardContent>
                 </Card>
               </div>
-              
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <Card>
                   <CardHeader>
@@ -583,7 +583,17 @@ export default function AnalyticsDashboard() {
                             label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                           >
                             {prepareStatusData().map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
+                              <Cell 
+                                key={`cell-${index}`} 
+                                fill={entry.color}
+                                onMouseEnter={(e) => {
+                                  toast({
+                                    title: entry.name,
+                                    description: `${entry.value} deals (${((entry.value / analyticsData?.pipelineStats.totalDeals) * 100).toFixed(1)}% of total)`,
+                                    duration: 2000,
+                                  });
+                                }}
+                              />
                             ))}
                           </Pie>
                           <Tooltip formatter={(value) => [`${value} deals`, 'Count']} />
@@ -593,7 +603,7 @@ export default function AnalyticsDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle>Deal Activity Over Time</CardTitle>
@@ -616,7 +626,7 @@ export default function AnalyticsDashboard() {
                   </CardContent>
                 </Card>
               </div>
-              
+
               <div className="grid grid-cols-1 gap-6">
                 <Card>
                   <CardHeader>
@@ -643,7 +653,7 @@ export default function AnalyticsDashboard() {
               </div>
             </>
           )}
-          
+
           {/* Deal Pipeline Tab Content */}
           {activeTab === "dealPipeline" && (
             <div className="grid grid-cols-1 gap-6">
@@ -671,7 +681,17 @@ export default function AnalyticsDashboard() {
                           fill="#8884d8"
                         >
                           {prepareStatusData().map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={entry.color}
+                              onMouseEnter={(e) => {
+                                toast({
+                                  title: entry.name,
+                                  description: `${entry.value} deals (${((entry.value / analyticsData?.pipelineStats.totalDeals) * 100).toFixed(1)}% of total)`,
+                                  duration: 2000,
+                                });
+                              }}
+                            />
                           ))}
                         </Bar>
                       </BarChart>
@@ -693,7 +713,7 @@ export default function AnalyticsDashboard() {
                   </div>
                 </CardFooter>
               </Card>
-              
+
               <Card>
                 <CardHeader>
                   <CardTitle>Stage Transitions</CardTitle>
@@ -714,11 +734,11 @@ export default function AnalyticsDashboard() {
                         const totalFromThisStage = analyticsData.pipelineStats.statusTransitions
                           .filter(t => t.fromStatus === transition.fromStatus)
                           .reduce((sum, t) => sum + t.count, 0);
-                        
+
                         const percentage = totalFromThisStage > 0
                           ? (transition.count / totalFromThisStage) * 100
                           : 0;
-                          
+
                         return (
                           <TableRow key={idx}>
                             <TableCell className="capitalize">{transition.fromStatus}</TableCell>
@@ -739,7 +759,7 @@ export default function AnalyticsDashboard() {
               </Card>
             </div>
           )}
-          
+
           {/* Performance Tab Content */}
           {activeTab === "performance" && (
             <div className="grid grid-cols-1 gap-6">
@@ -763,7 +783,7 @@ export default function AnalyticsDashboard() {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
@@ -796,7 +816,7 @@ export default function AnalyticsDashboard() {
                     </Table>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle>Performance by Responsible Party</CardTitle>
@@ -831,7 +851,7 @@ export default function AnalyticsDashboard() {
               </div>
             </div>
           )}
-          
+
           {/* Predictions Tab Content */}
           {activeTab === "predictions" && (
             <div className="grid grid-cols-1 gap-6">
@@ -907,7 +927,7 @@ export default function AnalyticsDashboard() {
               </Card>
             </div>
           )}
-          
+
           {/* Report Builder Tab Content */}
           {activeTab === "reports" && (
             <div className="grid grid-cols-1 gap-6">
@@ -967,7 +987,7 @@ export default function AnalyticsDashboard() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex flex-col gap-3">
                       <h3 className="text-lg font-medium">Output Options</h3>
                       <div className="flex gap-4">
@@ -976,7 +996,7 @@ export default function AnalyticsDashboard() {
                             title: "Generating report",
                             description: "Please wait while we prepare your report...",
                           });
-                          
+
                           setTimeout(() => {
                             toast({
                               title: "Report ready",
@@ -987,17 +1007,17 @@ export default function AnalyticsDashboard() {
                                   const reportContent = `
                                   Deal Analytics Report
                                   Generated on: ${new Date().toLocaleString()}
-                                  
+
                                   Summary:
                                   - Total deals: ${analyticsData?.pipelineStats.totalDeals || 0}
                                   - Success rate: ${analyticsData?.performanceMetrics.successRate || 0}%
                                   - Average time to close: ${analyticsData?.performanceMetrics.averageTimeToClose || 0} days
-                                  
+
                                   Deal Status Breakdown:
                                   ${Object.entries(analyticsData?.pipelineStats.byStatus || {}).map(([status, count]) => 
                                     `- ${status}: ${count} deals`).join('\n')}
                                   `;
-                                  
+
                                   const blob = new Blob([reportContent], { type: 'text/plain' });
                                   const url = URL.createObjectURL(blob);
                                   const a = document.createElement('a');
