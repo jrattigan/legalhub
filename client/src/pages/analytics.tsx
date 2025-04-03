@@ -439,11 +439,11 @@ export default function AnalyticsDashboard() {
         {/* Analytics Tabs */}
         <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="mb-6">
           <TabsList className="mb-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="dealPipeline">Deal Pipeline</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="predictions">Predictions</TabsTrigger>
-            <TabsTrigger value="reports">Report Builder</TabsTrigger>
+            <TabsTrigger value="overview" onClick={() => setActiveTab("overview")}>Overview</TabsTrigger>
+            <TabsTrigger value="dealPipeline" onClick={() => setActiveTab("dealPipeline")}>Deal Pipeline</TabsTrigger>
+            <TabsTrigger value="performance" onClick={() => setActiveTab("performance")}>Performance</TabsTrigger>
+            <TabsTrigger value="predictions" onClick={() => setActiveTab("predictions")}>Predictions</TabsTrigger>
+            <TabsTrigger value="reports" onClick={() => setActiveTab("reports")}>Report Builder</TabsTrigger>
           </TabsList>
           
           {/* Overview Tab Content */}
