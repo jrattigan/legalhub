@@ -1,13 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, Eye, FileText, ArrowRight } from 'lucide-react';
 // Import document viewers
-import { renderAsync } from 'docx-preview';
-import { Worker, Viewer } from '@react-pdf-viewer/core';
-import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
-// Import styles for PDF viewer
-import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+import NativeDocViewer from '../ui/NativeDocViewer';
+// Import styles for document viewers
+import '../ui/document-viewer.css';
 
 interface RedlineCompareViewProps {
   originalFile: File | null;
@@ -28,15 +25,6 @@ export default function RedlineCompareView({
 }: RedlineCompareViewProps) {
   const [activeTab, setActiveTab] = useState<'changes' | 'original' | 'new'>('changes');
   const [isProcessing, setIsProcessing] = useState<boolean>(true);
-  const [docxRendered1, setDocxRendered1] = useState<boolean>(false);
-  const [docxRendered2, setDocxRendered2] = useState<boolean>(false);
-  
-  // Create PDF viewer plugin instance
-  const defaultLayoutPluginInstance = defaultLayoutPlugin();
-  
-  // Refs for document containers
-  const docx1ContainerRef = useRef<HTMLDivElement>(null);
-  const docx2ContainerRef = useRef<HTMLDivElement>(null);
   
   // Simulate document processing time
   useEffect(() => {
@@ -47,45 +35,8 @@ export default function RedlineCompareView({
     return () => clearTimeout(timer);
   }, []);
   
-  // Function to render DOCX files in containers
-  const renderDocxViewer = async (containerRef: React.RefObject<HTMLDivElement>, file: File | null, setRendered: React.Dispatch<React.SetStateAction<boolean>>) => {
-    if (!containerRef.current || !file || isProcessing) return;
-    
-    try {
-      // Convert file to array buffer
-      const arrayBuffer = await file.arrayBuffer();
-      
-      // Render the document
-      await renderAsync(arrayBuffer, containerRef.current, undefined, {
-        className: 'docx-viewer',
-        inWrapper: true,
-        ignoreWidth: false,
-        ignoreHeight: false,
-        ignoreFonts: false,
-        experimental: true
-      });
-      
-      setRendered(true);
-    } catch (error) {
-      console.error('Error rendering DOCX:', error);
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '<div class="p-4 text-red-600">Error loading document. Please try again.</div>';
-      }
-    }
-  };
-  
-  // Render DOCX documents when tab changes and processing is done
-  useEffect(() => {
-    if (!isProcessing) {
-      if (activeTab === 'original' && !docxRendered1 && originalFile?.name.endsWith('.docx')) {
-        renderDocxViewer(docx1ContainerRef, originalFile, setDocxRendered1);
-      }
-      
-      if (activeTab === 'new' && !docxRendered2 && newFile?.name.endsWith('.docx')) {
-        renderDocxViewer(docx2ContainerRef, newFile, setDocxRendered2);
-      }
-    }
-  }, [isProcessing, activeTab, originalFile, newFile, docxRendered1, docxRendered2]);
+  // Simplified document viewing with NativeDocViewer
+  // No longer need specific DOCX rendering logic as it's handled by the NativeDocViewer component
   
   // Function to download the comparison result
   const downloadComparison = () => {
@@ -276,33 +227,13 @@ export default function RedlineCompareView({
                   </div>
                 ) : (
                   <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto">
-                    {originalFile?.name.endsWith('.pdf') ? (
-                      // PDF Viewer
+                    {originalFile?.name.endsWith('.pdf') || originalFile?.name.endsWith('.docx') ? (
+                      // Native Document Viewer for PDF and DOCX
                       <div className="w-full h-full">
-                        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
-                          <Viewer
-                            fileUrl={getFileUrl(originalFile)}
-                            plugins={[defaultLayoutPluginInstance]}
-                          />
-                        </Worker>
-                      </div>
-                    ) : originalFile?.name.endsWith('.docx') ? (
-                      // DOCX Viewer
-                      <div className="w-full h-full bg-white p-4 overflow-auto">
-                        <div 
-                          ref={docx1ContainerRef} 
-                          className="docx-container bg-white shadow-md max-w-4xl mx-auto min-h-[100%]"
-                        >
-                          <div className="flex justify-center items-center h-64">
-                            <div className="text-center">
-                              <svg className="animate-spin h-8 w-8 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              <p>Loading document...</p>
-                            </div>
-                          </div>
-                        </div>
+                        <NativeDocViewer 
+                          documentUrl={getFileUrl(originalFile)}
+                          documentType={originalFile?.name.split('.').pop()}
+                        />
                       </div>
                     ) : (
                       // Fallback for other file types
@@ -346,33 +277,13 @@ export default function RedlineCompareView({
                   </div>
                 ) : (
                   <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto">
-                    {newFile?.name.endsWith('.pdf') ? (
-                      // PDF Viewer
+                    {newFile?.name.endsWith('.pdf') || newFile?.name.endsWith('.docx') ? (
+                      // Native Document Viewer for PDF and DOCX
                       <div className="w-full h-full">
-                        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
-                          <Viewer
-                            fileUrl={getFileUrl(newFile)}
-                            plugins={[defaultLayoutPluginInstance]}
-                          />
-                        </Worker>
-                      </div>
-                    ) : newFile?.name.endsWith('.docx') ? (
-                      // DOCX Viewer
-                      <div className="w-full h-full bg-white p-4 overflow-auto">
-                        <div 
-                          ref={docx2ContainerRef} 
-                          className="docx-container bg-white shadow-md max-w-4xl mx-auto min-h-[100%]"
-                        >
-                          <div className="flex justify-center items-center h-64">
-                            <div className="text-center">
-                              <svg className="animate-spin h-8 w-8 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              <p>Loading document...</p>
-                            </div>
-                          </div>
-                        </div>
+                        <NativeDocViewer 
+                          documentUrl={getFileUrl(newFile)}
+                          documentType={newFile?.name.split('.').pop()}
+                        />
                       </div>
                     ) : (
                       // Fallback for other file types
