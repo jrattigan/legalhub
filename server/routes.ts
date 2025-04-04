@@ -41,6 +41,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
   });
   
+  // Special test upload endpoint for debugging
+  app.get('/test-upload', (req: Request, res: Response) => {
+    console.log('Test upload endpoint called');
+    res.status(200).send(`
+      <html>
+        <head>
+          <title>Test Upload</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; }
+            h1 { color: #333; }
+            form { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+            input, button { margin: 10px 0; padding: 8px; }
+            button { background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; }
+            pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
+          </style>
+        </head>
+        <body>
+          <h1>Test Document Upload</h1>
+          <form id="uploadForm" enctype="multipart/form-data">
+            <div>
+              <label for="file">Select Document:</label><br>
+              <input type="file" id="file" name="file" required>
+            </div>
+            <div>
+              <label for="documentId">Document ID:</label><br>
+              <input type="number" id="documentId" name="documentId" value="1" required>
+            </div>
+            <div>
+              <label for="uploadedById">Uploader ID:</label><br>
+              <input type="number" id="uploadedById" name="uploadedById" value="1" required>
+            </div>
+            <button type="button" onclick="uploadFile()">Upload</button>
+          </form>
+          
+          <div>
+            <h3>Response:</h3>
+            <pre id="response">No response yet</pre>
+          </div>
+          
+          <script>
+            async function uploadFile() {
+              const fileInput = document.getElementById('file');
+              const documentId = document.getElementById('documentId').value;
+              const uploadedById = document.getElementById('uploadedById').value;
+              const responseDiv = document.getElementById('response');
+              
+              if (!fileInput.files.length) {
+                responseDiv.textContent = "Please select a file first";
+                return;
+              }
+              
+              const file = fileInput.files[0];
+              const reader = new FileReader();
+              
+              reader.onload = async function(e) {
+                const base64Content = e.target.result.toString().split(',')[1];
+                
+                try {
+                  responseDiv.textContent = "Sending request...";
+                  
+                  const uploadData = {
+                    fileName: file.name,
+                    fileContent: base64Content,
+                    fileSize: file.size,
+                    fileType: file.type,
+                    uploadedById: parseInt(uploadedById)
+                  };
+                  
+                  // Using XMLHttpRequest
+                  const xhr = new XMLHttpRequest();
+                  xhr.open('POST', '/api/documents/' + documentId + '/versions', true);
+                  xhr.setRequestHeader('Content-Type', 'application/json');
+                  
+                  xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                      responseDiv.textContent = "Success!\\n" + xhr.responseText;
+                    } else {
+                      responseDiv.textContent = "Error: " + xhr.status + "\\n" + xhr.responseText;
+                    }
+                  };
+                  
+                  xhr.onerror = function() {
+                    responseDiv.textContent = "Network error during upload";
+                  };
+                  
+                  xhr.send(JSON.stringify(uploadData));
+                  
+                } catch (error) {
+                  responseDiv.textContent = "Error: " + error.message;
+                }
+              };
+              
+              reader.onerror = function() {
+                responseDiv.textContent = "Error reading the file";
+              };
+              
+              reader.readAsDataURL(file);
+            }
+          </script>
+        </body>
+      </html>
+    `);
+  });
+  
   // Seed data endpoint - for development purposes
   app.post('/api/seed-data', async (req: Request, res: Response) => {
     try {
