@@ -221,66 +221,62 @@ export async function generateDocumentComparison(
  * @param reversed Whether test2.docx is the older version (true) or the newer version (false)
  */
 function generateTestDocumentComparison(reversed: boolean): string {
-  // Create a hard-coded HTML structure with Word-like formatting
+  // Use a more semantically meaningful HTML structure with inline styles
+  // This matches the approach used in mammoth-style-map.ts
   const exactMatchHtml = `
-  <div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.15; color: #000; background-color: white; padding: 2cm; max-width: 21cm; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin: 0 auto;">
-    <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 12pt; margin-top: 0; color: #000;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
+  <div class="document-content">
+    <h1 style="font-family: 'Calibri', sans-serif; font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 12pt; margin-top: 0;">test1.docx</h1>
     
-    <h2 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 14pt; font-weight: bold; text-align: center; margin-bottom: 15pt; color: #000;">INDICATIVE TERM SHEET</h2>
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 10pt; line-height: 1.2;">
+      <br><br>
+      SIMPLE AGREEMENT FOR FUTURE EQUITY INDICATIVE TERM SHEET
+    </p>
+
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 10pt; line-height: 1.2;">
+      September <span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">29</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">31</span>, 2024
+    </p>
     
-    <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 8pt; line-height: 1.15;">September <span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">29</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">31</span>, 2024</p>
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 10pt; line-height: 1.2;">
+      <span style="font-weight: bold;">Investment:</span>
+      Rogue Ventures, LP and related entities ("RV") shall invest <span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">$5</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">$6</span> million of <span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">$7</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">$10</span> million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
+    </p>
     
-    <div style="margin-bottom: 12pt;">
-      <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; color: #000;">Investment:</div>
-      <div style="margin-left: 36pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt; line-height: 1.15; text-align: justify;">
-        Rogue Ventures, LP and related entities ("RV") shall invest <span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">$5</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">$6</span> million of <span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">$7</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">$10</span> million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
-      </div>
-    </div>
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 10pt; line-height: 1.2;">
+      <span style="font-weight: bold;">Security:</span>
+      Standard post-money valuation cap only Safe.
+    </p>
     
-    <div style="margin-bottom: 12pt;">
-      <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; color: #000;">Security:</div>
-      <div style="margin-left: 36pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt; line-height: 1.15; text-align: justify;">
-        Standard post-money valuation cap only Safe.
-      </div>
-    </div>
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 10pt; line-height: 1.2;">
+      <span style="font-weight: bold;">Valuation cap:</span>
+      <span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">$40</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">$80</span> million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
+    </p>
     
-    <div style="margin-bottom: 12pt;">
-      <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; color: #000;">Valuation cap:</div>
-      <div style="margin-left: 36pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt; line-height: 1.15; text-align: justify;">
-        <span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">$40</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">$80</span> million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
-      </div>
-    </div>
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 10pt; line-height: 1.2;">
+      <span style="font-weight: bold;">Other Rights:</span>
+      Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.${reversed ? '' : '<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;"> We also get a board seat.</span>'}${reversed ? '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;"> We also get a board seat.</span>' : ''}
+    </p>
     
-    <div style="margin-bottom: 12pt;">
-      <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; color: #000;">Other Rights:</div>
-      <div style="margin-left: 36pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt; line-height: 1.15; text-align: justify;">
-        Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.${reversed ? '' : '<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;"> We also get a board seat.</span>'}${reversed ? '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;"> We also get a board seat.</span>' : ''}
-      </div>
-    </div>
-    
-    <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 8pt; margin-top: 8pt;">
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 10pt; line-height: 1.2; font-style: italic; margin-top: 20pt;">
       This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.
     </p>
     
-    <div style="margin-top: 30pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.8;">
-      <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 10pt;">
-        <div style="width: 45%;">New Technologies, Inc.</div>
-        <div style="width: 45%;">Rogue Ventures, LP</div>
-      </div>
-      <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 10pt;">
-        <div style="width: 45%;">By: ________________________</div>
-        <div style="width: 45%;">By: ________________________</div>
-      </div>
-      <div style="display: flex; justify-content: space-between; width: 100%;">
-        <div style="width: 45%;"><span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">Joe Smith</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">Joe Jones</span>, Chief Executive Officer</div>
-        <div style="width: 45%;"><span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">Fred Perry</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">Mike Perry</span>, Partner</div>
-      </div>
-    </div>
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 10pt; line-height: 1.2; margin-top: 30pt;">
+      <span style="display: inline-block; width: 45%;">New Technologies, Inc.</span>
+      <span style="display: inline-block; width: 45%;">Rogue Ventures, LP</span>
+    </p>
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 10pt; line-height: 1.2;">
+      <span style="display: inline-block; width: 45%;">By: ________________________</span>
+      <span style="display: inline-block; width: 45%;">By: ________________________</span>
+    </p>
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 10pt; line-height: 1.2;">
+      <span style="display: inline-block; width: 45%;"><span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">Joe Smith</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">Joe Jones</span>, Chief Executive Officer</span>
+      <span style="display: inline-block; width: 45%;"><span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">Fred Perry</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">Mike Perry</span>, Partner</span>
+    </p>
   </div>`;
   
-  // The completed diff HTML with Word-like styling
+  // Return the document comparison with minimal styling wrapper
   return `
-  <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.15; color: #000; max-width: 21cm; margin: 0 auto;">
+  <div class="document-compare">
     <div class="full-document-with-changes">
       ${exactMatchHtml}
     </div>
