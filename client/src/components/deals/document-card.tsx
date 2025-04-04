@@ -152,20 +152,20 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
     }
   });
   
-  // Custom document upload handler - bypassing react-query's mutation to ensure proper fetch behavior
+  // Specialized document upload handler that uses XMLHttpRequest for more reliable POST requests
   const handleDocumentUpload = async (fileData: any) => {
     try {
       // Start loading state
       uploadMutation.reset();
       uploadMutation.mutate({}); // This triggers isPending state to true
       
-      console.log(`Starting custom document upload to document ID: ${document.id}`);
+      console.log(`Starting direct XMLHttpRequest upload to document ID: ${document.id}`);
       
       // Use an absolute URL to avoid path issues
-      const apiUrl = window.location.origin + `/api/documents/${document.id}/versions`;
-      console.log(`Making direct POST request to ${apiUrl} with XMLHttpRequest`);
+      const apiUrl = `/api/documents/${document.id}/versions`;
+      console.log(`Making POST request to ${apiUrl} via XMLHttpRequest`);
       
-      // Create a new XMLHttpRequest (more reliable than fetch in some contexts)
+      // Create a new XMLHttpRequest - this approach worked in our test page
       const xhr = new XMLHttpRequest();
       xhr.open('POST', apiUrl, true);
       xhr.setRequestHeader('Content-Type', 'application/json');
@@ -183,7 +183,7 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
           });
           
           // Update UI and queries
-          queryClient.invalidateQueries({ queryKey: [window.location.origin + `/api/document-versions/document/${document.id}`] });
+          queryClient.invalidateQueries({ queryKey: [`/api/document-versions/document/${document.id}`] });
           setIsUploadDialogOpen(false);
           onRefreshData();
           uploadMutation.reset(); // Reset pending state
@@ -216,11 +216,11 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
         uploadedById: 1 // For demo purposes, use first user
       };
       
-      console.log("Sending data with XMLHttpRequest");
+      console.log("Sending document data via XMLHttpRequest");
       xhr.send(JSON.stringify(uploadData));
       
     } catch (error) {
-      console.error("Error in custom document upload:", error);
+      console.error("Error in document upload handler:", error);
       toast({
         title: "Upload Error",
         description: "An unexpected error occurred. Please try again.",
@@ -230,31 +230,42 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
     }
   };
 
-  // Compare versions mutation
+  // Compare versions mutation using XMLHttpRequest for consistency
   const compareMutation = useMutation({
     mutationFn: async ({ version1Id, version2Id }: { version1Id: number, version2Id: number }) => {
-      console.log("Calling comparison API with:", {version1Id, version2Id});
-      // Use an absolute URL to avoid path issues
-      const apiUrl = window.location.origin + `/api/document-versions/compare?version1=${version1Id}&version2=${version2Id}`;
-      const response = await fetch(apiUrl);
+      console.log("Calling comparison API with XMLHttpRequest:", {version1Id, version2Id});
       
-      // Get response text first
-      const responseText = await response.text();
-      console.log("Raw API response:", responseText.substring(0, 100) + "...");
+      // Use direct path without window.location.origin
+      const apiUrl = `/api/document-versions/compare?version1=${version1Id}&version2=${version2Id}`;
       
-      if (!response.ok) {
-        throw new Error('Failed to compare versions');
-      }
-      
-      try {
-        // Then try to parse it as JSON
-        const result = JSON.parse(responseText);
-        console.log("Parsed API response:", result);
-        return result;
-      } catch (e) {
-        console.error("Error parsing response as JSON:", e);
-        throw new Error('Invalid response format from server');
-      }
+      // Create promise wrapper for XMLHttpRequest
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', apiUrl, true);
+        
+        xhr.onload = function() {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              console.log("Raw API response:", xhr.responseText.substring(0, 100) + "...");
+              const result = JSON.parse(xhr.responseText);
+              console.log("Parsed API response:", result);
+              resolve(result);
+            } catch (e) {
+              console.error("Error parsing response as JSON:", e);
+              reject(new Error('Invalid response format from server'));
+            }
+          } else {
+            reject(new Error('Failed to compare versions'));
+          }
+        };
+        
+        xhr.onerror = function() {
+          console.error("Network error during comparison request");
+          reject(new Error('Network error during comparison request'));
+        };
+        
+        xhr.send();
+      });
     },
     onSuccess: (data) => {
       console.log("Comparison success, setting state with:", {data});
