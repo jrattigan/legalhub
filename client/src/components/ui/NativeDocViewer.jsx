@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import { renderAsync } from 'docx-preview';
 
 // Set worker path for PDF.js
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
@@ -10,6 +9,7 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [fileExtension, setFileExtension] = useState(null);
+  const [documentFileName, setDocumentFileName] = useState('');
 
   useEffect(() => {
     if (!documentUrl) return;
@@ -18,10 +18,14 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
     const ext = documentType || documentUrl.split('.').pop().toLowerCase();
     setFileExtension(ext);
     
+    // Extract filename from URL
+    const fileName = documentUrl.split('/').pop();
+    setDocumentFileName(fileName);
+    
     setIsLoading(true);
     setError(null);
     
-    // Clear previous content
+    // Show loading indicator
     if (containerRef.current) {
       containerRef.current.innerHTML = `
         <div class="flex justify-center items-center h-full">
@@ -36,67 +40,15 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
       `;
     }
     
+    // Handle document rendering
     const renderDocument = async () => {
       try {
-        const response = await fetch(documentUrl);
-        if (!response.ok) throw new Error('Failed to fetch document');
-        
-        const arrayBuffer = await response.arrayBuffer();
-        
-        if (containerRef.current) {
-          // Clear loading indicator
-          containerRef.current.innerHTML = '';
-          
-          if (ext === 'pdf') {
-            // Render PDF using PDF.js
-            const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-            const pdfDocument = await loadingTask.promise;
-            
-            // Create viewer container
-            const viewerContainer = document.createElement('div');
-            viewerContainer.className = 'pdfViewer';
-            viewerContainer.style.padding = '20px';
-            containerRef.current.appendChild(viewerContainer);
-            
-            // Render each page
-            for (let i = 1; i <= pdfDocument.numPages; i++) {
-              const page = await pdfDocument.getPage(i);
-              const scale = 1.2;
-              const viewport = page.getViewport({ scale });
-              
-              const canvas = document.createElement('canvas');
-              canvas.width = viewport.width;
-              canvas.height = viewport.height;
-              canvas.style.display = 'block';
-              canvas.style.margin = '0 auto 10px auto';
-              canvas.style.border = '1px solid #ddd';
-              viewerContainer.appendChild(canvas);
-              
-              const context = canvas.getContext('2d');
-              const renderContext = {
-                canvasContext: context,
-                viewport: viewport
-              };
-              
-              await page.render(renderContext).promise;
-            }
-          } else if (ext === 'docx') {
-            // Render DOCX using docx-preview
-            await renderAsync(arrayBuffer, containerRef.current, undefined, {
-              className: 'docx-viewer',
-              inWrapper: true,
-              ignoreLastRenderedPageBreak: true,
-              useBase64URL: true,
-              renderHeaders: true,
-              renderFooters: true,
-              renderFootnotes: true,
-              renderEndnotes: true
-            });
-          } else {
-            throw new Error(`Unsupported file type: ${ext}`);
-          }
-          
-          setIsLoading(false);
+        if (ext === 'pdf') {
+          await renderPdf(documentUrl);
+        } else if (ext === 'docx' || ext === 'doc' || ext === 'xlsx' || ext === 'pptx') {
+          renderOffice365Viewer(documentUrl, ext);
+        } else {
+          throw new Error(`Unsupported file type: ${ext}`);
         }
       } catch (err) {
         console.error('Error rendering document:', err);
@@ -110,6 +62,171 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
     
     renderDocument();
   }, [documentUrl, documentType]);
+  
+  // Render PDF using PDF.js
+  const renderPdf = async (url) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch PDF document');
+      
+      const arrayBuffer = await response.arrayBuffer();
+      
+      if (containerRef.current) {
+        // Clear loading indicator
+        containerRef.current.innerHTML = '';
+        
+        // Render PDF using PDF.js
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdfDocument = await loadingTask.promise;
+        
+        // Create viewer container
+        const viewerContainer = document.createElement('div');
+        viewerContainer.className = 'pdfViewer';
+        viewerContainer.style.padding = '20px';
+        containerRef.current.appendChild(viewerContainer);
+        
+        // Add PDF controls
+        const controlsContainer = document.createElement('div');
+        controlsContainer.className = 'pdf-controls';
+        controlsContainer.style.padding = '10px';
+        controlsContainer.style.borderBottom = '1px solid #ddd';
+        controlsContainer.style.display = 'flex';
+        controlsContainer.style.justifyContent = 'center';
+        controlsContainer.style.background = '#f9fafb';
+        
+        const zoomOutBtn = document.createElement('button');
+        zoomOutBtn.innerText = '−';
+        zoomOutBtn.title = 'Zoom Out';
+        zoomOutBtn.className = 'pdf-control-button';
+        zoomOutBtn.style.margin = '0 5px';
+        zoomOutBtn.style.width = '30px';
+        zoomOutBtn.style.height = '30px';
+        zoomOutBtn.style.borderRadius = '4px';
+        zoomOutBtn.style.border = '1px solid #ddd';
+        
+        const zoomInBtn = document.createElement('button');
+        zoomInBtn.innerText = '+';
+        zoomInBtn.title = 'Zoom In';
+        zoomInBtn.className = 'pdf-control-button';
+        zoomInBtn.style.margin = '0 5px';
+        zoomInBtn.style.width = '30px';
+        zoomInBtn.style.height = '30px';
+        zoomInBtn.style.borderRadius = '4px';
+        zoomInBtn.style.border = '1px solid #ddd';
+        
+        controlsContainer.appendChild(zoomOutBtn);
+        controlsContainer.appendChild(zoomInBtn);
+        
+        containerRef.current.insertBefore(controlsContainer, viewerContainer);
+        
+        let currentScale = 1.2;
+        
+        const renderPages = async (scale) => {
+          // Clear existing pages
+          viewerContainer.innerHTML = '';
+          
+          // Render each page
+          for (let i = 1; i <= pdfDocument.numPages; i++) {
+            const page = await pdfDocument.getPage(i);
+            const viewport = page.getViewport({ scale });
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            canvas.style.display = 'block';
+            canvas.style.margin = '0 auto 10px auto';
+            canvas.style.border = '1px solid #ddd';
+            viewerContainer.appendChild(canvas);
+            
+            const context = canvas.getContext('2d');
+            const renderContext = {
+              canvasContext: context,
+              viewport: viewport
+            };
+            
+            await page.render(renderContext).promise;
+          }
+        };
+        
+        // Initial render
+        await renderPages(currentScale);
+        
+        // Zoom event handlers
+        zoomInBtn.addEventListener('click', async () => {
+          currentScale += 0.2;
+          await renderPages(currentScale);
+        });
+        
+        zoomOutBtn.addEventListener('click', async () => {
+          if (currentScale > 0.5) {
+            currentScale -= 0.2;
+            await renderPages(currentScale);
+          }
+        });
+        
+        setIsLoading(false);
+      }
+    } catch (err) {
+      throw err;
+    }
+  };
+  
+  // Render Office documents using Microsoft Office 365 Viewer
+  const renderOffice365Viewer = (url, ext) => {
+    if (!containerRef.current) return;
+    
+    // Clear any existing content
+    containerRef.current.innerHTML = '';
+    
+    // Get the full URL to the document
+    const fullUrl = new URL(url, window.location.origin).href;
+    
+    // Create the Office 365 Viewer iframe
+    const iframe = document.createElement('iframe');
+    iframe.width = '100%';
+    iframe.height = '100%';
+    iframe.frameBorder = '0';
+    
+    // Set the iframe source to Microsoft Office 365 Viewer
+    // For Word documents, we use the Word Online viewer
+    let viewerUrl;
+    if (ext === 'docx' || ext === 'doc') {
+      viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fullUrl)}`;
+    } else if (ext === 'xlsx') {
+      viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fullUrl)}`;
+    } else if (ext === 'pptx') {
+      viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fullUrl)}`;
+    }
+    
+    iframe.src = viewerUrl;
+    iframe.style.border = 'none';
+    
+    // Add the iframe to the container
+    containerRef.current.appendChild(iframe);
+    
+    // Handle iframe load events
+    iframe.onload = () => {
+      setIsLoading(false);
+    };
+    
+    iframe.onerror = (err) => {
+      setError('Failed to load the document viewer');
+      setIsLoading(false);
+      console.error('Office viewer iframe error:', err);
+      
+      // Fallback message
+      containerRef.current.innerHTML = `
+        <div class="p-4 text-center">
+          <div class="text-red-600 mb-4">Error loading Office document viewer.</div>
+          <div>
+            <a href="${url}" target="_blank" class="text-blue-600 underline">
+              Download document to view
+            </a>
+          </div>
+        </div>
+      `;
+    };
+  };
 
   return (
     <div 
