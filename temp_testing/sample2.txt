@@ -1,0 +1,8 @@
+This is a sample document for testing Redline functionality.
+It contains multiple paragraphs of text to be compared.
+
+This paragraph will be unchanged.
+
+The next paragraph has been modified to demonstrate how tracked changes appear in the redline view. New content has been added here.
+
+The final paragraph demonstrates how the tool handles document comparisons, with additional considerations for PDF files.

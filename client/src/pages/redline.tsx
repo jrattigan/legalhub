@@ -196,6 +196,7 @@ export default function RedlinePage() {
                           'application/rtf': ['.rtf'],
                           'text/plain': ['.txt'],
                           'text/html': ['.html', '.htm'],
+                          'application/pdf': ['.pdf'],
                         },
                       }}
                     />
@@ -220,6 +221,7 @@ export default function RedlinePage() {
                           'application/rtf': ['.rtf'],
                           'text/plain': ['.txt'],
                           'text/html': ['.html', '.htm'],
+                          'application/pdf': ['.pdf'],
                         },
                       }}
                     />
@@ -252,6 +254,7 @@ export default function RedlinePage() {
                     <li><strong>Rich Text Format:</strong> .rtf</li>
                     <li><strong>Plain Text:</strong> .txt</li>
                     <li><strong>HTML:</strong> .html, .htm</li>
+                    <li><strong>PDF:</strong> .pdf</li>
                   </ul>
                   
                   <h3 className="mt-4">File Size Limits</h3>
@@ -270,6 +273,8 @@ export default function RedlinePage() {
                     <li>For best results, compare documents of the same type</li>
                     <li>Complex formatting may be lost during comparison</li>
                     <li>For Word documents, only the text content is compared, not formatting or images</li>
+                    <li>PDF comparison focuses on text content; formatting, images, and tables may not be compared accurately</li>
+                    <li>For PDFs with complex layout or scanned content, OCR quality may affect comparison results</li>
                   </ul>
                 </div>
               </TabsContent>

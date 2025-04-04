@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as mammoth from 'mammoth';
+import pdfParse from 'pdf-parse';
 
 export interface FileData {
   name: string;
@@ -42,6 +43,27 @@ async function extractWordContent(content: string): Promise<string> {
 }
 
 /**
+ * Extract text content from a PDF document
+ * @param content The binary content of the PDF document
+ * @returns A promise that resolves to the extracted text
+ */
+async function extractPdfContent(content: string): Promise<string> {
+  try {
+    // Decode the base64 content
+    const buffer = Buffer.from(content, 'base64');
+    
+    // Use pdf-parse to extract text
+    const data = await pdfParse(buffer);
+    
+    // Return the text content
+    return data.text;
+  } catch (error) {
+    console.error('Error extracting PDF content:', error);
+    throw new Error('Failed to extract content from PDF document');
+  }
+}
+
+/**
  * Extract text content from a file based on its type
  * @param fileData Object containing file details and content
  * @returns The extracted text content
@@ -55,6 +77,9 @@ async function extractFileContent(fileData: FileData): Promise<string> {
   } else if (type.includes('text/plain') || type.includes('text/html') || type.includes('application/rtf')) {
     // For plain text, HTML, or RTF, we can use the content directly (decoded from base64)
     return Buffer.from(content, 'base64').toString('utf-8');
+  } else if (type.includes('application/pdf')) {
+    // For PDF files
+    return await extractPdfContent(content);
   } else {
     // For unsupported file types, return a message
     throw new Error(`Unsupported file type: ${type}`);
