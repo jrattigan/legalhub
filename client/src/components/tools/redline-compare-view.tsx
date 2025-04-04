@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { ArrowLeft, Download, Eye, Split, X } from 'lucide-react';
+import { ArrowLeft, Download, Eye, Split, FileText, X, ArrowRight } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 interface RedlineCompareViewProps {
@@ -22,7 +21,7 @@ export default function RedlineCompareView({
   contentV2,
   onReset,
 }: RedlineCompareViewProps) {
-  const [viewMode, setViewMode] = useState<'unified' | 'split'>('unified');
+  const [activeTab, setActiveTab] = useState<'changes' | 'original' | 'new'>('changes');
   
   // Function to download the comparison result
   const downloadComparison = () => {
@@ -55,20 +54,7 @@ export default function RedlineCompareView({
       <p>Comparison Date: ${new Date().toLocaleString()}</p>
     </div>
   </div>
-  
-  ${viewMode === 'unified' ? 
-    `<div class="document-diff">${diff}</div>` : 
-    `<div class="document-container">
-      <div class="document-panel">
-        <h2>Original Document</h2>
-        <div>${contentV1.replace(/\n/g, '<br>')}</div>
-      </div>
-      <div class="document-panel">
-        <h2>New Document</h2>
-        <div>${contentV2.replace(/\n/g, '<br>')}</div>
-      </div>
-    </div>`
-  }
+  <div class="document-diff">${diff}</div>
 </body>
 </html>
     `;
@@ -89,59 +75,145 @@ export default function RedlineCompareView({
   
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="pb-4">
+      <Card className="shadow-md overflow-hidden">
+        <CardHeader className="pb-4 bg-white border-b">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Comparison Results</CardTitle>
-              <CardDescription>
-                Comparing {originalFile?.name} with {newFile?.name}
-              </CardDescription>
+            <div className="flex items-center">
+              <FileText className="h-5 w-5 mr-2" />
+              <div>
+                <CardTitle>Document Comparison</CardTitle>
+                <CardDescription>
+                  Comparing {originalFile?.name} with {newFile?.name}
+                </CardDescription>
+              </div>
             </div>
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm" onClick={() => setViewMode('unified')}>
-                <Eye className="h-4 w-4 mr-1" />
-                Unified View
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setViewMode('split')}>
-                <Split className="h-4 w-4 mr-1" />
-                Split View
-              </Button>
-              <Button variant="outline" size="sm" onClick={downloadComparison}>
-                <Download className="h-4 w-4 mr-1" />
-                Download
-              </Button>
-              <Button variant="ghost" size="sm" onClick={onReset}>
-                <X className="h-4 w-4 mr-1" />
-                Close
-              </Button>
-            </div>
+            <Button variant="outline" size="sm" onClick={onReset}>
+              <X className="h-4 w-4 mr-1" />
+              Close
+            </Button>
           </div>
         </CardHeader>
         
-        <Separator />
-        
-        <CardContent className="pt-6">
-          {viewMode === 'unified' ? (
-            <div className="border rounded-md p-4 bg-background">
-              <h3 className="text-lg font-medium mb-4">Unified View</h3>
-              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: diff }} />
+        {/* Document Info */}
+        <div className="p-3 flex justify-between bg-slate-50 border-b">
+          <div>
+            <div className="text-sm font-medium">Original Document</div>
+            <div className="text-xs text-muted-foreground">
+              {originalFile?.name || 'Unknown'} ({Math.round((originalFile?.size || 0) / 1024)} KB)
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="border rounded-md p-4 bg-background">
-                <h3 className="text-lg font-medium mb-4">Original Document</h3>
-                <div className="whitespace-pre-wrap">{contentV1}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm font-medium">New Document</div>
+            <div className="text-xs text-muted-foreground">
+              {newFile?.name || 'Unknown'} ({Math.round((newFile?.size || 0) / 1024)} KB)
+            </div>
+          </div>
+        </div>
+        
+        {/* Tabs */}
+        <div className="bg-muted/10 border-b p-1 flex">
+          <button 
+            className={`flex items-center px-4 py-2 rounded-md text-sm ${activeTab === 'changes' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+            onClick={() => setActiveTab('changes')}
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            View Changes
+          </button>
+          <button 
+            className={`flex items-center px-4 py-2 rounded-md text-sm ${activeTab === 'original' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+            onClick={() => setActiveTab('original')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Original
+          </button>
+          <button 
+            className={`flex items-center px-4 py-2 rounded-md text-sm ${activeTab === 'new' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+            onClick={() => setActiveTab('new')}
+          >
+            <ArrowRight className="h-4 w-4 mr-2" />
+            New Version
+          </button>
+          <div className="flex-1"></div>
+          <Button variant="outline" size="sm" className="ml-auto" onClick={downloadComparison}>
+            <Download className="h-4 w-4 mr-1" />
+            Download
+          </Button>
+        </div>
+        
+        {/* Main Content Area */}
+        <div className="flex-1 min-h-[500px] max-h-[70vh] overflow-auto bg-white">
+          {/* Changes Tab */}
+          {activeTab === 'changes' && (
+            <div className="h-full flex flex-col">
+              <div className="p-2 text-xs text-slate-700 bg-slate-50 flex flex-wrap items-center justify-between border-b">
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                    <path d="M12 3v5"></path>  
+                    <path d="m9 10 3-2 3 2"></path>
+                    <rect x="4" y="14" width="16" height="6" rx="2"></rect>
+                  </svg>
+                  <span className="text-sm font-medium">Track Changes</span>
+                </div>
+                <div className="flex flex-wrap">
+                  <span className="inline-block mr-3"><span className="bg-red-100 text-red-700 px-1 py-0.5 text-xs rounded line-through">Red text</span>: Deleted</span>
+                  <span className="inline-block"><span className="bg-green-100 text-green-700 px-1 py-0.5 text-xs rounded">Green text</span>: Added</span>
+                </div>
               </div>
-              <div className="border rounded-md p-4 bg-background">
-                <h3 className="text-lg font-medium mb-4">New Document</h3>
-                <div className="whitespace-pre-wrap">{contentV2}</div>
+              
+              <div className="p-4 min-w-full">
+                <div className="border rounded-md p-6 bg-white shadow-sm min-h-[400px]" dangerouslySetInnerHTML={{ __html: diff }} />
               </div>
             </div>
           )}
-        </CardContent>
+          
+          {/* Original Tab */}
+          {activeTab === 'original' && (
+            <div className="h-full flex flex-col">
+              <div className="p-2 text-xs text-slate-700 bg-slate-50 flex items-center justify-between border-b">
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span className="text-sm font-medium">{originalFile?.name || 'Original Document'}</span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {originalFile && `${Math.round(originalFile.size / 1024)} KB`}
+                </div>
+              </div>
+              
+              <div className="p-4">
+                <div className="border rounded-md p-6 bg-white shadow-sm min-h-[400px]">
+                  <pre className="whitespace-pre-wrap">{contentV1}</pre>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* New Version Tab */}
+          {activeTab === 'new' && (
+            <div className="h-full flex flex-col">
+              <div className="p-2 text-xs text-slate-700 bg-slate-50 flex items-center justify-between border-b">
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span className="text-sm font-medium">{newFile?.name || 'New Document'}</span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {newFile && `${Math.round(newFile.size / 1024)} KB`}
+                </div>
+              </div>
+              
+              <div className="p-4">
+                <div className="border rounded-md p-6 bg-white shadow-sm min-h-[400px]">
+                  <pre className="whitespace-pre-wrap">{contentV2}</pre>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
         
-        <CardFooter className="border-t pt-4 flex justify-between">
+        <CardFooter className="border-t p-4 flex justify-between bg-slate-50">
           <Button variant="outline" onClick={onReset}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Upload
