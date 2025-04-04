@@ -117,16 +117,15 @@ export function DocumentCompareDirect({
   // Render DOCX documents when tab changes and processing is done
   useEffect(() => {
     if (!isProcessing) {
-      // Always load both documents when processing is complete, regardless of active tab
-      if (!docxRendered1 && originalVersion.fileName.endsWith('.docx')) {
+      if (activeTab === 'original' && !docxRendered1 && originalVersion.fileName.endsWith('.docx')) {
         renderDocxViewer(docx1ContainerRef, originalVersion.id, setDocxRendered1);
       }
       
-      if (!docxRendered2 && newVersion.fileName.endsWith('.docx')) {
+      if (activeTab === 'new' && !docxRendered2 && newVersion.fileName.endsWith('.docx')) {
         renderDocxViewer(docx2ContainerRef, newVersion.id, setDocxRendered2);
       }
     }
-  }, [isProcessing, originalVersion.id, newVersion.id, docxRendered1, docxRendered2]);
+  }, [isProcessing, activeTab, originalVersion.id, newVersion.id, docxRendered1, docxRendered2]);
 
   // Handler for document download
   const handleDownload = (versionId: number, fileName: string) => {
@@ -211,30 +210,14 @@ export function DocumentCompareDirect({
                     <path d="m9 10 3-2 3 2"></path>
                     <rect x="4" y="14" width="16" height="6" rx="2"></rect>
                   </svg>
-                  <span className="text-sm font-medium">Side-by-Side View: v{originalVersion.version} → v{newVersion.version}</span>
+                  <span className="text-sm font-medium">Track Changes: v{originalVersion.version} → v{newVersion.version}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleDownload(originalVersion.id, originalVersion.fileName)}
-                    className="flex items-center"
-                  >
-                    <Download className="h-3 w-3 mr-1" />
-                    Download Original
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleDownload(newVersion.id, newVersion.fileName)}
-                    className="flex items-center"
-                  >
-                    <Download className="h-3 w-3 mr-1" />
-                    Download New
-                  </Button>
+                <div className="flex flex-wrap">
+                  <span className="inline-block mr-3"><span className="bg-red-100 text-red-700 px-1 py-0.5 text-xs rounded line-through">Red text</span>: Deleted</span>
+                  <span className="inline-block"><span className="bg-green-100 text-green-700 px-1 py-0.5 text-xs rounded">Green text</span>: Added</span>
                 </div>
               </div>
-              <div className="flex-1 overflow-auto">
+              <div className="flex-1 overflow-auto p-4">
                 {isProcessing ? (
                   <div className="flex flex-col items-center justify-center h-full p-8">
                     <div className="w-16 h-16 mb-4 relative">
@@ -248,7 +231,7 @@ export function DocumentCompareDirect({
                     </div>
                     <div className="text-lg font-medium text-neutral-700 mb-2">Processing Documents</div>
                     <div className="text-sm text-neutral-500 text-center max-w-md animate-pulse">
-                      Preparing documents for comparison view...
+                      Analyzing differences between document versions...
                     </div>
                     <div className="mt-4 grid grid-cols-4 gap-2">
                       <div className="h-1 bg-primary/20 rounded animate-pulse"></div>
@@ -258,88 +241,11 @@ export function DocumentCompareDirect({
                     </div>
                   </div>
                 ) : (
-                  // Side-by-side document viewers
-                  <div className="flex h-full overflow-hidden">
-                    {/* Original Document */}
-                    <div className="w-1/2 h-full border-r overflow-auto">
-                      <div className="p-2 bg-slate-100 border-b text-xs font-medium text-center">
-                        Original Version (v{originalVersion.version})
-                      </div>
-                      <div className="h-[calc(100%-30px)] overflow-auto bg-gray-50">
-                        {originalVersion.fileName.endsWith('.pdf') ? (
-                          // PDF Viewer for Original
-                          <div className="w-full h-full">
-                            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
-                              <Viewer
-                                fileUrl={getDocumentFileUrl(originalVersion.id)}
-                                plugins={[defaultLayoutPluginInstance]}
-                              />
-                            </Worker>
-                          </div>
-                        ) : originalVersion.fileName.endsWith('.docx') ? (
-                          // DOCX Viewer for Original
-                          <div className="w-full h-full bg-white p-4 overflow-auto">
-                            <div 
-                              ref={docx1ContainerRef} 
-                              className="docx-container bg-white shadow-md mx-auto min-h-[100%]"
-                            />
-                          </div>
-                        ) : (
-                          // Fallback for other file types
-                          <div className="p-4 text-center">
-                            <p className="mb-4">This file type cannot be previewed.</p>
-                            <Button 
-                              onClick={() => handleDownload(originalVersion.id, originalVersion.fileName)}
-                              className="flex items-center gap-2"
-                            >
-                              <Download className="h-4 w-4" />
-                              Download to view
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* New Version Document */}
-                    <div className="w-1/2 h-full overflow-auto">
-                      <div className="p-2 bg-slate-100 border-b text-xs font-medium text-center">
-                        New Version (v{newVersion.version})
-                      </div>
-                      <div className="h-[calc(100%-30px)] overflow-auto bg-gray-50">
-                        {newVersion.fileName.endsWith('.pdf') ? (
-                          // PDF Viewer for New Version
-                          <div className="w-full h-full">
-                            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
-                              <Viewer
-                                fileUrl={getDocumentFileUrl(newVersion.id)}
-                                plugins={[defaultLayoutPluginInstance]}
-                              />
-                            </Worker>
-                          </div>
-                        ) : newVersion.fileName.endsWith('.docx') ? (
-                          // DOCX Viewer for New Version
-                          <div className="w-full h-full bg-white p-4 overflow-auto">
-                            <div 
-                              ref={docx2ContainerRef} 
-                              className="docx-container bg-white shadow-md mx-auto min-h-[100%]"
-                            />
-                          </div>
-                        ) : (
-                          // Fallback for other file types
-                          <div className="p-4 text-center">
-                            <p className="mb-4">This file type cannot be previewed.</p>
-                            <Button 
-                              onClick={() => handleDownload(newVersion.id, newVersion.fileName)}
-                              className="flex items-center gap-2"
-                            >
-                              <Download className="h-4 w-4" />
-                              Download to view
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  // Directly insert the HTML using dangerouslySetInnerHTML
+                  <div 
+                    className="prose prose-sm max-w-none" 
+                    dangerouslySetInnerHTML={{ __html: diff }} 
+                  />
                 )}
               </div>
             </div>
