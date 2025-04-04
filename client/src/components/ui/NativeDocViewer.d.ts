@@ -1,10 +1,22 @@
-// Type definitions for NativeDocViewer component
-import { FC } from 'react';
+import React from 'react';
 
-export interface NativeDocViewerProps {
+interface NativeDocViewerProps {
+  /**
+   * URL of the document to be displayed
+   */
   documentUrl: string;
+  
+  /**
+   * Optional document type override (e.g., 'pdf', 'docx')
+   * If not provided, will be inferred from the documentUrl extension
+   */
   documentType?: string;
 }
 
-declare const NativeDocViewer: FC<NativeDocViewerProps>;
+/**
+ * A native document viewer component that renders documents in their original format
+ * Currently supports PDF using PDF.js and DOCX with a download option or Office 365 Viewer
+ */
+declare const NativeDocViewer: React.FC<NativeDocViewerProps>;
+
 export default NativeDocViewer;

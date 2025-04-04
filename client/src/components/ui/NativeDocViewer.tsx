@@ -4,17 +4,22 @@ import * as pdfjsLib from 'pdfjs-dist';
 // Set worker path for PDF.js
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-const NativeDocViewer = ({ documentUrl, documentType }) => {
-  const containerRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [fileExtension, setFileExtension] = useState(null);
+interface NativeDocViewerProps {
+  documentUrl: string;
+  documentType?: string;
+}
+
+const NativeDocViewer: React.FC<NativeDocViewerProps> = ({ documentUrl, documentType }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [fileExtension, setFileExtension] = useState<string | null>(null);
 
   useEffect(() => {
     if (!documentUrl) return;
     
     // Extract file extension from URL or documentType prop
-    const ext = documentType || documentUrl.split('.').pop().toLowerCase();
+    const ext = documentType || documentUrl.split('.').pop()?.toLowerCase() || '';
     setFileExtension(ext);
     
     setIsLoading(true);
@@ -50,7 +55,7 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
         if (containerRef.current) {
           containerRef.current.innerHTML = `
             <div class="p-4 text-center">
-              <div class="text-red-600 mb-4">Error loading document: ${err.message}</div>
+              <div class="text-red-600 mb-4">Error loading document: ${err instanceof Error ? err.message : 'Unknown error'}</div>
               <div>
                 <a href="${documentUrl}" download class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -64,7 +69,7 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
             </div>
           `;
         }
-        setError(err.message);
+        setError(err instanceof Error ? err.message : 'Unknown error');
         setIsLoading(false);
       }
     };
@@ -73,7 +78,7 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
   }, [documentUrl, documentType]);
   
   // Render PDF using PDF.js
-  const renderPdf = async (url) => {
+  const renderPdf = async (url: string): Promise<void> => {
     try {
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch PDF document');
@@ -133,7 +138,7 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
         
         let currentScale = 1.2;
         
-        const renderPages = async (scale) => {
+        const renderPages = async (scale: number): Promise<void> => {
           // Clear existing pages
           viewerContainer.innerHTML = '';
           
@@ -157,6 +162,10 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
             viewerContainer.appendChild(pageContainer);
             
             const context = canvas.getContext('2d');
+            if (!context) {
+              throw new Error('Could not get canvas context');
+            }
+            
             const renderContext = {
               canvasContext: context,
               viewport: viewport
@@ -190,7 +199,7 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
   };
   
   // Render DOCX - since we can't use external libraries, offer direct download or use iframe embedder
-  const renderDocx = async (url) => {
+  const renderDocx = async (url: string): Promise<void> => {
     try {
       if (containerRef.current) {
         // Clear any existing content
@@ -279,6 +288,7 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
         tryOfficeViewerButton.addEventListener('click', () => {
           try {
             // Clear the container
+            if (!containerRef.current) return;
             containerRef.current.innerHTML = '';
             
             // Get the full URL to the document
@@ -384,7 +394,7 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
       if (containerRef.current) {
         containerRef.current.innerHTML = `
           <div class="p-4 text-center">
-            <div class="text-red-600 mb-4">Error handling document: ${err.message}</div>
+            <div class="text-red-600 mb-4">Error handling document: ${err instanceof Error ? err.message : 'Unknown error'}</div>
             <div>
               <a href="${url}" download class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -398,7 +408,7 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
           </div>
         `;
       }
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'Unknown error');
       setIsLoading(false);
     }
   };
