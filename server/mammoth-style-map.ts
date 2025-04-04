@@ -88,90 +88,9 @@ export async function convertDocumentWithStyles(buffer: Buffer): Promise<string>
  * @returns The wrapped HTML with document styles
  */
 function wrapWithDocumentStyles(html: string): string {
+  // Apply styles directly using inline style attributes instead of a style tag
   return `
   <div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">
-    <style>
-      /* Base document styles */
-      .document-content {
-        font-family: 'Calibri', 'Arial', sans-serif;
-        font-size: 11pt;
-        line-height: 1.5;
-        color: #333;
-      }
-      
-      /* Paragraph styles */
-      .document-content p {
-        margin: 0 0 8px 0;
-      }
-      .document-content .body-text {
-        margin-bottom: 12px;
-      }
-      .document-content .table-paragraph {
-        margin: 0;
-      }
-      
-      /* Heading styles */
-      .document-content h1, 
-      .document-content h2, 
-      .document-content h3 {
-        font-weight: bold;
-        margin: 12px 0 6px 0;
-      }
-      .document-content h1.title {
-        font-size: 18pt;
-        text-align: center;
-        margin-bottom: 12px;
-      }
-      .document-content h2.subtitle {
-        font-size: 14pt;
-        text-align: center;
-        margin-bottom: 12px;
-      }
-      .document-content .heading1 {
-        font-size: 16pt;
-      }
-      .document-content .heading2 {
-        font-size: 14pt;
-      }
-      .document-content .heading3 {
-        font-size: 12pt;
-      }
-      
-      /* Table styles */
-      .document-content .document-table {
-        border-collapse: collapse;
-        width: 100%;
-        margin-bottom: 12px;
-      }
-      .document-content .document-table td {
-        padding: 4px 8px;
-        border: 1px solid #ccc;
-        vertical-align: top;
-      }
-      
-      /* List styles */
-      .document-content ul, 
-      .document-content ol {
-        margin: 0 0 12px 20px;
-        padding: 0;
-      }
-      .document-content li {
-        margin-bottom: 4px;
-      }
-      
-      /* Character styles */
-      .document-content .intense-emphasis {
-        font-style: italic;
-        color: #666;
-      }
-      .document-content .strong-emphasis {
-        font-weight: bold;
-        color: #666;
-      }
-      .document-content .book-title {
-        font-style: italic;
-      }
-    </style>
     ${html}
   </div>`;
 }
