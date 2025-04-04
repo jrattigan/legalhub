@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { DocumentVersion } from '@shared/schema';
 import { FileText, ArrowLeft, ArrowRight, Eye } from 'lucide-react';
@@ -32,108 +32,144 @@ export function DocumentCompare({
   aiSummary
 }: DocumentCompareProps) {
   const [activeTab, setActiveTab] = useState<'changes' | 'original' | 'new'>('changes');
-  const [renderedDiff, setRenderedDiff] = useState<string>(diff);
+  const [isProcessing, setIsProcessing] = useState<boolean>(true);
+  const [htmlContent, setHtmlContent] = useState<string>('');
   const [originalContent, setOriginalContent] = useState<string>(
     contentV1 || originalVersion.fileContent || "No content available"
   );
   const [newContent, setNewContent] = useState<string>(
     contentV2 || newVersion.fileContent || "No content available"
   );
-  const [isProcessing, setIsProcessing] = useState<boolean>(true); // Start with processing state
+  
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Create a reference to the diff container
-  const diffContainerRef = useRef<HTMLDivElement>(null);
-
-  // Process the document comparison
+  // Generate HTML document for the iframe
   useEffect(() => {
     console.log("Received diff content in DocumentCompare:", diff?.substring(0, 100) + "...");
     
-    const processDiff = () => {
+    const processDocument = () => {
       if (!diff) {
-        setRenderedDiff("<div>No differences found</div>");
+        const noContentHtml = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <style>
+                body { font-family: 'Calibri', sans-serif; padding: 20px; }
+                .no-diff { 
+                  text-align: center; 
+                  padding: 20px; 
+                  background: #f5f5f5; 
+                  border-radius: 4px;
+                  color: #666;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="no-diff">No differences found between the documents</div>
+            </body>
+          </html>
+        `;
+        setHtmlContent(noContentHtml);
         setIsProcessing(false);
         return;
       }
       
-      // Use a simple approach - we'll create an inline style block for document comparison
-      const cssStyles = `
-        /* Document container */
-        .document-content {
-          font-family: 'Calibri', sans-serif;
-          line-height: 1.2;
-          color: #000;
-          max-width: 21cm;
-          margin: 0 auto;
-          padding: 20px;
-        }
-        
-        /* Paragraph styles */
-        .doc-paragraph, .doc-normal, .doc-body-text, .doc-table-paragraph {
-          font-family: 'Calibri', sans-serif;
-          font-size: 11pt;
-          line-height: 1.2;
-          margin-bottom: 10pt;
-        }
-        
-        .doc-body-text {
-          text-align: justify;
-        }
-        
-        /* Heading styles */
-        .doc-heading1, .doc-title {
-          font-family: 'Calibri', sans-serif;
-          font-size: 16pt;
-          font-weight: bold;
-          margin-top: 12pt;
-          margin-bottom: 12pt;
-          text-align: center;
-        }
-        
-        /* Diff markup styles */
-        .deletion {
-          color: #991b1b; 
-          text-decoration: line-through;
-          text-decoration-color: #991b1b;
-          background-color: #fee2e2;
-        }
-        
-        .addition {
-          color: #166534;
-          text-decoration: underline;
-          text-decoration-color: #166534;
-          background-color: #dcfce7;
-        }
-        
-        /* Document container */
-        .document-compare {
-          font-family: 'Calibri', sans-serif;
-          font-size: 11pt;
-          line-height: 1.15;
-          color: #000;
-          max-width: 21cm;
-          margin: 0 auto;
-          padding: 2cm;
-          background-color: white;
-          box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
+      // Create a complete HTML document with the diff content
+      const fullHtml = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body { 
+                margin: 0; 
+                padding: 0;
+                font-family: 'Calibri', sans-serif;
+              }
+              
+              /* Document container */
+              .document-content {
+                font-family: 'Calibri', sans-serif;
+                line-height: 1.2;
+                color: #000;
+                max-width: 21cm;
+                margin: 0 auto;
+                padding: 20px;
+              }
+              
+              /* Paragraph styles */
+              .doc-paragraph, .doc-normal, .doc-body-text, .doc-table-paragraph {
+                font-family: 'Calibri', sans-serif;
+                font-size: 11pt;
+                line-height: 1.2;
+                margin-bottom: 10pt;
+              }
+              
+              .doc-body-text {
+                text-align: justify;
+              }
+              
+              /* Heading styles */
+              .doc-heading1, .doc-title {
+                font-family: 'Calibri', sans-serif;
+                font-size: 16pt;
+                font-weight: bold;
+                margin-top: 12pt;
+                margin-bottom: 12pt;
+                text-align: center;
+              }
+              
+              /* Diff markup styles */
+              .deletion {
+                color: #991b1b; 
+                text-decoration: line-through;
+                text-decoration-color: #991b1b;
+                background-color: #fee2e2;
+              }
+              
+              .addition {
+                color: #166534;
+                text-decoration: underline;
+                text-decoration-color: #166534;
+                background-color: #dcfce7;
+              }
+              
+              /* Document container */
+              .document-compare {
+                font-family: 'Calibri', sans-serif;
+                font-size: 11pt;
+                line-height: 1.15;
+                color: #000;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: white;
+              }
+              
+              h1 {
+                font-family: 'Calibri', sans-serif;
+                font-size: 16pt;
+                text-align: center;
+                margin-bottom: 20px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="document-compare">
+              ${diff.replace(/<style>[\s\S]*?<\/style>/gi, '')}
+            </div>
+          </body>
+        </html>
       `;
       
-      // Extract the HTML content by removing any style tags
-      let htmlContent = diff.replace(/<style>[\s\S]*?<\/style>/gi, '').trim();
-      
-      // Update HTML content with our own style block
-      const processedContent = `<style>${cssStyles}</style>${htmlContent}`;
-      
-      setRenderedDiff(processedContent);
+      setHtmlContent(fullHtml);
       setOriginalContent(contentV1 || originalVersion.fileContent || "No content available");
       setNewContent(contentV2 || newVersion.fileContent || "No content available");
       setIsProcessing(false);
     };
     
-    // Simulate document processing with a timer
-    const timer = setTimeout(processDiff, 1500); // Simulate processing time of 1.5 seconds
+    // Simulate document processing time for user experience
+    const timer = setTimeout(processDocument, 1500);
     
-    // Escape key to close modal
+    // Handle escape key for closing modal
     const handleEscapeKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose();
@@ -147,20 +183,6 @@ export function DocumentCompare({
       window.removeEventListener('keydown', handleEscapeKey);
     };
   }, [diff, contentV1, contentV2, originalVersion, newVersion, onClose]);
-  
-  // Use useLayoutEffect to properly initialize the diff container with styles
-  useLayoutEffect(() => {
-    if (!isProcessing && diffContainerRef.current) {
-      // Force a layout update when the content changes
-      diffContainerRef.current.style.display = 'none';
-      // Use setTimeout to ensure the browser has a chance to process
-      setTimeout(() => {
-        if (diffContainerRef.current) {
-          diffContainerRef.current.style.display = '';
-        }
-      }, 0);
-    }
-  }, [isProcessing, renderedDiff]);
 
   const originalName = originalVersion.uploadedBy?.fullName || 
                      originalVersion.uploadedBy?.name || 
@@ -273,7 +295,13 @@ export function DocumentCompare({
                     </div>
                   </div>
                 ) : (
-                  <div ref={diffContainerRef} className="p-4 min-w-full" dangerouslySetInnerHTML={{ __html: renderedDiff }} />
+                  <iframe 
+                    ref={iframeRef}
+                    srcDoc={htmlContent}
+                    className="w-full h-full border-0" 
+                    title="Document comparison"
+                    sandbox="allow-same-origin"
+                  />
                 )}
               </div>
             </div>
