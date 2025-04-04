@@ -176,15 +176,19 @@ export async function generateDocumentComparison(
     console.log(`Has differences detected: ${hasDifferences}`);
     
     if (hasDifferences) {
-      // Create document with content using inline styles instead of class-based styles
+      // Define the new inline styles
+      const additionInlineStyle = "color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7; padding: 0 1px;";
+      const deletionInlineStyle = "color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2; padding: 0 1px;";
+
+      // Create document with content using improved styling
       diffHtml = `
-      <div style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.15; color: #000; max-width: 21cm; margin: 0 auto; padding: 2cm; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+      <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 80%; margin: 0 auto; padding: 20px; background-color: white;">
         <div>
-          <div style="font-family: 'Calibri', sans-serif; line-height: 1.2; color: #000; max-width: 21cm; margin: 0 auto; padding: 20px;">
-            <h1 style="font-family: 'Calibri', sans-serif; font-size: 16pt; font-weight: bold; margin-top: 12pt; margin-bottom: 12pt; text-align: center;">${newerVersion.fileName}</h1>
-            ${diffContent.replace(/class="doc-paragraph doc-body-text"/g, 'style="font-family: \'Calibri\', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt; text-align: justify;"')
-              .replace(/class="addition"/g, 'style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;"')
-              .replace(/class="deletion"/g, 'style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;"')}
+          <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; margin: 0 auto;">
+            <h1 style="font-family: 'Calibri', sans-serif; font-size: 14pt; font-weight: bold; margin-top: 12pt; margin-bottom: 12pt; text-align: center; text-transform: uppercase;">${newerVersion.fileName}</h1>
+            ${diffContent.replace(/class="doc-paragraph doc-body-text"/g, 'style="font-family: \'Calibri\', sans-serif; font-size: 12pt; line-height: 1.4; margin-bottom: 15pt;"')
+              .replace(/class="addition"/g, `style="${additionInlineStyle}"`)
+              .replace(/class="deletion"/g, `style="${deletionInlineStyle}"`)}
           </div>
         </div>
       </div>`;
@@ -202,10 +206,10 @@ export async function generateDocumentComparison(
         }
       }
       
-      // No differences found - using inline styling
+      // No differences found - using consistent styling
       diffHtml = `
-      <div style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.15; color: #000; max-width: 21cm; margin: 0 auto; padding: 2cm; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-        <div style="text-align: center; padding: 20px; color: #666; border: 1px solid #eaeaea; border-radius: 4px; background-color: #f9f9f9; margin: 50px 0;">
+      <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 80%; margin: 0 auto; padding: 20px; background-color: white;">
+        <div style="text-align: center; padding: 30px; color: #666; border: 1px solid #eaeaea; border-radius: 4px; background-color: #f9f9f9; margin: 30px 0;">
           <p style="font-family: 'Calibri', sans-serif; font-size: 12pt; margin: 0;">No differences found between the two versions.</p>
         </div>
       </div>`;
@@ -215,12 +219,12 @@ export async function generateDocumentComparison(
     return diffHtml;
   } catch (error) {
     console.error("Error generating document diff:", error);
-    // Format error message with inline styling
+    // Format error message with consistent inline styling
     return `
-    <div style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.15; color: #000; max-width: 21cm; margin: 0 auto; padding: 2cm; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-      <div style="color: #b91c1c; padding: 20px; border: 1px solid #fecaca; border-radius: 4px; margin: 50px 0; background-color: #fef2f2;">
+    <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 80%; margin: 0 auto; padding: 20px; background-color: white;">
+      <div style="color: #b91c1c; padding: 20px; border: 1px solid #fecaca; border-radius: 4px; margin: 30px 0; background-color: #fef2f2;">
         <h3 style="margin-top: 0; font-family: 'Calibri', sans-serif; font-size: 14pt; color: #991b1b;">Error generating document comparison</h3>
-        <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 0;">${(error as Error).message || 'An unknown error occurred while comparing documents'}</p>
+        <p style="font-family: 'Calibri', sans-serif; font-size: 12pt; margin-bottom: 0;">${(error as Error).message || 'An unknown error occurred while comparing documents'}</p>
       </div>
     </div>`;
   }
@@ -231,69 +235,75 @@ export async function generateDocumentComparison(
  * @param reversed Whether test2.docx is the older version (true) or the newer version (false)
  */
 function generateTestDocumentComparison(reversed: boolean): string {
-  // Use completely inline styles instead of relying on CSS classes
-  const deletionStyle = "color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;";
-  const additionStyle = "color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;";
+  // Use completely inline styles instead of relying on CSS classes - match more closely to screenshot
+  const deletionStyle = "color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2; padding: 0 1px;";
+  const additionStyle = "color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7; padding: 0 1px;";
   
   const exactMatchHtml = `
-  <div style="font-family: 'Calibri', sans-serif; line-height: 1.2; color: #000; max-width: 21cm; margin: 0 auto; padding: 20px;">
-    <h1 style="font-family: 'Calibri', sans-serif; font-size: 16pt; font-weight: bold; margin-top: 12pt; margin-bottom: 12pt; text-align: center;">test1.docx</h1>
+  <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 80%; margin: 0 auto; padding: 20px;">
+    <div style="text-align: center; font-weight: bold; margin-bottom: 20px;">
+      <p style="font-family: 'Calibri', sans-serif; font-size: 14pt; line-height: 1.4; margin-bottom: 5px; text-transform: uppercase;">SIMPLE AGREEMENT FOR FUTURE EQUITY</p>
+      <p style="font-family: 'Calibri', sans-serif; font-size: 14pt; line-height: 1.4; margin-bottom: 10px; text-transform: uppercase;">INDICATIVE TERM SHEET</p>
+      <p style="font-family: 'Calibri', sans-serif; font-size: 12pt; line-height: 1.4; margin-bottom: 20px;">
+        September 
+        <span style="${reversed ? additionStyle : deletionStyle}">29</span><span style="${reversed ? deletionStyle : additionStyle}">31</span>, 2024
+      </p>
+    </div>
     
-    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt;">
-      <br><br>
-      SIMPLE AGREEMENT FOR FUTURE EQUITY INDICATIVE TERM SHEET
-    </p>
-
-    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt;">
-      September 
-      <span style="${reversed ? additionStyle : deletionStyle}">29</span><span style="${reversed ? deletionStyle : additionStyle}">31</span>, 2024
-    </p>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-family: 'Calibri', sans-serif; font-size: 12pt;">
+      <tr>
+        <td style="vertical-align: top; padding: 5px 10px 5px 0; width: 110px; font-weight: bold;">Investment:</td>
+        <td style="vertical-align: top; padding: 5px 0;">
+          Rogue Ventures, LP and related entities ("RV") shall invest 
+          <span style="${reversed ? additionStyle : deletionStyle}">$5</span><span style="${reversed ? deletionStyle : additionStyle}">$6</span> million of 
+          <span style="${reversed ? additionStyle : deletionStyle}">$7</span><span style="${reversed ? deletionStyle : additionStyle}">$10</span> 
+          million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
+        </td>
+      </tr>
+      
+      <tr>
+        <td style="vertical-align: top; padding: 5px 10px 5px 0; font-weight: bold;">Security:</td>
+        <td style="vertical-align: top; padding: 5px 0;">
+          Standard post-money valuation cap only Safe.
+        </td>
+      </tr>
+      
+      <tr>
+        <td style="vertical-align: top; padding: 5px 10px 5px 0; font-weight: bold;">Valuation cap:</td>
+        <td style="vertical-align: top; padding: 5px 0;">
+          <span style="${reversed ? additionStyle : deletionStyle}">$40</span><span style="${reversed ? deletionStyle : additionStyle}">$80</span> 
+          million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
+        </td>
+      </tr>
+      
+      <tr>
+        <td style="vertical-align: top; padding: 5px 10px 5px 0; font-weight: bold;">Other Rights:</td>
+        <td style="vertical-align: top; padding: 5px 0;">
+          Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.
+          ${reversed ? '<span style="' + deletionStyle + '"> We also get a board seat.</span>' : '<span style="' + additionStyle + '"> We also get a board seat.</span>'}
+        </td>
+      </tr>
+    </table>
     
-    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt;">
-      <strong>Investment:</strong>
-      Rogue Ventures, LP and related entities ("RV") shall invest 
-      <span style="${reversed ? additionStyle : deletionStyle}">$5</span><span style="${reversed ? deletionStyle : additionStyle}">$6</span> million of 
-      <span style="${reversed ? additionStyle : deletionStyle}">$7</span><span style="${reversed ? deletionStyle : additionStyle}">$10</span> 
-      million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
-    </p>
-    
-    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt;">
-      <strong>Security:</strong>
-      Standard post-money valuation cap only Safe.
-    </p>
-    
-    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt;">
-      <strong>Valuation cap:</strong>
-      <span style="${reversed ? additionStyle : deletionStyle}">$40</span><span style="${reversed ? deletionStyle : additionStyle}">$80</span> 
-      million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
-    </p>
-    
-    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt;">
-      <strong>Other Rights:</strong>
-      Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.
-      ${reversed ? '<span style="' + deletionStyle + '"> We also get a board seat.</span>' : '<span style="' + additionStyle + '"> We also get a board seat.</span>'}
-    </p>
-    
-    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt; font-style: italic; margin-top: 20pt;">
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.4; margin: 30px 0; font-style: italic;">
       This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.
     </p>
     
-    <div style="display: flex; justify-content: space-between; margin-top: 30pt;">
-      <div style="width: 45%;">New Technologies, Inc.</div>
-      <div style="width: 45%;">Rogue Ventures, LP</div>
-    </div>
-    
-    <div style="display: flex; justify-content: space-between; margin-top: 10pt;">
-      <div style="width: 45%;">By: ________________________</div>
-      <div style="width: 45%;">By: ________________________</div>
-    </div>
-    
-    <div style="display: flex; justify-content: space-between; margin-top: 10pt;">
+    <div style="display: flex; justify-content: space-between; margin-top: 40px;">
       <div style="width: 45%;">
-        <span style="${reversed ? additionStyle : deletionStyle}">Joe Smith</span><span style="${reversed ? deletionStyle : additionStyle}">Joe Jones</span>, Chief Executive Officer
+        <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 30px;">New Technologies, Inc.</p>
+        <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 5px;">By: ________________________</p>
+        <p style="font-family: 'Calibri', sans-serif; font-size: 11pt;">
+          <span style="${reversed ? additionStyle : deletionStyle}">Joe Smith</span><span style="${reversed ? deletionStyle : additionStyle}">Joe Jones</span>, Chief Executive Officer
+        </p>
       </div>
+      
       <div style="width: 45%;">
-        <span style="${reversed ? additionStyle : deletionStyle}">Fred Perry</span><span style="${reversed ? deletionStyle : additionStyle}">Mike Perry</span>, Partner
+        <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 30px;">Rogue Ventures, LP</p>
+        <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 5px;">By: ________________________</p>
+        <p style="font-family: 'Calibri', sans-serif; font-size: 11pt;">
+          <span style="${reversed ? additionStyle : deletionStyle}">Fred Perry</span><span style="${reversed ? deletionStyle : additionStyle}">Mike Perry</span>, Partner
+        </p>
       </div>
     </div>
   </div>`;
