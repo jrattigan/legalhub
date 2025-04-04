@@ -161,123 +161,121 @@ export default function RedlinePage() {
         )}
         
         {/* Always show the upload UI */}
-        {(
-          <Card>
-            <CardHeader>
-              <CardTitle>Document Comparison</CardTitle>
-              <CardDescription>
-                Upload two documents to compare. Changes will be highlighted: additions in green, deletions in red.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              
-              <Tabs defaultValue="upload">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="upload">Upload Files</TabsTrigger>
-                  <TabsTrigger value="info">Supported Formats</TabsTrigger>
-                </TabsList>
-                <TabsContent value="upload" className="space-y-4 pt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <Label htmlFor="original-file" className="mb-2 block">Original Document</Label>
-                      <FileUpload
-                        id="original-file"
-                        value={originalFile}
-                        onValueChange={setOriginalFile}
-                        dropzoneOptions={{
-                          accept: {
-                            'application/msword': ['.doc'],
-                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                            'application/rtf': ['.rtf'],
-                            'text/plain': ['.txt'],
-                            'text/html': ['.html', '.htm'],
-                          },
-                        }}
-                      />
-                      {originalFile && (
-                        <div className="mt-2 flex items-center text-sm text-muted-foreground">
-                          <FileText className="mr-2 h-4 w-4" />
-                          {originalFile.name} ({Math.round(originalFile.size / 1024)} KB)
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="new-file" className="mb-2 block">New Document</Label>
-                      <FileUpload
-                        id="new-file"
-                        value={newFile}
-                        onValueChange={setNewFile}
-                        dropzoneOptions={{
-                          accept: {
-                            'application/msword': ['.doc'],
-                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                            'application/rtf': ['.rtf'],
-                            'text/plain': ['.txt'],
-                            'text/html': ['.html', '.htm'],
-                          },
-                        }}
-                      />
-                      {newFile && (
-                        <div className="mt-2 flex items-center text-sm text-muted-foreground">
-                          <FileText className="mr-2 h-4 w-4" />
-                          {newFile.name} ({Math.round(newFile.size / 1024)} KB)
-                        </div>
-                      )}
-                    </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Document Comparison</CardTitle>
+            <CardDescription>
+              Upload two documents to compare. Changes will be highlighted: additions in green, deletions in red.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <Tabs defaultValue="upload">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="upload">Upload Files</TabsTrigger>
+                <TabsTrigger value="info">Supported Formats</TabsTrigger>
+              </TabsList>
+              <TabsContent value="upload" className="space-y-4 pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="original-file" className="mb-2 block">Original Document</Label>
+                    <FileUpload
+                      id="original-file"
+                      value={originalFile}
+                      onValueChange={setOriginalFile}
+                      dropzoneOptions={{
+                        accept: {
+                          'application/msword': ['.doc'],
+                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                          'application/rtf': ['.rtf'],
+                          'text/plain': ['.txt'],
+                          'text/html': ['.html', '.htm'],
+                        },
+                      }}
+                    />
+                    {originalFile && (
+                      <div className="mt-2 flex items-center text-sm text-muted-foreground">
+                        <FileText className="mr-2 h-4 w-4" />
+                        {originalFile.name} ({Math.round(originalFile.size / 1024)} KB)
+                      </div>
+                    )}
                   </div>
                   
-                  <div className="pt-4 border-t">
-                    <Button 
-                      onClick={handleCompare} 
-                      disabled={!canCompare || isComparing}
-                      className="w-full md:w-auto"
-                    >
-                      <Upload className="mr-2 h-4 w-4" />
-                      {isComparing ? 'Comparing...' : 'Compare Documents'}
-                    </Button>
+                  <div>
+                    <Label htmlFor="new-file" className="mb-2 block">New Document</Label>
+                    <FileUpload
+                      id="new-file"
+                      value={newFile}
+                      onValueChange={setNewFile}
+                      dropzoneOptions={{
+                        accept: {
+                          'application/msword': ['.doc'],
+                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                          'application/rtf': ['.rtf'],
+                          'text/plain': ['.txt'],
+                          'text/html': ['.html', '.htm'],
+                        },
+                      }}
+                    />
+                    {newFile && (
+                      <div className="mt-2 flex items-center text-sm text-muted-foreground">
+                        <FileText className="mr-2 h-4 w-4" />
+                        {newFile.name} ({Math.round(newFile.size / 1024)} KB)
+                      </div>
+                    )}
                   </div>
-                </TabsContent>
+                </div>
                 
-                <TabsContent value="info" className="space-y-4 pt-4">
-                  <div className="text-sm prose max-w-none">
-                    <h3>Supported File Formats</h3>
-                    <ul>
-                      <li><strong>Microsoft Word:</strong> .doc, .docx</li>
-                      <li><strong>Rich Text Format:</strong> .rtf</li>
-                      <li><strong>Plain Text:</strong> .txt</li>
-                      <li><strong>HTML:</strong> .html, .htm</li>
-                    </ul>
-                    
-                    <h3 className="mt-4">File Size Limits</h3>
-                    <p>
-                      Files should be less than 10MB each for optimal performance. Larger files may take longer to process.
-                    </p>
-                    
-                    <h3 className="mt-4">How It Works</h3>
-                    <p>
-                      The Redline tool extracts text content from both documents and performs a word-by-word comparison
-                      to identify changes. Additions are highlighted in green, deletions in red.
-                    </p>
-                    
-                    <h3 className="mt-4">Tips</h3>
-                    <ul>
-                      <li>For best results, compare documents of the same type</li>
-                      <li>Complex formatting may be lost during comparison</li>
-                      <li>For Word documents, only the text content is compared, not formatting or images</li>
-                    </ul>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        )}
+                <div className="pt-4 border-t">
+                  <Button 
+                    onClick={handleCompare} 
+                    disabled={!canCompare || isComparing}
+                    className="w-full md:w-auto"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {isComparing ? 'Comparing...' : 'Compare Documents'}
+                  </Button>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="info" className="space-y-4 pt-4">
+                <div className="text-sm prose max-w-none">
+                  <h3>Supported File Formats</h3>
+                  <ul>
+                    <li><strong>Microsoft Word:</strong> .doc, .docx</li>
+                    <li><strong>Rich Text Format:</strong> .rtf</li>
+                    <li><strong>Plain Text:</strong> .txt</li>
+                    <li><strong>HTML:</strong> .html, .htm</li>
+                  </ul>
+                  
+                  <h3 className="mt-4">File Size Limits</h3>
+                  <p>
+                    Files should be less than 10MB each for optimal performance. Larger files may take longer to process.
+                  </p>
+                  
+                  <h3 className="mt-4">How It Works</h3>
+                  <p>
+                    The Redline tool extracts text content from both documents and performs a word-by-word comparison
+                    to identify changes. Additions are highlighted in green, deletions in red.
+                  </p>
+                  
+                  <h3 className="mt-4">Tips</h3>
+                  <ul>
+                    <li>For best results, compare documents of the same type</li>
+                    <li>Complex formatting may be lost during comparison</li>
+                    <li>For Word documents, only the text content is compared, not formatting or images</li>
+                  </ul>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );
