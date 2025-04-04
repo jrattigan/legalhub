@@ -189,7 +189,7 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
     }
   };
   
-  // Render DOCX - simplified approach with direct download option
+  // Render DOCX - since we can't use external libraries, offer direct download or use iframe embedder
   const renderDocx = async (url) => {
     try {
       if (containerRef.current) {
@@ -252,10 +252,127 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
           Download Document
         `;
         
+        // Try to use the Office 365 viewer if possible
+        const tryOfficeViewerButton = document.createElement('button');
+        tryOfficeViewerButton.className = 'try-office-viewer-btn';
+        tryOfficeViewerButton.style.display = 'inline-flex';
+        tryOfficeViewerButton.style.alignItems = 'center';
+        tryOfficeViewerButton.style.gap = '8px';
+        tryOfficeViewerButton.style.padding = '10px 20px';
+        tryOfficeViewerButton.style.backgroundColor = 'transparent';
+        tryOfficeViewerButton.style.color = '#2563eb';
+        tryOfficeViewerButton.style.border = '1px solid #2563eb';
+        tryOfficeViewerButton.style.borderRadius = '4px';
+        tryOfficeViewerButton.style.fontWeight = '500';
+        tryOfficeViewerButton.style.cursor = 'pointer';
+        tryOfficeViewerButton.style.marginTop = '10px';
+        tryOfficeViewerButton.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+          Try Office 365 Viewer
+        `;
+        
+        // Event listener for Office 365 Viewer button
+        tryOfficeViewerButton.addEventListener('click', () => {
+          try {
+            // Clear the container
+            containerRef.current.innerHTML = '';
+            
+            // Get the full URL to the document
+            const fullUrl = new URL(url, window.location.origin).href;
+            
+            // Create iframe for Office 365 Viewer
+            const iframe = document.createElement('iframe');
+            iframe.width = '100%';
+            iframe.height = '100%';
+            iframe.style.border = 'none';
+            iframe.style.display = 'block';
+            
+            // Set source to Office 365 Viewer
+            iframe.src = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fullUrl)}`;
+            
+            // Add a loading message
+            const loadingMsg = document.createElement('div');
+            loadingMsg.className = 'loading-message';
+            loadingMsg.style.position = 'absolute';
+            loadingMsg.style.top = '50%';
+            loadingMsg.style.left = '50%';
+            loadingMsg.style.transform = 'translate(-50%, -50%)';
+            loadingMsg.style.padding = '20px';
+            loadingMsg.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+            loadingMsg.style.borderRadius = '8px';
+            loadingMsg.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+            loadingMsg.style.textAlign = 'center';
+            loadingMsg.innerHTML = `
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="2" x2="12" y2="6"></line>
+                  <line x1="12" y1="18" x2="12" y2="22"></line>
+                  <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                  <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                  <line x1="2" y1="12" x2="6" y2="12"></line>
+                  <line x1="18" y1="12" x2="22" y2="12"></line>
+                  <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                  <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+                </svg>
+                <span>Loading Office 365 Viewer...</span>
+                <span style="font-size: 12px; color: #666;">Note: This requires the document to be publicly accessible</span>
+              </div>
+            `;
+            
+            // Append iframe and loading message
+            containerRef.current.appendChild(iframe);
+            containerRef.current.appendChild(loadingMsg);
+            
+            // Add a back button
+            const backButton = document.createElement('button');
+            backButton.textContent = 'Back to download options';
+            backButton.style.position = 'absolute';
+            backButton.style.top = '10px';
+            backButton.style.left = '10px';
+            backButton.style.padding = '5px 10px';
+            backButton.style.backgroundColor = '#f3f4f6';
+            backButton.style.border = '1px solid #d1d5db';
+            backButton.style.borderRadius = '4px';
+            backButton.style.fontSize = '12px';
+            backButton.style.cursor = 'pointer';
+            backButton.style.zIndex = '10';
+            
+            backButton.addEventListener('click', () => {
+              // Re-render the download options
+              renderDocx(url);
+            });
+            
+            containerRef.current.appendChild(backButton);
+            
+            // Remove loading message when iframe is loaded
+            iframe.onload = () => {
+              // Check if the loading message is still in the DOM
+              if (loadingMsg.parentNode) {
+                loadingMsg.parentNode.removeChild(loadingMsg);
+              }
+            };
+            
+            // Handle iframe errors
+            iframe.onerror = () => {
+              // Re-render the download options if the iframe fails to load
+              renderDocx(url);
+            };
+          } catch (err) {
+            console.error('Error using Office 365 Viewer:', err);
+            // If there's an error, revert to the download view
+            renderDocx(url);
+          }
+        });
+        
         // Assemble the message container
         messageContainer.appendChild(docIcon);
         messageContainer.appendChild(messageText);
         messageContainer.appendChild(downloadButton);
+        messageContainer.appendChild(tryOfficeViewerButton);
         
         // Add to the main container
         containerRef.current.appendChild(messageContainer);

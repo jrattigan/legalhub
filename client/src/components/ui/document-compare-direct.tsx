@@ -9,7 +9,7 @@ import {
   Download
 } from 'lucide-react';
 
-// Import Native Document Viewer without specifying file extension
+// Import Native Document Viewer (TypeScript version)
 import NativeDocViewer from './NativeDocViewer';
 
 // Import styles for document viewers
@@ -46,18 +46,6 @@ type DocumentCompareProps = {
   };
 };
 
-/**
- * DocumentCompareDirect Component
- * 
- * A powerful document comparison tool that allows users to:
- * - View differences between two document versions with HTML highlighting
- * - View original PDF/Word documents using a native document viewer
- * - Download documents for external viewing
- * 
- * The component uses NativeDocViewer which supports:
- * - PDF rendering with PDF.js for direct browser viewing
- * - Word document viewing with download option
- */
 export function DocumentCompareDirect({ 
   originalVersion,
   newVersion, 
@@ -68,12 +56,27 @@ export function DocumentCompareDirect({
   aiSummary
 }: DocumentCompareProps) {
   const [activeTab, setActiveTab] = useState<'changes' | 'original' | 'new'>('changes');
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [isProcessing, setIsProcessing] = useState<boolean>(true);
+
+  // No longer need refs for document containers since using NativeDocViewer
+  
+  // Simulate document processing time for user experience
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsProcessing(false);
+    }, 1500);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Get document file URLs
   const getDocumentFileUrl = (versionId: number) => {
     return `/api/document-versions/${versionId}/file`;
   };
+  
+  // Document rendering is now handled by the NativeDocViewer component
+
+  // No need to manually render documents - NativeDocViewer handles this automatically
 
   // Handler for document download
   const handleDownload = (versionId: number, fileName: string) => {
@@ -247,17 +250,16 @@ export function DocumentCompareDirect({
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full w-full bg-gray-100 overflow-auto">
+                  <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto p-4">
                     {originalVersion.fileName.endsWith('.pdf') || originalVersion.fileName.endsWith('.docx') ? (
-                      <div className="w-full h-full">
-                        <NativeDocViewer 
-                          documentUrl={`/api/document-versions/${originalVersion.id}/file`}
-                          documentType={originalVersion.fileName.split('.').pop()}
-                        />
-                      </div>
+                      // Native document viewer using Office Viewer JS
+                      <NativeDocViewer 
+                        documentUrl={`/api/document-versions/${originalVersion.id}/file`}
+                        documentType={originalVersion.fileName.split('.').pop()}
+                      />
                     ) : (
                       // Fallback for other file types
-                      <div className="p-4 text-center flex flex-col items-center justify-center h-full">
+                      <div className="p-4 text-center">
                         <p className="mb-4">This file type cannot be previewed.</p>
                         <Button 
                           onClick={() => handleDownload(originalVersion.id, originalVersion.fileName)}
@@ -314,17 +316,16 @@ export function DocumentCompareDirect({
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full w-full bg-gray-100 overflow-auto">
+                  <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto p-4">
                     {newVersion.fileName.endsWith('.pdf') || newVersion.fileName.endsWith('.docx') ? (
-                      <div className="w-full h-full">
-                        <NativeDocViewer 
-                          documentUrl={`/api/document-versions/${newVersion.id}/file`}
-                          documentType={newVersion.fileName.split('.').pop()}
-                        />
-                      </div>
+                      // Native document viewer using Office Viewer JS
+                      <NativeDocViewer 
+                        documentUrl={`/api/document-versions/${newVersion.id}/file`}
+                        documentType={newVersion.fileName.split('.').pop()}
+                      />
                     ) : (
                       // Fallback for other file types
-                      <div className="p-4 text-center flex flex-col items-center justify-center h-full">
+                      <div className="p-4 text-center">
                         <p className="mb-4">This file type cannot be previewed.</p>
                         <Button 
                           onClick={() => handleDownload(newVersion.id, newVersion.fileName)}
