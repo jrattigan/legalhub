@@ -187,8 +187,24 @@ export default function RedlinePage() {
                     <Label htmlFor="original-file" className="mb-2 block">Original Document</Label>
                     <FileUpload
                       id="original-file"
-                      value={originalFile}
-                      onValueChange={setOriginalFile}
+                      onUpload={(fileData) => {
+                        // Convert base64 back to a File object
+                        const byteString = atob(fileData.fileContent);
+                        const ab = new ArrayBuffer(byteString.length);
+                        const ia = new Uint8Array(ab);
+                        
+                        for (let i = 0; i < byteString.length; i++) {
+                          ia[i] = byteString.charCodeAt(i);
+                        }
+                        
+                        const blob = new Blob([ab], { type: fileData.fileType });
+                        const file = new File([blob], fileData.fileName, { 
+                          type: fileData.fileType,
+                          lastModified: new Date().getTime()
+                        });
+                        
+                        setOriginalFile(file);
+                      }}
                       dropzoneOptions={{
                         accept: {
                           'application/msword': ['.doc'],
@@ -212,8 +228,24 @@ export default function RedlinePage() {
                     <Label htmlFor="new-file" className="mb-2 block">New Document</Label>
                     <FileUpload
                       id="new-file"
-                      value={newFile}
-                      onValueChange={setNewFile}
+                      onUpload={(fileData) => {
+                        // Convert base64 back to a File object
+                        const byteString = atob(fileData.fileContent);
+                        const ab = new ArrayBuffer(byteString.length);
+                        const ia = new Uint8Array(ab);
+                        
+                        for (let i = 0; i < byteString.length; i++) {
+                          ia[i] = byteString.charCodeAt(i);
+                        }
+                        
+                        const blob = new Blob([ab], { type: fileData.fileType });
+                        const file = new File([blob], fileData.fileName, { 
+                          type: fileData.fileType,
+                          lastModified: new Date().getTime()
+                        });
+                        
+                        setNewFile(file);
+                      }}
                       dropzoneOptions={{
                         accept: {
                           'application/msword': ['.doc'],

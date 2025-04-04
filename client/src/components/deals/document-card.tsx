@@ -88,14 +88,17 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
                 onUpload={async (fileData) => {
                   // Create a new document with the uploaded file data
                   try {
-                    await apiRequest('POST', '/api/documents', {
-                      title: fileData.fileName,
-                      dealId: dealId,
-                      description: "Uploaded document",
-                      category: "Primary",
-                      status: "Draft",
-                      fileType: fileData.fileType,
-                      assigneeId: null
+                    await apiRequest('/api/documents', {
+                      method: 'POST',
+                      data: {
+                        title: fileData.fileName,
+                        dealId: dealId,
+                        description: "Uploaded document",
+                        category: "Primary",
+                        status: "Draft",
+                        fileType: fileData.fileType,
+                        assigneeId: null
+                      }
                     });
                     
                     setIsNewDocDialogOpen(false);
@@ -139,7 +142,10 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
   // Upload new version mutation
   const uploadMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('POST', `/api/documents/${document.id}/versions`, data);
+      const response = await apiRequest(`/api/documents/${document.id}/versions`, {
+        method: 'POST',
+        data: data
+      });
       return response.json();
     },
     onSuccess: () => {
