@@ -1,9 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, Eye, FileText, ArrowRight } from 'lucide-react';
-import NativeDocViewer from '@/components/ui/NativeDocViewer';
+import { 
+  ArrowLeft, 
+  Download, 
+  Eye, 
+  FileText, 
+  ArrowRight,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Search,
+  RotateCcw,
+  Plus,
+  Minus
+} from 'lucide-react';
+// Import PDF.js and document viewers
+import * as pdfjsLib from 'pdfjs-dist';
+import { PDFViewer } from 'pdfjs-dist/web/pdf_viewer.js';
+import { renderAsync } from 'docx-preview';
+import 'pdfjs-dist/web/pdf_viewer.css';
 // Import styles for document viewers
 import '@/components/ui/document-viewer.css';
+
+// Set the PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
 interface RedlineCompareViewProps {
   originalFile: File | null;
@@ -26,6 +46,12 @@ export default function RedlineCompareView({
   const [isProcessing, setIsProcessing] = useState<boolean>(true);
   const [originalFileUrl, setOriginalFileUrl] = useState<string>('');
   const [newFileUrl, setNewFileUrl] = useState<string>('');
+  
+  // Refs for document containers
+  const docxContainer1Ref = useRef<HTMLDivElement>(null);
+  const docxContainer2Ref = useRef<HTMLDivElement>(null);
+  const pdfContainer1Ref = useRef<HTMLDivElement>(null);
+  const pdfContainer2Ref = useRef<HTMLDivElement>(null);
   
   // Simulate document processing time and prepare files
   useEffect(() => {
@@ -52,6 +78,233 @@ export default function RedlineCompareView({
       if (newFileUrl) URL.revokeObjectURL(newFileUrl);
     };
   }, [originalFile, newFile]);
+  
+  // Function to render DOCX files using docx-preview
+  const renderDocx = async (containerRef: React.RefObject<HTMLDivElement>, fileUrl: string) => {
+    if (!containerRef.current) return;
+    
+    try {
+      // Show loading indicator
+      containerRef.current.innerHTML = `
+        <div class="flex justify-center items-center h-full">
+          <div class="text-center">
+            <svg class="animate-spin h-8 w-8 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p>Loading document...</p>
+          </div>
+        </div>
+      `;
+      
+      // Fetch the document file as blob
+      const response = await fetch(fileUrl);
+      if (!response.ok) throw new Error('Failed to fetch document');
+      
+      // Convert to ArrayBuffer
+      const arrayBuffer = await response.arrayBuffer();
+      
+      // Clear container
+      containerRef.current.innerHTML = '';
+      
+      // Render document with docx-preview using the exact options provided
+      await renderAsync(arrayBuffer, containerRef.current, undefined, {
+        className: 'docx-viewer',
+        inWrapper: true,
+        ignoreLastRenderedPageBreak: true,
+        useBase64URL: true,
+        renderHeaders: true,
+        renderFooters: true,
+        renderFootnotes: true,
+        renderEndnotes: true
+      });
+      
+      console.log('DOCX document rendered successfully');
+    } catch (error) {
+      console.error('Error rendering DOCX:', error);
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '<div class="p-4 text-red-600">Error loading document. Please try again.</div>';
+      }
+    }
+  };
+  
+  // Function to render PDF files using PDF.js
+  const renderPdf = async (containerRef: React.RefObject<HTMLDivElement>, fileUrl: string) => {
+    if (!containerRef.current) return;
+    
+    try {
+      // Show loading indicator
+      containerRef.current.innerHTML = `
+        <div class="flex justify-center items-center h-full">
+          <div class="text-center">
+            <svg class="animate-spin h-8 w-8 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p>Loading document...</p>
+          </div>
+        </div>
+      `;
+      
+      // Fetch the document file
+      const response = await fetch(fileUrl);
+      if (!response.ok) throw new Error('Failed to fetch document');
+      
+      // Convert to ArrayBuffer
+      const arrayBuffer = await response.arrayBuffer();
+      
+      // Clear container
+      containerRef.current.innerHTML = '';
+      
+      // Load the PDF using PDF.js
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdfDocument = await loadingTask.promise;
+      
+      // Create PDF viewer as specified
+      // @ts-ignore - PDF.js types are not always accurate
+      const eventBus = new pdfjsLib.EventBus();
+      
+      try {
+        const viewer = new PDFViewer({
+          container: containerRef.current,
+          eventBus: eventBus,
+        });
+        
+        // Set the document to the viewer
+        viewer.setDocument(pdfDocument);
+        
+        console.log('PDF document rendered successfully with PDFViewer');
+      } catch (pdfViewerError) {
+        console.error('Error creating PDFViewer:', pdfViewerError);
+        
+        // Fallback to manual rendering
+        containerRef.current.innerHTML = '';
+        
+        // Add controls
+        const controlsContainer = document.createElement('div');
+        controlsContainer.className = 'pdf-controls';
+        controlsContainer.style.padding = '10px';
+        controlsContainer.style.borderBottom = '1px solid #ddd';
+        controlsContainer.style.display = 'flex';
+        controlsContainer.style.justifyContent = 'center';
+        controlsContainer.style.background = '#f9fafb';
+        
+        const zoomOutBtn = document.createElement('button');
+        zoomOutBtn.innerText = '−';
+        zoomOutBtn.title = 'Zoom Out';
+        zoomOutBtn.className = 'pdf-control-button';
+        zoomOutBtn.style.margin = '0 5px';
+        zoomOutBtn.style.width = '30px';
+        zoomOutBtn.style.height = '30px';
+        zoomOutBtn.style.borderRadius = '4px';
+        zoomOutBtn.style.border = '1px solid #ddd';
+        
+        const zoomInBtn = document.createElement('button');
+        zoomInBtn.innerText = '+';
+        zoomInBtn.title = 'Zoom In';
+        zoomInBtn.className = 'pdf-control-button';
+        zoomInBtn.style.margin = '0 5px';
+        zoomInBtn.style.width = '30px';
+        zoomInBtn.style.height = '30px';
+        zoomInBtn.style.borderRadius = '4px';
+        zoomInBtn.style.border = '1px solid #ddd';
+        
+        controlsContainer.appendChild(zoomOutBtn);
+        controlsContainer.appendChild(zoomInBtn);
+        
+        // Add document container
+        const pagesContainer = document.createElement('div');
+        pagesContainer.className = 'pdf-pages';
+        pagesContainer.style.padding = '20px';
+        pagesContainer.style.overflow = 'auto';
+        pagesContainer.style.height = 'calc(100% - 50px)';
+        
+        containerRef.current.appendChild(controlsContainer);
+        containerRef.current.appendChild(pagesContainer);
+        
+        let currentScale = 1.0;
+        const renderPages = async (scale: number) => {
+          // Clear existing pages
+          pagesContainer.innerHTML = '';
+          
+          // Render each page
+          for (let i = 1; i <= pdfDocument.numPages; i++) {
+            const page = await pdfDocument.getPage(i);
+            const viewport = page.getViewport({ scale });
+            
+            const pageContainer = document.createElement('div');
+            pageContainer.className = 'pdf-page';
+            pageContainer.style.marginBottom = '20px';
+            pageContainer.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            canvas.style.display = 'block';
+            canvas.style.width = '100%';
+            canvas.style.height = 'auto';
+            
+            pageContainer.appendChild(canvas);
+            pagesContainer.appendChild(pageContainer);
+            
+            const context = canvas.getContext('2d');
+            if (context) {
+              const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+              };
+              
+              await page.render(renderContext).promise;
+            }
+          }
+        };
+        
+        // Initial render
+        renderPages(currentScale);
+        
+        // Zoom event handlers
+        zoomInBtn.addEventListener('click', async () => {
+          currentScale += 0.2;
+          await renderPages(currentScale);
+        });
+        
+        zoomOutBtn.addEventListener('click', async () => {
+          if (currentScale > 0.5) {
+            currentScale -= 0.2;
+            await renderPages(currentScale);
+          }
+        });
+        
+        console.log('PDF document rendered with fallback method');
+      }
+    } catch (error) {
+      console.error('Error rendering PDF:', error);
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '<div class="p-4 text-red-600">Error loading document. Please try again.</div>';
+      }
+    }
+  };
+
+  // Render documents when tab changes and processing is done
+  useEffect(() => {
+    if (isProcessing) return;
+    
+    if (activeTab === 'original' && originalFile) {
+      if (originalFile.name.endsWith('.pdf')) {
+        renderPdf(pdfContainer1Ref, originalFileUrl);
+      } else if (originalFile.name.endsWith('.docx') || originalFile.name.endsWith('.doc')) {
+        renderDocx(docxContainer1Ref, originalFileUrl);
+      }
+    }
+    
+    if (activeTab === 'new' && newFile) {
+      if (newFile.name.endsWith('.pdf')) {
+        renderPdf(pdfContainer2Ref, newFileUrl);
+      } else if (newFile.name.endsWith('.docx') || newFile.name.endsWith('.doc')) {
+        renderDocx(docxContainer2Ref, newFileUrl);
+      }
+    }
+  }, [isProcessing, activeTab, originalFile, newFile, originalFileUrl, newFileUrl]);
   
   // Function to download the comparison result
   const downloadComparison = () => {
@@ -100,6 +353,21 @@ export default function RedlineCompareView({
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+  
+  // Function to download the original files
+  const handleDownload = (file: File | null) => {
+    if (!file) return;
+    
+    const url = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = file.name;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
   
@@ -216,8 +484,19 @@ export default function RedlineCompareView({
                   </svg>
                   <span className="text-sm font-medium">{originalFile?.name || 'Original Document'}</span>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {originalFile && `${Math.round(originalFile.size / 1024)} KB`}
+                <div className="flex items-center">
+                  <div className="text-xs text-muted-foreground mr-4">
+                    {originalFile && `${Math.round(originalFile.size / 1024)} KB`}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleDownload(originalFile)}
+                    className="flex items-center"
+                  >
+                    <Download className="h-3 w-3 mr-1" />
+                    Download
+                  </Button>
                 </div>
               </div>
               <div className="flex-1 overflow-auto">
@@ -235,18 +514,16 @@ export default function RedlineCompareView({
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto">
-                    {originalFile?.name.endsWith('.pdf') || originalFile?.name.endsWith('.docx') ? (
-                      // Native document viewer for PDF or DOCX
-                      <div className="w-full h-full">
-                        <NativeDocViewer 
-                          documentUrl={originalFileUrl}
-                          documentType={originalFile?.name.split('.').pop() || ''}
-                        />
-                      </div>
+                  <div className="h-full bg-slate-50">
+                    {originalFile && originalFile.name.endsWith('.pdf') ? (
+                      // PDF Viewer
+                      <div ref={pdfContainer1Ref} className="h-full w-full document-viewer"></div>
+                    ) : originalFile && (originalFile.name.endsWith('.docx') || originalFile.name.endsWith('.doc')) ? (
+                      // DOCX Viewer
+                      <div ref={docxContainer1Ref} className="h-full w-full document-viewer"></div>
                     ) : (
-                      // Fallback for other file types
-                      <div className="p-4 w-full h-full bg-white overflow-auto">
+                      // Fallback for other file types or when file is not available
+                      <div className="p-4 h-full w-full bg-white overflow-auto">
                         <pre className="whitespace-pre-wrap p-4 text-sm">{contentV1}</pre>
                       </div>
                     )}
@@ -266,8 +543,19 @@ export default function RedlineCompareView({
                   </svg>
                   <span className="text-sm font-medium">{newFile?.name || 'New Document'}</span>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {newFile && `${Math.round(newFile.size / 1024)} KB`}
+                <div className="flex items-center">
+                  <div className="text-xs text-muted-foreground mr-4">
+                    {newFile && `${Math.round(newFile.size / 1024)} KB`}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleDownload(newFile)}
+                    className="flex items-center"
+                  >
+                    <Download className="h-3 w-3 mr-1" />
+                    Download
+                  </Button>
                 </div>
               </div>
               <div className="flex-1 overflow-auto">
@@ -285,18 +573,16 @@ export default function RedlineCompareView({
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto">
-                    {newFile?.name.endsWith('.pdf') || newFile?.name.endsWith('.docx') ? (
-                      // Native document viewer for PDF or DOCX
-                      <div className="w-full h-full">
-                        <NativeDocViewer 
-                          documentUrl={newFileUrl}
-                          documentType={newFile?.name.split('.').pop() || ''}
-                        />
-                      </div>
+                  <div className="h-full bg-slate-50">
+                    {newFile && newFile.name.endsWith('.pdf') ? (
+                      // PDF Viewer
+                      <div ref={pdfContainer2Ref} className="h-full w-full document-viewer"></div>
+                    ) : newFile && (newFile.name.endsWith('.docx') || newFile.name.endsWith('.doc')) ? (
+                      // DOCX Viewer
+                      <div ref={docxContainer2Ref} className="h-full w-full document-viewer"></div>
                     ) : (
-                      // Fallback for other file types
-                      <div className="p-4 w-full h-full bg-white overflow-auto">
+                      // Fallback for other file types or when file is not available
+                      <div className="p-4 h-full w-full bg-white overflow-auto">
                         <pre className="whitespace-pre-wrap p-4 text-sm">{contentV2}</pre>
                       </div>
                     )}

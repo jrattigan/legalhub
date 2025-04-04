@@ -1,14 +1,12 @@
-declare module '@/components/ui/NativeDocViewer' {
-  import { FC } from 'react';
-  
-  export interface NativeDocViewerProps {
-    documentUrl: string;
-    documentType?: string;
-  }
+import { FC } from 'react';
 
-  const NativeDocViewer: FC<NativeDocViewerProps>;
-  export default NativeDocViewer;
+export interface NativeDocViewerProps {
+  documentUrl: string;
+  documentType?: string;
 }
+
+declare const NativeDocViewer: FC<NativeDocViewerProps>;
+export default NativeDocViewer;
 
 declare module 'docx-preview' {
   export interface RenderOptions {
