@@ -1,6 +1,7 @@
 import { DocumentVersion } from '@shared/schema';
 import * as diff from 'diff';
 import * as mammoth from 'mammoth';
+import { convertDocumentWithStyles, getMammothConversionOptions } from './mammoth-style-map';
 
 /**
  * Smart document comparison utility to intelligently highlight changes
@@ -26,18 +27,17 @@ export async function generateDocumentComparison(
   const extractReadableText = async (content: string, fileName: string): Promise<string> => {
     // Check if it's likely a binary Word document
     if (content.startsWith('UEsDB') || content.includes('PK\u0003\u0004') || fileName.endsWith('.docx')) {
-      console.log(`Binary Word document detected for ${fileName}, extracting text using mammoth`);
+      console.log(`Binary Word document detected for ${fileName}, extracting text using mammoth with style preservation`);
       
       try {
         // For .docx files, try to convert using mammoth
         // Convert base64 string to binary array
         const buffer = Buffer.from(content, 'base64');
         
-        // Extract HTML from docx using mammoth
-        const result = await mammoth.convertToHtml({ buffer });
-        const extractedHtml = result.value;
+        // Use our enhanced style mapping to preserve document formatting
+        const extractedHtml = await convertDocumentWithStyles(buffer);
         
-        console.log(`Mammoth extraction success for ${fileName}, extracted ${extractedHtml.length} characters`);
+        console.log(`Mammoth extraction with style mapping success for ${fileName}, extracted ${extractedHtml.length} characters`);
         return extractedHtml;
       } catch (err) {
         console.error(`Failed to extract DOCX content with mammoth: ${err}`);

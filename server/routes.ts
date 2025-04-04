@@ -5,6 +5,7 @@ import { format, parseISO, subMonths } from "date-fns";
 import { z } from "zod";
 import { compareDocuments } from "./tools/redline";
 import * as mammoth from "mammoth";
+import { convertDocumentWithStyles } from "./mammoth-style-map";
 import { generateDocumentComparison } from "./document-compare";
 import {
   insertDealSchema,
@@ -948,8 +949,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (version1.fileName.endsWith('.docx')) {
         try {
           const buffer1 = Buffer.from(version1.fileContent, 'base64');
-          const result1 = await mammoth.convertToHtml({ buffer: buffer1 });
-          contentV1 = result1.value;
+          // Use our custom style mapping for better document formatting
+          contentV1 = await convertDocumentWithStyles(buffer1);
           console.log(`Extracted HTML content from ${version1.fileName}, length: ${contentV1.length}`);
         } catch (err) {
           console.error(`Failed to extract content from ${version1.fileName}:`, err);
@@ -961,8 +962,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (version2.fileName.endsWith('.docx')) {
         try {
           const buffer2 = Buffer.from(version2.fileContent, 'base64');
-          const result2 = await mammoth.convertToHtml({ buffer: buffer2 });
-          contentV2 = result2.value;
+          // Use our custom style mapping for better document formatting
+          contentV2 = await convertDocumentWithStyles(buffer2);
           console.log(`Extracted HTML content from ${version2.fileName}, length: ${contentV2.length}`);
         } catch (err) {
           console.error(`Failed to extract content from ${version2.fileName}:`, err);
