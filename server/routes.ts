@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { format, parseISO, subMonths } from "date-fns";
 import { z } from "zod";
-import { generateDocumentDiff } from "./tools/redline";
+import { compareDocuments } from "./tools/redline";
 import {
   insertDealSchema,
   insertDocumentSchema,
@@ -359,30 +359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Tools section API routes
   
   // Redline Tool - Document Comparison
-  app.post('/api/tools/redline/compare', async (req: Request, res: Response) => {
-    try {
-      // Validate request body
-      if (!req.body || (!req.body.originalFileData || !req.body.newFileData)) {
-        return res.status(400).json({ 
-          message: 'Missing file data. Please provide both original and new files.' 
-        });
-      }
-      
-      const { originalFileData, newFileData } = req.body;
-      
-      // Generate document diff using our helper function
-      const result = await generateDocumentDiff(originalFileData, newFileData);
-      
-      // Return the processed result
-      res.json(result);
-    } catch (error) {
-      console.error('Error processing document comparison:', error);
-      res.status(500).json({ 
-        message: 'An error occurred while processing document comparison',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
+  app.post('/api/tools/redline/compare', compareDocuments);
   
   const httpServer = createServer(app);
 

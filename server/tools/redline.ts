@@ -1,144 +1,120 @@
+import { Request, Response } from 'express';
 import * as diff from 'diff';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import * as mammoth from 'mammoth';
 
-/**
- * Interface for file data coming from the client
- */
-interface FileData {
+export interface FileData {
   name: string;
   content: string;
   type: string;
 }
 
 /**
- * Process document text content based on file type
- * @param fileData File data from client
- * @returns Processed content
+ * Extract text content from a Word document (.doc, .docx)
+ * @param content The binary content of the document
+ * @returns A promise that resolves to the extracted text
  */
-function processDocumentContent(fileData: FileData): string {
-  const { name, content, type } = fileData;
-  
-  // Detect file type based on extension
-  const fileExtension = name.substring(name.lastIndexOf('.')).toLowerCase();
-  
-  // Process different file types
-  if (fileExtension === '.docx' || fileExtension === '.doc') {
-    // For now, basic handling - in the future we can extract text from binary docs
-    if (content.startsWith('UEsDB') || content.includes('PK\u0003\u0004')) {
-      return "Binary Word document - limited text extraction";
-    }
-    return content;
-  } else if (fileExtension === '.pdf') {
-    // Basic PDF handling - just plain text for now
-    return content;
-  } else if (fileExtension === '.rtf') {
-    // Basic RTF handling - strip RTF markup (simplified)
-    return content.replace(/\{\\rtf1.*?\\viewkind4/, '')
-      .replace(/\\\w+\s?/g, ' ')
-      .replace(/\{|\}/g, '')
-      .trim();
-  } else {
-    // Default text handling
-    return content;
+async function extractWordContent(content: string): Promise<string> {
+  try {
+    // Create a temporary file
+    const tmpdir = os.tmpdir();
+    const tempFilePath = path.join(tmpdir, `temp_${Date.now()}.docx`);
+    
+    // Decode the base64 content
+    const buffer = Buffer.from(content, 'base64');
+    
+    // Write to temp file
+    fs.writeFileSync(tempFilePath, buffer);
+    
+    // Extract text from the Word document
+    const result = await mammoth.extractRawText({ path: tempFilePath });
+    
+    // Clean up
+    fs.unlinkSync(tempFilePath);
+    
+    return result.value;
+  } catch (error) {
+    console.error('Error extracting Word content:', error);
+    throw new Error('Failed to extract content from Word document');
   }
 }
 
 /**
- * Generate HTML diff between two documents
- * @param originalFile Original file data
- * @param newFile New file data
- * @returns HTML diff content and processed source files
+ * Extract text content from a file based on its type
+ * @param fileData Object containing file details and content
+ * @returns The extracted text content
  */
-export async function generateDocumentDiff(
-  originalFile: FileData,
-  newFile: FileData
-): Promise<{
-  diff: string;
-  contentV1: string;
-  contentV2: string;
-}> {
+async function extractFileContent(fileData: FileData): Promise<string> {
+  const { content, type } = fileData;
+  
+  if (type.includes('application/vnd.openxmlformats-officedocument.wordprocessingml.document') || 
+      type.includes('application/msword')) {
+    return await extractWordContent(content);
+  } else if (type.includes('text/plain') || type.includes('text/html') || type.includes('application/rtf')) {
+    // For plain text, HTML, or RTF, we can use the content directly (decoded from base64)
+    return Buffer.from(content, 'base64').toString('utf-8');
+  } else {
+    // For unsupported file types, return a message
+    throw new Error(`Unsupported file type: ${type}`);
+  }
+}
+
+/**
+ * Generate HTML with highlighted differences between two texts
+ * @param oldText Original text
+ * @param newText Updated text
+ * @returns HTML string with differences highlighted
+ */
+function generateDiffHtml(oldText: string, newText: string): string {
+  // Generate diff
+  const differences = diff.diffWords(oldText, newText);
+  
+  // Convert to HTML with styling
+  let html = '';
+  differences.forEach((part) => {
+    const color = part.added 
+      ? '<span class="bg-green-100">' 
+      : part.removed 
+        ? '<span class="bg-red-100">' 
+        : '<span>';
+    
+    html += color + part.value + '</span>';
+  });
+  
+  return html;
+}
+
+/**
+ * Handle document comparison requests
+ */
+export async function compareDocuments(req: Request, res: Response) {
   try {
-    // Process file contents
-    const processedOriginal = processDocumentContent(originalFile);
-    const processedNew = processDocumentContent(newFile);
+    const { originalFile, newFile } = req.body;
     
-    // Create diff
-    const changes = diff.diffWords(processedOriginal, processedNew);
-    
-    // Check if there are differences
-    const hasDifferences = changes.some(part => part.added || part.removed);
-    
-    let diffHtml = '';
-    
-    if (hasDifferences) {
-      // Process content with Word-like styling
-      let processedContent = '';
-      for (const part of changes) {
-        if (part.added) {
-          // Added text - green with Word-like styling (underline with background)
-          processedContent += `<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7; display: inline;">${part.value}</span>`;
-        } else if (part.removed) {
-          // Removed text - red with Word-like styling (strikethrough with background)
-          processedContent += `<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2; display: inline;">${part.value}</span>`;
-        } else {
-          processedContent += part.value;
-        }
-      }
-      
-      // Format into paragraphs
-      let formattedContent = '';
-      if (processedContent.includes('\n')) {
-        const paragraphs = processedContent.split(/\n\n+/);
-        for (const paragraph of paragraphs) {
-          formattedContent += `<p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 10pt;">${paragraph.replace(/\n/g, '<br>')}</p>`;
-        }
-      } else {
-        // If no paragraphs, wrap in a single p tag
-        formattedContent = `<p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 10pt;">${processedContent}</p>`;
-      }
-      
-      // Create document with title and content - using Word-like styling
-      diffHtml = `
-      <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0;">
-        <div class="full-document-with-changes">
-          <div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">
-            <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 24pt;">${newFile.name}</h1>
-            ${formattedContent}
-          </div>
-        </div>
-      </div>`;
-    } else {
-      // No differences found
-      diffHtml = `
-      <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
-        <div class="no-differences" style="text-align: center; padding: 20px; color: #666;">
-          <p>No differences found between the two versions.</p>
-          <p class="text-sm">The documents appear to be identical.</p>
-        </div>
-      </div>`;
+    if (!originalFile || !newFile) {
+      return res.status(400).json({ error: 'Both original and new files are required' });
     }
     
-    console.log("Diff generated successfully");
+    // Extract content from both files
+    const originalContent = await extractFileContent(originalFile);
+    const newContent = await extractFileContent(newFile);
     
-    return {
+    // Generate diff HTML
+    const diffHtml = generateDiffHtml(originalContent, newContent);
+    
+    // Return the comparison result
+    return res.status(200).json({
+      success: true,
       diff: diffHtml,
-      contentV1: processedOriginal,
-      contentV2: processedNew
-    };
+      contentV1: originalContent,
+      contentV2: newContent
+    });
   } catch (error) {
-    console.error("Error generating document diff:", error);
-    // Format error message
-    const errorHtml = `
-    <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
-      <div class="error" style="color: #b91c1c; padding: 20px; border: 1px solid #fecaca; border-radius: 4px; margin: 10px 0;">
-        <h3 style="margin-top: 0;">Error generating document comparison</h3>
-        <p>${(error as Error).message || 'An unknown error occurred while comparing documents'}</p>
-      </div>
-    </div>`;
-    
-    return {
-      diff: errorHtml,
-      contentV1: "Error processing original document",
-      contentV2: "Error processing new document"
-    };
+    console.error('Error comparing documents:', error);
+    return res.status(500).json({ 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    });
   }
 }

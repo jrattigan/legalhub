@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Download, RefreshCw, ArrowLeft, ArrowRight, PanelLeftOpen, PanelRightOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { ArrowLeft, Download, Eye, Split, X } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 interface RedlineCompareViewProps {
   originalFile: File | null;
@@ -19,52 +20,67 @@ export default function RedlineCompareView({
   diff,
   contentV1,
   contentV2,
-  onReset
+  onReset,
 }: RedlineCompareViewProps) {
-  const [viewMode, setViewMode] = useState<'unified' | 'side-by-side'>('unified');
+  const [viewMode, setViewMode] = useState<'unified' | 'split'>('unified');
   
-  // Function to download the diff as HTML
-  const downloadDiff = () => {
-    // Create a blob with the HTML content
+  // Function to download the comparison result
+  const downloadComparison = () => {
+    // Create HTML content with styling
     const htmlContent = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Redline Comparison</title>
-      <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .info { margin-bottom: 20px; }
-        .file-info { margin-bottom: 10px; }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <h1>Document Comparison</h1>
-        <p>Generated on ${new Date().toLocaleString()}</p>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Document Comparison - ${originalFile?.name || 'Original'} vs ${newFile?.name || 'New'}</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.5; padding: 20px; }
+    h1 { font-size: 24px; margin-bottom: 10px; }
+    .info { margin-bottom: 20px; color: #555; }
+    .document-diff { margin-top: 20px; }
+    .bg-green-100 { background-color: #dcfce7; color: #166534; padding: 2px 0; }
+    .bg-red-100 { background-color: #fee2e2; color: #991b1b; text-decoration: line-through; padding: 2px 0; }
+    .comparison-meta { margin-bottom: 30px; border-bottom: 1px solid #e5e7eb; padding-bottom: 15px; }
+    .document-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .document-panel { border: 1px solid #e5e7eb; padding: 15px; border-radius: 5px; }
+    h2 { font-size: 18px; margin-top: 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div class="comparison-meta">
+    <h1>Document Comparison</h1>
+    <div class="info">
+      <p>Original Document: ${originalFile?.name || 'Unknown'}</p>
+      <p>New Document: ${newFile?.name || 'Unknown'}</p>
+      <p>Comparison Date: ${new Date().toLocaleString()}</p>
+    </div>
+  </div>
+  
+  ${viewMode === 'unified' ? 
+    `<div class="document-diff">${diff}</div>` : 
+    `<div class="document-container">
+      <div class="document-panel">
+        <h2>Original Document</h2>
+        <div>${contentV1.replace(/\n/g, '<br>')}</div>
       </div>
-      <div class="info">
-        <div class="file-info">
-          <strong>Original Document:</strong> ${originalFile?.name || 'Unknown'}
-        </div>
-        <div class="file-info">
-          <strong>New Document:</strong> ${newFile?.name || 'Unknown'}
-        </div>
+      <div class="document-panel">
+        <h2>New Document</h2>
+        <div>${contentV2.replace(/\n/g, '<br>')}</div>
       </div>
-      ${diff}
-    </body>
-    </html>
+    </div>`
+  }
+</body>
+</html>
     `;
     
+    // Create a blob with the content
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     
-    // Create a link and click it to download
+    // Create a download link and click it
     const a = document.createElement('a');
     a.href = url;
-    a.download = `redline-comparison-${new Date().toISOString().slice(0, 10)}.html`;
+    a.download = `comparison_${originalFile?.name || 'document1'}_vs_${newFile?.name || 'document2'}.html`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -73,121 +89,68 @@ export default function RedlineCompareView({
   
   return (
     <div className="space-y-6">
-      {/* File info and actions */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Comparison Results</CardTitle>
-          <CardDescription>
-            Comparing {originalFile?.name} with {newFile?.name}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pb-2">
-          <div className="flex flex-wrap justify-between gap-2">
-            <div className="flex items-center space-x-4">
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">Original Document</span>
-                <span className="text-xs text-muted-foreground">{originalFile?.name}</span>
-              </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">New Document</span>
-                <span className="text-xs text-muted-foreground">{newFile?.name}</span>
-              </div>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Comparison Results</CardTitle>
+              <CardDescription>
+                Comparing {originalFile?.name} with {newFile?.name}
+              </CardDescription>
             </div>
             <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setViewMode(viewMode === 'unified' ? 'side-by-side' : 'unified')}
-              >
-                {viewMode === 'unified' ? (
-                  <>
-                    <PanelLeftOpen className="mr-2 h-4 w-4" />
-                    Side by Side
-                  </>
-                ) : (
-                  <>
-                    <PanelRightOpen className="mr-2 h-4 w-4" />
-                    Unified View
-                  </>
-                )}
+              <Button variant="outline" size="sm" onClick={() => setViewMode('unified')}>
+                <Eye className="h-4 w-4 mr-1" />
+                Unified View
               </Button>
-              <Button variant="outline" size="sm" onClick={downloadDiff}>
-                <Download className="mr-2 h-4 w-4" />
+              <Button variant="outline" size="sm" onClick={() => setViewMode('split')}>
+                <Split className="h-4 w-4 mr-1" />
+                Split View
+              </Button>
+              <Button variant="outline" size="sm" onClick={downloadComparison}>
+                <Download className="h-4 w-4 mr-1" />
                 Download
               </Button>
-              <Button variant="outline" size="sm" onClick={onReset}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                New Comparison
+              <Button variant="ghost" size="sm" onClick={onReset}>
+                <X className="h-4 w-4 mr-1" />
+                Close
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* View modes */}
-      {viewMode === 'unified' ? (
-        // Unified view - changes highlighted inline
-        <Card className="border shadow-sm">
-          <CardContent className="p-0">
-            <div 
-              className="p-6 max-h-[800px] overflow-auto bg-white rounded-md"
-              dangerouslySetInnerHTML={{ __html: diff }}
-            />
-          </CardContent>
-        </Card>
-      ) : (
-        // Side-by-side view
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="border shadow-sm">
-            <CardHeader className="py-3 px-4 border-b bg-gray-50">
-              <CardTitle className="text-sm font-medium">Original Document</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div 
-                className="p-6 h-[700px] overflow-auto font-mono text-sm whitespace-pre-wrap bg-white"
-              >
-                {contentV1 || "No content available"}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="border shadow-sm">
-            <CardHeader className="py-3 px-4 border-b bg-gray-50">
-              <CardTitle className="text-sm font-medium">New Document</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div 
-                className="p-6 h-[700px] overflow-auto font-mono text-sm whitespace-pre-wrap bg-white"
-              >
-                {contentV2 || "No content available"}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-      
-      {/* Key for understanding the changes */}
-      <Card>
-        <CardHeader className="py-3">
-          <CardTitle className="text-sm">Color Key</CardTitle>
         </CardHeader>
-        <CardContent className="py-2">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-            <div className="flex items-center">
-              <div className="w-4 h-4 mr-2 rounded bg-green-100 border border-green-300"></div>
-              <span>Added content <span className="text-green-700">(green)</span></span>
+        
+        <Separator />
+        
+        <CardContent className="pt-6">
+          {viewMode === 'unified' ? (
+            <div className="border rounded-md p-4 bg-background">
+              <h3 className="text-lg font-medium mb-4">Unified View</h3>
+              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: diff }} />
             </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 mr-2 rounded bg-red-100 border border-red-300"></div>
-              <span>Deleted content <span className="text-red-700">(red)</span></span>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="border rounded-md p-4 bg-background">
+                <h3 className="text-lg font-medium mb-4">Original Document</h3>
+                <div className="whitespace-pre-wrap">{contentV1}</div>
+              </div>
+              <div className="border rounded-md p-4 bg-background">
+                <h3 className="text-lg font-medium mb-4">New Document</h3>
+                <div className="whitespace-pre-wrap">{contentV2}</div>
+              </div>
             </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 mr-2 rounded bg-amber-100 border border-amber-300"></div>
-              <span>Modified sections <span className="text-amber-700">(yellow)</span></span>
-            </div>
-          </div>
+          )}
         </CardContent>
+        
+        <CardFooter className="border-t pt-4 flex justify-between">
+          <Button variant="outline" onClick={onReset}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Upload
+          </Button>
+          <Button variant="default" onClick={downloadComparison}>
+            <Download className="h-4 w-4 mr-2" />
+            Download Comparison
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );

@@ -1,279 +1,279 @@
-import React, { useState, useRef } from 'react';
-import AppLayout from '../components/layouts/app-layout';
+import React, { useState } from 'react';
+import { useLocation, Link } from 'wouter';
+import AppLayout from '@/components/layouts/app-layout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ArrowLeft, Upload, FileText, AlertCircle, Check, Loader2 } from 'lucide-react';
-import { Link } from 'wouter';
+import { FileUpload } from '@/components/ui/file-upload';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ArrowLeft, FileText, Upload, AlertCircle } from 'lucide-react';
+import RedlineCompareView from '@/components/tools/redline-compare-view';
 import { useToast } from '@/hooks/use-toast';
-import RedlineCompareView from '../components/tools/redline-compare-view';
 
 export default function RedlinePage() {
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+  
   const [originalFile, setOriginalFile] = useState<File | null>(null);
   const [newFile, setNewFile] = useState<File | null>(null);
+  const [isComparing, setIsComparing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [comparing, setComparing] = useState(false);
-  const [compareResult, setCompareResult] = useState<{ 
-    diff: string; 
+  
+  // State for the comparison results
+  const [comparisonResult, setComparisonResult] = useState<{
+    diff: string;
     contentV1: string;
     contentV2: string;
   } | null>(null);
   
-  const originalFileInputRef = useRef<HTMLInputElement>(null);
-  const newFileInputRef = useRef<HTMLInputElement>(null);
-  
-  const { toast } = useToast();
-  
-  const clearFiles = () => {
+  // Clear all files and reset states
+  const handleReset = () => {
     setOriginalFile(null);
     setNewFile(null);
+    setComparisonResult(null);
     setError(null);
-    setCompareResult(null);
-    setComparing(false);
-    
-    // Reset file input values
-    if (originalFileInputRef.current) originalFileInputRef.current.value = '';
-    if (newFileInputRef.current) newFileInputRef.current.value = '';
   };
   
-  const handleFileChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    setFile: React.Dispatch<React.SetStateAction<File | null>>
-  ) => {
-    const selectedFile = e.target.files && e.target.files[0];
-    if (selectedFile) {
-      // Check file type
-      const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase();
-      const allowedTypes = ['txt', 'doc', 'docx', 'rtf', 'pdf'];
-      
-      if (allowedTypes.includes(fileExtension || '')) {
-        setFile(selectedFile);
-        setError(null);
-      } else {
-        setError(`File type not supported. Please upload a ${allowedTypes.join(', ')} file.`);
-        e.target.value = '';
-      }
-    }
-  };
-  
-  const readFileAsText = (file: File): Promise<string> => {
+  // Convert a file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target?.result as string);
-      reader.onerror = (e) => reject(new Error('Failed to read file'));
-      reader.readAsText(file);
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          // Extract the base64 part (remove the prefix)
+          const base64String = reader.result.split(',')[1];
+          resolve(base64String);
+        } else {
+          reject(new Error('Failed to convert file to base64'));
+        }
+      };
+      reader.onerror = error => reject(error);
     });
   };
   
-  const compareDocuments = async () => {
+  // Handle the comparison action
+  const handleCompare = async () => {
     if (!originalFile || !newFile) {
-      setError('Please select both original and new documents.');
+      setError('Please upload both original and new files');
       return;
     }
     
-    setLoading(true);
-    setError(null);
-    
     try {
-      // Read both files
-      const originalContent = await readFileAsText(originalFile);
-      const newContent = await readFileAsText(newFile);
+      setIsComparing(true);
+      setError(null);
       
-      // Prepare file data for API
-      const originalFileData = {
-        name: originalFile.name,
-        content: originalContent,
-        type: originalFile.type
+      // Convert files to base64
+      const originalFileBase64 = await fileToBase64(originalFile);
+      const newFileBase64 = await fileToBase64(newFile);
+      
+      // Prepare the request body
+      const requestData = {
+        originalFile: {
+          name: originalFile.name,
+          content: originalFileBase64,
+          type: originalFile.type
+        },
+        newFile: {
+          name: newFile.name,
+          content: newFileBase64,
+          type: newFile.type
+        }
       };
       
-      const newFileData = {
-        name: newFile.name,
-        content: newContent,
-        type: newFile.type
-      };
-      
-      // Make API request
+      // Send to the API
       const response = await fetch('/api/tools/redline/compare', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          originalFileData,
-          newFileData
-        }),
+        body: JSON.stringify(requestData)
       });
       
       if (!response.ok) {
-        throw new Error(`Error comparing documents: ${response.statusText}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to compare documents');
       }
       
       const result = await response.json();
-      setCompareResult(result);
-      setComparing(true);
+      
+      // Set the comparison result
+      setComparisonResult({
+        diff: result.diff,
+        contentV1: result.contentV1,
+        contentV2: result.contentV2
+      });
       
       toast({
-        title: "Comparison Complete",
-        description: "Documents have been successfully compared.",
-        variant: "default",
+        title: 'Comparison Complete',
+        description: 'Documents have been compared successfully.',
       });
     } catch (err) {
       console.error('Error comparing documents:', err);
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setError(err instanceof Error ? err.message : 'Unknown error occurred');
       
       toast({
-        title: "Comparison Failed",
-        description: err instanceof Error ? err.message : 'An unknown error occurred',
-        variant: "destructive",
+        title: 'Comparison Failed',
+        description: err instanceof Error ? err.message : 'Failed to compare documents',
+        variant: 'destructive',
       });
     } finally {
-      setLoading(false);
+      setIsComparing(false);
     }
   };
   
-  const handleReset = () => {
-    clearFiles();
-  };
+  // Check if we have valid files to enable the compare button
+  const canCompare = originalFile !== null && newFile !== null;
   
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex items-center">
-          <Link href="/tools">
-            <Button variant="ghost" size="sm" className="mr-2">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back to Tools
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <Button
+              variant="ghost"
+              asChild
+              className="mb-2 px-0 text-muted-foreground hover:text-foreground"
+            >
+              <Link href="/tools">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Tools
+              </Link>
             </Button>
-          </Link>
-          <h1 className="text-3xl font-bold tracking-tight">Redline Tool</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Redline Tool</h1>
+            <p className="text-muted-foreground mt-1">
+              Compare documents and visualize changes with highlighted differences
+            </p>
+          </div>
         </div>
         
-        {!comparing ? (
-          <>
-            <Card>
-              <CardHeader>
-                <CardTitle>Compare Documents</CardTitle>
-                <CardDescription>
-                  Upload two versions of a document to see the differences highlighted.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {error && (
-                  <Alert variant="destructive" className="mb-4">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Error</AlertTitle>
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-                
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label htmlFor="originalFile" className="mb-2 block">Original Document</Label>
-                    <div className="relative">
-                      <Input
-                        id="originalFile"
-                        ref={originalFileInputRef}
-                        type="file"
-                        accept=".txt,.doc,.docx,.rtf,.pdf"
-                        onChange={(e) => handleFileChange(e, setOriginalFile)}
-                        className="cursor-pointer"
+        {/* Show the comparison view if we have results, otherwise show the upload UI */}
+        {comparisonResult ? (
+          <RedlineCompareView 
+            originalFile={originalFile}
+            newFile={newFile}
+            diff={comparisonResult.diff}
+            contentV1={comparisonResult.contentV1}
+            contentV2={comparisonResult.contentV2}
+            onReset={handleReset}
+          />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Document Comparison</CardTitle>
+              <CardDescription>
+                Upload two documents to compare. Changes will be highlighted: additions in green, deletions in red.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              <Tabs defaultValue="upload">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="upload">Upload Files</TabsTrigger>
+                  <TabsTrigger value="info">Supported Formats</TabsTrigger>
+                </TabsList>
+                <TabsContent value="upload" className="space-y-4 pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="original-file" className="mb-2 block">Original Document</Label>
+                      <FileUpload
+                        id="original-file"
+                        value={originalFile}
+                        onValueChange={setOriginalFile}
+                        dropzoneOptions={{
+                          accept: {
+                            'application/msword': ['.doc'],
+                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                            'application/rtf': ['.rtf'],
+                            'text/plain': ['.txt'],
+                            'text/html': ['.html', '.htm'],
+                          },
+                        }}
                       />
+                      {originalFile && (
+                        <div className="mt-2 flex items-center text-sm text-muted-foreground">
+                          <FileText className="mr-2 h-4 w-4" />
+                          {originalFile.name} ({Math.round(originalFile.size / 1024)} KB)
+                        </div>
+                      )}
                     </div>
-                    {originalFile && (
-                      <div className="mt-2 flex items-center text-sm text-muted-foreground">
-                        <FileText className="mr-1 h-4 w-4" />
-                        <span className="truncate max-w-[240px]">{originalFile.name}</span>
-                        <Check className="ml-1 h-4 w-4 text-green-500" />
-                      </div>
-                    )}
+                    
+                    <div>
+                      <Label htmlFor="new-file" className="mb-2 block">New Document</Label>
+                      <FileUpload
+                        id="new-file"
+                        value={newFile}
+                        onValueChange={setNewFile}
+                        dropzoneOptions={{
+                          accept: {
+                            'application/msword': ['.doc'],
+                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                            'application/rtf': ['.rtf'],
+                            'text/plain': ['.txt'],
+                            'text/html': ['.html', '.htm'],
+                          },
+                        }}
+                      />
+                      {newFile && (
+                        <div className="mt-2 flex items-center text-sm text-muted-foreground">
+                          <FileText className="mr-2 h-4 w-4" />
+                          {newFile.name} ({Math.round(newFile.size / 1024)} KB)
+                        </div>
+                      )}
+                    </div>
                   </div>
                   
-                  <div>
-                    <Label htmlFor="newFile" className="mb-2 block">New Document</Label>
-                    <div className="relative">
-                      <Input
-                        id="newFile"
-                        ref={newFileInputRef}
-                        type="file"
-                        accept=".txt,.doc,.docx,.rtf,.pdf"
-                        onChange={(e) => handleFileChange(e, setNewFile)}
-                        className="cursor-pointer"
-                      />
-                    </div>
-                    {newFile && (
-                      <div className="mt-2 flex items-center text-sm text-muted-foreground">
-                        <FileText className="mr-1 h-4 w-4" />
-                        <span className="truncate max-w-[240px]">{newFile.name}</span>
-                        <Check className="ml-1 h-4 w-4 text-green-500" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="mt-4 text-sm text-muted-foreground">
-                  <p>Supported file types: .txt, .doc, .docx, .rtf, .pdf</p>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between border-t pt-4">
-                <Button variant="outline" onClick={clearFiles} disabled={loading}>
-                  Clear
-                </Button>
-                <Button 
-                  onClick={compareDocuments} 
-                  disabled={!originalFile || !newFile || loading}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
+                  <div className="pt-4 border-t">
+                    <Button 
+                      onClick={handleCompare} 
+                      disabled={!canCompare || isComparing}
+                      className="w-full md:w-auto"
+                    >
                       <Upload className="mr-2 h-4 w-4" />
-                      Compare Documents
-                    </>
-                  )}
-                </Button>
-              </CardFooter>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>How to Use</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ol className="list-decimal list-inside space-y-2 text-sm">
-                  <li>Upload your original document (the older version).</li>
-                  <li>Upload the new document (the updated version).</li>
-                  <li>Click "Compare Documents" to generate the redline comparison.</li>
-                  <li>View the result with changes highlighted in color:
-                    <ul className="list-disc list-inside ml-4 mt-1 text-sm">
-                      <li><span className="text-green-600">Added text</span> will be highlighted in green.</li>
-                      <li><span className="text-red-600">Deleted text</span> will be crossed out in red.</li>
-                      <li><span className="text-amber-600">Modified sections</span> will be highlighted in yellow/orange.</li>
+                      {isComparing ? 'Comparing...' : 'Compare Documents'}
+                    </Button>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="info" className="space-y-4 pt-4">
+                  <div className="text-sm prose max-w-none">
+                    <h3>Supported File Formats</h3>
+                    <ul>
+                      <li><strong>Microsoft Word:</strong> .doc, .docx</li>
+                      <li><strong>Rich Text Format:</strong> .rtf</li>
+                      <li><strong>Plain Text:</strong> .txt</li>
+                      <li><strong>HTML:</strong> .html, .htm</li>
                     </ul>
-                  </li>
-                  <li>You can toggle between unified view and side-by-side view.</li>
-                  <li>Download the comparison result for offline reference or sharing.</li>
-                </ol>
-              </CardContent>
-            </Card>
-          </>
-        ) : (
-          compareResult && (
-            <RedlineCompareView
-              originalFile={originalFile}
-              newFile={newFile}
-              diff={compareResult.diff}
-              contentV1={compareResult.contentV1}
-              contentV2={compareResult.contentV2}
-              onReset={handleReset}
-            />
-          )
+                    
+                    <h3 className="mt-4">File Size Limits</h3>
+                    <p>
+                      Files should be less than 10MB each for optimal performance. Larger files may take longer to process.
+                    </p>
+                    
+                    <h3 className="mt-4">How It Works</h3>
+                    <p>
+                      The Redline tool extracts text content from both documents and performs a word-by-word comparison
+                      to identify changes. Additions are highlighted in green, deletions in red.
+                    </p>
+                    
+                    <h3 className="mt-4">Tips</h3>
+                    <ul>
+                      <li>For best results, compare documents of the same type</li>
+                      <li>Complex formatting may be lost during comparison</li>
+                      <li>For Word documents, only the text content is compared, not formatting or images</li>
+                    </ul>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
         )}
       </div>
     </AppLayout>

@@ -1,0 +1,4 @@
+This is a sample text document.
+We will use this for testing the Redline tool.
+It's a simple document with multiple lines.
+Some of this content will be modified in version 2.

@@ -33,6 +33,7 @@ export default function AppHeader({ title, user, notifications = 0 }: AppHeaderP
     { name: 'Documents', path: '/documents' },
     { name: 'Outside Counsel', path: '/counsel' },
     { name: 'Analytics', path: '/analytics' },
+    { name: 'Tools', path: '/tools' },
   ];
 
   return (
