@@ -148,8 +148,8 @@ export default function RedlinePage() {
           </div>
         </div>
         
-        {/* Show the comparison view if we have results, otherwise show the upload UI */}
-        {comparisonResult ? (
+        {/* Display the comparison view as a modal overlay if there are results */}
+        {comparisonResult && (
           <RedlineCompareView 
             originalFile={originalFile}
             newFile={newFile}
@@ -158,7 +158,10 @@ export default function RedlinePage() {
             contentV2={comparisonResult.contentV2}
             onReset={handleReset}
           />
-        ) : (
+        )}
+        
+        {/* Always show the upload UI */}
+        {(
           <Card>
             <CardHeader>
               <CardTitle>Document Comparison</CardTitle>

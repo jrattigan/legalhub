@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, Eye, Split, FileText, X, ArrowRight } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import { ArrowLeft, Download, Eye, FileText, X, ArrowRight } from 'lucide-react';
 
 interface RedlineCompareViewProps {
   originalFile: File | null;
@@ -74,36 +72,34 @@ export default function RedlineCompareView({
   };
   
   return (
-    <div className="space-y-6">
-      <Card className="shadow-md overflow-hidden">
-        <CardHeader className="pb-4 bg-white border-b">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <FileText className="h-5 w-5 mr-2" />
-              <div>
-                <CardTitle>Document Comparison</CardTitle>
-                <CardDescription>
-                  Comparing {originalFile?.name} with {newFile?.name}
-                </CardDescription>
-              </div>
-            </div>
-            <Button variant="outline" size="sm" onClick={onReset}>
-              <X className="h-4 w-4 mr-1" />
-              Close
-            </Button>
+    <div className="fixed inset-0 z-50">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50" onClick={onReset} />
+      
+      {/* Modal Container */}
+      <div 
+        className="absolute inset-4 bg-white rounded-lg shadow-xl overflow-hidden flex flex-col"
+        style={{ maxHeight: 'calc(100vh - 32px)' }}
+      >
+        {/* Header */}
+        <div className="p-4 flex justify-between items-center border-b bg-muted/30">
+          <div className="flex items-center">
+            <FileText className="h-5 w-5 mr-2" />
+            <h2 className="text-lg font-semibold">Document Comparison</h2>
           </div>
-        </CardHeader>
+          <Button variant="outline" size="sm" onClick={onReset}>Close</Button>
+        </div>
         
         {/* Document Info */}
         <div className="p-3 flex justify-between bg-slate-50 border-b">
           <div>
-            <div className="text-sm font-medium">Original Document</div>
+            <div className="text-sm font-medium">Original Version</div>
             <div className="text-xs text-muted-foreground">
               {originalFile?.name || 'Unknown'} ({Math.round((originalFile?.size || 0) / 1024)} KB)
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm font-medium">New Document</div>
+            <div className="text-sm font-medium">New Version</div>
             <div className="text-xs text-muted-foreground">
               {newFile?.name || 'Unknown'} ({Math.round((newFile?.size || 0) / 1024)} KB)
             </div>
@@ -133,15 +129,10 @@ export default function RedlineCompareView({
             <ArrowRight className="h-4 w-4 mr-2" />
             New Version
           </button>
-          <div className="flex-1"></div>
-          <Button variant="outline" size="sm" className="ml-auto" onClick={downloadComparison}>
-            <Download className="h-4 w-4 mr-1" />
-            Download
-          </Button>
         </div>
         
-        {/* Main Content Area */}
-        <div className="flex-1 min-h-[500px] max-h-[70vh] overflow-auto bg-white">
+        {/* Main Content Area - Flexbox to take up all remaining height */}
+        <div className="flex-1 min-h-0 overflow-hidden">
           {/* Changes Tab */}
           {activeTab === 'changes' && (
             <div className="h-full flex flex-col">
@@ -159,9 +150,8 @@ export default function RedlineCompareView({
                   <span className="inline-block"><span className="bg-green-100 text-green-700 px-1 py-0.5 text-xs rounded">Green text</span>: Added</span>
                 </div>
               </div>
-              
-              <div className="p-4 min-w-full">
-                <div className="border rounded-md p-6 bg-white shadow-sm min-h-[400px]" dangerouslySetInnerHTML={{ __html: diff }} />
+              <div className="flex-1 overflow-auto">
+                <div className="p-4 min-w-full" dangerouslySetInnerHTML={{ __html: diff }} />
               </div>
             </div>
           )}
@@ -180,11 +170,8 @@ export default function RedlineCompareView({
                   {originalFile && `${Math.round(originalFile.size / 1024)} KB`}
                 </div>
               </div>
-              
-              <div className="p-4">
-                <div className="border rounded-md p-6 bg-white shadow-sm min-h-[400px]">
-                  <pre className="whitespace-pre-wrap">{contentV1}</pre>
-                </div>
+              <div className="flex-1 overflow-auto">
+                <pre className="whitespace-pre-wrap p-4">{contentV1}</pre>
               </div>
             </div>
           )}
@@ -203,27 +190,24 @@ export default function RedlineCompareView({
                   {newFile && `${Math.round(newFile.size / 1024)} KB`}
                 </div>
               </div>
-              
-              <div className="p-4">
-                <div className="border rounded-md p-6 bg-white shadow-sm min-h-[400px]">
-                  <pre className="whitespace-pre-wrap">{contentV2}</pre>
-                </div>
+              <div className="flex-1 overflow-auto">
+                <pre className="whitespace-pre-wrap p-4">{contentV2}</pre>
               </div>
             </div>
           )}
         </div>
         
-        <CardFooter className="border-t p-4 flex justify-between bg-slate-50">
-          <Button variant="outline" onClick={onReset}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
+        {/* Footer with download option */}
+        <div className="p-3 border-t bg-slate-50 flex justify-end">
+          <Button variant="outline" size="sm" onClick={onReset} className="mr-2">
             Back to Upload
           </Button>
-          <Button variant="default" onClick={downloadComparison}>
+          <Button size="sm" onClick={downloadComparison}>
             <Download className="h-4 w-4 mr-2" />
             Download Comparison
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
