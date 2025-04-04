@@ -6,6 +6,7 @@ import {
   Trash2, Clock, Plus, File, CheckSquare, AlertCircle as Alert, Users,
   Building, FileText, Upload, ExternalLink, DollarSign
 } from 'lucide-react';
+import { uploadDocumentWithXhr } from '@/components/ui/xhr-upload';
 import { FileUpload } from '@/components/ui/file-upload';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
