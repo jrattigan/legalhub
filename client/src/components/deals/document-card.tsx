@@ -148,15 +148,27 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
       
       // Use an absolute URL to avoid path issues
       const apiUrl = window.location.origin + `/api/documents/${document.id}/versions`;
-      console.log(`Making POST request to ${apiUrl}`);
+      console.log(`Making direct POST request to ${apiUrl}`);
       
       try {
-        const response = await apiRequest(apiUrl, {
+        // Use direct fetch instead of the apiRequest helper
+        const response = await fetch(apiUrl, {
           method: 'POST',
-          data: data
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data),
+          credentials: 'include'
         });
         
-        console.log(`Upload successful, response status: ${response.status}`);
+        console.log(`Upload response status: ${response.status}`);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Error response: ${errorText}`);
+          throw new Error(`Upload failed: ${response.status} ${errorText || response.statusText}`);
+        }
+        
         return response.json();
       } catch (error) {
         console.error("Error in document upload:", error);
@@ -171,6 +183,11 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
     },
     onError: (error) => {
       console.error("Upload mutation failed:", error);
+      toast({
+        title: "Upload Failed",
+        description: "There was an error uploading your document. Please try again.",
+        variant: "destructive"
+      });
     }
   });
 
