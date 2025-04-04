@@ -54,18 +54,13 @@ export function DocumentCompare({
           <html>
             <head>
               <style>
-                body { font-family: 'Calibri', sans-serif; padding: 20px; }
-                .no-diff { 
-                  text-align: center; 
-                  padding: 20px; 
-                  background: #f5f5f5; 
-                  border-radius: 4px;
-                  color: #666;
-                }
+                body { font-family: 'Calibri', sans-serif; padding: 20px; margin: 0; }
               </style>
             </head>
             <body>
-              <div class="no-diff">No differences found between the documents</div>
+              <div style="text-align: center; padding: 20px; background: #f5f5f5; border-radius: 4px; color: #666;">
+                No differences found between the documents
+              </div>
             </body>
           </html>
         `;
@@ -75,6 +70,8 @@ export function DocumentCompare({
       }
       
       // Create a complete HTML document with the diff content
+      // Instead of replacing style tags, we'll directly use the diff content 
+      // which now contains inline styles instead of CSS classes
       const fullHtml = `
         <!DOCTYPE html>
         <html>
@@ -86,76 +83,15 @@ export function DocumentCompare({
                 font-family: 'Calibri', sans-serif;
               }
               
-              /* Document container */
-              .document-content {
-                font-family: 'Calibri', sans-serif;
-                line-height: 1.2;
-                color: #000;
-                max-width: 21cm;
-                margin: 0 auto;
-                padding: 20px;
-              }
-              
-              /* Paragraph styles */
-              .doc-paragraph, .doc-normal, .doc-body-text, .doc-table-paragraph {
-                font-family: 'Calibri', sans-serif;
-                font-size: 11pt;
-                line-height: 1.2;
-                margin-bottom: 10pt;
-              }
-              
-              .doc-body-text {
-                text-align: justify;
-              }
-              
-              /* Heading styles */
-              .doc-heading1, .doc-title {
-                font-family: 'Calibri', sans-serif;
-                font-size: 16pt;
-                font-weight: bold;
-                margin-top: 12pt;
-                margin-bottom: 12pt;
-                text-align: center;
-              }
-              
-              /* Diff markup styles */
-              .deletion {
-                color: #991b1b; 
-                text-decoration: line-through;
-                text-decoration-color: #991b1b;
-                background-color: #fee2e2;
-              }
-              
-              .addition {
-                color: #166534;
-                text-decoration: underline;
-                text-decoration-color: #166534;
-                background-color: #dcfce7;
-              }
-              
-              /* Document container */
-              .document-compare {
-                font-family: 'Calibri', sans-serif;
-                font-size: 11pt;
-                line-height: 1.15;
-                color: #000;
-                margin: 0 auto;
-                padding: 20px;
+              /* Basic styling for the iframe body */
+              body {
                 background-color: white;
-              }
-              
-              h1 {
-                font-family: 'Calibri', sans-serif;
-                font-size: 16pt;
-                text-align: center;
-                margin-bottom: 20px;
+                font-size: 11pt;
               }
             </style>
           </head>
           <body>
-            <div class="document-compare">
-              ${diff.replace(/<style>[\s\S]*?<\/style>/gi, '')}
-            </div>
+            ${diff}
           </body>
         </html>
       `;
