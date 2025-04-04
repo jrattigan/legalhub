@@ -135,9 +135,13 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
   // If we don't have a document, return null
   if (!document) return null;
 
-  // Fetch document versions
-  const { data: versions = [], isLoading: versionsLoading } = useQuery<(DocumentVersion & { uploadedBy: any })[]>({
-    queryKey: [window.location.origin + `/api/document-versions/document/${document.id}`],
+  // Fetch document versions with refetch function
+  const { 
+    data: versions = [], 
+    isLoading: versionsLoading,
+    refetch: refetchVersions 
+  } = useQuery<(DocumentVersion & { uploadedBy: any })[]>({
+    queryKey: [`/api/document-versions/document/${document.id}`], // Remove window.location.origin for consistency
     enabled: isExpanded
   });
 
@@ -152,7 +156,7 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
     }
   });
   
-  // Specialized document upload handler that uses XMLHttpRequest for more reliable POST requests
+  // Specialized document upload handler that uses XMLHttpRequest for reliable POST requests
   const handleDocumentUpload = async (fileData: any) => {
     try {
       // Start loading state
@@ -161,7 +165,7 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
       
       console.log(`Starting direct XMLHttpRequest upload to document ID: ${document.id}`);
       
-      // Use an absolute URL to avoid path issues
+      // Use a simple path without window.location.origin
       const apiUrl = `/api/documents/${document.id}/versions`;
       console.log(`Making POST request to ${apiUrl} via XMLHttpRequest`);
       
@@ -182,8 +186,14 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
             duration: 3000,
           });
           
-          // Update UI and queries
-          queryClient.invalidateQueries({ queryKey: [`/api/document-versions/document/${document.id}`] });
+          // Update UI and queries - Fixed to invalidate all document-related cache
+          queryClient.invalidateQueries({ queryKey: ['api'] }); // Invalidate all API queries to ensure refresh
+          
+          // Also manually refetch the document versions to update the UI
+          if (isExpanded) {
+            refetchVersions();
+          }
+          
           setIsUploadDialogOpen(false);
           onRefreshData();
           uploadMutation.reset(); // Reset pending state
@@ -267,7 +277,7 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
         xhr.send();
       });
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       console.log("Comparison success, setting state with:", {data});
       if (versions && versions.length >= 2) {
         // First open the dialog
@@ -277,10 +287,10 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
         setCompareVersions({
           version1: versions[1],
           version2: versions[0],
-          diff: data.diff || "<div>No differences detected</div>",
-          contentV1: data.contentV1 || versions[1].fileContent,
-          contentV2: data.contentV2 || versions[0].fileContent,
-          aiSummary: data.aiSummary
+          diff: data?.diff || "<div>No differences detected</div>",
+          contentV1: data?.contentV1 || versions[1].fileContent || "",
+          contentV2: data?.contentV2 || versions[0].fileContent || "",
+          aiSummary: data?.aiSummary
         });
       }
     },
