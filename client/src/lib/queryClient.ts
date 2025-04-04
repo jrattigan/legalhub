@@ -8,14 +8,41 @@ async function throwIfResNotOk(res: Response) {
 }
 
 export async function apiRequest(
-  url: string,
-  options?: { method?: string; data?: unknown },
+  urlOrMethod: string,
+  methodOrUrlOrData?: string | { method?: string; data?: unknown },
+  data?: any
 ): Promise<Response> {
-  const method = options?.method || 'GET';
-  const data = options?.data;
+  let url: string;
+  let method: string = 'GET';
+  let requestData: any = undefined;
+  
+  // Handle the different ways this function is being called
+  if (urlOrMethod.toUpperCase() === 'GET' || 
+      urlOrMethod.toUpperCase() === 'POST' || 
+      urlOrMethod.toUpperCase() === 'PUT' || 
+      urlOrMethod.toUpperCase() === 'DELETE' || 
+      urlOrMethod.toUpperCase() === 'PATCH') {
+    // Called as apiRequest('POST', '/api/endpoint', data)
+    method = urlOrMethod.toUpperCase();
+    url = methodOrUrlOrData as string;
+    requestData = data;
+  } else {
+    // Called as apiRequest('/api/endpoint', 'POST', data) or
+    // apiRequest('/api/endpoint', { method: 'POST', data: {...} })
+    url = urlOrMethod;
+    
+    if (typeof methodOrUrlOrData === 'string') {
+      // It's apiRequest('/api/endpoint', 'POST', data)
+      method = methodOrUrlOrData.toUpperCase();
+      requestData = data;
+    } else if (methodOrUrlOrData && typeof methodOrUrlOrData === 'object') {
+      // It's apiRequest('/api/endpoint', { method: 'POST', data: {...} })
+      method = methodOrUrlOrData.method?.toUpperCase() || 'GET';
+      requestData = methodOrUrlOrData.data;
+    }
+  }
   
   // Ensure we have an absolute URL and don't include the method in the URL
-  // Fix for issue where "/POST" was added to the URL instead of using POST method
   let absoluteUrl = url.startsWith('http') 
     ? url 
     : (window.location.origin + (url.startsWith('/') ? url : `/${url}`));
@@ -27,12 +54,12 @@ export async function apiRequest(
     console.warn('Fixed malformed URL that contained HTTP method:', absoluteUrl);
   }
   
-  console.log(`Making ${method} request to ${absoluteUrl}`, data || '');
+  console.log(`Making ${method} request to ${absoluteUrl}`, requestData || '');
   
   const res = await fetch(absoluteUrl, {
-    method, // This should be 'POST', 'GET', etc. - not part of the URL
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
+    method,
+    headers: requestData ? { "Content-Type": "application/json" } : {},
+    body: requestData ? JSON.stringify(requestData) : undefined,
     credentials: "include",
   });
 
