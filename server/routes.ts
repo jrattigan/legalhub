@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import { format, parseISO, subMonths } from "date-fns";
 import { z } from "zod";
 import { compareDocuments } from "./tools/redline";
+import * as mammoth from "mammoth";
+import { generateDocumentComparison } from "./document-compare";
 import {
   insertDealSchema,
   insertDocumentSchema,
@@ -930,302 +932,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "One or both document versions not found" });
       }
 
-      // Force us to use the test documents if either document has "test1.docx" or "test2.docx" as filename
-      // This ensures our demo always works with these specific test files
-      const isTestDoc = version1.fileName.includes('test') && version1.fileName.endsWith('.docx') 
-                     || version2.fileName.includes('test') && version2.fileName.endsWith('.docx');
-                     
-      // For test documents, we'll directly determine which is test1 and which is test2
-      let isTest1_2 = false;  // true = comparing test1->test2, false = comparing test2->test1
-      let forceTestDocuments = false;
-            
-      if (isTestDoc) {
-        console.log("Test documents detected, forcing hardcoded comparison demo");
-        forceTestDocuments = true;
-        
-        // Check which document is which test file
-        if (version1.fileName === 'test1.docx' && version2.fileName === 'test2.docx') {
-          isTest1_2 = true;
-          console.log("Comparing test1.docx -> test2.docx");
-        } else if (version1.fileName === 'test2.docx' && version2.fileName === 'test1.docx') {
-          isTest1_2 = false;
-          console.log("Comparing test2.docx -> test1.docx");
-        } else {
-          // For any other test document, assume it's similar to our demo
-          console.log("Unknown test document, using default comparison");
+      // Use the document-compare.ts library to generate the diff
+      // This will automatically use mammoth.js to extract content from docx files
+      const diff = await generateDocumentComparison(version1, version2);
+      
+      // Also get content for each document version separately
+      // Depending on the document type, this might be processed differently
+      let contentV1 = version1.fileContent;
+      let contentV2 = version2.fileContent;
+      
+      // If it's a Word document, extract the content using mammoth
+      // mammoth is already imported at the top of the file
+      
+      // Attempt to extract text from version 1 if it's a docx file
+      if (version1.fileName.endsWith('.docx')) {
+        try {
+          const buffer1 = Buffer.from(version1.fileContent, 'base64');
+          const result1 = await mammoth.convertToHtml({ buffer: buffer1 });
+          contentV1 = result1.value;
+          console.log(`Extracted HTML content from ${version1.fileName}, length: ${contentV1.length}`);
+        } catch (err) {
+          console.error(`Failed to extract content from ${version1.fileName}:`, err);
+          contentV1 = `<p>Failed to extract content from ${version1.fileName}</p>`;
         }
       }
       
-      // Special handling for the comparison demo using our test files
-      if (forceTestDocuments) {
-        // Create hardcoded comparison for the test documents
-        // This ensures a consistent demo experience
-        const diffHtml = `
-        <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
-          <div class="full-document-with-changes">
-            <div class="document-content">
-              <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 12pt; margin-top: 0;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
-              
-              <h2 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 14pt; font-weight: bold; text-align: center; margin-bottom: 15pt;">INDICATIVE TERM SHEET</h2>
-              
-              <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 8pt;">September <span style="color: ${isTest1_2 ? '#991b1b' : '#166534'}; text-decoration: ${isTest1_2 ? 'line-through' : 'underline'}; text-decoration-color: ${isTest1_2 ? '#991b1b' : '#166534'}; background-color: ${isTest1_2 ? '#fee2e2' : '#dcfce7'};">29</span><span style="color: ${isTest1_2 ? '#166534' : '#991b1b'}; text-decoration: ${isTest1_2 ? 'underline' : 'line-through'}; text-decoration-color: ${isTest1_2 ? '#166534' : '#991b1b'}; background-color: ${isTest1_2 ? '#dcfce7' : '#fee2e2'};">31</span>, 2024</p>
-              
-              <div style="margin-bottom: 12pt;">
-                <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">Investment:</div>
-                <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt;">
-                  Rogue Ventures, LP and related entities ("RV") shall invest <span style="color: ${isTest1_2 ? '#991b1b' : '#166534'}; text-decoration: ${isTest1_2 ? 'line-through' : 'underline'}; text-decoration-color: ${isTest1_2 ? '#991b1b' : '#166534'}; background-color: ${isTest1_2 ? '#fee2e2' : '#dcfce7'};">$5</span><span style="color: ${isTest1_2 ? '#166534' : '#991b1b'}; text-decoration: ${isTest1_2 ? 'underline' : 'line-through'}; text-decoration-color: ${isTest1_2 ? '#166534' : '#991b1b'}; background-color: ${isTest1_2 ? '#dcfce7' : '#fee2e2'};">$6</span> million of <span style="color: ${isTest1_2 ? '#991b1b' : '#166534'}; text-decoration: ${isTest1_2 ? 'line-through' : 'underline'}; text-decoration-color: ${isTest1_2 ? '#991b1b' : '#166534'}; background-color: ${isTest1_2 ? '#fee2e2' : '#dcfce7'};">$7</span><span style="color: ${isTest1_2 ? '#166534' : '#991b1b'}; text-decoration: ${isTest1_2 ? 'underline' : 'line-through'}; text-decoration-color: ${isTest1_2 ? '#166534' : '#991b1b'}; background-color: ${isTest1_2 ? '#dcfce7' : '#fee2e2'};">$10</span> million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
-                </div>
-              </div>
-              
-              <div style="margin-bottom: 12pt;">
-                <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">Security:</div>
-                <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt;">
-                  Standard post-money valuation cap only Safe.
-                </div>
-              </div>
-              
-              <div style="margin-bottom: 12pt;">
-                <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">Valuation cap:</div>
-                <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt;">
-                  <span style="color: ${isTest1_2 ? '#991b1b' : '#166534'}; text-decoration: ${isTest1_2 ? 'line-through' : 'underline'}; text-decoration-color: ${isTest1_2 ? '#991b1b' : '#166534'}; background-color: ${isTest1_2 ? '#fee2e2' : '#dcfce7'};">$40</span><span style="color: ${isTest1_2 ? '#166534' : '#991b1b'}; text-decoration: ${isTest1_2 ? 'underline' : 'line-through'}; text-decoration-color: ${isTest1_2 ? '#166534' : '#991b1b'}; background-color: ${isTest1_2 ? '#dcfce7' : '#fee2e2'};">$80</span> million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
-                </div>
-              </div>
-              
-              <div style="margin-bottom: 12pt;">
-                <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">Other Rights:</div>
-                <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt;">
-                  Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.${isTest1_2 ? '<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;"> We also get a board seat.</span>' : ''} ${!isTest1_2 ? '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;"> We also get a board seat.</span>' : ''}
-                </div>
-              </div>
-              
-              <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 8pt; margin-top: 8pt;">
-                This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.
-              </p>
-              
-              <div style="margin-top: 30pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.8;">
-                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 10pt;">
-                  <div style="width: 45%;">New Technologies, Inc.</div>
-                  <div style="width: 45%;">Rogue Ventures, LP</div>
-                </div>
-                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 10pt;">
-                  <div style="width: 45%;">By: ________________________</div>
-                  <div style="width: 45%;">By: ________________________</div>
-                </div>
-                <div style="display: flex; justify-content: space-between; width: 100%;">
-                  <div style="width: 45%;"><span style="color: ${isTest1_2 ? '#991b1b' : '#166534'}; text-decoration: ${isTest1_2 ? 'line-through' : 'underline'}; text-decoration-color: ${isTest1_2 ? '#991b1b' : '#166534'}; background-color: ${isTest1_2 ? '#fee2e2' : '#dcfce7'};">Joe Smith</span><span style="color: ${isTest1_2 ? '#166534' : '#991b1b'}; text-decoration: ${isTest1_2 ? 'underline' : 'line-through'}; text-decoration-color: ${isTest1_2 ? '#166534' : '#991b1b'}; background-color: ${isTest1_2 ? '#dcfce7' : '#fee2e2'};">Joe Jones</span>, Chief Executive Officer</div>
-                  <div style="width: 45%;"><span style="color: ${isTest1_2 ? '#991b1b' : '#166534'}; text-decoration: ${isTest1_2 ? 'line-through' : 'underline'}; text-decoration-color: ${isTest1_2 ? '#991b1b' : '#166534'}; background-color: ${isTest1_2 ? '#fee2e2' : '#dcfce7'};">Fred Perry</span><span style="color: ${isTest1_2 ? '#166534' : '#991b1b'}; text-decoration: ${isTest1_2 ? 'underline' : 'line-through'}; text-decoration-color: ${isTest1_2 ? '#166534' : '#991b1b'}; background-color: ${isTest1_2 ? '#dcfce7' : '#fee2e2'};">Mike Perry</span>, Partner</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>`;
-        
-        // Create content for test1.docx
-        const test1Content = `
-<div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">
-  <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 12pt; margin-top: 18pt;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
-  <h2 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 14pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 10pt;">INDICATIVE TERM SHEET</h2>
-  <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; text-align: center; margin-bottom: 16pt;">September 29, 2024</p>
-  
-  <div style="margin-bottom: 15pt; padding: 0;">
-    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Investment:</div>
-    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
-      Rogue Ventures, LP and related entities ("RV") shall invest $5 million of $7 million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
-    </div>
-  </div>
-  
-  <div style="margin-bottom: 15pt; padding: 0;">
-    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Security:</div>
-    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
-      Standard post-money valuation cap only Safe.
-    </div>
-  </div>
-  
-  <div style="margin-bottom: 15pt; padding: 0;">
-    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Valuation cap:</div>
-    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
-      $40 million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
-    </div>
-  </div>
-  
-  <div style="margin-bottom: 15pt; padding: 0;">
-    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Other Rights:</div>
-    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
-      Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.
-    </div>
-  </div>
-  
-  <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 20pt; margin-bottom: 30pt;">This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.</p>
-  
-  <div style="margin-top: 40pt; display: flex; justify-content: space-between;">
-    <div style="width: 45%;">
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 6pt;">New Technologies, Inc.</p>
-      <div style="border-top: 1px solid #000; margin: 10pt 0;"></div>
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">By:</p>
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-weight: bold; margin-bottom: 4pt;">Joe Smith</p>
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-style: italic;">Chief Executive Officer</p>
-    </div>
-    
-    <div style="width: 45%;">
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 6pt;">Rogue Ventures, LP</p>
-      <div style="border-top: 1px solid #000; margin: 10pt 0;"></div>
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">By:</p>
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-weight: bold; margin-bottom: 4pt;">Fred Perry</p>
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-style: italic;">Partner</p>
-    </div>
-  </div>
-</div>`;
-
-        // Create content for test2.docx
-        const test2Content = `
-<div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">
-  <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 12pt; margin-top: 18pt;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
-  <h2 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 14pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 10pt;">INDICATIVE TERM SHEET</h2>
-  <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; text-align: center; margin-bottom: 16pt;">September 31, 2024</p>
-  
-  <div style="margin-bottom: 15pt; padding: 0;">
-    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Investment:</div>
-    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
-      Rogue Ventures, LP and related entities ("RV") shall invest $6 million of $10 million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
-    </div>
-  </div>
-  
-  <div style="margin-bottom: 15pt; padding: 0;">
-    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Security:</div>
-    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
-      Standard post-money valuation cap only Safe.
-    </div>
-  </div>
-  
-  <div style="margin-bottom: 15pt; padding: 0;">
-    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Valuation cap:</div>
-    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
-      $80 million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
-    </div>
-  </div>
-  
-  <div style="margin-bottom: 15pt; padding: 0;">
-    <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">Other Rights:</div>
-    <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">
-      Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing. We also get a board seat.
-    </div>
-  </div>
-  
-  <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 20pt; margin-bottom: 30pt;">This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.</p>
-  
-  <div style="margin-top: 40pt; display: flex; justify-content: space-between;">
-    <div style="width: 45%;">
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 6pt;">New Technologies, Inc.</p>
-      <div style="border-top: 1px solid #000; margin: 10pt 0;"></div>
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">By:</p>
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-weight: bold; margin-bottom: 4pt;">Joe Jones</p>
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-style: italic;">Chief Executive Officer</p>
-    </div>
-    
-    <div style="width: 45%;">
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 6pt;">Rogue Ventures, LP</p>
-      <div style="border-top: 1px solid #000; margin: 10pt 0;"></div>
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 4pt;">By:</p>
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-weight: bold; margin-bottom: 4pt;">Mike Perry</p>
-      <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; font-style: italic;">Partner</p>
-    </div>
-  </div>
-</div>`;
-
-        // Determine which content to return for each version
-        const contentV1 = isTest1_2 ? test1Content : test2Content;
-        const contentV2 = isTest1_2 ? test2Content : test1Content;
-        
-        // Return the hardcoded diff and content
-        console.log("Returning hardcoded diff and content for test documents");
-        res.json({
-          diff: diffHtml,
-          contentV1,
-          contentV2,
-          aiSummary: {
-            significant_changes: [
-              {
-                section: "Investment Amount",
-                change_type: "Value Change",
-                description: `Changed from ${isTest1_2 ? '$5 million to $6 million' : '$6 million to $5 million'} and total from ${isTest1_2 ? '$7 million to $10 million' : '$10 million to $7 million'}`,
-                significance: "High"
-              },
-              {
-                section: "Date",
-                change_type: "Date Change",
-                description: `Date changed from ${isTest1_2 ? 'September 29 to September 31' : 'September 31 to September 29'}, 2024`,
-                significance: "Medium"
-              },
-              {
-                section: "Valuation Cap",
-                change_type: "Value Change",
-                description: `Cap changed from ${isTest1_2 ? '$40 million to $80 million' : '$80 million to $40 million'}`,
-                significance: "High"
-              },
-              {
-                section: "Governance",
-                change_type: isTest1_2 ? "Addition" : "Removal",
-                description: isTest1_2 ? "Added board seat provision" : "Removed board seat provision",
-                significance: "High"
-              },
-              {
-                section: "Signatories",
-                change_type: "Personnel Change",
-                description: `Changed CEO from ${isTest1_2 ? 'Joe Smith to Joe Jones' : 'Joe Jones to Joe Smith'} and Partner from ${isTest1_2 ? 'Fred Perry to Mike Perry' : 'Mike Perry to Fred Perry'}`,
-                significance: "Medium"
-              }
-            ],
-            unchanged_sections: ["Security", "Term Sheet Disclaimer", "Document Structure"],
-            summary: `This revision ${isTest1_2 ? 'increases' : 'decreases'} both the investment amount and valuation cap, ${isTest1_2 ? 'adds' : 'removes'} board seat rights, changes the signatories, and modifies the date.`
-          }
-        });
-        return;
+      // Attempt to extract text from version 2 if it's a docx file
+      if (version2.fileName.endsWith('.docx')) {
+        try {
+          const buffer2 = Buffer.from(version2.fileContent, 'base64');
+          const result2 = await mammoth.convertToHtml({ buffer: buffer2 });
+          contentV2 = result2.value;
+          console.log(`Extracted HTML content from ${version2.fileName}, length: ${contentV2.length}`);
+        } catch (err) {
+          console.error(`Failed to extract content from ${version2.fileName}:`, err);
+          contentV2 = `<p>Failed to extract content from ${version2.fileName}</p>`;
+        }
       }
       
-      // Extract readable text from Word documents if needed
-      const processContent = (content: string, fileName: string): string => {
-        console.log(`Processing content for file: ${fileName}, content length: ${content ? content.length : 0}`);
-        console.log(`Content starts with: ${content ? content.substring(0, Math.min(50, content.length)).replace(/[\x00-\x1F\x7F-\x9F]/g, '.') : 'null or empty'}`);
-        
-        // Check if it's likely binary content from a docx file
-        if (fileName.endsWith('.docx') || (content && (content.startsWith('UEsDB') || content.includes('PK\u0003\u0004')))) {
-          console.log(`File ${fileName} detected as Word document`);
-          
-          // If it's a Word document, try to extract some readable text
-          try {
-            return `<div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;"><p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 10pt;">Binary content (Word document) - text extraction limited</p></div>`;
-          } catch (e) {
-            return `<div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;"><p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 10pt;">Binary content (Word document) - text extraction failed</p></div>`;
-          }
-        }
-        
-        // Process plain text with basic HTML formatting and apply Word-like styling
-        if (typeof content === 'string' && content.trim() && !content.includes('<div') && !content.includes('<p')) {
-          return `<div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;"><p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 10pt;">${content.replace(/\n\n+/g, '</p><p style="font-family: \'Calibri\', \'Arial\', sans-serif; font-size: 11pt; margin-bottom: 10pt;">').replace(/\n/g, '<br>')}</p></div>`;
-        }
-        
-        return content;
-      };
+      // Wrap the content in document-content div for proper styling
+      if (!contentV1.includes('document-content')) {
+        contentV1 = `<div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">${contentV1}</div>`;
+      }
       
-      // Process content for both versions
-      const processedContent1 = processContent(version1.fileContent, version1.fileName);
-      const processedContent2 = processContent(version2.fileContent, version2.fileName);
-      
-      // Get the diff HTML from storage, passing the processed content
-      const diff = await storage.compareDocumentVersions(
-        versionId1, 
-        versionId2,
-        processedContent1,
-        processedContent2
-      );
-      
-      console.log("Diff generated successfully");
+      if (!contentV2.includes('document-content')) {
+        contentV2 = `<div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">${contentV2}</div>`;
+      }
       
       // Return the diff, processed content, and empty AI summary
       res.json({ 
         diff,
-        contentV1: processedContent1,
-        contentV2: processedContent2,
+        contentV1,
+        contentV2,
         // Send an empty AI summary structure to avoid UI errors
         aiSummary: null
       });

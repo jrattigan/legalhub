@@ -1,5 +1,6 @@
 import { DocumentVersion } from '@shared/schema';
 import * as diff from 'diff';
+import * as mammoth from 'mammoth';
 
 /**
  * Smart document comparison utility to intelligently highlight changes
@@ -22,19 +23,33 @@ export async function generateDocumentComparison(
   console.log(`Custom content provided: ${!!customContent1}, ${!!customContent2}`);
   
   // Extract readable text from binary content like Word documents
-  const extractReadableText = (content: string): string => {
-    if (content.startsWith('UEsDB') || content.includes('PK\u0003\u0004')) {
-      // This is likely a binary Word document (.docx)
-      // Return a placeholder for binary content
-      console.log("Binary Word document detected, text extraction limited");
-      return "Binary content (Word document) - text extraction limited";
+  const extractReadableText = async (content: string, fileName: string): Promise<string> => {
+    // Check if it's likely a binary Word document
+    if (content.startsWith('UEsDB') || content.includes('PK\u0003\u0004') || fileName.endsWith('.docx')) {
+      console.log(`Binary Word document detected for ${fileName}, extracting text using mammoth`);
+      
+      try {
+        // For .docx files, try to convert using mammoth
+        // Convert base64 string to binary array
+        const buffer = Buffer.from(content, 'base64');
+        
+        // Extract HTML from docx using mammoth
+        const result = await mammoth.convertToHtml({ buffer });
+        const extractedHtml = result.value;
+        
+        console.log(`Mammoth extraction success for ${fileName}, extracted ${extractedHtml.length} characters`);
+        return extractedHtml;
+      } catch (err) {
+        console.error(`Failed to extract DOCX content with mammoth: ${err}`);
+        return "Binary content (Word document) - text extraction failed";
+      }
     }
     return content;
   };
   
   // Process content if not already processed (customContent provided)
-  const processedOldContent = customContent1 ? oldContent : extractReadableText(oldContent);
-  const processedNewContent = customContent2 ? newContent : extractReadableText(newContent);
+  let processedOldContent = customContent1 ? oldContent : await extractReadableText(oldContent, olderVersion.fileName);
+  let processedNewContent = customContent2 ? newContent : await extractReadableText(newContent, newerVersion.fileName);
   
   console.log(`Processed old content length: ${processedOldContent.length}, Processed new content length: ${processedNewContent.length}`);
   
