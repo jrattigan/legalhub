@@ -56,7 +56,7 @@ type DocumentCompareProps = {
  * 
  * The component uses NativeDocViewer which supports:
  * - PDF rendering with PDF.js for direct browser viewing
- * - Word document viewing with download option or Office 365 viewer attempt
+ * - Word document viewing with download option
  */
 export function DocumentCompareDirect({ 
   originalVersion,
@@ -68,25 +68,12 @@ export function DocumentCompareDirect({
   aiSummary
 }: DocumentCompareProps) {
   const [activeTab, setActiveTab] = useState<'changes' | 'original' | 'new'>('changes');
-  const [isProcessing, setIsProcessing] = useState<boolean>(true);
-
-  // Simulate document processing time for user experience
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsProcessing(false);
-    }, 1500);
-    
-    return () => clearTimeout(timer);
-  }, []);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   // Get document file URLs
   const getDocumentFileUrl = (versionId: number) => {
     return `/api/document-versions/${versionId}/file`;
   };
-  
-  // Document rendering is now handled by the NativeDocViewer component
-
-  // No need to manually render documents - NativeDocViewer handles this automatically
 
   // Handler for document download
   const handleDownload = (versionId: number, fileName: string) => {
