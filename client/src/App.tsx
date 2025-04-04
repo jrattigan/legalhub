@@ -16,6 +16,9 @@ import Companies from "@/pages/companies";
 import Settings from "@/pages/settings";
 import CompaniesList from "@/components/companies/companies-list";
 import LawFirmsList from "@/components/counsel/law-firms-list";
+// Import Tools pages
+import ToolsPage from "./pages/tools";
+import RedlinePage from "./pages/redline";
 
 function Router() {
   return (
@@ -32,6 +35,9 @@ function Router() {
       <Route path="/counsel/:id" component={Counsel} />
       <Route path="/analytics" component={AnalyticsNew} />
       <Route path="/settings" component={Settings} />
+      {/* Tools section routes */}
+      <Route path="/tools" component={ToolsPage} />
+      <Route path="/tools/redline" component={RedlinePage} />
       {/* Iframe content routes */}
       <Route path="/companies-list" component={CompaniesList} />
       <Route path="/law-firms-list" component={LawFirmsList} />
