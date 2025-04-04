@@ -141,55 +141,94 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
     enabled: isExpanded
   });
 
-  // Upload new version mutation
+  // Upload new version mutation setup for UI state
   const uploadMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log(`Starting document upload to document ID: ${document.id}`);
+      // This is now just a placeholder for UI state tracking
+      return { success: true };
+    },
+    onSuccess: () => {
+      // We'll manually manage this in the handleDocumentUpload function
+    }
+  });
+  
+  // Custom document upload handler - bypassing react-query's mutation to ensure proper fetch behavior
+  const handleDocumentUpload = async (fileData: any) => {
+    try {
+      // Start loading state
+      uploadMutation.reset();
+      uploadMutation.mutate({}); // This triggers isPending state to true
+      
+      console.log(`Starting custom document upload to document ID: ${document.id}`);
       
       // Use an absolute URL to avoid path issues
       const apiUrl = window.location.origin + `/api/documents/${document.id}/versions`;
-      console.log(`Making direct POST request to ${apiUrl}`);
+      console.log(`Making direct POST request to ${apiUrl} with XMLHttpRequest`);
       
-      try {
-        // Use direct fetch instead of the apiRequest helper
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(data),
-          credentials: 'include'
-        });
-        
-        console.log(`Upload response status: ${response.status}`);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`Error response: ${errorText}`);
-          throw new Error(`Upload failed: ${response.status} ${errorText || response.statusText}`);
+      // Create a new XMLHttpRequest (more reliable than fetch in some contexts)
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', apiUrl, true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      
+      // Set up completion handlers
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          console.log("Upload successful, response:", xhr.responseText);
+          
+          // Success handling
+          toast({
+            title: "Upload Successful",
+            description: "Document version has been uploaded successfully.",
+            duration: 3000,
+          });
+          
+          // Update UI and queries
+          queryClient.invalidateQueries({ queryKey: [window.location.origin + `/api/document-versions/document/${document.id}`] });
+          setIsUploadDialogOpen(false);
+          onRefreshData();
+          uploadMutation.reset(); // Reset pending state
+        } else {
+          console.error("Upload failed with status:", xhr.status, xhr.responseText);
+          
+          // Error handling
+          toast({
+            title: "Upload Failed",
+            description: "There was an error uploading your document. Please try again.",
+            variant: "destructive"
+          });
+          uploadMutation.reset(); // Reset pending state
         }
-        
-        return response.json();
-      } catch (error) {
-        console.error("Error in document upload:", error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      console.log("Upload mutation succeeded, invalidating queries");
-      queryClient.invalidateQueries({ queryKey: [window.location.origin + `/api/document-versions/document/${document.id}`] });
-      setIsUploadDialogOpen(false);
-      onRefreshData();
-    },
-    onError: (error) => {
-      console.error("Upload mutation failed:", error);
+      };
+      
+      xhr.onerror = function() {
+        console.error("Network error during upload");
+        toast({
+          title: "Upload Failed",
+          description: "Network error while uploading. Please try again.",
+          variant: "destructive"
+        });
+        uploadMutation.reset(); // Reset pending state
+      };
+      
+      // Add user ID to the file data
+      const uploadData = {
+        ...fileData,
+        uploadedById: 1 // For demo purposes, use first user
+      };
+      
+      console.log("Sending data with XMLHttpRequest");
+      xhr.send(JSON.stringify(uploadData));
+      
+    } catch (error) {
+      console.error("Error in custom document upload:", error);
       toast({
-        title: "Upload Failed",
-        description: "There was an error uploading your document. Please try again.",
+        title: "Upload Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
+      uploadMutation.reset(); // Reset pending state
     }
-  });
+  };
 
   // Compare versions mutation
   const compareMutation = useMutation({
@@ -396,11 +435,9 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
                   <FileUpload
                     documentTitle={document.title}
                     onUpload={(fileData) => {
-                      console.log("FileUpload component triggered onUpload with:", fileData);
-                      uploadMutation.mutate({
-                        ...fileData,
-                        uploadedById: 1 // For demo purposes, use first user
-                      });
+                      console.log("FileUpload component triggered onUpload with data");
+                      // Instead of using react-query's mutation here, we'll handle the fetch directly
+                      handleDocumentUpload(fileData);
                     }}
                     isUploading={uploadMutation.isPending}
                   />

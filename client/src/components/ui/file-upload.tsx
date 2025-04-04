@@ -74,15 +74,18 @@ export function FileUpload({
         const base64Content = fileReader.result as string;
         const base64Data = base64Content.split(',')[1]; // Remove the data:application/type;base64, prefix
         
-        console.log("File read successfully, calling onUpload function");
+        console.log("File read successfully, preparing file data");
         
-        // Call onUpload with file data
-        onUpload({
+        // Prepare the file data to be uploaded
+        const fileData = {
           fileName: documentTitle || selectedFile.name,
           fileContent: base64Data,
           fileSize: selectedFile.size,
           fileType: selectedFile.type
-        });
+        };
+        
+        // Call onUpload with file data (pass as an object to avoid serialization issues)
+        onUpload(fileData);
       };
       
       fileReader.onerror = () => {
