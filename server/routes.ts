@@ -971,13 +971,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Wrap the content in document-content div for proper styling
+      // Wrap the content in Word-like styling div for proper display
       if (!contentV1.includes('document-content')) {
-        contentV1 = `<div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">${contentV1}</div>`;
+        // Create a Word-like viewer style wrapper
+        contentV1 = `
+        <div class="document-content" style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 100%; margin: 0; padding: 0;">
+          <style>
+            /* Document styles */
+            .document-content {
+              font-family: 'Calibri', sans-serif;
+              line-height: 1.4;
+              color: #000;
+            }
+            
+            /* Paragraph styles */
+            p {
+              font-family: 'Calibri', sans-serif;
+              font-size: 11pt;
+              line-height: 1.4;
+              margin-bottom: 10pt;
+            }
+            
+            /* Heading styles */
+            h1 {
+              font-family: 'Calibri', sans-serif;
+              font-size: 16pt;
+              font-weight: bold;
+              margin-top: 12pt;
+              margin-bottom: 12pt;
+            }
+            
+            h2 {
+              font-family: 'Calibri', sans-serif;
+              font-size: 14pt;
+              font-weight: bold;
+              margin-top: 10pt;
+              margin-bottom: 10pt;
+            }
+            
+            h3 {
+              font-family: 'Calibri', sans-serif;
+              font-size: 12pt;
+              font-weight: bold;
+              margin-top: 10pt;
+              margin-bottom: 10pt;
+            }
+            
+            /* Table styles */
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 10pt;
+              font-family: 'Calibri', sans-serif;
+              font-size: 11pt;
+            }
+            
+            td, th {
+              padding: 5pt;
+              border: 1px solid #ddd;
+            }
+            
+            th {
+              background-color: #f5f5f5;
+              font-weight: bold;
+            }
+          </style>
+          ${contentV1}
+        </div>`;
       }
       
       if (!contentV2.includes('document-content')) {
-        contentV2 = `<div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">${contentV2}</div>`;
+        // Create a Word-like viewer style wrapper
+        contentV2 = `
+        <div class="document-content" style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 100%; margin: 0; padding: 0;">
+          <style>
+            /* Document styles */
+            .document-content {
+              font-family: 'Calibri', sans-serif;
+              line-height: 1.4;
+              color: #000;
+            }
+            
+            /* Paragraph styles */
+            p {
+              font-family: 'Calibri', sans-serif;
+              font-size: 11pt;
+              line-height: 1.4;
+              margin-bottom: 10pt;
+            }
+            
+            /* Heading styles */
+            h1 {
+              font-family: 'Calibri', sans-serif;
+              font-size: 16pt;
+              font-weight: bold;
+              margin-top: 12pt;
+              margin-bottom: 12pt;
+            }
+            
+            h2 {
+              font-family: 'Calibri', sans-serif;
+              font-size: 14pt;
+              font-weight: bold;
+              margin-top: 10pt;
+              margin-bottom: 10pt;
+            }
+            
+            h3 {
+              font-family: 'Calibri', sans-serif;
+              font-size: 12pt;
+              font-weight: bold;
+              margin-top: 10pt;
+              margin-bottom: 10pt;
+            }
+            
+            /* Table styles */
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 10pt;
+              font-family: 'Calibri', sans-serif;
+              font-size: 11pt;
+            }
+            
+            td, th {
+              padding: 5pt;
+              border: 1px solid #ddd;
+            }
+            
+            th {
+              background-color: #f5f5f5;
+              font-weight: bold;
+            }
+          </style>
+          ${contentV2}
+        </div>`;
       }
       
       // Return the diff, processed content, and empty AI summary
