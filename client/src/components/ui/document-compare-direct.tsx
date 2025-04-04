@@ -9,8 +9,13 @@ import {
   Download
 } from 'lucide-react';
 
-// Import Native Document Viewer
-import NativeDocViewer from './NativeDocViewer';
+// Import Native Document Viewer with type casting to fix TS issues
+import NativeDocViewerComponent from './NativeDocViewer';
+// Cast component to its proper type
+const NativeDocViewer = NativeDocViewerComponent as React.FC<{
+  documentUrl: string;
+  documentType?: string;
+}>;
 
 // Import styles for document viewers
 import './document-viewer.css';

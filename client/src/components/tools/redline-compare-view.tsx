@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, Eye, FileText, ArrowRight } from 'lucide-react';
-// Import document viewers
-import NativeDocViewer from '../ui/NativeDocViewer';
+// Import document viewers with type casting to fix TS issues
+import NativeDocViewerComponent from '../ui/NativeDocViewer';
+// Cast component to its proper type
+const NativeDocViewer = NativeDocViewerComponent as React.FC<{
+  documentUrl: string;
+  documentType?: string;
+}>;
 // Import styles for document viewers
 import '../ui/document-viewer.css';
 
@@ -173,7 +178,7 @@ export default function RedlineCompareView({
                   <span className="inline-block"><span className="bg-green-100 text-green-700 px-1 py-0.5 text-xs rounded">Green text</span>: Added</span>
                 </div>
               </div>
-              <div className="flex-1 overflow-auto">
+              <div className="flex-1 overflow-auto p-4">
                 {isProcessing ? (
                   <div className="flex flex-col items-center justify-center h-full p-8">
                     <div className="w-16 h-16 mb-4 relative">
@@ -189,9 +194,18 @@ export default function RedlineCompareView({
                     <div className="text-sm text-neutral-500 text-center max-w-md animate-pulse">
                       Analyzing differences between document versions...
                     </div>
+                    <div className="mt-4 grid grid-cols-4 gap-2">
+                      <div className="h-1 bg-primary/20 rounded animate-pulse"></div>
+                      <div className="h-1 bg-primary/40 rounded animate-pulse delay-100"></div>
+                      <div className="h-1 bg-primary/60 rounded animate-pulse delay-200"></div>
+                      <div className="h-1 bg-primary/80 rounded animate-pulse delay-300"></div>
+                    </div>
                   </div>
                 ) : (
-                  <div className="p-4 min-w-full prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: diff }} />
+                  <div 
+                    className="prose prose-sm max-w-none" 
+                    dangerouslySetInnerHTML={{ __html: diff }} 
+                  />
                 )}
               </div>
             </div>
@@ -226,19 +240,33 @@ export default function RedlineCompareView({
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto">
+                  <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto p-4">
                     {originalFile?.name.endsWith('.pdf') || originalFile?.name.endsWith('.docx') ? (
-                      // Native Document Viewer for PDF and DOCX
-                      <div className="w-full h-full">
-                        <NativeDocViewer 
-                          documentUrl={getFileUrl(originalFile)}
-                          documentType={originalFile?.name.split('.').pop()}
-                        />
-                      </div>
+                      // Native document viewer using Office Viewer JS
+                      <NativeDocViewer 
+                        documentUrl={getFileUrl(originalFile)}
+                        documentType={originalFile?.name.split('.').pop()}
+                      />
                     ) : (
                       // Fallback for other file types
-                      <div className="p-4 w-full h-full bg-white overflow-auto">
-                        <pre className="whitespace-pre-wrap p-4 text-sm">{contentV1}</pre>
+                      <div className="p-4 text-center">
+                        <p className="mb-4">This file type cannot be previewed.</p>
+                        <Button 
+                          onClick={() => {
+                            if (originalFile) {
+                              const link = document.createElement('a');
+                              link.href = getFileUrl(originalFile);
+                              link.download = originalFile.name;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          Download to view
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -276,19 +304,33 @@ export default function RedlineCompareView({
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto">
+                  <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto p-4">
                     {newFile?.name.endsWith('.pdf') || newFile?.name.endsWith('.docx') ? (
-                      // Native Document Viewer for PDF and DOCX
-                      <div className="w-full h-full">
-                        <NativeDocViewer 
-                          documentUrl={getFileUrl(newFile)}
-                          documentType={newFile?.name.split('.').pop()}
-                        />
-                      </div>
+                      // Native document viewer using Office Viewer JS
+                      <NativeDocViewer 
+                        documentUrl={getFileUrl(newFile)}
+                        documentType={newFile?.name.split('.').pop()}
+                      />
                     ) : (
                       // Fallback for other file types
-                      <div className="p-4 w-full h-full bg-white overflow-auto">
-                        <pre className="whitespace-pre-wrap p-4 text-sm">{contentV2}</pre>
+                      <div className="p-4 text-center">
+                        <p className="mb-4">This file type cannot be previewed.</p>
+                        <Button 
+                          onClick={() => {
+                            if (newFile) {
+                              const link = document.createElement('a');
+                              link.href = getFileUrl(newFile);
+                              link.download = newFile.name;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          Download to view
+                        </Button>
                       </div>
                     )}
                   </div>
