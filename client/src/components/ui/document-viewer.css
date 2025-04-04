@@ -10,3 +10,61 @@
 .docx-viewer {
   padding: 20px;
 }
+
+.native-doc-viewer {
+  width: 100%;
+  height: 700px;
+  overflow: auto;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+}
+
+/* Override PDF.js viewer styles */
+.pdfViewer .page {
+  margin-bottom: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Office Viewer custom styles */
+.office-viewer-container {
+  max-width: 100%;
+  margin: 0 auto;
+  background-color: white;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Document toolbar styles */
+.document-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.document-toolbar button {
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  margin-right: 4px;
+  color: #555;
+  cursor: pointer;
+}
+
+.document-toolbar button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.document-toolbar .separator {
+  width: 1px;
+  height: 24px;
+  background-color: #e2e8f0;
+  margin: 0 8px;
+}

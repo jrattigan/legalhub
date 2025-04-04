@@ -16,10 +16,13 @@ import {
   Minus
 } from 'lucide-react';
 
-// Import document viewers for DOCX files
+// Import Native Document Viewer
+import NativeDocViewer from './NativeDocViewer';
+
+// Import document viewers for DOCX files (as fallback)
 import { renderAsync } from 'docx-preview';
 
-// Import PDF.js as specified
+// Import PDF.js as specified (as fallback)
 import * as pdfjsLib from 'pdfjs-dist';
 import 'pdfjs-dist/web/pdf_viewer.css';
 import { PDFViewer } from 'pdfjs-dist/web/pdf_viewer.js';
@@ -122,7 +125,7 @@ export function DocumentCompareDirect({
       containerRef.current.innerHTML = '';
       
       // Render document with docx-preview using the exact options provided
-      await renderAsync(arrayBuffer, containerRef.current, null, {
+      await renderAsync(arrayBuffer, containerRef.current, undefined, {
         className: 'docx-viewer',
         inWrapper: true,
         ignoreLastRenderedPageBreak: true,
@@ -175,10 +178,11 @@ export function DocumentCompareDirect({
       const pdfDocument = await loadingTask.promise;
       
       // Create PDF viewer as specified
+      // @ts-ignore - PDF.js types are not always accurate
+      const eventBus = new pdfjsLib.EventBus();
       const viewer = new PDFViewer({
         container: containerRef.current,
-        enhanceTextSelection: true,
-        textLayerMode: 2,
+        eventBus: eventBus,
       });
       
       // Set the document to the viewer
@@ -387,12 +391,12 @@ export function DocumentCompareDirect({
                   </div>
                 ) : (
                   <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto p-4">
-                    {originalVersion.fileName.endsWith('.pdf') ? (
-                      // PDF Viewer using PDF.js
-                      <div id="pdf-container" ref={pdfContainer1Ref} className="document-viewer" />
-                    ) : originalVersion.fileName.endsWith('.docx') ? (
-                      // DOCX Viewer using docx-preview
-                      <div id="docx-container" ref={docxContainer1Ref} className="document-viewer" />
+                    {originalVersion.fileName.endsWith('.pdf') || originalVersion.fileName.endsWith('.docx') ? (
+                      // Native document viewer using Office Viewer JS
+                      <NativeDocViewer 
+                        documentUrl={`/api/document-versions/${originalVersion.id}/file`}
+                        documentType={originalVersion.fileName.split('.').pop()}
+                      />
                     ) : (
                       // Fallback for other file types
                       <div className="p-4 text-center">
@@ -453,12 +457,12 @@ export function DocumentCompareDirect({
                   </div>
                 ) : (
                   <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto p-4">
-                    {newVersion.fileName.endsWith('.pdf') ? (
-                      // PDF Viewer using PDF.js
-                      <div id="pdf-container" ref={pdfContainer2Ref} className="document-viewer" />
-                    ) : newVersion.fileName.endsWith('.docx') ? (
-                      // DOCX Viewer using docx-preview
-                      <div id="docx-container" ref={docxContainer2Ref} className="document-viewer" />
+                    {newVersion.fileName.endsWith('.pdf') || newVersion.fileName.endsWith('.docx') ? (
+                      // Native document viewer using Office Viewer JS
+                      <NativeDocViewer 
+                        documentUrl={`/api/document-versions/${newVersion.id}/file`}
+                        documentType={newVersion.fileName.split('.').pop()}
+                      />
                     ) : (
                       // Fallback for other file types
                       <div className="p-4 text-center">
