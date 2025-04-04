@@ -29,7 +29,7 @@ import {
 import { Document, DocumentVersion } from '@shared/schema';
 import { FileUpload } from '@/components/ui/file-upload';
 import { apiRequest } from '@/lib/queryClient';
-import { DocumentCompare } from '@/components/ui/document-compare-new';
+import { DocumentCompareDirect } from '@/components/ui/document-compare-direct';
 import { useToast } from '@/hooks/use-toast';
 
 interface DocumentCardProps {
@@ -597,7 +597,7 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
 
       {/* Document comparison dialog */}
       {compareDialogOpen && compareVersions.version1 && compareVersions.version2 && (
-        <DocumentCompare
+        <DocumentCompareDirect
           originalVersion={compareVersions.version1}
           newVersion={compareVersions.version2}
           diff={compareVersions.diff || "<div>Diff data not available</div>"}
