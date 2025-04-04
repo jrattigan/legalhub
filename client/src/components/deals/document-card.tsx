@@ -88,7 +88,9 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
                 onUpload={async (fileData) => {
                   // Create a new document with the uploaded file data
                   try {
-                    await apiRequest('/api/documents', {
+                    // Use an absolute URL to avoid path issues
+                    const apiUrl = window.location.origin + '/api/documents';
+                    await apiRequest(apiUrl, {
                       method: 'POST',
                       data: {
                         title: fileData.fileName,
@@ -135,21 +137,23 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
 
   // Fetch document versions
   const { data: versions = [], isLoading: versionsLoading } = useQuery<(DocumentVersion & { uploadedBy: any })[]>({
-    queryKey: [`/api/document-versions/document/${document.id}`],
+    queryKey: [window.location.origin + `/api/document-versions/document/${document.id}`],
     enabled: isExpanded
   });
 
   // Upload new version mutation
   const uploadMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest(`/api/documents/${document.id}/versions`, {
+      // Use an absolute URL to avoid path issues
+      const apiUrl = window.location.origin + `/api/documents/${document.id}/versions`;
+      const response = await apiRequest(apiUrl, {
         method: 'POST',
         data: data
       });
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/document-versions/document/${document.id}`] });
+      queryClient.invalidateQueries({ queryKey: [window.location.origin + `/api/document-versions/document/${document.id}`] });
       setIsUploadDialogOpen(false);
       onRefreshData();
     }
@@ -159,7 +163,9 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
   const compareMutation = useMutation({
     mutationFn: async ({ version1Id, version2Id }: { version1Id: number, version2Id: number }) => {
       console.log("Calling comparison API with:", {version1Id, version2Id});
-      const response = await fetch(`/api/document-versions/compare?version1=${version1Id}&version2=${version2Id}`);
+      // Use an absolute URL to avoid path issues
+      const apiUrl = window.location.origin + `/api/document-versions/compare?version1=${version1Id}&version2=${version2Id}`;
+      const response = await fetch(apiUrl);
       
       // Get response text first
       const responseText = await response.text();
