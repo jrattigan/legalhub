@@ -1,10 +1,12 @@
-declare module './NativeDocViewer' {
+declare module '@/components/ui/NativeDocViewer' {
+  import { FC } from 'react';
+  
   export interface NativeDocViewerProps {
     documentUrl: string;
     documentType?: string;
   }
 
-  const NativeDocViewer: React.FC<NativeDocViewerProps>;
+  const NativeDocViewer: FC<NativeDocViewerProps>;
   export default NativeDocViewer;
 }
 
@@ -18,6 +20,7 @@ declare module 'docx-preview' {
     renderFooters?: boolean;
     renderFootnotes?: boolean;
     renderEndnotes?: boolean;
+    experimental?: boolean;
   }
 
   export function renderAsync(
