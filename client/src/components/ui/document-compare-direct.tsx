@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { DocumentVersion } from '@shared/schema';
 import { 
@@ -6,11 +6,29 @@ import {
   ArrowLeft, 
   ArrowRight, 
   Eye, 
-  Download
+  Download, 
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Search,
+  RotateCcw,
+  Plus,
+  Minus
 } from 'lucide-react';
 
-// Import Native Document Viewer (TypeScript version)
+// Import Native Document Viewer
 import NativeDocViewer from './NativeDocViewer';
+
+// Import document viewers for DOCX files (as fallback)
+import { renderAsync } from 'docx-preview';
+
+// Import PDF.js as specified (as fallback)
+import * as pdfjsLib from 'pdfjs-dist';
+import 'pdfjs-dist/web/pdf_viewer.css';
+import { PDFViewer } from 'pdfjs-dist/web/pdf_viewer.js';
+
+// Set the PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
 // Import styles for document viewers
 import './document-viewer.css';
@@ -58,7 +76,11 @@ export function DocumentCompareDirect({
   const [activeTab, setActiveTab] = useState<'changes' | 'original' | 'new'>('changes');
   const [isProcessing, setIsProcessing] = useState<boolean>(true);
 
-  // No longer need refs for document containers since using NativeDocViewer
+  // Refs for document containers
+  const docxContainer1Ref = useRef<HTMLDivElement>(null);
+  const docxContainer2Ref = useRef<HTMLDivElement>(null);
+  const pdfContainer1Ref = useRef<HTMLDivElement>(null);
+  const pdfContainer2Ref = useRef<HTMLDivElement>(null);
   
   // Simulate document processing time for user experience
   useEffect(() => {
@@ -74,9 +96,127 @@ export function DocumentCompareDirect({
     return `/api/document-versions/${versionId}/file`;
   };
   
-  // Document rendering is now handled by the NativeDocViewer component
+  // Function to render DOCX files using docx-preview as specified
+  const renderDocx = async (containerRef: React.RefObject<HTMLDivElement>, versionId: number) => {
+    if (!containerRef.current) return;
+    
+    try {
+      // Show loading indicator
+      containerRef.current.innerHTML = `
+        <div class="flex justify-center items-center h-full">
+          <div class="text-center">
+            <svg class="animate-spin h-8 w-8 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p>Loading document...</p>
+          </div>
+        </div>
+      `;
+      
+      // Fetch the document file as blob
+      const response = await fetch(getDocumentFileUrl(versionId));
+      if (!response.ok) throw new Error('Failed to fetch document');
+      
+      // Convert to ArrayBuffer
+      const arrayBuffer = await response.arrayBuffer();
+      
+      // Clear container
+      containerRef.current.innerHTML = '';
+      
+      // Render document with docx-preview using the exact options provided
+      await renderAsync(arrayBuffer, containerRef.current, undefined, {
+        className: 'docx-viewer',
+        inWrapper: true,
+        ignoreLastRenderedPageBreak: true,
+        useBase64URL: true,
+        renderHeaders: true,
+        renderFooters: true,
+        renderFootnotes: true,
+        renderEndnotes: true
+      });
+      
+      console.log('DOCX document rendered successfully');
+    } catch (error) {
+      console.error('Error rendering DOCX:', error);
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '<div class="p-4 text-red-600">Error loading document. Please try again.</div>';
+      }
+    }
+  };
+  
+  // Function to render PDF files using PDF.js as specified
+  const renderPdf = async (containerRef: React.RefObject<HTMLDivElement>, versionId: number) => {
+    if (!containerRef.current) return;
+    
+    try {
+      // Show loading indicator
+      containerRef.current.innerHTML = `
+        <div class="flex justify-center items-center h-full">
+          <div class="text-center">
+            <svg class="animate-spin h-8 w-8 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p>Loading document...</p>
+          </div>
+        </div>
+      `;
+      
+      // Fetch the document file
+      const response = await fetch(getDocumentFileUrl(versionId));
+      if (!response.ok) throw new Error('Failed to fetch document');
+      
+      // Convert to ArrayBuffer
+      const arrayBuffer = await response.arrayBuffer();
+      
+      // Clear container
+      containerRef.current.innerHTML = '';
+      
+      // Load the PDF using PDF.js
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdfDocument = await loadingTask.promise;
+      
+      // Create PDF viewer as specified
+      // @ts-ignore - PDF.js types are not always accurate
+      const eventBus = new pdfjsLib.EventBus();
+      const viewer = new PDFViewer({
+        container: containerRef.current,
+        eventBus: eventBus,
+      });
+      
+      // Set the document to the viewer
+      viewer.setDocument(pdfDocument);
+      
+      console.log('PDF document rendered successfully');
+    } catch (error) {
+      console.error('Error rendering PDF:', error);
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '<div class="p-4 text-red-600">Error loading document. Please try again.</div>';
+      }
+    }
+  };
 
-  // No need to manually render documents - NativeDocViewer handles this automatically
+  // Render documents when tab changes and processing is done
+  useEffect(() => {
+    if (isProcessing) return;
+    
+    if (activeTab === 'original') {
+      if (originalVersion.fileName.endsWith('.pdf')) {
+        renderPdf(pdfContainer1Ref, originalVersion.id);
+      } else if (originalVersion.fileName.endsWith('.docx')) {
+        renderDocx(docxContainer1Ref, originalVersion.id);
+      }
+    }
+    
+    if (activeTab === 'new') {
+      if (newVersion.fileName.endsWith('.pdf')) {
+        renderPdf(pdfContainer2Ref, newVersion.id);
+      } else if (newVersion.fileName.endsWith('.docx')) {
+        renderDocx(docxContainer2Ref, newVersion.id);
+      }
+    }
+  }, [isProcessing, activeTab, originalVersion.id, newVersion.id]);
 
   // Handler for document download
   const handleDownload = (versionId: number, fileName: string) => {

@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, Eye, FileText, ArrowRight } from 'lucide-react';
-// Import document viewers with type casting to fix TS issues
-import NativeDocViewerComponent from '../ui/NativeDocViewer';
-// Cast component to its proper type
-const NativeDocViewer = NativeDocViewerComponent as React.FC<{
-  documentUrl: string;
-  documentType?: string;
-}>;
-// Import styles for document viewers
-import '../ui/document-viewer.css';
+// Import document viewers
+import { renderAsync } from 'docx-preview';
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+// Import styles for PDF viewer
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 interface RedlineCompareViewProps {
   originalFile: File | null;
@@ -30,6 +28,15 @@ export default function RedlineCompareView({
 }: RedlineCompareViewProps) {
   const [activeTab, setActiveTab] = useState<'changes' | 'original' | 'new'>('changes');
   const [isProcessing, setIsProcessing] = useState<boolean>(true);
+  const [docxRendered1, setDocxRendered1] = useState<boolean>(false);
+  const [docxRendered2, setDocxRendered2] = useState<boolean>(false);
+  
+  // Create PDF viewer plugin instance
+  const defaultLayoutPluginInstance = defaultLayoutPlugin();
+  
+  // Refs for document containers
+  const docx1ContainerRef = useRef<HTMLDivElement>(null);
+  const docx2ContainerRef = useRef<HTMLDivElement>(null);
   
   // Simulate document processing time
   useEffect(() => {
@@ -40,8 +47,45 @@ export default function RedlineCompareView({
     return () => clearTimeout(timer);
   }, []);
   
-  // Simplified document viewing with NativeDocViewer
-  // No longer need specific DOCX rendering logic as it's handled by the NativeDocViewer component
+  // Function to render DOCX files in containers
+  const renderDocxViewer = async (containerRef: React.RefObject<HTMLDivElement>, file: File | null, setRendered: React.Dispatch<React.SetStateAction<boolean>>) => {
+    if (!containerRef.current || !file || isProcessing) return;
+    
+    try {
+      // Convert file to array buffer
+      const arrayBuffer = await file.arrayBuffer();
+      
+      // Render the document
+      await renderAsync(arrayBuffer, containerRef.current, undefined, {
+        className: 'docx-viewer',
+        inWrapper: true,
+        ignoreWidth: false,
+        ignoreHeight: false,
+        ignoreFonts: false,
+        experimental: true
+      });
+      
+      setRendered(true);
+    } catch (error) {
+      console.error('Error rendering DOCX:', error);
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '<div class="p-4 text-red-600">Error loading document. Please try again.</div>';
+      }
+    }
+  };
+  
+  // Render DOCX documents when tab changes and processing is done
+  useEffect(() => {
+    if (!isProcessing) {
+      if (activeTab === 'original' && !docxRendered1 && originalFile?.name.endsWith('.docx')) {
+        renderDocxViewer(docx1ContainerRef, originalFile, setDocxRendered1);
+      }
+      
+      if (activeTab === 'new' && !docxRendered2 && newFile?.name.endsWith('.docx')) {
+        renderDocxViewer(docx2ContainerRef, newFile, setDocxRendered2);
+      }
+    }
+  }, [isProcessing, activeTab, originalFile, newFile, docxRendered1, docxRendered2]);
   
   // Function to download the comparison result
   const downloadComparison = () => {
@@ -178,7 +222,7 @@ export default function RedlineCompareView({
                   <span className="inline-block"><span className="bg-green-100 text-green-700 px-1 py-0.5 text-xs rounded">Green text</span>: Added</span>
                 </div>
               </div>
-              <div className="flex-1 overflow-auto p-4">
+              <div className="flex-1 overflow-auto">
                 {isProcessing ? (
                   <div className="flex flex-col items-center justify-center h-full p-8">
                     <div className="w-16 h-16 mb-4 relative">
@@ -194,18 +238,9 @@ export default function RedlineCompareView({
                     <div className="text-sm text-neutral-500 text-center max-w-md animate-pulse">
                       Analyzing differences between document versions...
                     </div>
-                    <div className="mt-4 grid grid-cols-4 gap-2">
-                      <div className="h-1 bg-primary/20 rounded animate-pulse"></div>
-                      <div className="h-1 bg-primary/40 rounded animate-pulse delay-100"></div>
-                      <div className="h-1 bg-primary/60 rounded animate-pulse delay-200"></div>
-                      <div className="h-1 bg-primary/80 rounded animate-pulse delay-300"></div>
-                    </div>
                   </div>
                 ) : (
-                  <div 
-                    className="prose prose-sm max-w-none" 
-                    dangerouslySetInnerHTML={{ __html: diff }} 
-                  />
+                  <div className="p-4 min-w-full prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: diff }} />
                 )}
               </div>
             </div>
@@ -240,33 +275,39 @@ export default function RedlineCompareView({
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto p-4">
-                    {originalFile?.name.endsWith('.pdf') || originalFile?.name.endsWith('.docx') ? (
-                      // Native document viewer using Office Viewer JS
-                      <NativeDocViewer 
-                        documentUrl={getFileUrl(originalFile)}
-                        documentType={originalFile?.name.split('.').pop()}
-                      />
+                  <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto">
+                    {originalFile?.name.endsWith('.pdf') ? (
+                      // PDF Viewer
+                      <div className="w-full h-full">
+                        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
+                          <Viewer
+                            fileUrl={getFileUrl(originalFile)}
+                            plugins={[defaultLayoutPluginInstance]}
+                          />
+                        </Worker>
+                      </div>
+                    ) : originalFile?.name.endsWith('.docx') ? (
+                      // DOCX Viewer
+                      <div className="w-full h-full bg-white p-4 overflow-auto">
+                        <div 
+                          ref={docx1ContainerRef} 
+                          className="docx-container bg-white shadow-md max-w-4xl mx-auto min-h-[100%]"
+                        >
+                          <div className="flex justify-center items-center h-64">
+                            <div className="text-center">
+                              <svg className="animate-spin h-8 w-8 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              <p>Loading document...</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     ) : (
                       // Fallback for other file types
-                      <div className="p-4 text-center">
-                        <p className="mb-4">This file type cannot be previewed.</p>
-                        <Button 
-                          onClick={() => {
-                            if (originalFile) {
-                              const link = document.createElement('a');
-                              link.href = getFileUrl(originalFile);
-                              link.download = originalFile.name;
-                              document.body.appendChild(link);
-                              link.click();
-                              document.body.removeChild(link);
-                            }
-                          }}
-                          className="flex items-center gap-2"
-                        >
-                          <Download className="h-4 w-4" />
-                          Download to view
-                        </Button>
+                      <div className="p-4 w-full h-full bg-white overflow-auto">
+                        <pre className="whitespace-pre-wrap p-4 text-sm">{contentV1}</pre>
                       </div>
                     )}
                   </div>
@@ -304,33 +345,39 @@ export default function RedlineCompareView({
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto p-4">
-                    {newFile?.name.endsWith('.pdf') || newFile?.name.endsWith('.docx') ? (
-                      // Native document viewer using Office Viewer JS
-                      <NativeDocViewer 
-                        documentUrl={getFileUrl(newFile)}
-                        documentType={newFile?.name.split('.').pop()}
-                      />
+                  <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto">
+                    {newFile?.name.endsWith('.pdf') ? (
+                      // PDF Viewer
+                      <div className="w-full h-full">
+                        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
+                          <Viewer
+                            fileUrl={getFileUrl(newFile)}
+                            plugins={[defaultLayoutPluginInstance]}
+                          />
+                        </Worker>
+                      </div>
+                    ) : newFile?.name.endsWith('.docx') ? (
+                      // DOCX Viewer
+                      <div className="w-full h-full bg-white p-4 overflow-auto">
+                        <div 
+                          ref={docx2ContainerRef} 
+                          className="docx-container bg-white shadow-md max-w-4xl mx-auto min-h-[100%]"
+                        >
+                          <div className="flex justify-center items-center h-64">
+                            <div className="text-center">
+                              <svg className="animate-spin h-8 w-8 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              <p>Loading document...</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     ) : (
                       // Fallback for other file types
-                      <div className="p-4 text-center">
-                        <p className="mb-4">This file type cannot be previewed.</p>
-                        <Button 
-                          onClick={() => {
-                            if (newFile) {
-                              const link = document.createElement('a');
-                              link.href = getFileUrl(newFile);
-                              link.download = newFile.name;
-                              document.body.appendChild(link);
-                              link.click();
-                              document.body.removeChild(link);
-                            }
-                          }}
-                          className="flex items-center gap-2"
-                        >
-                          <Download className="h-4 w-4" />
-                          Download to view
-                        </Button>
+                      <div className="p-4 w-full h-full bg-white overflow-auto">
+                        <pre className="whitespace-pre-wrap p-4 text-sm">{contentV2}</pre>
                       </div>
                     )}
                   </div>
