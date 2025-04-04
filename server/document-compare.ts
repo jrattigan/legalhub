@@ -5,7 +5,8 @@ import { convertDocumentWithStyles, getMammothConversionOptions } from './mammot
 
 /**
  * Smart document comparison utility to intelligently highlight changes
- * while filtering out common terms that shouldn't be highlighted separately
+ * while filtering out common terms that shouldn't be highlighted separately.
+ * Uses inline styles instead of CSS classes to ensure proper rendering in all environments.
  */
 export async function generateDocumentComparison(
   olderVersion: DocumentVersion, 
@@ -168,75 +169,15 @@ export async function generateDocumentComparison(
     console.log(`Has differences detected: ${hasDifferences}`);
     
     if (hasDifferences) {
-      // Create document with title and content using class-based styles
+      // Create document with content using inline styles instead of class-based styles
       diffHtml = `
-      <style>
-        /* Document container */
-        .document-content {
-          font-family: 'Calibri', sans-serif;
-          line-height: 1.2;
-          color: #000;
-          max-width: 21cm;
-          margin: 0 auto;
-          padding: 20px;
-        }
-        
-        /* Paragraph styles */
-        .doc-paragraph, .doc-normal, .doc-body-text, .doc-table-paragraph {
-          font-family: 'Calibri', sans-serif;
-          font-size: 11pt;
-          line-height: 1.2;
-          margin-bottom: 10pt;
-        }
-        
-        .doc-body-text {
-          text-align: justify;
-        }
-        
-        /* Heading styles */
-        .doc-heading1, .doc-title {
-          font-family: 'Calibri', sans-serif;
-          font-size: 16pt;
-          font-weight: bold;
-          margin-top: 12pt;
-          margin-bottom: 12pt;
-          text-align: center;
-        }
-        
-        /* Diff markup styles */
-        .deletion {
-          color: #991b1b; 
-          text-decoration: line-through;
-          text-decoration-color: #991b1b;
-          background-color: #fee2e2;
-        }
-        
-        .addition {
-          color: #166534;
-          text-decoration: underline;
-          text-decoration-color: #166534;
-          background-color: #dcfce7;
-        }
-        
-        /* Document container */
-        .document-compare {
-          font-family: 'Calibri', sans-serif;
-          font-size: 11pt;
-          line-height: 1.15;
-          color: #000;
-          max-width: 21cm;
-          margin: 0 auto;
-          padding: 2cm;
-          background-color: white;
-          box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-      </style>
-      
-      <div class="document-compare">
-        <div class="full-document-with-changes">
-          <div class="document-content">
-            <h1 class="doc-title">${newerVersion.fileName}</h1>
-            ${diffContent}
+      <div style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.15; color: #000; max-width: 21cm; margin: 0 auto; padding: 2cm; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <div>
+          <div style="font-family: 'Calibri', sans-serif; line-height: 1.2; color: #000; max-width: 21cm; margin: 0 auto; padding: 20px;">
+            <h1 style="font-family: 'Calibri', sans-serif; font-size: 16pt; font-weight: bold; margin-top: 12pt; margin-bottom: 12pt; text-align: center;">${newerVersion.fileName}</h1>
+            ${diffContent.replace(/class="doc-paragraph doc-body-text"/g, 'style="font-family: \'Calibri\', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt; text-align: justify;"')
+              .replace(/class="addition"/g, 'style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;"')
+              .replace(/class="deletion"/g, 'style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;"')}
           </div>
         </div>
       </div>`;
@@ -254,53 +195,11 @@ export async function generateDocumentComparison(
         }
       }
       
-      // No differences found - using class-based styling
+      // No differences found - using inline styling
       diffHtml = `
-      <style>
-        /* Document container */
-        .document-content {
-          font-family: 'Calibri', sans-serif;
-          line-height: 1.2;
-          color: #000;
-          max-width: 21cm;
-          margin: 0 auto;
-          padding: 20px;
-        }
-        
-        /* Document container */
-        .document-compare {
-          font-family: 'Calibri', sans-serif;
-          font-size: 11pt;
-          line-height: 1.15;
-          color: #000;
-          max-width: 21cm;
-          margin: 0 auto;
-          padding: 2cm;
-          background-color: white;
-          box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        
-        /* No differences message */
-        .no-differences {
-          text-align: center;
-          padding: 20px;
-          color: #666;
-          border: 1px solid #eaeaea;
-          border-radius: 4px;
-          background-color: #f9f9f9;
-          margin: 50px 0;
-        }
-        
-        .no-differences p {
-          font-family: 'Calibri', sans-serif;
-          font-size: 12pt;
-          margin: 0;
-        }
-      </style>
-      
-      <div class="document-compare">
-        <div class="no-differences">
-          <p>No differences found between the two versions.</p>
+      <div style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.15; color: #000; max-width: 21cm; margin: 0 auto; padding: 2cm; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <div style="text-align: center; padding: 20px; color: #666; border: 1px solid #eaeaea; border-radius: 4px; background-color: #f9f9f9; margin: 50px 0;">
+          <p style="font-family: 'Calibri', sans-serif; font-size: 12pt; margin: 0;">No differences found between the two versions.</p>
         </div>
       </div>`;
     }
@@ -309,50 +208,12 @@ export async function generateDocumentComparison(
     return diffHtml;
   } catch (error) {
     console.error("Error generating document diff:", error);
-    // Format error message with class-based styling
+    // Format error message with inline styling
     return `
-    <style>
-      /* Document container */
-      .document-compare {
-        font-family: 'Calibri', sans-serif;
-        font-size: 11pt;
-        line-height: 1.15;
-        color: #000;
-        max-width: 21cm;
-        margin: 0 auto;
-        padding: 2cm;
-        background-color: white;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      }
-      
-      /* Error message styling */
-      .error-container {
-        color: #b91c1c;
-        padding: 20px;
-        border: 1px solid #fecaca;
-        border-radius: 4px;
-        margin: 50px 0;
-        background-color: #fef2f2;
-      }
-      
-      .error-heading {
-        margin-top: 0;
-        font-family: 'Calibri', sans-serif;
-        font-size: 14pt;
-        color: #991b1b;
-      }
-      
-      .error-message {
-        font-family: 'Calibri', sans-serif;
-        font-size: 11pt;
-        margin-bottom: 0;
-      }
-    </style>
-    
-    <div class="document-compare">
-      <div class="error-container">
-        <h3 class="error-heading">Error generating document comparison</h3>
-        <p class="error-message">${(error as Error).message || 'An unknown error occurred while comparing documents'}</p>
+    <div style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.15; color: #000; max-width: 21cm; margin: 0 auto; padding: 2cm; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+      <div style="color: #b91c1c; padding: 20px; border: 1px solid #fecaca; border-radius: 4px; margin: 50px 0; background-color: #fef2f2;">
+        <h3 style="margin-top: 0; font-family: 'Calibri', sans-serif; font-size: 14pt; color: #991b1b;">Error generating document comparison</h3>
+        <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 0;">${(error as Error).message || 'An unknown error occurred while comparing documents'}</p>
       </div>
     </div>`;
   }
@@ -363,127 +224,69 @@ export async function generateDocumentComparison(
  * @param reversed Whether test2.docx is the older version (true) or the newer version (false)
  */
 function generateTestDocumentComparison(reversed: boolean): string {
-  // Use our document-content CSS class and class-based style mapping
-  // This aligns with the approach used in mammoth-style-map.ts
-  const exactMatchHtml = `
-  <style>
-    /* Document container */
-    .document-content {
-      font-family: 'Calibri', sans-serif;
-      line-height: 1.2;
-      color: #000;
-      max-width: 21cm;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    
-    /* Paragraph styles */
-    .doc-paragraph, .doc-normal, .doc-body-text, .doc-table-paragraph {
-      font-family: 'Calibri', sans-serif;
-      font-size: 11pt;
-      line-height: 1.2;
-      margin-bottom: 10pt;
-    }
-    
-    .doc-body-text {
-      text-align: justify;
-    }
-    
-    /* Heading styles */
-    .doc-heading1, .doc-title {
-      font-family: 'Calibri', sans-serif;
-      font-size: 16pt;
-      font-weight: bold;
-      margin-top: 12pt;
-      margin-bottom: 12pt;
-      text-align: center;
-    }
-    
-    /* Diff markup styles */
-    .deletion {
-      color: #991b1b; 
-      text-decoration: line-through;
-      text-decoration-color: #991b1b;
-      background-color: #fee2e2;
-    }
-    
-    .addition {
-      color: #166534;
-      text-decoration: underline;
-      text-decoration-color: #166534;
-      background-color: #dcfce7;
-    }
-
-    /* Table layout for signature blocks */
-    .signature-row {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 10pt;
-    }
-    
-    .signature-block {
-      width: 45%;
-    }
-  </style>
+  // Use completely inline styles instead of relying on CSS classes
+  const deletionStyle = "color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;";
+  const additionStyle = "color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;";
   
-  <div class="document-content">
-    <h1 class="doc-title">test1.docx</h1>
+  const exactMatchHtml = `
+  <div style="font-family: 'Calibri', sans-serif; line-height: 1.2; color: #000; max-width: 21cm; margin: 0 auto; padding: 20px;">
+    <h1 style="font-family: 'Calibri', sans-serif; font-size: 16pt; font-weight: bold; margin-top: 12pt; margin-bottom: 12pt; text-align: center;">test1.docx</h1>
     
-    <p class="doc-paragraph">
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt;">
       <br><br>
       SIMPLE AGREEMENT FOR FUTURE EQUITY INDICATIVE TERM SHEET
     </p>
 
-    <p class="doc-paragraph">
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt;">
       September 
-      <span class="${reversed ? 'addition' : 'deletion'}">29</span><span class="${reversed ? 'deletion' : 'addition'}">31</span>, 2024
+      <span style="${reversed ? additionStyle : deletionStyle}">29</span><span style="${reversed ? deletionStyle : additionStyle}">31</span>, 2024
     </p>
     
-    <p class="doc-paragraph">
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt;">
       <strong>Investment:</strong>
       Rogue Ventures, LP and related entities ("RV") shall invest 
-      <span class="${reversed ? 'addition' : 'deletion'}">$5</span><span class="${reversed ? 'deletion' : 'addition'}">$6</span> million of 
-      <span class="${reversed ? 'addition' : 'deletion'}">$7</span><span class="${reversed ? 'deletion' : 'addition'}">$10</span> 
+      <span style="${reversed ? additionStyle : deletionStyle}">$5</span><span style="${reversed ? deletionStyle : additionStyle}">$6</span> million of 
+      <span style="${reversed ? additionStyle : deletionStyle}">$7</span><span style="${reversed ? deletionStyle : additionStyle}">$10</span> 
       million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
     </p>
     
-    <p class="doc-paragraph">
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt;">
       <strong>Security:</strong>
       Standard post-money valuation cap only Safe.
     </p>
     
-    <p class="doc-paragraph">
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt;">
       <strong>Valuation cap:</strong>
-      <span class="${reversed ? 'addition' : 'deletion'}">$40</span><span class="${reversed ? 'deletion' : 'addition'}">$80</span> 
+      <span style="${reversed ? additionStyle : deletionStyle}">$40</span><span style="${reversed ? deletionStyle : additionStyle}">$80</span> 
       million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
     </p>
     
-    <p class="doc-paragraph">
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt;">
       <strong>Other Rights:</strong>
       Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.
-      ${reversed ? '<span class="deletion"> We also get a board seat.</span>' : '<span class="addition"> We also get a board seat.</span>'}
+      ${reversed ? '<span style="' + deletionStyle + '"> We also get a board seat.</span>' : '<span style="' + additionStyle + '"> We also get a board seat.</span>'}
     </p>
     
-    <p class="doc-paragraph" style="font-style: italic; margin-top: 20pt;">
+    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.2; margin-bottom: 10pt; font-style: italic; margin-top: 20pt;">
       This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.
     </p>
     
-    <div class="signature-row" style="margin-top: 30pt;">
-      <div class="signature-block">New Technologies, Inc.</div>
-      <div class="signature-block">Rogue Ventures, LP</div>
+    <div style="display: flex; justify-content: space-between; margin-top: 30pt;">
+      <div style="width: 45%;">New Technologies, Inc.</div>
+      <div style="width: 45%;">Rogue Ventures, LP</div>
     </div>
     
-    <div class="signature-row">
-      <div class="signature-block">By: ________________________</div>
-      <div class="signature-block">By: ________________________</div>
+    <div style="display: flex; justify-content: space-between; margin-top: 10pt;">
+      <div style="width: 45%;">By: ________________________</div>
+      <div style="width: 45%;">By: ________________________</div>
     </div>
     
-    <div class="signature-row">
-      <div class="signature-block">
-        <span class="${reversed ? 'addition' : 'deletion'}">Joe Smith</span><span class="${reversed ? 'deletion' : 'addition'}">Joe Jones</span>, Chief Executive Officer
+    <div style="display: flex; justify-content: space-between; margin-top: 10pt;">
+      <div style="width: 45%;">
+        <span style="${reversed ? additionStyle : deletionStyle}">Joe Smith</span><span style="${reversed ? deletionStyle : additionStyle}">Joe Jones</span>, Chief Executive Officer
       </div>
-      <div class="signature-block">
-        <span class="${reversed ? 'addition' : 'deletion'}">Fred Perry</span><span class="${reversed ? 'deletion' : 'addition'}">Mike Perry</span>, Partner
+      <div style="width: 45%;">
+        <span style="${reversed ? additionStyle : deletionStyle}">Fred Perry</span><span style="${reversed ? deletionStyle : additionStyle}">Mike Perry</span>, Partner
       </div>
     </div>
   </div>`;
