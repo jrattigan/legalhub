@@ -157,11 +157,11 @@ export async function generateDocumentComparison(
       if (processedContent.includes('\n')) {
         const paragraphs = processedContent.split(/\n\n+/);
         for (const paragraph of paragraphs) {
-          diffContent += `<p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 10pt;">${paragraph.replace(/\n/g, '<br>')}</p>`;
+          diffContent += `<p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 10pt; line-height: 1.15; text-align: justify;">${paragraph.replace(/\n/g, '<br>')}</p>`;
         }
       } else {
         // If no paragraphs, wrap in a single p tag
-        diffContent = `<p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 10pt;">${processedContent}</p>`;
+        diffContent = `<p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 10pt; line-height: 1.15; text-align: justify;">${processedContent}</p>`;
       }
     }
     
@@ -170,9 +170,9 @@ export async function generateDocumentComparison(
     if (hasDifferences) {
       // Create document with title and content - using Word-like styling
       diffHtml = `
-      <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
+      <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.15; color: #000; max-width: 21cm; margin: 0 auto; padding: 2cm; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
         <div class="full-document-with-changes">
-          <div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">
+          <div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.15; color: #000; margin: 0; padding: 0;">
             <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 24pt;">${newerVersion.fileName}</h1>
             ${diffContent}
           </div>
@@ -192,11 +192,11 @@ export async function generateDocumentComparison(
         }
       }
       
-      // No differences found - default message
+      // No differences found - default message with Word-like formatting
       diffHtml = `
-      <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
-        <div class="no-differences" style="text-align: center; padding: 20px; color: #666;">
-          No differences found between the two versions.
+      <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.15; color: #000; max-width: 21cm; margin: 0 auto; padding: 2cm; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <div class="no-differences" style="text-align: center; padding: 20px; color: #666; border: 1px solid #eaeaea; border-radius: 4px; background-color: #f9f9f9; margin: 50px 0;">
+          <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 12pt; margin: 0;">No differences found between the two versions.</p>
         </div>
       </div>`;
     }
@@ -205,12 +205,12 @@ export async function generateDocumentComparison(
     return diffHtml;
   } catch (error) {
     console.error("Error generating document diff:", error);
-    // Format error message
+    // Format error message with Word-like styling
     return `
-    <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333;">
-      <div class="error" style="color: #b91c1c; padding: 20px; border: 1px solid #fecaca; border-radius: 4px; margin: 10px 0;">
-        <h3 style="margin-top: 0;">Error generating document comparison</h3>
-        <p>${(error as Error).message || 'An unknown error occurred while comparing documents'}</p>
+    <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.15; color: #000; max-width: 21cm; margin: 0 auto; padding: 2cm; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+      <div class="error" style="color: #b91c1c; padding: 20px; border: 1px solid #fecaca; border-radius: 4px; margin: 50px 0; background-color: #fef2f2;">
+        <h3 style="margin-top: 0; font-family: 'Calibri', 'Arial', sans-serif; font-size: 14pt; color: #991b1b;">Error generating document comparison</h3>
+        <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 0;">${(error as Error).message || 'An unknown error occurred while comparing documents'}</p>
       </div>
     </div>`;
   }
@@ -221,39 +221,39 @@ export async function generateDocumentComparison(
  * @param reversed Whether test2.docx is the older version (true) or the newer version (false)
  */
 function generateTestDocumentComparison(reversed: boolean): string {
-  // Create a hard-coded HTML structure that exactly matches the screenshot
+  // Create a hard-coded HTML structure with Word-like formatting
   const exactMatchHtml = `
-  <div class="document-content">
-    <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 12pt; margin-top: 0;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
+  <div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.15; color: #000; background-color: white; padding: 2cm; max-width: 21cm; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin: 0 auto;">
+    <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 12pt; margin-top: 0; color: #000;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
     
-    <h2 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 14pt; font-weight: bold; text-align: center; margin-bottom: 15pt;">INDICATIVE TERM SHEET</h2>
+    <h2 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 14pt; font-weight: bold; text-align: center; margin-bottom: 15pt; color: #000;">INDICATIVE TERM SHEET</h2>
     
-    <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 8pt;">September <span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">29</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">31</span>, 2024</p>
+    <p style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-bottom: 8pt; line-height: 1.15;">September <span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">29</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">31</span>, 2024</p>
     
     <div style="margin-bottom: 12pt;">
-      <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">Investment:</div>
-      <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt;">
+      <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; color: #000;">Investment:</div>
+      <div style="margin-left: 36pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt; line-height: 1.15; text-align: justify;">
         Rogue Ventures, LP and related entities ("RV") shall invest <span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">$5</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">$6</span> million of <span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">$7</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">$10</span> million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
       </div>
     </div>
     
     <div style="margin-bottom: 12pt;">
-      <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">Security:</div>
-      <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt;">
+      <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; color: #000;">Security:</div>
+      <div style="margin-left: 36pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt; line-height: 1.15; text-align: justify;">
         Standard post-money valuation cap only Safe.
       </div>
     </div>
     
     <div style="margin-bottom: 12pt;">
-      <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">Valuation cap:</div>
-      <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt;">
+      <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; color: #000;">Valuation cap:</div>
+      <div style="margin-left: 36pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt; line-height: 1.15; text-align: justify;">
         <span style="color: ${reversed ? '#166534' : '#991b1b'}; text-decoration: ${reversed ? 'underline' : 'line-through'}; text-decoration-color: ${reversed ? '#166534' : '#991b1b'}; background-color: ${reversed ? '#dcfce7' : '#fee2e2'};">$40</span><span style="color: ${reversed ? '#991b1b' : '#166534'}; text-decoration: ${reversed ? 'line-through' : 'underline'}; text-decoration-color: ${reversed ? '#991b1b' : '#166534'}; background-color: ${reversed ? '#fee2e2' : '#dcfce7'};">$80</span> million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
       </div>
     </div>
     
     <div style="margin-bottom: 12pt;">
-      <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt;">Other Rights:</div>
-      <div style="margin-left: 20pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt;">
+      <div style="font-weight: bold; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; color: #000;">Other Rights:</div>
+      <div style="margin-left: 36pt; font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; margin-top: 2pt; line-height: 1.15; text-align: justify;">
         Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.${reversed ? '' : '<span style="color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7;"> We also get a board seat.</span>'}${reversed ? '<span style="color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2;"> We also get a board seat.</span>' : ''}
       </div>
     </div>
@@ -278,9 +278,9 @@ function generateTestDocumentComparison(reversed: boolean): string {
     </div>
   </div>`;
   
-  // The completed diff HTML
+  // The completed diff HTML with Word-like styling
   return `
-  <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div class="document-compare" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.15; color: #000; max-width: 21cm; margin: 0 auto;">
     <div class="full-document-with-changes">
       ${exactMatchHtml}
     </div>
