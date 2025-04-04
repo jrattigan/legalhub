@@ -206,11 +206,27 @@ export async function generateDocumentComparison(
         }
       }
       
-      // No differences found - using consistent styling
+      // No differences found - using consistent styling with Word container
       diffHtml = `
-      <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 80%; margin: 0 auto; padding: 20px; background-color: white;">
-        <div style="text-align: center; padding: 30px; color: #666; border: 1px solid #eaeaea; border-radius: 4px; background-color: #f9f9f9; margin: 30px 0;">
-          <p style="font-family: 'Calibri', sans-serif; font-size: 12pt; margin: 0;">No differences found between the two versions.</p>
+      <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 80%; margin: 0 auto; padding: 0; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); background-color: #ffffff; overflow: hidden;">
+        <div style="background-color: #f3f4f6; padding: 8px 16px; border-bottom: 1px solid #e5e7eb;">
+          <div style="display: flex; align-items: center;">
+            <div style="width: 16px; height: 16px; margin-right: 8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#185abd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </div>
+            <div style="font-size: 14px; font-weight: 500; color: #185abd;">Document Comparison</div>
+          </div>
+        </div>
+        <div style="padding: 20px;">
+          <div style="text-align: center; padding: 30px; color: #666; border: 1px solid #eaeaea; border-radius: 4px; background-color: #f9f9f9; margin: 30px 0;">
+            <p style="font-family: 'Calibri', sans-serif; font-size: 12pt; margin: 0;">No differences found between the two versions.</p>
+          </div>
         </div>
       </div>`;
     }
@@ -219,12 +235,28 @@ export async function generateDocumentComparison(
     return diffHtml;
   } catch (error) {
     console.error("Error generating document diff:", error);
-    // Format error message with consistent inline styling
+    // Format error message with Word document container styling
     return `
-    <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 80%; margin: 0 auto; padding: 20px; background-color: white;">
-      <div style="color: #b91c1c; padding: 20px; border: 1px solid #fecaca; border-radius: 4px; margin: 30px 0; background-color: #fef2f2;">
-        <h3 style="margin-top: 0; font-family: 'Calibri', sans-serif; font-size: 14pt; color: #991b1b;">Error generating document comparison</h3>
-        <p style="font-family: 'Calibri', sans-serif; font-size: 12pt; margin-bottom: 0;">${(error as Error).message || 'An unknown error occurred while comparing documents'}</p>
+    <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 80%; margin: 0 auto; padding: 0; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); background-color: #ffffff; overflow: hidden;">
+      <div style="background-color: #f3f4f6; padding: 8px 16px; border-bottom: 1px solid #e5e7eb;">
+        <div style="display: flex; align-items: center;">
+          <div style="width: 16px; height: 16px; margin-right: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#185abd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </div>
+          <div style="font-size: 14px; font-weight: 500; color: #185abd;">Document Comparison</div>
+        </div>
+      </div>
+      <div style="padding: 20px;">
+        <div style="color: #b91c1c; padding: 20px; border: 1px solid #fecaca; border-radius: 4px; margin: 30px 0; background-color: #fef2f2;">
+          <h3 style="margin-top: 0; font-family: 'Calibri', sans-serif; font-size: 14pt; color: #991b1b;">Error generating document comparison</h3>
+          <p style="font-family: 'Calibri', sans-serif; font-size: 12pt; margin-bottom: 0;">${(error as Error).message || 'An unknown error occurred while comparing documents'}</p>
+        </div>
       </div>
     </div>`;
   }
@@ -240,8 +272,23 @@ function generateTestDocumentComparison(reversed: boolean): string {
   const additionStyle = "color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7; padding: 0 1px;";
   
   const exactMatchHtml = `
-  <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 80%; margin: 0 auto; padding: 20px;">
-    <div style="text-align: center; font-weight: bold; margin-bottom: 20px;">
+  <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 80%; margin: 0 auto; padding: 0; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); background-color: #ffffff; overflow: hidden;">
+    <div style="background-color: #f3f4f6; padding: 8px 16px; border-bottom: 1px solid #e5e7eb;">
+      <div style="display: flex; align-items: center;">
+        <div style="width: 16px; height: 16px; margin-right: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#185abd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+        </div>
+        <div style="font-size: 14px; font-weight: 500; color: #185abd;">Document Comparison</div>
+      </div>
+    </div>
+    <div style="padding: 20px;">
+      <div style="text-align: center; font-weight: bold; margin-bottom: 20px;">
       <p style="font-family: 'Calibri', sans-serif; font-size: 14pt; line-height: 1.4; margin-bottom: 5px; text-transform: uppercase;">SIMPLE AGREEMENT FOR FUTURE EQUITY</p>
       <p style="font-family: 'Calibri', sans-serif; font-size: 14pt; line-height: 1.4; margin-bottom: 10px; text-transform: uppercase;">INDICATIVE TERM SHEET</p>
       <p style="font-family: 'Calibri', sans-serif; font-size: 12pt; line-height: 1.4; margin-bottom: 20px;">
@@ -305,6 +352,7 @@ function generateTestDocumentComparison(reversed: boolean): string {
           <span style="${reversed ? additionStyle : deletionStyle}">Fred Perry</span><span style="${reversed ? deletionStyle : additionStyle}">Mike Perry</span>, Partner
         </p>
       </div>
+    </div>
     </div>
   </div>`;
   
