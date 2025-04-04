@@ -13,24 +13,30 @@ export async function apiRequest(
 ): Promise<Response> {
   const method = options?.method || 'GET';
   const data = options?.data;
-  console.log(`Making ${method} request to ${url}`, data || '');
   
-  const res = await fetch(url, {
+  // Ensure we have an absolute URL
+  const absoluteUrl = url.startsWith('http') 
+    ? url 
+    : (window.location.origin + (url.startsWith('/') ? url : `/${url}`));
+  
+  console.log(`Making ${method} request to ${absoluteUrl}`, data || '');
+  
+  const res = await fetch(absoluteUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
 
-  console.log(`Response from ${method} ${url}:`, res.status, res.statusText);
+  console.log(`Response from ${method} ${absoluteUrl}:`, res.status, res.statusText);
   
   if (!res.ok) {
     try {
       const errorText = await res.text();
-      console.error(`Error in ${method} ${url}:`, errorText);
+      console.error(`Error in ${method} ${absoluteUrl}:`, errorText);
       throw new Error(`${res.status}: ${errorText || res.statusText}`);
     } catch (error) {
-      console.error(`Failed to parse error response from ${method} ${url}:`, error);
+      console.error(`Failed to parse error response from ${method} ${absoluteUrl}:`, error);
       throw new Error(`${res.status}: ${res.statusText}`);
     }
   }
@@ -44,7 +50,13 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const url = queryKey[0] as string;
+    const rawUrl = queryKey[0] as string;
+    
+    // Ensure we have an absolute URL
+    const url = rawUrl.startsWith('http') 
+      ? rawUrl 
+      : (window.location.origin + (rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`));
+      
     console.log(`Fetching data from ${url}`);
     
     try {
