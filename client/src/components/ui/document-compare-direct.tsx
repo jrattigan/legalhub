@@ -10,16 +10,22 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCw,
-  Search
+  Search,
+  RotateCcw,
+  Plus,
+  Minus
 } from 'lucide-react';
 
 // Import document viewers
+// For DOCX files - using docx-preview which preserves native formatting
 import { renderAsync } from 'docx-preview';
-import { Worker, Viewer } from '@react-pdf-viewer/core';
+
+// For PDF files - using PDF.js through React components with all needed plugins
+import { Worker, Viewer, SpecialZoomLevel, ScrollMode } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { zoomPlugin } from '@react-pdf-viewer/zoom';
 import { searchPlugin } from '@react-pdf-viewer/search';
-import { ScrollMode } from '@react-pdf-viewer/core';
+// Additional plugins will be imported after proper installation
 
 // Import styles for PDF viewer
 import '@react-pdf-viewer/core/lib/styles/index.css';
@@ -104,7 +110,8 @@ export function DocumentCompareDirect({
     return `/api/document-versions/${versionId}/file`;
   };
   
-  // Function to render DOCX files in containers with zoom support
+  // Function to render DOCX files in containers with zoom support using docx-preview
+  // This preserves all native formatting including tables, styles, fonts, etc.
   const renderDocxViewer = async (
     containerRef: React.RefObject<HTMLDivElement>, 
     versionId: number, 
@@ -119,26 +126,49 @@ export function DocumentCompareDirect({
         containerRef.current.innerHTML = '';
       }
       
+      // Show loading indicator
+      const loadingElement = document.createElement('div');
+      loadingElement.className = 'flex flex-col items-center justify-center h-64 p-4';
+      loadingElement.innerHTML = `
+        <svg class="animate-spin h-8 w-8 text-primary mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p>Loading document...</p>
+      `;
+      containerRef.current.appendChild(loadingElement);
+      
       // Fetch the document
       const response = await fetch(getDocumentFileUrl(versionId));
       if (!response.ok) throw new Error('Failed to fetch document');
       
       const arrayBuffer = await response.arrayBuffer();
       
-      // Render the document with current scale
+      // Advanced rendering options to preserve all formatting
       const options = {
         className: 'docx-viewer',
         inWrapper: true,
         ignoreWidth: false,
         ignoreHeight: false,
         ignoreFonts: false,
-        experimental: true
+        experimental: true,
+        useBase64URL: true,
+        useMathMLPolyfill: true,
+        renderHeaders: true,
+        renderFooters: true,
+        renderFootnotes: true,
+        renderEndnotes: true
       };
       
-      // Apply scale manually after rendering
+      // Remove loading indicator
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
+      
+      // Render document with docx-preview
       await renderAsync(arrayBuffer, containerRef.current, undefined, options);
       
-      // Apply scale through CSS if the container exists
+      // Apply scale through CSS for zoom functionality
       if (containerRef.current) {
         const docxContainer = containerRef.current.querySelector('.docx-viewer');
         if (docxContainer) {
@@ -148,6 +178,8 @@ export function DocumentCompareDirect({
       }
       
       setRendered(true);
+      
+      console.log('DOCX document rendered successfully with native formatting preserved');
     } catch (error) {
       console.error('Error rendering DOCX:', error);
       if (containerRef.current) {
@@ -429,8 +461,25 @@ export function DocumentCompareDirect({
                             <Viewer
                               fileUrl={getDocumentFileUrl(originalVersion.id)}
                               plugins={[zoomPluginInstance1, searchPluginInstance1, defaultLayoutPluginInstance1]}
-                              defaultScale={1}
+                              defaultScale={SpecialZoomLevel.PageFit}
                               scrollMode={ScrollMode.Page}
+                              renderLoader={(percentages: number) => (
+                                <div className="flex flex-col items-center justify-center h-full">
+                                  <div className="w-16 h-16 mb-4 relative">
+                                    <svg className="animate-spin h-16 w-16 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <FileText className="h-6 w-6 text-primary-foreground" />
+                                    </div>
+                                  </div>
+                                  <div className="text-center">
+                                    <p className="text-lg font-medium text-neutral-700">Loading PDF Document</p>
+                                    <p className="text-sm text-neutral-500 mt-1">{Math.round(percentages)}% loaded</p>
+                                  </div>
+                                </div>
+                              )}
                             />
                           </Worker>
                         </div>
@@ -595,8 +644,25 @@ export function DocumentCompareDirect({
                             <Viewer
                               fileUrl={getDocumentFileUrl(newVersion.id)}
                               plugins={[zoomPluginInstance2, searchPluginInstance2, defaultLayoutPluginInstance2]}
-                              defaultScale={1}
+                              defaultScale={SpecialZoomLevel.PageFit}
                               scrollMode={ScrollMode.Page}
+                              renderLoader={(percentages: number) => (
+                                <div className="flex flex-col items-center justify-center h-full">
+                                  <div className="w-16 h-16 mb-4 relative">
+                                    <svg className="animate-spin h-16 w-16 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <FileText className="h-6 w-6 text-primary-foreground" />
+                                    </div>
+                                  </div>
+                                  <div className="text-center">
+                                    <p className="text-lg font-medium text-neutral-700">Loading PDF Document</p>
+                                    <p className="text-sm text-neutral-500 mt-1">{Math.round(percentages)}% loaded</p>
+                                  </div>
+                                </div>
+                              )}
                             />
                           </Worker>
                         </div>
