@@ -14,15 +14,23 @@ export async function apiRequest(
   const method = options?.method || 'GET';
   const data = options?.data;
   
-  // Ensure we have an absolute URL
-  const absoluteUrl = url.startsWith('http') 
+  // Ensure we have an absolute URL and don't include the method in the URL
+  // Fix for issue where "/POST" was added to the URL instead of using POST method
+  let absoluteUrl = url.startsWith('http') 
     ? url 
     : (window.location.origin + (url.startsWith('/') ? url : `/${url}`));
+  
+  // Check if the URL accidentally contains the method name (like ending with /POST)
+  if (absoluteUrl.endsWith('/' + method)) {
+    // Fix the URL by removing the method
+    absoluteUrl = absoluteUrl.substring(0, absoluteUrl.length - ('/' + method).length);
+    console.warn('Fixed malformed URL that contained HTTP method:', absoluteUrl);
+  }
   
   console.log(`Making ${method} request to ${absoluteUrl}`, data || '');
   
   const res = await fetch(absoluteUrl, {
-    method,
+    method, // This should be 'POST', 'GET', etc. - not part of the URL
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
@@ -52,10 +60,20 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const rawUrl = queryKey[0] as string;
     
-    // Ensure we have an absolute URL
-    const url = rawUrl.startsWith('http') 
+    // Ensure we have an absolute URL and fix any method name in the URL
+    let url = rawUrl.startsWith('http') 
       ? rawUrl 
       : (window.location.origin + (rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`));
+    
+    // Check for common HTTP methods in the URL and fix if needed
+    const methodNames = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
+    for (const method of methodNames) {
+      if (url.endsWith('/' + method)) {
+        url = url.substring(0, url.length - ('/' + method).length);
+        console.warn(`Fixed URL that incorrectly included HTTP method: ${url}`);
+        break;
+      }
+    }
       
     console.log(`Fetching data from ${url}`);
     
