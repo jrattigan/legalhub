@@ -932,10 +932,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Extract readable text from Word documents if needed
       const processContent = (content: string, fileName: string): string => {
+        console.log(`Processing content for file: ${fileName}, content length: ${content ? content.length : 0}`);
+        console.log(`Content starts with: ${content ? content.substring(0, Math.min(50, content.length)).replace(/[\x00-\x1F\x7F-\x9F]/g, '.') : 'null or empty'}`);
+        
         // Check if it's likely binary content from a docx file
-        if (fileName.endsWith('.docx') || content.startsWith('UEsDB') || content.includes('PK\u0003\u0004')) {
+        if (fileName.endsWith('.docx') || (content && (content.startsWith('UEsDB') || content.includes('PK\u0003\u0004')))) {
+          console.log(`File ${fileName} detected as Word document`);
           // For our specific test files, return the appropriate content with Word-like HTML formatting
           if (fileName === 'test1.docx') {
+            console.log(`Returning test1.docx template content`);
             return `
 <div class="document-content" style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #333; margin: 0; padding: 0;">
   <h1 style="font-family: 'Calibri', 'Arial', sans-serif; font-size: 16pt; font-weight: bold; color: #000; text-align: center; margin-bottom: 12pt; margin-top: 18pt;">SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>

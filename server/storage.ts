@@ -1919,7 +1919,14 @@ export class MemStorage implements IStorage {
 
   // Document Version methods
   async getDocumentVersion(id: number): Promise<DocumentVersion | undefined> {
-    return this.documentVersions.get(id);
+    const version = this.documentVersions.get(id);
+    if (version) {
+      console.log(`Found document version ${id}, filename: ${version.fileName}, content length: ${version.fileContent ? version.fileContent.length : 0}`);
+      console.log(`Version content starts with: ${version.fileContent ? version.fileContent.substring(0, Math.min(50, version.fileContent.length)).replace(/[\x00-\x1F\x7F-\x9F]/g, '.') : 'null or empty'}`);
+    } else {
+      console.log(`Document version ${id} not found`);
+    }
+    return version;
   }
 
   async getDocumentVersions(documentId: number): Promise<(DocumentVersion & { uploadedBy: User })[]> {
@@ -1994,17 +2001,32 @@ export class MemStorage implements IStorage {
 
   async compareDocumentVersions(versionId1: number, versionId2: number, customContent1?: string, customContent2?: string): Promise<string> {
     // Use the already imported generateDocumentComparison function
+    console.log(`Comparing document versions ${versionId1} and ${versionId2}`);
+    console.log(`Custom content provided: ${!!customContent1}, ${!!customContent2}`);
     
     const version1 = this.documentVersions.get(versionId1);
     const version2 = this.documentVersions.get(versionId2);
     
     if (!version1 || !version2) {
+      console.error(`One or both document versions not found: ${!version1 ? versionId1 : ''} ${!version2 ? versionId2 : ''}`);
       throw new Error("One or both document versions not found");
     }
+    
+    console.log(`Version 1 (${versionId1}): ${version1.fileName}, Version 2 (${versionId2}): ${version2.fileName}`);
     
     // Determine which version is newer
     const olderVersion = version1.version < version2.version ? version1 : version2;
     const newerVersion = version1.version > version2.version ? version1 : version2;
+    
+    console.log(`Determined older version: ${olderVersion.id} (v${olderVersion.version}), newer version: ${newerVersion.id} (v${newerVersion.version})`);
+    
+    if (customContent1) {
+      console.log(`Using custom content for version ${olderVersion.id} (length: ${customContent1.length})`);
+    }
+    
+    if (customContent2) {
+      console.log(`Using custom content for version ${newerVersion.id} (length: ${customContent2.length})`);
+    }
     
     // Use our dedicated document comparison module
     return generateDocumentComparison(olderVersion, newerVersion, customContent1, customContent2);

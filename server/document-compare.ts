@@ -11,16 +11,22 @@ export async function generateDocumentComparison(
   customContent1?: string,
   customContent2?: string
 ): Promise<string> {
+  console.log(`Document comparison started between version ${olderVersion.id} and ${newerVersion.id}`);
+  console.log(`Older version filename: ${olderVersion.fileName}, Newer version filename: ${newerVersion.fileName}`);
   
   // Get document content from versions
   const oldContent = customContent1 || olderVersion.fileContent || "No content available";
   const newContent = customContent2 || newerVersion.fileContent || "No content available";
+  
+  console.log(`Old content length: ${oldContent.length}, New content length: ${newContent.length}`);
+  console.log(`Custom content provided: ${!!customContent1}, ${!!customContent2}`);
   
   // Extract readable text from binary content like Word documents
   const extractReadableText = (content: string): string => {
     if (content.startsWith('UEsDB') || content.includes('PK\u0003\u0004')) {
       // This is likely a binary Word document (.docx)
       // Return a placeholder for binary content
+      console.log("Binary Word document detected, text extraction limited");
       return "Binary content (Word document) - text extraction limited";
     }
     return content;
@@ -29,6 +35,8 @@ export async function generateDocumentComparison(
   // Process content if not already processed (customContent provided)
   const processedOldContent = customContent1 ? oldContent : extractReadableText(oldContent);
   const processedNewContent = customContent2 ? newContent : extractReadableText(newContent);
+  
+  console.log(`Processed old content length: ${processedOldContent.length}, Processed new content length: ${processedNewContent.length}`);
   
   // Diff HTML to be returned
   let diffHtml = '';
@@ -105,10 +113,18 @@ export async function generateDocumentComparison(
     }
     
     // For generic files, use standard diff approach
+    console.log("Performing word-level diff...");
     const changes = diff.diffWords(processedOldContent, processedNewContent);
+    
+    // Log diff results for debugging
+    console.log(`Diff changes length: ${changes.length}`);
+    console.log(`Diff changes: ${changes.map(c => 
+      `${c.added ? 'ADDED' : (c.removed ? 'REMOVED' : 'UNCHANGED')} length: ${c.value.length}`
+    ).join(', ')}`);
     
     // Check if there are differences
     const hasDifferences = changes.some(part => part.added || part.removed);
+    console.log(`Has differences detected: ${hasDifferences}`);
     
     if (hasDifferences) {
       // Process content with Word-like styling
