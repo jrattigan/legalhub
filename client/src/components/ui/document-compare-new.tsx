@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { DocumentVersion } from '@shared/schema';
 import { FileText, ArrowLeft, ArrowRight, Eye } from 'lucide-react';
@@ -41,15 +41,59 @@ export function DocumentCompare({
   );
   const [isProcessing, setIsProcessing] = useState<boolean>(true); // Start with processing state
 
-  // Ensure diff HTML is properly sanitized and formatted
+  // Create a ref for style element
+  const styleRef = useRef<HTMLStyleElement | null>(null);
+
+  // Extract CSS and HTML from the diff content
   useEffect(() => {
     // Log the diff content for debugging
     console.log("Received diff content in DocumentCompare:", diff?.substring(0, 100) + "...");
     
-    // Simulate document processing with a timer
-    const timer = setTimeout(() => {
-      // The diff is already properly formatted HTML from the server
-      setRenderedDiff(diff || "<div>No differences found</div>");
+    // Create a function to process the diff
+    const processDiff = () => {
+      // Check if we have diff content
+      if (!diff) {
+        setRenderedDiff("<div>No differences found</div>");
+        return;
+      }
+
+      try {
+        // Extract CSS and HTML from the diff
+        let cssContent = '';
+        let htmlContent = '';
+        
+        // Check if the diff has a style tag
+        const styleMatch = diff.match(/<style>([\s\S]*?)<\/style>/i);
+        
+        if (styleMatch && styleMatch[1]) {
+          // We found CSS content
+          cssContent = styleMatch[1];
+          
+          // Remove the style tag from the HTML
+          htmlContent = diff.replace(/<style>[\s\S]*?<\/style>/i, '');
+        } else {
+          // No style tag found, use the diff as is
+          htmlContent = diff;
+        }
+        
+        // Create or update the style element
+        if (!styleRef.current) {
+          styleRef.current = document.createElement('style');
+          styleRef.current.type = 'text/css';
+          document.head.appendChild(styleRef.current);
+        }
+        
+        // Set the CSS content
+        if (cssContent && styleRef.current) {
+          styleRef.current.textContent = cssContent;
+        }
+        
+        // Set the HTML content
+        setRenderedDiff(htmlContent);
+      } catch (error) {
+        console.error("Error processing diff content:", error);
+        setRenderedDiff("<div>Error processing document comparison</div>");
+      }
       
       // Set original and new content
       setOriginalContent(contentV1 || originalVersion.fileContent || "No content available");
@@ -57,7 +101,10 @@ export function DocumentCompare({
       
       // Set processing state to false after the operation is complete
       setIsProcessing(false);
-    }, 1500); // Simulate processing time of 1.5 seconds
+    };
+    
+    // Simulate document processing with a timer
+    const timer = setTimeout(processDiff, 1500); // Simulate processing time of 1.5 seconds
     
     // Escape key to close modal
     const handleEscapeKey = (event: KeyboardEvent) => {
@@ -70,6 +117,12 @@ export function DocumentCompare({
     return () => {
       clearTimeout(timer);
       window.removeEventListener('keydown', handleEscapeKey);
+      
+      // Clean up the style element when component unmounts
+      if (styleRef.current) {
+        document.head.removeChild(styleRef.current);
+        styleRef.current = null;
+      }
     };
   }, [diff, contentV1, contentV2, originalVersion, newVersion, onClose]);
 
