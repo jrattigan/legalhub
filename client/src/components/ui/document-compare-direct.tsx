@@ -1,14 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { DocumentVersion } from '@shared/schema';
-import { FileText, ArrowLeft, ArrowRight, Eye, Download } from 'lucide-react';
+import { 
+  FileText, 
+  ArrowLeft, 
+  ArrowRight, 
+  Eye, 
+  Download, 
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Search
+} from 'lucide-react';
+
 // Import document viewers
 import { renderAsync } from 'docx-preview';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import { zoomPlugin } from '@react-pdf-viewer/zoom';
+import { searchPlugin } from '@react-pdf-viewer/search';
+import { ScrollMode } from '@react-pdf-viewer/core';
+
 // Import styles for PDF viewer
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+import '@react-pdf-viewer/zoom/lib/styles/index.css';
+import '@react-pdf-viewer/search/lib/styles/index.css';
 
 // Type for the document metadata returned from API
 type DocumentData = {
@@ -54,9 +71,24 @@ export function DocumentCompareDirect({
   const [isProcessing, setIsProcessing] = useState<boolean>(true);
   const [docxRendered1, setDocxRendered1] = useState<boolean>(false);
   const [docxRendered2, setDocxRendered2] = useState<boolean>(false);
+  const [docxScale1, setDocxScale1] = useState<number>(1);
+  const [docxScale2, setDocxScale2] = useState<number>(1);
   
-  // Create PDF viewer plugin instance
-  const defaultLayoutPluginInstance = defaultLayoutPlugin();
+  // Create PDF viewer plugins
+  const zoomPluginInstance1 = zoomPlugin();
+  const zoomPluginInstance2 = zoomPlugin();
+  const searchPluginInstance1 = searchPlugin();
+  const searchPluginInstance2 = searchPlugin();
+  
+  // Get zoom controls for PDF viewers
+  const { ZoomIn: ZoomInButton1, ZoomOut: ZoomOutButton1 } = zoomPluginInstance1;
+  const { ZoomIn: ZoomInButton2, ZoomOut: ZoomOutButton2 } = zoomPluginInstance2;
+  const { Search: SearchButton1 } = searchPluginInstance1;
+  const { Search: SearchButton2 } = searchPluginInstance2;
+  
+  // Create PDF viewer plugin instances with all the needed plugins
+  const defaultLayoutPluginInstance1 = defaultLayoutPlugin();
+  const defaultLayoutPluginInstance2 = defaultLayoutPlugin();
   
   // Simulate document processing time for user experience
   useEffect(() => {
@@ -72,26 +104,48 @@ export function DocumentCompareDirect({
     return `/api/document-versions/${versionId}/file`;
   };
   
-  // Function to render DOCX files in containers
-  const renderDocxViewer = async (containerRef: React.RefObject<HTMLDivElement>, versionId: number, setRendered: React.Dispatch<React.SetStateAction<boolean>>) => {
+  // Function to render DOCX files in containers with zoom support
+  const renderDocxViewer = async (
+    containerRef: React.RefObject<HTMLDivElement>, 
+    versionId: number, 
+    setRendered: React.Dispatch<React.SetStateAction<boolean>>,
+    scale: number = 1
+  ) => {
     if (!containerRef.current || isProcessing) return;
     
     try {
+      // Clear container first
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
+      
       // Fetch the document
       const response = await fetch(getDocumentFileUrl(versionId));
       if (!response.ok) throw new Error('Failed to fetch document');
       
       const arrayBuffer = await response.arrayBuffer();
       
-      // Render the document
-      await renderAsync(arrayBuffer, containerRef.current, undefined, {
+      // Render the document with current scale
+      const options = {
         className: 'docx-viewer',
         inWrapper: true,
         ignoreWidth: false,
         ignoreHeight: false,
         ignoreFonts: false,
         experimental: true
-      });
+      };
+      
+      // Apply scale manually after rendering
+      await renderAsync(arrayBuffer, containerRef.current, undefined, options);
+      
+      // Apply scale through CSS if the container exists
+      if (containerRef.current) {
+        const docxContainer = containerRef.current.querySelector('.docx-viewer');
+        if (docxContainer) {
+          (docxContainer as HTMLElement).style.transform = `scale(${scale})`;
+          (docxContainer as HTMLElement).style.transformOrigin = 'top left';
+        }
+      }
       
       setRendered(true);
     } catch (error) {
@@ -99,6 +153,32 @@ export function DocumentCompareDirect({
       if (containerRef.current) {
         containerRef.current.innerHTML = '<div class="p-4 text-red-600">Error loading document. Please try again.</div>';
       }
+    }
+  };
+  
+  // Handle DOCX zoom in
+  const handleDocxZoomIn = (containerRef: React.RefObject<HTMLDivElement>, docNumber: 1 | 2) => {
+    if (docNumber === 1) {
+      const newScale = Math.min(docxScale1 + 0.2, 2);
+      setDocxScale1(newScale);
+      renderDocxViewer(containerRef, originalVersion.id, setDocxRendered1, newScale);
+    } else {
+      const newScale = Math.min(docxScale2 + 0.2, 2);
+      setDocxScale2(newScale);
+      renderDocxViewer(containerRef, newVersion.id, setDocxRendered2, newScale);
+    }
+  };
+  
+  // Handle DOCX zoom out
+  const handleDocxZoomOut = (containerRef: React.RefObject<HTMLDivElement>, docNumber: 1 | 2) => {
+    if (docNumber === 1) {
+      const newScale = Math.max(docxScale1 - 0.2, 0.4);
+      setDocxScale1(newScale);
+      renderDocxViewer(containerRef, originalVersion.id, setDocxRendered1, newScale);
+    } else {
+      const newScale = Math.max(docxScale2 - 0.2, 0.4);
+      setDocxScale2(newScale);
+      renderDocxViewer(containerRef, newVersion.id, setDocxRendered2, newScale);
     }
   };
 
@@ -293,29 +373,107 @@ export function DocumentCompareDirect({
                 ) : (
                   <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto">
                     {originalVersion.fileName.endsWith('.pdf') ? (
-                      // PDF Viewer
-                      <div className="w-full h-full">
-                        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
-                          <Viewer
-                            fileUrl={getDocumentFileUrl(originalVersion.id)}
-                            plugins={[defaultLayoutPluginInstance]}
-                          />
-                        </Worker>
+                      // PDF Viewer with enhanced controls
+                      <div className="w-full h-full flex flex-col">
+                        <div className="border-b p-2 bg-slate-50 flex items-center space-x-2">
+                          <div className="flex items-center">
+                            <ZoomOutButton1>
+                              {(props) => (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={props.onClick} 
+                                  className="flex items-center"
+                                  title="Zoom out"
+                                >
+                                  <ZoomOut className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </ZoomOutButton1>
+                            <ZoomInButton1>
+                              {(props) => (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={props.onClick} 
+                                  className="flex items-center ml-1"
+                                  title="Zoom in"
+                                >
+                                  <ZoomIn className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </ZoomInButton1>
+                          </div>
+                          <div className="ml-auto">
+                            <SearchButton1>
+                              {(props) => {
+                                // Using TS type assertion to work around the type issue
+                                const onClickHandler = props as unknown as { onClick?: () => void };
+                                return (
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={onClickHandler.onClick} 
+                                    className="flex items-center"
+                                    title="Search in document"
+                                  >
+                                    <Search className="h-4 w-4" />
+                                  </Button>
+                                );
+                              }}
+                            </SearchButton1>
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
+                            <Viewer
+                              fileUrl={getDocumentFileUrl(originalVersion.id)}
+                              plugins={[zoomPluginInstance1, searchPluginInstance1, defaultLayoutPluginInstance1]}
+                              defaultScale={1}
+                              scrollMode={ScrollMode.Page}
+                            />
+                          </Worker>
+                        </div>
                       </div>
                     ) : originalVersion.fileName.endsWith('.docx') ? (
-                      // DOCX Viewer
-                      <div className="w-full h-full bg-white p-4 overflow-auto">
-                        <div 
-                          ref={docx1ContainerRef} 
-                          className="docx-container bg-white shadow-md max-w-4xl mx-auto min-h-[100%]"
-                        >
-                          <div className="flex justify-center items-center h-64">
-                            <div className="text-center">
-                              <svg className="animate-spin h-8 w-8 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              <p>Loading document...</p>
+                      // DOCX Viewer with zoom controls
+                      <div className="w-full h-full bg-white flex flex-col">
+                        <div className="border-b p-2 bg-slate-50 flex items-center space-x-2">
+                          <div className="flex items-center">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleDocxZoomOut(docx1ContainerRef, 1)} 
+                              className="flex items-center"
+                              title="Zoom out"
+                            >
+                              <ZoomOut className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleDocxZoomIn(docx1ContainerRef, 1)} 
+                              className="flex items-center ml-1"
+                              title="Zoom in"
+                            >
+                              <ZoomIn className="h-4 w-4" />
+                            </Button>
+                            <span className="ml-2 text-xs text-gray-500">{Math.round(docxScale1 * 100)}%</span>
+                          </div>
+                        </div>
+                        <div className="flex-1 p-4 overflow-auto">
+                          <div 
+                            ref={docx1ContainerRef} 
+                            className="docx-container bg-white shadow-md max-w-4xl mx-auto min-h-[100%]"
+                          >
+                            <div className="flex justify-center items-center h-64">
+                              <div className="text-center">
+                                <svg className="animate-spin h-8 w-8 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <p>Loading document...</p>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -381,29 +539,107 @@ export function DocumentCompareDirect({
                 ) : (
                   <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto">
                     {newVersion.fileName.endsWith('.pdf') ? (
-                      // PDF Viewer
-                      <div className="w-full h-full">
-                        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
-                          <Viewer
-                            fileUrl={getDocumentFileUrl(newVersion.id)}
-                            plugins={[defaultLayoutPluginInstance]}
-                          />
-                        </Worker>
+                      // PDF Viewer with enhanced controls
+                      <div className="w-full h-full flex flex-col">
+                        <div className="border-b p-2 bg-slate-50 flex items-center space-x-2">
+                          <div className="flex items-center">
+                            <ZoomOutButton2>
+                              {(props) => (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={props.onClick} 
+                                  className="flex items-center"
+                                  title="Zoom out"
+                                >
+                                  <ZoomOut className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </ZoomOutButton2>
+                            <ZoomInButton2>
+                              {(props) => (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={props.onClick} 
+                                  className="flex items-center ml-1"
+                                  title="Zoom in"
+                                >
+                                  <ZoomIn className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </ZoomInButton2>
+                          </div>
+                          <div className="ml-auto">
+                            <SearchButton2>
+                              {(props) => {
+                                // Using TS type assertion to work around the type issue
+                                const onClickHandler = props as unknown as { onClick?: () => void };
+                                return (
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={onClickHandler.onClick} 
+                                    className="flex items-center"
+                                    title="Search in document"
+                                  >
+                                    <Search className="h-4 w-4" />
+                                  </Button>
+                                );
+                              }}
+                            </SearchButton2>
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
+                            <Viewer
+                              fileUrl={getDocumentFileUrl(newVersion.id)}
+                              plugins={[zoomPluginInstance2, searchPluginInstance2, defaultLayoutPluginInstance2]}
+                              defaultScale={1}
+                              scrollMode={ScrollMode.Page}
+                            />
+                          </Worker>
+                        </div>
                       </div>
                     ) : newVersion.fileName.endsWith('.docx') ? (
-                      // DOCX Viewer
-                      <div className="w-full h-full bg-white p-4 overflow-auto">
-                        <div 
-                          ref={docx2ContainerRef} 
-                          className="docx-container bg-white shadow-md max-w-4xl mx-auto min-h-[100%]"
-                        >
-                          <div className="flex justify-center items-center h-64">
-                            <div className="text-center">
-                              <svg className="animate-spin h-8 w-8 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              <p>Loading document...</p>
+                      // DOCX Viewer with zoom controls
+                      <div className="w-full h-full bg-white flex flex-col">
+                        <div className="border-b p-2 bg-slate-50 flex items-center space-x-2">
+                          <div className="flex items-center">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleDocxZoomOut(docx2ContainerRef, 2)} 
+                              className="flex items-center"
+                              title="Zoom out"
+                            >
+                              <ZoomOut className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleDocxZoomIn(docx2ContainerRef, 2)} 
+                              className="flex items-center ml-1"
+                              title="Zoom in"
+                            >
+                              <ZoomIn className="h-4 w-4" />
+                            </Button>
+                            <span className="ml-2 text-xs text-gray-500">{Math.round(docxScale2 * 100)}%</span>
+                          </div>
+                        </div>
+                        <div className="flex-1 p-4 overflow-auto">
+                          <div 
+                            ref={docx2ContainerRef} 
+                            className="docx-container bg-white shadow-md max-w-4xl mx-auto min-h-[100%]"
+                          >
+                            <div className="flex justify-center items-center h-64">
+                              <div className="text-center">
+                                <svg className="animate-spin h-8 w-8 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <p>Loading document...</p>
+                              </div>
                             </div>
                           </div>
                         </div>
