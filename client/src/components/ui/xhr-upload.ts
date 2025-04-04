@@ -9,9 +9,15 @@ export const uploadDocumentWithXhr = async (
   try {
     console.log("Starting document upload with XMLHttpRequest");
     
+    // Get the base URL - this is important to avoid wrong URL construction
+    const baseURL = window.location.origin || '';
+    
     // Step 1: Create the document record first
     const createDocumentXhr = new XMLHttpRequest();
-    createDocumentXhr.open('POST', '/api/documents', true);
+    const documentEndpoint = `${baseURL}/api/documents`;
+    console.log(`Sending POST request to: ${documentEndpoint}`);
+    
+    createDocumentXhr.open('POST', documentEndpoint, true);
     createDocumentXhr.setRequestHeader('Content-Type', 'application/json');
     
     // We wrap in a Promise to make this function work with async/await
@@ -58,7 +64,10 @@ export const uploadDocumentWithXhr = async (
       console.log(`Document created with ID: ${newDocId}, now creating version`);
       
       const createVersionXhr = new XMLHttpRequest();
-      createVersionXhr.open('POST', `/api/documents/${newDocId}/versions`, true);
+      const versionEndpoint = `${baseURL}/api/documents/${newDocId}/versions`;
+      console.log(`Sending POST request to: ${versionEndpoint}`);
+      
+      createVersionXhr.open('POST', versionEndpoint, true);
       createVersionXhr.setRequestHeader('Content-Type', 'application/json');
       
       // Version creation promise

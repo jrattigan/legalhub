@@ -165,8 +165,9 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
       
       console.log(`Starting direct XMLHttpRequest upload to document ID: ${document.id}`);
       
-      // Use a simple path without window.location.origin
-      const apiUrl = `/api/documents/${document.id}/versions`;
+      // Get the base URL - this is important to avoid wrong URL construction
+      const baseURL = window.location.origin || '';
+      const apiUrl = `${baseURL}/api/documents/${document.id}/versions`;
       console.log(`Making POST request to ${apiUrl} via XMLHttpRequest`);
       
       // Create a new XMLHttpRequest - this approach worked in our test page
@@ -245,8 +246,10 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
     mutationFn: async ({ version1Id, version2Id }: { version1Id: number, version2Id: number }) => {
       console.log("Calling comparison API with XMLHttpRequest:", {version1Id, version2Id});
       
-      // Use direct path without window.location.origin
-      const apiUrl = `/api/document-versions/compare?version1=${version1Id}&version2=${version2Id}`;
+      // Get the base URL - this is important to avoid wrong URL construction
+      const baseURL = window.location.origin || '';
+      const apiUrl = `${baseURL}/api/document-versions/compare?version1=${version1Id}&version2=${version2Id}`;
+      console.log(`Making GET request to ${apiUrl} via XMLHttpRequest`);
       
       // Create promise wrapper for XMLHttpRequest
       return new Promise((resolve, reject) => {
