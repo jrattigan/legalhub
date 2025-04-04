@@ -51,8 +51,8 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
     version1?: DocumentVersion & { uploadedBy: any };
     version2?: DocumentVersion & { uploadedBy: any };
     diff?: string;
-    contentV1?: string;
-    contentV2?: string;
+    docData1?: any;
+    docData2?: any;
     aiSummary?: {
       significant_changes: Array<{
         section: string;
@@ -291,8 +291,24 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
           version1: versions[1],
           version2: versions[0],
           diff: data?.diff || "<div>No differences detected</div>",
-          contentV1: data?.contentV1 || versions[1].fileContent || "",
-          contentV2: data?.contentV2 || versions[0].fileContent || "",
+          docData1: data?.docData1 || { 
+            id: versions[1].id,
+            version: versions[1].version,
+            fileName: versions[1].fileName,
+            contentType: versions[1].fileType,
+            fileSize: versions[1].fileSize,
+            createdAt: versions[1].createdAt,
+            documentId: versions[1].documentId
+          },
+          docData2: data?.docData2 || {
+            id: versions[0].id,
+            version: versions[0].version,
+            fileName: versions[0].fileName,
+            contentType: versions[0].fileType,
+            fileSize: versions[0].fileSize,
+            createdAt: versions[0].createdAt,
+            documentId: versions[0].documentId
+          },
           aiSummary: data?.aiSummary
         });
       }
@@ -601,8 +617,8 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
           originalVersion={compareVersions.version1}
           newVersion={compareVersions.version2}
           diff={compareVersions.diff || "<div>Diff data not available</div>"}
-          contentV1={compareVersions.contentV1}
-          contentV2={compareVersions.contentV2}
+          docData1={compareVersions.docData1}
+          docData2={compareVersions.docData2}
           aiSummary={compareVersions.aiSummary}
           onClose={() => setCompareDialogOpen(false)}
         />

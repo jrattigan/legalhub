@@ -933,186 +933,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "One or both document versions not found" });
       }
 
-      // Use the document-compare.ts library to generate the diff
+      // Use the document-compare.ts library to generate the diff for the diff view
       // This will automatically use mammoth.js to extract content from docx files
       const diff = await generateDocumentComparison(version1, version2);
       
-      // Also get content for each document version separately
-      // Depending on the document type, this might be processed differently
-      let contentV1 = version1.fileContent;
-      let contentV2 = version2.fileContent;
+      // We're going to return the original files for native viewers
+      // For individual document viewing, return document metadata
+      const docData1 = {
+        id: version1.id,
+        version: version1.version,
+        fileName: version1.fileName,
+        contentType: version1.fileName.endsWith('.pdf') ? 'application/pdf' : 
+                    version1.fileName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 
+                    'application/octet-stream',
+        fileSize: Buffer.from(version1.fileContent, 'base64').length,
+        createdAt: version1.createdAt,
+        documentId: version1.documentId
+      };
       
-      // If it's a Word document, extract the content using mammoth
-      // mammoth is already imported at the top of the file
+      const docData2 = {
+        id: version2.id,
+        version: version2.version,
+        fileName: version2.fileName,
+        contentType: version2.fileName.endsWith('.pdf') ? 'application/pdf' : 
+                    version2.fileName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 
+                    'application/octet-stream',
+        fileSize: Buffer.from(version2.fileContent, 'base64').length,
+        createdAt: version2.createdAt,
+        documentId: version2.documentId
+      };
       
-      // Attempt to extract text from version 1 if it's a docx file
-      if (version1.fileName.endsWith('.docx')) {
-        try {
-          const buffer1 = Buffer.from(version1.fileContent, 'base64');
-          // Use our custom style mapping for better document formatting
-          contentV1 = await convertDocumentWithStyles(buffer1);
-          console.log(`Extracted HTML content from ${version1.fileName}, length: ${contentV1.length}`);
-        } catch (err) {
-          console.error(`Failed to extract content from ${version1.fileName}:`, err);
-          contentV1 = `<p>Failed to extract content from ${version1.fileName}</p>`;
-        }
-      }
-      
-      // Attempt to extract text from version 2 if it's a docx file
-      if (version2.fileName.endsWith('.docx')) {
-        try {
-          const buffer2 = Buffer.from(version2.fileContent, 'base64');
-          // Use our custom style mapping for better document formatting
-          contentV2 = await convertDocumentWithStyles(buffer2);
-          console.log(`Extracted HTML content from ${version2.fileName}, length: ${contentV2.length}`);
-        } catch (err) {
-          console.error(`Failed to extract content from ${version2.fileName}:`, err);
-          contentV2 = `<p>Failed to extract content from ${version2.fileName}</p>`;
-        }
-      }
-      
-      // Wrap the content in Word-like styling div for proper display
-      if (!contentV1.includes('document-content')) {
-        // Create a Word-like viewer style wrapper
-        contentV1 = `
-        <div class="document-content" style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 100%; margin: 0; padding: 0;">
-          <style>
-            /* Document styles */
-            .document-content {
-              font-family: 'Calibri', sans-serif;
-              line-height: 1.4;
-              color: #000;
-            }
-            
-            /* Paragraph styles */
-            p {
-              font-family: 'Calibri', sans-serif;
-              font-size: 11pt;
-              line-height: 1.4;
-              margin-bottom: 10pt;
-            }
-            
-            /* Heading styles */
-            h1 {
-              font-family: 'Calibri', sans-serif;
-              font-size: 16pt;
-              font-weight: bold;
-              margin-top: 12pt;
-              margin-bottom: 12pt;
-            }
-            
-            h2 {
-              font-family: 'Calibri', sans-serif;
-              font-size: 14pt;
-              font-weight: bold;
-              margin-top: 10pt;
-              margin-bottom: 10pt;
-            }
-            
-            h3 {
-              font-family: 'Calibri', sans-serif;
-              font-size: 12pt;
-              font-weight: bold;
-              margin-top: 10pt;
-              margin-bottom: 10pt;
-            }
-            
-            /* Table styles */
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 10pt;
-              font-family: 'Calibri', sans-serif;
-              font-size: 11pt;
-            }
-            
-            td, th {
-              padding: 5pt;
-              border: 1px solid #ddd;
-            }
-            
-            th {
-              background-color: #f5f5f5;
-              font-weight: bold;
-            }
-          </style>
-          ${contentV1}
-        </div>`;
-      }
-      
-      if (!contentV2.includes('document-content')) {
-        // Create a Word-like viewer style wrapper
-        contentV2 = `
-        <div class="document-content" style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 100%; margin: 0; padding: 0;">
-          <style>
-            /* Document styles */
-            .document-content {
-              font-family: 'Calibri', sans-serif;
-              line-height: 1.4;
-              color: #000;
-            }
-            
-            /* Paragraph styles */
-            p {
-              font-family: 'Calibri', sans-serif;
-              font-size: 11pt;
-              line-height: 1.4;
-              margin-bottom: 10pt;
-            }
-            
-            /* Heading styles */
-            h1 {
-              font-family: 'Calibri', sans-serif;
-              font-size: 16pt;
-              font-weight: bold;
-              margin-top: 12pt;
-              margin-bottom: 12pt;
-            }
-            
-            h2 {
-              font-family: 'Calibri', sans-serif;
-              font-size: 14pt;
-              font-weight: bold;
-              margin-top: 10pt;
-              margin-bottom: 10pt;
-            }
-            
-            h3 {
-              font-family: 'Calibri', sans-serif;
-              font-size: 12pt;
-              font-weight: bold;
-              margin-top: 10pt;
-              margin-bottom: 10pt;
-            }
-            
-            /* Table styles */
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 10pt;
-              font-family: 'Calibri', sans-serif;
-              font-size: 11pt;
-            }
-            
-            td, th {
-              padding: 5pt;
-              border: 1px solid #ddd;
-            }
-            
-            th {
-              background-color: #f5f5f5;
-              font-weight: bold;
-            }
-          </style>
-          ${contentV2}
-        </div>`;
-      }
-      
-      // Return the diff, processed content, and empty AI summary
+      // Return the diff for the diff view, plus document metadata for both files
       res.json({ 
         diff,
-        contentV1,
-        contentV2,
+        docData1,
+        docData2,
         // Send an empty AI summary structure to avoid UI errors
         aiSummary: null
       });
@@ -1120,6 +975,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error comparing document versions:", error);
       res.status(500).json({ 
         message: "Failed to compare document versions",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Add a new endpoint to fetch the actual document file by version ID
+  app.get("/api/document-versions/:id/file", async (req, res) => {
+    const versionId = parseInt(req.params.id);
+    if (isNaN(versionId)) {
+      return res.status(400).json({ message: "Invalid version ID" });
+    }
+    
+    try {
+      const version = await storage.getDocumentVersion(versionId);
+      if (!version) {
+        return res.status(404).json({ message: "Document version not found" });
+      }
+      
+      console.log(`Serving document file: ${version.fileName} (version ${version.version})`);
+      
+      // Determine the content type based on the file extension
+      let contentType = 'application/octet-stream'; // Default content type
+      if (version.fileName.endsWith('.pdf')) {
+        contentType = 'application/pdf';
+      } else if (version.fileName.endsWith('.docx')) {
+        contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      } else if (version.fileName.endsWith('.doc')) {
+        contentType = 'application/msword';
+      } else if (version.fileName.endsWith('.txt')) {
+        contentType = 'text/plain';
+      }
+      
+      // Convert the base64 content to a buffer
+      const fileBuffer = Buffer.from(version.fileContent, 'base64');
+      
+      // Set appropriate content disposition and type headers
+      res.setHeader('Content-Disposition', `inline; filename="${version.fileName}"`);
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Length', fileBuffer.length);
+      
+      // Send the file buffer directly to the client
+      res.send(fileBuffer);
+    } catch (error) {
+      console.error("Error fetching document file:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch document file",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }

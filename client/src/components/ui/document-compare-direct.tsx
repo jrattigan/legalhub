@@ -1,15 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { DocumentVersion } from '@shared/schema';
-import { FileText, ArrowLeft, ArrowRight, Eye } from 'lucide-react';
+import { FileText, ArrowLeft, ArrowRight, Eye, Download } from 'lucide-react';
+// Import document viewers
+import { renderAsync } from 'docx-preview';
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+// Import styles for PDF viewer
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+
+// Type for the document metadata returned from API
+type DocumentData = {
+  id: number;
+  version: number;
+  fileName: string;
+  contentType: string;
+  fileSize: number;
+  createdAt: string;
+  documentId: number;
+};
 
 type DocumentCompareProps = {
   originalVersion: DocumentVersion & { uploadedBy: any };
   newVersion: DocumentVersion & { uploadedBy: any };
   onClose: () => void;
   diff: string;
-  contentV1?: string;
-  contentV2?: string;
+  // These are for the diff view
+  docData1?: DocumentData;
+  docData2?: DocumentData;
   aiSummary?: {
     significant_changes: Array<{
       section: string;
@@ -27,21 +46,61 @@ export function DocumentCompareDirect({
   newVersion, 
   onClose,
   diff,
-  contentV1,
-  contentV2,
+  docData1,
+  docData2,
   aiSummary
 }: DocumentCompareProps) {
   const [activeTab, setActiveTab] = useState<'changes' | 'original' | 'new'>('changes');
   const [isProcessing, setIsProcessing] = useState<boolean>(true);
+  const [docxRendered1, setDocxRendered1] = useState<boolean>(false);
+  const [docxRendered2, setDocxRendered2] = useState<boolean>(false);
   
-  // Simulate document processing time for user experience (keeps the loading UI visible long enough to be visible)
-  React.useEffect(() => {
+  // Create PDF viewer plugin instance
+  const defaultLayoutPluginInstance = defaultLayoutPlugin();
+  
+  // Simulate document processing time for user experience
+  useEffect(() => {
     const timer = setTimeout(() => {
       setIsProcessing(false);
     }, 1500);
     
     return () => clearTimeout(timer);
   }, []);
+
+  // Get document file URLs
+  const getDocumentFileUrl = (versionId: number) => {
+    return `/api/document-versions/${versionId}/file`;
+  };
+  
+  // Function to render DOCX files in containers
+  const renderDocxViewer = async (containerRef: React.RefObject<HTMLDivElement>, versionId: number, setRendered: React.Dispatch<React.SetStateAction<boolean>>) => {
+    if (!containerRef.current || isProcessing) return;
+    
+    try {
+      // Fetch the document
+      const response = await fetch(getDocumentFileUrl(versionId));
+      if (!response.ok) throw new Error('Failed to fetch document');
+      
+      const arrayBuffer = await response.arrayBuffer();
+      
+      // Render the document
+      await renderAsync(arrayBuffer, containerRef.current, undefined, {
+        className: 'docx-viewer',
+        inWrapper: true,
+        ignoreWidth: false,
+        ignoreHeight: false,
+        ignoreFonts: false,
+        experimental: true
+      });
+      
+      setRendered(true);
+    } catch (error) {
+      console.error('Error rendering DOCX:', error);
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '<div class="p-4 text-red-600">Error loading document. Please try again.</div>';
+      }
+    }
+  };
 
   const originalName = originalVersion.uploadedBy?.fullName || 
                      originalVersion.uploadedBy?.name || 
@@ -50,6 +109,34 @@ export function DocumentCompareDirect({
   const newName = newVersion.uploadedBy?.fullName || 
                 newVersion.uploadedBy?.name || 
                 'Unknown user';
+  
+  // Refs for document containers
+  const docx1ContainerRef = React.useRef<HTMLDivElement>(null);
+  const docx2ContainerRef = React.useRef<HTMLDivElement>(null);
+  
+  // Render DOCX documents when tab changes and processing is done
+  useEffect(() => {
+    if (!isProcessing) {
+      if (activeTab === 'original' && !docxRendered1 && originalVersion.fileName.endsWith('.docx')) {
+        renderDocxViewer(docx1ContainerRef, originalVersion.id, setDocxRendered1);
+      }
+      
+      if (activeTab === 'new' && !docxRendered2 && newVersion.fileName.endsWith('.docx')) {
+        renderDocxViewer(docx2ContainerRef, newVersion.id, setDocxRendered2);
+      }
+    }
+  }, [isProcessing, activeTab, originalVersion.id, newVersion.id, docxRendered1, docxRendered2]);
+
+  // Handler for document download
+  const handleDownload = (versionId: number, fileName: string) => {
+    const link = document.createElement('a');
+    link.href = getDocumentFileUrl(versionId);
+    link.download = fileName;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="fixed inset-0 z-50">
@@ -174,8 +261,19 @@ export function DocumentCompareDirect({
                   </svg>
                   <span className="text-sm font-medium">{originalVersion.fileName}</span>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  v{originalVersion.version} | Uploaded by {originalName} | {new Date(originalVersion.createdAt).toLocaleString()}
+                <div className="flex items-center">
+                  <div className="text-xs text-muted-foreground mr-4">
+                    v{originalVersion.version} | Uploaded by {originalName} | {new Date(originalVersion.createdAt).toLocaleString()}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleDownload(originalVersion.id, originalVersion.fileName)}
+                    className="flex items-center"
+                  >
+                    <Download className="h-3 w-3 mr-1" />
+                    Download
+                  </Button>
                 </div>
               </div>
               <div className="flex-1 overflow-auto">
@@ -193,23 +291,48 @@ export function DocumentCompareDirect({
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4">
-                    <div 
-                      className="border border-neutral-200 rounded-lg shadow-sm overflow-hidden"
-                      style={{ maxWidth: "100%", margin: "0 auto" }}
-                    >
-                      <div className="bg-slate-50 px-4 py-2 border-b border-neutral-200 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#185abd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 mr-2">
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                          <polyline points="14 2 14 8 20 8"></polyline>
-                          <line x1="16" y1="13" x2="8" y2="13"></line>
-                          <line x1="16" y1="17" x2="8" y2="17"></line>
-                          <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                        <span className="text-sm font-medium text-blue-700">{originalVersion.fileName}</span>
+                  <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto">
+                    {originalVersion.fileName.endsWith('.pdf') ? (
+                      // PDF Viewer
+                      <div className="w-full h-full">
+                        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
+                          <Viewer
+                            fileUrl={getDocumentFileUrl(originalVersion.id)}
+                            plugins={[defaultLayoutPluginInstance]}
+                          />
+                        </Worker>
                       </div>
-                      <div className="p-6 bg-white" dangerouslySetInnerHTML={{ __html: contentV1 || originalVersion.fileContent || "<div>No content available</div>" }} />
-                    </div>
+                    ) : originalVersion.fileName.endsWith('.docx') ? (
+                      // DOCX Viewer
+                      <div className="w-full h-full bg-white p-4 overflow-auto">
+                        <div 
+                          ref={docx1ContainerRef} 
+                          className="docx-container bg-white shadow-md max-w-4xl mx-auto min-h-[100%]"
+                        >
+                          <div className="flex justify-center items-center h-64">
+                            <div className="text-center">
+                              <svg className="animate-spin h-8 w-8 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              <p>Loading document...</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // Fallback for other file types
+                      <div className="p-4 text-center">
+                        <p className="mb-4">This file type cannot be previewed.</p>
+                        <Button 
+                          onClick={() => handleDownload(originalVersion.id, originalVersion.fileName)}
+                          className="flex items-center gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          Download to view
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -226,8 +349,19 @@ export function DocumentCompareDirect({
                   </svg>
                   <span className="text-sm font-medium">{newVersion.fileName}</span>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  v{newVersion.version} | Uploaded by {newName} | {new Date(newVersion.createdAt).toLocaleString()}
+                <div className="flex items-center">
+                  <div className="text-xs text-muted-foreground mr-4">
+                    v{newVersion.version} | Uploaded by {newName} | {new Date(newVersion.createdAt).toLocaleString()}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleDownload(newVersion.id, newVersion.fileName)}
+                    className="flex items-center"
+                  >
+                    <Download className="h-3 w-3 mr-1" />
+                    Download
+                  </Button>
                 </div>
               </div>
               <div className="flex-1 overflow-auto">
@@ -245,23 +379,48 @@ export function DocumentCompareDirect({
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4">
-                    <div 
-                      className="border border-neutral-200 rounded-lg shadow-sm overflow-hidden"
-                      style={{ maxWidth: "100%", margin: "0 auto" }}
-                    >
-                      <div className="bg-slate-50 px-4 py-2 border-b border-neutral-200 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#185abd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 mr-2">
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                          <polyline points="14 2 14 8 20 8"></polyline>
-                          <line x1="16" y1="13" x2="8" y2="13"></line>
-                          <line x1="16" y1="17" x2="8" y2="17"></line>
-                          <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                        <span className="text-sm font-medium text-blue-700">{newVersion.fileName}</span>
+                  <div className="h-full flex items-center justify-center bg-gray-100 overflow-auto">
+                    {newVersion.fileName.endsWith('.pdf') ? (
+                      // PDF Viewer
+                      <div className="w-full h-full">
+                        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
+                          <Viewer
+                            fileUrl={getDocumentFileUrl(newVersion.id)}
+                            plugins={[defaultLayoutPluginInstance]}
+                          />
+                        </Worker>
                       </div>
-                      <div className="p-6 bg-white" dangerouslySetInnerHTML={{ __html: contentV2 || newVersion.fileContent || "<div>No content available</div>" }} />
-                    </div>
+                    ) : newVersion.fileName.endsWith('.docx') ? (
+                      // DOCX Viewer
+                      <div className="w-full h-full bg-white p-4 overflow-auto">
+                        <div 
+                          ref={docx2ContainerRef} 
+                          className="docx-container bg-white shadow-md max-w-4xl mx-auto min-h-[100%]"
+                        >
+                          <div className="flex justify-center items-center h-64">
+                            <div className="text-center">
+                              <svg className="animate-spin h-8 w-8 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              <p>Loading document...</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // Fallback for other file types
+                      <div className="p-4 text-center">
+                        <p className="mb-4">This file type cannot be previewed.</p>
+                        <Button 
+                          onClick={() => handleDownload(newVersion.id, newVersion.fileName)}
+                          className="flex items-center gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          Download to view
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
