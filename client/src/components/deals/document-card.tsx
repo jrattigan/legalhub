@@ -144,18 +144,33 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
   // Upload new version mutation
   const uploadMutation = useMutation({
     mutationFn: async (data: any) => {
+      console.log(`Starting document upload to document ID: ${document.id}`);
+      
       // Use an absolute URL to avoid path issues
       const apiUrl = window.location.origin + `/api/documents/${document.id}/versions`;
-      const response = await apiRequest(apiUrl, {
-        method: 'POST',
-        data: data
-      });
-      return response.json();
+      console.log(`Making POST request to ${apiUrl}`);
+      
+      try {
+        const response = await apiRequest(apiUrl, {
+          method: 'POST',
+          data: data
+        });
+        
+        console.log(`Upload successful, response status: ${response.status}`);
+        return response.json();
+      } catch (error) {
+        console.error("Error in document upload:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
+      console.log("Upload mutation succeeded, invalidating queries");
       queryClient.invalidateQueries({ queryKey: [window.location.origin + `/api/document-versions/document/${document.id}`] });
       setIsUploadDialogOpen(false);
       onRefreshData();
+    },
+    onError: (error) => {
+      console.error("Upload mutation failed:", error);
     }
   });
 
@@ -363,10 +378,13 @@ export default function DocumentCard({ document, documents = [], onRefreshData, 
                   </DialogHeader>
                   <FileUpload
                     documentTitle={document.title}
-                    onUpload={(fileData) => uploadMutation.mutate({
-                      ...fileData,
-                      uploadedById: 1 // For demo purposes, use first user
-                    })}
+                    onUpload={(fileData) => {
+                      console.log("FileUpload component triggered onUpload with:", fileData);
+                      uploadMutation.mutate({
+                        ...fileData,
+                        uploadedById: 1 // For demo purposes, use first user
+                      });
+                    }}
                     isUploading={uploadMutation.isPending}
                   />
                 </DialogContent>

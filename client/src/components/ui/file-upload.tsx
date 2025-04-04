@@ -55,10 +55,16 @@ export function FileUpload({
     setSelectedFile(null);
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (e: React.MouseEvent) => {
+    // Prevent the default form submission behavior
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!selectedFile) return;
     
     try {
+      console.log("Processing file for upload:", selectedFile.name);
+      
       // Read the file as base64
       const fileReader = new FileReader();
       fileReader.readAsDataURL(selectedFile);
@@ -67,6 +73,8 @@ export function FileUpload({
         // Extract the base64 content from the data URL
         const base64Content = fileReader.result as string;
         const base64Data = base64Content.split(',')[1]; // Remove the data:application/type;base64, prefix
+        
+        console.log("File read successfully, calling onUpload function");
         
         // Call onUpload with file data
         onUpload({
