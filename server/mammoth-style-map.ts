@@ -12,7 +12,7 @@ import * as mammoth from 'mammoth';
  * We'll use class names and a stylesheet approach instead
  */
 export const documentStyleMap = [
-  // Paragraph styles
+  // Paragraph styles with enhanced formatting preservation
   "p[style-name='Normal'] => p.doc-normal:fresh",
   "p[style-name='Body Text'] => p.doc-body-text:fresh",
   "p[style-name='Table Paragraph'] => p.doc-table-paragraph:fresh",
@@ -20,37 +20,58 @@ export const documentStyleMap = [
   // Default paragraph
   "p => p.doc-paragraph:fresh",
   
-  // Heading styles
+  // Heading styles with proper hierarchical structure
   "p[style-name='Heading 1'] => h1.doc-heading1:fresh",
   "p[style-name='Heading 2'] => h2.doc-heading2:fresh",
   "p[style-name='Heading 3'] => h3.doc-heading3:fresh",
+  "p[style-name='Heading 4'] => h4.doc-heading4:fresh",
+  "p[style-name='Heading 5'] => h5.doc-heading5:fresh",
+  "p[style-name='Heading 6'] => h6.doc-heading6:fresh",
   "p[style-name='Title'] => h1.doc-title:fresh",
   "p[style-name='Subtitle'] => h2.doc-subtitle:fresh",
   
-  // Other paragraph styles
+  // Other paragraph styles with improved semantics
   "p[style-name='Caption'] => p.doc-caption:fresh",
   "p[style-name='Intense Quote'] => blockquote.doc-intense-quote:fresh",
   "p[style-name='Quote'] => blockquote.doc-quote:fresh",
   "p[style-name='List Paragraph'] => p.doc-list-paragraph:fresh",
   
-  // Character styles
+  // Character styles with proper formatting
   "r[style-name='Strong'] => strong",
   "r[style-name='Emphasis'] => em",
   "r[style-name='Intense Emphasis'] => em.doc-intense-emphasis",
   "r[style-name='Strong Emphasis'] => strong.doc-strong-emphasis",
   "r[style-name='Book Title'] => span.doc-book-title",
+  "r[style-name='Underline'] => span.doc-underline",
+  "r[style-name='Strikethrough'] => span.doc-strikethrough",
+  "r[style-name='Highlight'] => span.doc-highlight",
+  "r[style-name='Subscript'] => sub",
+  "r[style-name='Superscript'] => sup",
   
-  // Tables and list items
+  // Enhanced table support for better structure preservation
   "table => table.doc-table",
   "tr => tr.doc-tr",
   "td => td.doc-td",
   "th => th.doc-th",
+  "table[style-name='Table Grid'] => table.doc-table-grid",
+  "table[style-name='Table List'] => table.doc-table-list",
   
-  // Lists
+  // Lists with proper nesting support
   "p:unordered-list(1) => ul > li.doc-list-item:fresh",
   "p:unordered-list(2) => ul > li > ul > li.doc-list-item-2:fresh",
+  "p:unordered-list(3) => ul > li > ul > li > ul > li.doc-list-item-3:fresh",
   "p:ordered-list(1) => ol > li.doc-list-item:fresh",
-  "p:ordered-list(2) => ol > li > ol > li.doc-list-item-2:fresh"
+  "p:ordered-list(2) => ol > li > ol > li.doc-list-item-2:fresh",
+  "p:ordered-list(3) => ol > li > ol > li > ol > li.doc-list-item-3:fresh",
+  
+  // Special content types
+  "p[style-name='TOC Heading'] => h2.doc-toc-heading:fresh",
+  "p[style-name='TOC 1'] => p.doc-toc-1:fresh",
+  "p[style-name='TOC 2'] => p.doc-toc-2:fresh",
+  "p[style-name='TOC 3'] => p.doc-toc-3:fresh",
+  "p[style-name='Footer'] => div.doc-footer > p:fresh",
+  "p[style-name='Header'] => div.doc-header > p:fresh",
+  "p[style-name='Footnote Text'] => div.doc-footnote > p:fresh"
 ];
 
 /**
@@ -208,8 +229,20 @@ function wrapWithDocumentStyles(html: string): string {
         font-style: italic;
       }
       
+      .doc-underline {
+        text-decoration: underline;
+      }
+      
+      .doc-strikethrough {
+        text-decoration: line-through;
+      }
+      
+      .doc-highlight {
+        background-color: #ffff00;
+      }
+      
       /* Tables */
-      .doc-table {
+      .doc-table, .doc-table-grid, .doc-table-list {
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 10pt;
@@ -217,9 +250,19 @@ function wrapWithDocumentStyles(html: string): string {
         font-size: 11pt;
       }
       
+      .doc-table-grid {
+        border: 1px solid #ccc;
+      }
+      
+      .doc-table-list {
+        border-top: 2px solid #666;
+        border-bottom: 2px solid #666;
+      }
+      
       .doc-td {
         padding: 5pt;
         border: 1px solid #ddd;
+        vertical-align: top;
       }
       
       .doc-th {
@@ -230,10 +273,53 @@ function wrapWithDocumentStyles(html: string): string {
       }
       
       /* List items */
-      .doc-list-item, .doc-list-item-2 {
+      .doc-list-item, .doc-list-item-2, .doc-list-item-3 {
         font-family: 'Calibri', sans-serif;
         font-size: 11pt;
         margin-bottom: 5pt;
+      }
+      
+      /* Special content types */
+      .doc-toc-heading {
+        font-weight: bold;
+        font-size: 14pt;
+        margin-bottom: 10pt;
+      }
+      
+      .doc-toc-1 {
+        margin-left: 0;
+        margin-bottom: 5pt;
+      }
+      
+      .doc-toc-2 {
+        margin-left: 20pt;
+        margin-bottom: 5pt;
+      }
+      
+      .doc-toc-3 {
+        margin-left: 40pt; 
+        margin-bottom: 5pt;
+      }
+      
+      .doc-header {
+        border-bottom: 1px solid #eee;
+        margin-bottom: 20pt;
+        color: #666;
+      }
+      
+      .doc-footer {
+        border-top: 1px solid #eee;
+        margin-top: 20pt;
+        padding-top: 10pt;
+        color: #666;
+      }
+      
+      .doc-footnote {
+        font-size: 9pt;
+        color: #555;
+        border-top: 1px solid #ccc;
+        margin-top: 20pt;
+        padding-top: 10pt;
       }
       
       /* Diff markup styles */

@@ -8,6 +8,14 @@ import { convertDocumentWithStyles, getMammothConversionOptions } from './mammot
  * while filtering out common terms that shouldn't be highlighted separately.
  * Uses inline styles instead of CSS classes to ensure proper rendering in all environments.
  */
+/**
+ * Enhanced document comparison that preserves formatting in Word documents
+ * This function properly handles:
+ * - Paragraph styles, fonts, and formatting
+ * - Tables, lists, and other structured content
+ * - All formatting attributes (bold, italic, underline, etc.)
+ * - Complex formatting elements like headers, footers, etc.
+ */
 export async function generateDocumentComparison(
   olderVersion: DocumentVersion, 
   newerVersion: DocumentVersion,
