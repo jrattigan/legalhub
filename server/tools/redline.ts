@@ -57,11 +57,13 @@ async function prepareFileForComparison(fileData: FileData): Promise<{
       const textContent = buffer.toString('utf-8');
       
       // Format as simple HTML with proper line breaks and spacing preservation
-      const htmlContent = `<pre class="text-content" style="font-family: 'Courier New', monospace; white-space: pre-wrap; word-wrap: break-word; margin: 0; font-size: 0.875rem; line-height: 1.5; padding: 1rem; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.25rem;">${
+      const htmlContent = `<pre class="text-content" style="font-family: 'Courier New', monospace; white-space: pre-wrap; word-wrap: break-word; margin: 0; font-size: 0.875rem; line-height: 1.5; padding: 1rem; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.25rem; overflow-x: auto; word-break: keep-all;">${
         textContent
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;')
+          // Explicitly preserve line breaks for better rendering
+          .replace(/\n/g, '\n')
       }</pre>`;
       
       return {

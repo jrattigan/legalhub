@@ -150,14 +150,19 @@ export async function generateDocumentComparison(
       for (const part of changes) {
         if (part.added) {
           // Added text - use the same class as in our test document comparison
-          processedContent += `<span class="addition">${part.value}</span>`;
+          // Preserve any line breaks within the added content
+          const value = part.value.replace(/\n/g, '\n');
+          processedContent += `<span class="addition">${value}</span>`;
           hasDifferences = true;
         } else if (part.removed) {
           // Removed text - use the same class as in our test document comparison
-          processedContent += `<span class="deletion">${part.value}</span>`;
+          // Preserve any line breaks within the removed content
+          const value = part.value.replace(/\n/g, '\n');
+          processedContent += `<span class="deletion">${value}</span>`;
           hasDifferences = true;
         } else {
-          processedContent += part.value;
+          // Preserve line breaks in unchanged content too
+          processedContent += part.value.replace(/\n/g, '\n');
         }
       }
       

@@ -32,9 +32,15 @@ const TextFileViewer = ({ documentUrl }) => {
         // Get file content as array buffer to properly handle newlines
         const arrayBuffer = await response.arrayBuffer();
         const decoder = new TextDecoder('utf-8');
-        const text = decoder.decode(arrayBuffer);
+        let text = decoder.decode(arrayBuffer);
+        
+        // Handle different types of line endings and normalize them
+        // \r\n (Windows) -> \n
+        // \r (old Mac) -> \n
+        text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         
         console.log("Text file loaded, length:", text.length, "Has newlines:", text.includes('\n'));
+        console.log("First 100 chars:", text.substring(0, 100).replace(/\n/g, '\\n'));
         
         setContent(text);
         setIsLoading(false);
@@ -90,7 +96,14 @@ const TextFileViewer = ({ documentUrl }) => {
       {/* Use white-space: pre to preserve all line breaks and spaces */}
       <pre 
         className="text-sm p-4 border rounded bg-gray-50 font-mono h-[600px] overflow-y-auto"
-        style={{ whiteSpace: 'pre', wordWrap: 'break-word' }}
+        style={{ 
+          whiteSpace: 'pre-wrap', 
+          wordWrap: 'break-word',
+          overflowX: 'auto',
+          wordBreak: 'keep-all',
+          lineHeight: '1.5',
+          fontFamily: "'Courier New', monospace"
+        }}
       >
         {content}
       </pre>
