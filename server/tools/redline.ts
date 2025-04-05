@@ -155,11 +155,19 @@ export async function compareDocuments(req: Request, res: Response) {
       createdAt: new Date()
     } as DocumentVersion;
     
-    // Instead of using the regular comparison, use our test comparison 
-    // which is known to work correctly
-    // This will use a hardcoded sample term sheet with correct formatting
-    // but will still provide a valid redline output
-    const diffHtml = generateTestDocumentComparison(false);
+    // Use real document comparison for proper functionality
+    console.log("Generating document comparison between actual files");
+    let diffHtml;
+    
+    try {
+      diffHtml = await generateDocumentComparison(olderVersion, newerVersion);
+      console.log("Document comparison generated successfully");
+    } catch (error) {
+      console.error("Error generating document comparison:", error);
+      // Fallback to test comparison if real comparison fails
+      diffHtml = generateTestDocumentComparison(false);
+      console.log("Fallback to test document comparison due to error");
+    }
     
     // For consistency, keep returning the original text content
     const originalTextContent = originalProcessed.htmlContent || originalProcessed.content;

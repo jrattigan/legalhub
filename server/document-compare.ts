@@ -235,9 +235,9 @@ export async function generateDocumentComparison(
             }
           }
           
-          // Wrap with addition style
+          // Wrap with addition style - using semantic classnames for styling on client
           const value = formattedValue.replace(/\n/g, '<br>');
-          processedContent += `<span class="addition">${value}</span>`;
+          processedContent += `<span class="addition-text">${value}</span>`;
           posNew += part.value.length;
           hasDifferences = true;
         } else if (part.removed) {
@@ -257,9 +257,9 @@ export async function generateDocumentComparison(
             }
           }
           
-          // Wrap with deletion style
+          // Wrap with deletion style - using semantic classnames for styling on client
           const value = formattedValue.replace(/\n/g, '<br>');
-          processedContent += `<span class="deletion">${value}</span>`;
+          processedContent += `<span class="deletion-text">${value}</span>`;
           posOld += part.value.length;
           hasDifferences = true;
         } else {
@@ -336,13 +336,13 @@ export async function generateDocumentComparison(
             // Added text - use the same class as in our test document comparison
             // Preserve any line breaks within the added content
             const value = part.value.replace(/\n/g, '\n');
-            processedContent += `<span class="addition">${value}</span>`;
+            processedContent += `<span class="addition-text">${value}</span>`;
             hasDifferences = true;
           } else if (part.removed) {
             // Removed text - use the same class as in our test document comparison
             // Preserve any line breaks within the removed content
             const value = part.value.replace(/\n/g, '\n');
-            processedContent += `<span class="deletion">${value}</span>`;
+            processedContent += `<span class="deletion-text">${value}</span>`;
             hasDifferences = true;
           } else {
             // Preserve line breaks in unchanged content too
@@ -397,8 +397,8 @@ export async function generateDocumentComparison(
               .replace(/class="doc-table"/g, 'style="width: 100%; border-collapse: collapse; margin-bottom: 15pt; font-family: \'Calibri\', sans-serif; font-size: 11pt;"')
               .replace(/class="doc-td"/g, 'style="padding: 5pt; border: 1px solid #ddd; vertical-align: top;"')
               .replace(/class="doc-th"/g, 'style="padding: 5pt; border: 1px solid #ddd; background-color: #f5f5f5; font-weight: bold; vertical-align: top;"')
-              .replace(/class="addition"/g, `style="${additionInlineStyle}"`)
-              .replace(/class="deletion"/g, `style="${deletionInlineStyle}"`)}
+              .replace(/class="addition-text"/g, `style="${additionInlineStyle}"`)
+              .replace(/class="deletion-text"/g, `style="${deletionInlineStyle}"`)}
           </div>
         </div>
       </div>`;
