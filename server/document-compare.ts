@@ -478,7 +478,7 @@ export async function generateDocumentComparison(
       .replace(/<span style="[^"]*color:\s*#166534[^"]*"[^>]*>/g, '<span class="addition-text">')
       .replace(/<span style="[^"]*color:\s*#991b1b[^"]*"[^>]*>/g, '<span class="deletion-text">');
     
-    // Step 4: Clean up any remaining style-related content
+    // Step 4: Clean up any remaining style-related content and HTML tags
     cleanDiffHtml = cleanDiffHtml
       // Remove CSS-looking blocks that might display as text
       .replace(/\.doc-[a-zA-Z0-9_-]+\s*{[^}]*}/g, '')
@@ -495,7 +495,16 @@ export async function generateDocumentComparison(
           return match;
         }
         return '';
-      });
+      })
+      // Fix malformed/broken HTML tags showing in the text
+      .replace(/<\/?(strong|b|i|em|u|s|strike|sub|sup|a|tr|td|th|table|tbody|thead|ul|ol|li)>+/g, '')
+      .replace(/<\/?[a-z][^>]*>/g, '')
+      // Replace any broken open/close tags
+      .replace(/<\/?(strong|b|i|em|u|s|strike|sub|sup|a|tr|td|th)\s*\/?>/gi, '')
+      // Remove any remaining HTML-like fragments
+      .replace(/<[^>]*$/g, '') // Remove incomplete/broken tags at the end of text
+      .replace(/^[^<]*>/g, '') // Remove incomplete/broken tags at the start of text
+      .replace(/r?strong>/g, '');  // Specifically handle rstrong> issue
     
     // Return the clean HTML with semantic classes
     diffHtml = cleanDiffHtml;
