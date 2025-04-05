@@ -112,16 +112,27 @@ export async function generateDocumentComparison(
     let hasDifferences = false;
     let diffContent = '';
     
-    // If both contents are HTML, extract the text content for a more accurate comparison
+    // Improved function to strip HTML and properly escape CSS content
     const stripHtml = (html: string): string => {
-      return html.replace(/<[^>]*>/g, '');
+      // First escape any CSS style blocks to prevent them from appearing in the output
+      let processedHtml = html;
+      
+      // Replace style blocks with placeholders
+      processedHtml = processedHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '/* CSS styles removed */');
+      
+      // Replace inline styles with placeholder
+      processedHtml = processedHtml.replace(/style="[^"]*"/gi, 'style="..."');
+      
+      // Remove all HTML tags
+      return processedHtml.replace(/<[^>]*>/g, '');
     };
     
-    const oldText = normalizedOld.includes('<div') || normalizedOld.includes('<p') 
+    // Clean the input content if it appears to contain HTML
+    const oldText = normalizedOld.includes('<') && (normalizedOld.includes('</') || normalizedOld.includes('/>'))
       ? stripHtml(normalizedOld) 
       : normalizedOld;
       
-    const newText = normalizedNew.includes('<div') || normalizedNew.includes('<p') 
+    const newText = normalizedNew.includes('<') && (normalizedNew.includes('</') || normalizedNew.includes('/>'))
       ? stripHtml(normalizedNew) 
       : normalizedNew;
     

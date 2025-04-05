@@ -93,20 +93,27 @@ const TextFileViewer = ({ documentUrl }) => {
           {documentUrl.split('/').pop()}
         </div>
       </div>
-      {/* Use white-space: pre to preserve all line breaks and spaces */}
-      <pre 
-        className="text-sm p-4 border rounded bg-gray-50 font-mono h-[600px] overflow-y-auto"
-        style={{ 
-          whiteSpace: 'pre-wrap', 
-          wordWrap: 'break-word',
-          overflowX: 'auto',
-          wordBreak: 'keep-all',
-          lineHeight: '1.5',
-          fontFamily: "'Courier New', monospace"
-        }}
-      >
-        {content}
-      </pre>
+      {/* Conditionally render based on HTML content */}
+      {content.includes('<style') || content.includes('<div') || content.includes('<p') ? (
+        <div 
+          className="p-4 border rounded bg-white h-[600px] overflow-y-auto"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
+      ) : (
+        <pre 
+          className="text-sm p-4 border rounded bg-gray-50 font-mono h-[600px] overflow-y-auto"
+          style={{ 
+            whiteSpace: 'pre-wrap', 
+            wordWrap: 'break-word',
+            overflowX: 'auto',
+            wordBreak: 'keep-all',
+            lineHeight: '1.5',
+            fontFamily: "'Courier New', monospace"
+          }}
+        >
+          {content}
+        </pre>
+      )}
     </div>
   );
 };
