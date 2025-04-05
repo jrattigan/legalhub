@@ -431,23 +431,30 @@ export async function generateDocumentComparison(
     
     console.log("Diff generated successfully");
     
-    // Ensure CSS is not rendered as text by directly applying inline styles
-    // instead of including style blocks that would be rendered as text
+    // Ensure CSS is not rendered as text by removing any style blocks
+    // The styling will be applied from the component that renders this content
     
-    // First, check if there's any CSS styling in the content that should be applied inline
+    // Remove all <style> blocks from the HTML to prevent them displaying as text
+    diffHtml = diffHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+    
+    // Remove any commented style sections
     if (diffHtml.includes('/* Document container */')) {
-      // Extract the CSS and convert to inline styles
-      const cssContent = diffHtml.match(/\/\* Document container \*\/([\s\S]*?)\/\* End document styles \*\//);
-      if (cssContent && cssContent[1]) {
-        // Remove the CSS block to prevent it from displaying as text
-        diffHtml = diffHtml.replace(/\/\* Document container \*\/([\s\S]*?)\/\* End document styles \*\//, '');
-        
-        // Additional cleanup for any remaining style blocks
-        diffHtml = diffHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+      diffHtml = diffHtml.replace(/\/\* Document container \*\/([\s\S]*?)\/\* End document styles \*\//, '');
+    }
+    
+    // Strip any style tags that might be part of the content
+    diffHtml = diffHtml.replace(/<style>/g, '').replace(/<\/style>/g, '');
+    
+    // For the redline comparison only, ensure we're just returning the content
+    // without any document container div that might include styles
+    if (diffHtml.includes('<div style="font-family: \'Calibri\'')) {
+      // Extract just the document content part
+      const contentMatch = diffHtml.match(/<div class="document-content"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/);
+      if (contentMatch && contentMatch[1]) {
+        diffHtml = contentMatch[1];
       }
     }
     
-    // Ensure the content has the proper structure with inline styles already applied
     return diffHtml;
   } catch (error) {
     console.error("Error generating document diff:", error);
