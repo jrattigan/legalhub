@@ -6,10 +6,11 @@ import { convertDocumentWithStyles, getMammothConversionOptions } from './mammot
 /**
  * Smart document comparison utility to intelligently highlight changes
  * while filtering out common terms that shouldn't be highlighted separately.
- * Uses inline styles instead of CSS classes to ensure proper rendering in all environments.
+ * Uses semantic HTML classes that are styled on the client side, preventing
+ * any CSS from being included directly in the HTML output.
  * 
- * NOTE: The styling must be applied inline to the content, NOT included as separate CSS
- * blocks in the returned HTML to prevent the CSS from being rendered as text.
+ * NOTE: This function returns clean HTML without any raw CSS to prevent
+ * CSS code from being displayed as text in the document comparison view.
  */
 export async function generateDocumentComparison(
   olderVersion: DocumentVersion, 
@@ -431,53 +432,57 @@ export async function generateDocumentComparison(
     
     console.log("Diff generated successfully");
     
-    // Ensure CSS is not rendered as text by removing any style blocks
-    // The styling will be applied from the component that renders this content
+    // --------------------------------------------------------
+    // Convert to a clean, semantic HTML structure for client rendering
+    // This prevents CSS from appearing as text in the output
+    // --------------------------------------------------------
     
-    // Remove all <style> blocks from the HTML to prevent them displaying as text
-    diffHtml = diffHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+    // Step 1: First strip ALL styling and CSS-related content
+    let cleanDiffHtml = diffHtml;
     
-    // Remove any commented style sections
-    if (diffHtml.includes('/* Document container */')) {
-      diffHtml = diffHtml.replace(/\/\* Document container \*\/([\s\S]*?)\/\* End document styles \*\//, '');
-    }
+    // Remove all <style> blocks
+    cleanDiffHtml = cleanDiffHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
     
-    // Strip any style tags that might be part of the content
-    diffHtml = diffHtml.replace(/<style>/g, '').replace(/<\/style>/g, '');
+    // Remove any CSS comment blocks
+    cleanDiffHtml = cleanDiffHtml.replace(/\/\*[\s\S]*?\*\//g, '');
     
-    // Remove comment blocks that might contain CSS or formatting instructions
-    diffHtml = diffHtml.replace(/\/\*[\s\S]*?\*\//g, '');
+    // Remove all style attributes that might contain CSS declarations
+    cleanDiffHtml = cleanDiffHtml.replace(/style="[^"]*"/gi, '');
     
-    // Remove CSS-like content that might be displayed as text
-    diffHtml = diffHtml.replace(/\.document-content \{[\s\S]*?\}/g, '');
-    diffHtml = diffHtml.replace(/font-family:.*?;/g, '');
-    diffHtml = diffHtml.replace(/line-height:.*?;/g, '');
-    diffHtml = diffHtml.replace(/margin:.*?;/g, '');
-    diffHtml = diffHtml.replace(/padding:.*?;/g, '');
+    // Remove CSS rule blocks that might appear as text
+    cleanDiffHtml = cleanDiffHtml.replace(/\.[a-z-]+\s*\{[\s\S]*?\}/gi, '');
+    cleanDiffHtml = cleanDiffHtml.replace(/\[style\*=[\s\S]*?\}/g, '');
     
-    // For the redline comparison only, ensure we're just returning the content
-    // without any document container div that might include styles
-    if (diffHtml.includes('<div style="font-family: \'Calibri\'')) {
-      // Extract just the document content part
-      const contentMatch = diffHtml.match(/<div class="document-content"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/);
+    // Step 2: Extract just the content when wrapped in document container
+    if (cleanDiffHtml.includes('<div class="document-content"')) {
+      const contentMatch = cleanDiffHtml.match(/<div class="document-content"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/);
       if (contentMatch && contentMatch[1]) {
-        diffHtml = contentMatch[1];
+        cleanDiffHtml = contentMatch[1];
       }
     }
     
-    // Remove any CSS-like blocks shown in the screenshot 
-    if (diffHtml.includes('/* Document container */') || 
-        diffHtml.includes('/* General formatting preservations */')) {
-      // Clean up the entire document container and formatting blocks
-      diffHtml = diffHtml.replace(/\/\* Document container \*\/[\s\S]*?\}/, '');
-      diffHtml = diffHtml.replace(/\/\* General formatting preservations \*\/[\s\S]*?\}/, '');
-      
-      // Remove .document-content { ... } blocks
-      diffHtml = diffHtml.replace(/\.document-content \{[\s\S]*?\}/g, '');
-      
-      // Remove [style*=...] style blocks
-      diffHtml = diffHtml.replace(/\[style\*=[\s\S]*?\}/g, '');
-    }
+    // Step 3: Apply semantic classes to highlight additions and deletions
+    // Convert specific inline styles to our semantic classes
+    cleanDiffHtml = cleanDiffHtml
+      .replace(/<ins class="diff-html-added"[^>]*>/g, '<span class="addition-text">')
+      .replace(/<\/ins>/g, '</span>')
+      .replace(/<del class="diff-html-removed"[^>]*>/g, '<span class="deletion-text">')
+      .replace(/<\/del>/g, '</span>')
+      .replace(/<span style="[^"]*color:\s*#166534[^"]*"[^>]*>/g, '<span class="addition-text">')
+      .replace(/<span style="[^"]*color:\s*#991b1b[^"]*"[^>]*>/g, '<span class="deletion-text">');
+    
+    // Step 4: Clean up any remaining style-related content
+    cleanDiffHtml = cleanDiffHtml
+      .replace(/class="[^"]*"/g, (match) => {
+        // Keep only our semantic classes, remove any other classes
+        if (match.includes('addition-text') || match.includes('deletion-text')) {
+          return match;
+        }
+        return '';
+      });
+    
+    // Return the clean HTML with semantic classes
+    diffHtml = cleanDiffHtml;
     
     return diffHtml;
   } catch (error) {
@@ -511,98 +516,79 @@ export async function generateDocumentComparison(
 
 /**
  * Generates a comparison between test1.docx and test2.docx
+ * Uses semantic classes instead of inline styles to prevent CSS from appearing as text
  * @param reversed Whether test2.docx is the older version (true) or the newer version (false)
  */
 function generateTestDocumentComparison(reversed: boolean): string {
-  // Use completely inline styles instead of relying on CSS classes - match more closely to screenshot
-  const deletionStyle = "color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2; padding: 0 1px;";
-  const additionStyle = "color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7; padding: 0 1px;";
+  // Use semantic class names that will be styled on the client
+  const deletionClass = "deletion-text";
+  const additionClass = "addition-text";
   
-  const exactMatchHtml = `
-  <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 80%; margin: 0 auto; padding: 0; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); background-color: #ffffff; overflow: hidden;">
-    <div style="background-color: #f3f4f6; padding: 8px 16px; border-bottom: 1px solid #e5e7eb;">
-      <div style="display: flex; align-items: center;">
-        <div style="width: 16px; height: 16px; margin-right: 8px;">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#185abd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-            <polyline points="10 9 9 9 8 9"></polyline>
-          </svg>
-        </div>
-        <div style="font-size: 14px; font-weight: 500; color: #185abd;">Document Comparison</div>
-      </div>
-    </div>
-    <div style="padding: 20px;">
-      <div style="text-align: center; font-weight: bold; margin-bottom: 20px;">
-      <p style="font-family: 'Calibri', sans-serif; font-size: 14pt; line-height: 1.4; margin-bottom: 5px; text-transform: uppercase;">SIMPLE AGREEMENT FOR FUTURE EQUITY</p>
-      <p style="font-family: 'Calibri', sans-serif; font-size: 14pt; line-height: 1.4; margin-bottom: 10px; text-transform: uppercase;">INDICATIVE TERM SHEET</p>
-      <p style="font-family: 'Calibri', sans-serif; font-size: 12pt; line-height: 1.4; margin-bottom: 20px;">
+  // Return only the semantic HTML content without any CSS or container divs
+  return `
+    <div class="document-header">
+      <h1>SIMPLE AGREEMENT FOR FUTURE EQUITY</h1>
+      <h2>INDICATIVE TERM SHEET</h2>
+      <p>
         September 
-        <span style="${reversed ? additionStyle : deletionStyle}">29</span><span style="${reversed ? deletionStyle : additionStyle}">31</span>, 2024
+        <span class="${reversed ? additionClass : deletionClass}">29</span><span class="${reversed ? deletionClass : additionClass}">31</span>, 2024
       </p>
     </div>
     
-    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-family: 'Calibri', sans-serif; font-size: 12pt;">
+    <table>
       <tr>
-        <td style="vertical-align: top; padding: 5px 10px 5px 0; width: 110px; font-weight: bold;">Investment:</td>
-        <td style="vertical-align: top; padding: 5px 0;">
+        <td class="term-label">Investment:</td>
+        <td>
           Rogue Ventures, LP and related entities ("RV") shall invest 
-          <span style="${reversed ? additionStyle : deletionStyle}">$5</span><span style="${reversed ? deletionStyle : additionStyle}">$6</span> million of 
-          <span style="${reversed ? additionStyle : deletionStyle}">$7</span><span style="${reversed ? deletionStyle : additionStyle}">$10</span> 
+          <span class="${reversed ? additionClass : deletionClass}">$5</span><span class="${reversed ? deletionClass : additionClass}">$6</span> million of 
+          <span class="${reversed ? additionClass : deletionClass}">$7</span><span class="${reversed ? deletionClass : additionClass}">$10</span> 
           million in aggregate Simple Agreements for Future Equity ("Safes") in New Technologies, Inc. (the "Company"), which shall convert upon the consummation of the Company's next issuance and sale of preferred shares at a fixed valuation (the "Equity Financing").
         </td>
       </tr>
       
       <tr>
-        <td style="vertical-align: top; padding: 5px 10px 5px 0; font-weight: bold;">Security:</td>
-        <td style="vertical-align: top; padding: 5px 0;">
+        <td class="term-label">Security:</td>
+        <td>
           Standard post-money valuation cap only Safe.
         </td>
       </tr>
       
       <tr>
-        <td style="vertical-align: top; padding: 5px 10px 5px 0; font-weight: bold;">Valuation cap:</td>
-        <td style="vertical-align: top; padding: 5px 0;">
-          <span style="${reversed ? additionStyle : deletionStyle}">$40</span><span style="${reversed ? deletionStyle : additionStyle}">$80</span> 
+        <td class="term-label">Valuation cap:</td>
+        <td>
+          <span class="${reversed ? additionClass : deletionClass}">$40</span><span class="${reversed ? deletionClass : additionClass}">$80</span> 
           million post-money fully-diluted valuation cap (which includes all new capital above, any outstanding convertible notes/Safes).
         </td>
       </tr>
       
       <tr>
-        <td style="vertical-align: top; padding: 5px 10px 5px 0; font-weight: bold;">Other Rights:</td>
-        <td style="vertical-align: top; padding: 5px 0;">
+        <td class="term-label">Other Rights:</td>
+        <td>
           Standard and customary investor most favored nations clause, pro rata rights and major investor rounds upon the consummation of the Equity Financing.
-          ${reversed ? '<span style="' + deletionStyle + '"> We also get a board seat.</span>' : '<span style="' + additionStyle + '"> We also get a board seat.</span>'}
+          ${reversed ? '<span class="' + deletionClass + '"> We also get a board seat.</span>' : '<span class="' + additionClass + '"> We also get a board seat.</span>'}
         </td>
       </tr>
     </table>
     
-    <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; line-height: 1.4; margin: 30px 0; font-style: italic;">
+    <p class="disclaimer">
       This term sheet does not constitute either an offer to sell or to purchase securities, is non-binding and is intended solely as a summary of the terms that are currently proposed by the parties, and the failure to execute and deliver a definitive agreement shall impose no liability on RV.
     </p>
     
-    <div style="display: flex; justify-content: space-between; margin-top: 40px;">
-      <div style="width: 45%;">
-        <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 30px;">New Technologies, Inc.</p>
-        <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 5px;">By: ________________________</p>
-        <p style="font-family: 'Calibri', sans-serif; font-size: 11pt;">
-          <span style="${reversed ? additionStyle : deletionStyle}">Joe Smith</span><span style="${reversed ? deletionStyle : additionStyle}">Joe Jones</span>, Chief Executive Officer
+    <div class="signature-block">
+      <div class="company-signature">
+        <p>New Technologies, Inc.</p>
+        <p>By: ________________________</p>
+        <p>
+          <span class="${reversed ? additionClass : deletionClass}">Joe Smith</span><span class="${reversed ? deletionClass : additionClass}">Joe Jones</span>, Chief Executive Officer
         </p>
       </div>
       
-      <div style="width: 45%;">
-        <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 30px;">Rogue Ventures, LP</p>
-        <p style="font-family: 'Calibri', sans-serif; font-size: 11pt; margin-bottom: 5px;">By: ________________________</p>
-        <p style="font-family: 'Calibri', sans-serif; font-size: 11pt;">
-          <span style="${reversed ? additionStyle : deletionStyle}">Fred Perry</span><span style="${reversed ? deletionStyle : additionStyle}">Mike Perry</span>, Partner
+      <div class="partner-signature">
+        <p>Rogue Ventures, LP</p>
+        <p>By: ________________________</p>
+        <p>
+          <span class="${reversed ? additionClass : deletionClass}">Fred Perry</span><span class="${reversed ? deletionClass : additionClass}">Mike Perry</span>, Partner
         </p>
       </div>
-    </div>
-    </div>
-  </div>`;
-  
-  // Return the document with class-based styles already embedded
-  return exactMatchHtml;
+    </div>`;
 }

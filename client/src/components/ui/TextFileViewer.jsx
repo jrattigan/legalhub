@@ -117,9 +117,7 @@ const TextFileViewer = ({ documentUrl }) => {
             color: "#000"
           }}
           dangerouslySetInnerHTML={{ 
-            __html: content.includes('<style') || content.includes('class="document-content') 
-              ? content  // Already has styles, use as-is
-              : `
+            __html: `
                 <style>
                   /* Default document styles for HTML content */
                   body, p, div, span, table, td, th, ul, ol, li {
@@ -141,10 +139,17 @@ const TextFileViewer = ({ documentUrl }) => {
                   table {
                     border-collapse: collapse;
                     margin-bottom: 1em;
+                    width: 100%;
                   }
                   td, th {
                     border: 1px solid #ddd;
                     padding: 6px;
+                  }
+                  td.term-label {
+                    font-weight: bold;
+                    vertical-align: top;
+                    padding: 5px 10px 5px 0;
+                    width: 110px;
                   }
                   th {
                     background-color: #f5f5f5;
@@ -156,6 +161,64 @@ const TextFileViewer = ({ documentUrl }) => {
                     background-color: #f5f5f5;
                     padding: 0.5em;
                     border-radius: 3px;
+                  }
+                  /* Document comparison specific styling */
+                  .addition-text {
+                    color: #166534; 
+                    text-decoration: underline; 
+                    text-decoration-color: #166534; 
+                    background-color: #dcfce7; 
+                    padding: 0 1px;
+                  }
+                  .deletion-text {
+                    color: #991b1b; 
+                    text-decoration: line-through; 
+                    text-decoration-color: #991b1b; 
+                    background-color: #fee2e2; 
+                    padding: 0 1px;
+                  }
+                  /* Document formatting for redline comparison */
+                  .document-header {
+                    text-align: center;
+                    font-weight: bold;
+                    margin-bottom: 20px;
+                  }
+                  .document-header h1 {
+                    font-size: 14pt;
+                    line-height: 1.4;
+                    margin-bottom: 5px;
+                    text-transform: uppercase;
+                  }
+                  .document-header h2 {
+                    font-size: 14pt;
+                    line-height: 1.4;
+                    margin-bottom: 10px;
+                    text-transform: uppercase;
+                  }
+                  .document-header p {
+                    font-size: 12pt;
+                    line-height: 1.4;
+                    margin-bottom: 20px;
+                  }
+                  .disclaimer {
+                    font-family: 'Calibri', sans-serif;
+                    font-size: 11pt;
+                    line-height: 1.4;
+                    margin: 30px 0;
+                    font-style: italic;
+                  }
+                  .signature-block {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 40px;
+                  }
+                  .company-signature, .partner-signature {
+                    width: 45%;
+                  }
+                  .signature-block p {
+                    font-family: 'Calibri', sans-serif;
+                    font-size: 11pt;
+                    margin-bottom: 5px;
                   }
                 </style>
                 ${content}
