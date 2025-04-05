@@ -546,6 +546,7 @@ export async function generateDocumentComparison(
  */
 export function generateTestDocumentComparison(reversed: boolean): string {
   // Use semantic class names that will be styled on the client
+  // These class names MUST match the ones defined in TextFileViewer.jsx
   const deletionClass = "deletion-text";
   const additionClass = "addition-text";
   
