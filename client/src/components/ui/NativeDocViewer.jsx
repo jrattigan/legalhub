@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import CompatiblePDFViewer from './CompatiblePDFViewer';
+import TextFileViewer from './TextFileViewer';
 
 // For non-PDF documents, we still need the worker
 console.log('PDF.js version:', pdfjsLib.version);
@@ -64,11 +65,16 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
     const renderDocument = async () => {
       try {
         if (ext === 'pdf') {
-          console.log('NativeDocViewer: Attempting to render PDF document');
-          await renderPdf(documentUrl);
+          console.log('NativeDocViewer: Detected PDF document, using CompatiblePDFViewer');
+          // We'll handle this with the dedicated component
+          setIsLoading(false);
         } else if (ext === 'docx' || ext === 'doc' || ext === 'xlsx' || ext === 'pptx') {
           console.log(`NativeDocViewer: Attempting to render Office document (${ext})`);
           renderOffice365Viewer(documentUrl, ext);
+        } else if (ext === 'txt' || ext === 'text' || ext === 'log' || ext === 'md') {
+          console.log(`NativeDocViewer: Detected text file (${ext}), using TextFileViewer`);
+          // We'll handle this with the dedicated component
+          setIsLoading(false);
         } else {
           throw new Error(`Unsupported file type: ${ext}`);
         }
@@ -294,6 +300,11 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
   // For PDF files, use the compatible viewer
   if (fileExtension === 'pdf') {
     return <CompatiblePDFViewer documentUrl={documentUrl} />;
+  }
+  
+  // For text files, use the text file viewer
+  if (fileExtension === 'txt' || fileExtension === 'text' || fileExtension === 'log' || fileExtension === 'md') {
+    return <TextFileViewer documentUrl={documentUrl} />;
   }
   
   // For other document types

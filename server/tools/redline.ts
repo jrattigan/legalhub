@@ -45,6 +45,36 @@ async function prepareFileForComparison(fileData: FileData): Promise<{
     }
   }
   
+  // For text files, decode and format as HTML
+  if (type.includes('text/plain') || 
+      name.toLowerCase().endsWith('.txt') || 
+      name.toLowerCase().endsWith('.text') || 
+      name.toLowerCase().endsWith('.log') ||
+      name.toLowerCase().endsWith('.md')) {
+    
+    try {
+      // Decode the text content from base64
+      const textContent = buffer.toString('utf-8');
+      
+      // Format as simple HTML with proper line breaks
+      const htmlContent = `<div class="text-content">${
+        textContent
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\n/g, '<br>')
+      }</div>`;
+      
+      return {
+        content: content, // Keep original base64 content
+        htmlContent: htmlContent
+      };
+    } catch (error) {
+      console.error('Error processing text file:', error);
+      throw new Error('Failed to process text file');
+    }
+  }
+  
   // For other file types, just return the original content
   return { content: content };
 }
