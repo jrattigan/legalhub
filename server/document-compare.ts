@@ -87,46 +87,12 @@ export async function generateDocumentComparison(
   let diffHtml = '';
   
   try {
-    // Just return a simple test comparison to verify inline styles are working
-    if (olderVersion.fileName.includes('test') && newerVersion.fileName.includes('test')) {
-      // Generate a test comparison - this helps us confirm the core styling works
-      console.log("Using test document comparison to check inline styles");
-      return generateTestDocumentComparison(false); 
-    }
-    
-    // Handle specific test documents if they're being compared (using actual names)
-    if (olderVersion.fileName === 'test1.docx' && newerVersion.fileName === 'test2.docx') {
-      // Generate a comparison between test1.docx and test2.docx with the known differences
-      return generateTestDocumentComparison(false);
-    } else if (olderVersion.fileName === 'test2.docx' && newerVersion.fileName === 'test1.docx') {
-      // Generate a comparison between test2.docx and test1.docx (reverse order)
-      return generateTestDocumentComparison(true);
-    }
-    
     // For any document with the same name using standard HTML content comparing
     if (olderVersion.fileName === newerVersion.fileName && 
         processedOldContent !== processedNewContent && 
         customContent1 && customContent2) {
       
       console.log("Performing direct content comparison between similar documents");
-      
-      // Try to identify direct files with HTML content instead of relying on diff
-      const oldHTML = customContent1;
-      const newHTML = customContent2;
-      
-      // Check if both contents have HTML structure
-      if (oldHTML.includes('<div') && newHTML.includes('<div')) {
-        console.log("Both contents have HTML structure, analyzing changes");
-        
-        // Handle test docx files even if filenames are different than our expected ones
-        if ((oldHTML.includes('September 29, 2024') && newHTML.includes('September 31, 2024')) ||
-            (oldHTML.includes('September 31, 2024') && newHTML.includes('September 29, 2024'))) {
-          
-          console.log("DOCX test files detected by content, generating comparison");
-          const reversed = oldHTML.includes('September 31, 2024');
-          return generateTestDocumentComparison(reversed);
-        }
-      }
     }
     
     // For generic files, use standard diff approach
@@ -227,18 +193,7 @@ export async function generateDocumentComparison(
         </div>
       </div>`;
     } else {
-      // As a final fallback, create a special comparison for test1.docx and test2.docx files
-      // This helps when filenames may have been changed but content is still the same
-      if (customContent1 && customContent2) {
-        // Check for exact strings that would be in test1.docx and test2.docx
-        const isTest1 = customContent1.includes('September 29, 2024') || customContent2.includes('September 29, 2024');
-        const isTest2 = customContent1.includes('September 31, 2024') || customContent2.includes('September 31, 2024');
-        
-        if (isTest1 && isTest2) {
-          console.log("Test documents detected by content pattern, creating hardcoded diff");
-          return generateTestDocumentComparison(customContent1.includes('September 31, 2024'));
-        }
-      }
+      // No hardcoded fallback - actually compare the documents
       
       // No differences found - using consistent styling with Word container
       diffHtml = `
