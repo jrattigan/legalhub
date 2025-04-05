@@ -14,6 +14,9 @@ import NativeDocViewer from '@/components/ui/NativeDocViewer';
 // Import styles for document viewers
 import '@/components/ui/document-viewer.css';
 
+// Import file upload utility
+import { uploadFilesToServer } from '@/lib/file-upload';
+
 interface RedlineCompareViewProps {
   originalFile: File | null;
   newFile: File | null;
@@ -40,98 +43,85 @@ export default function RedlineCompareView({
   const originalUrlRef = useRef<string | null>(null);
   const newUrlRef = useRef<string | null>(null);
   
-  // Create blob URLs for the files and handle file conversions when files change
+  // Upload files to server and get server URLs for document viewing
   useEffect(() => {
     // Reset processing state when files change
     setIsProcessing(true);
     
-    // Create an array to store URLs that need to be cleaned up
-    const urlsToCleanUp: string[] = [];
-    
-    const createFileUrls = async () => {
+    const uploadAndGetUrls = async () => {
       try {
-        // Create blob URLs for the files
-        if (originalFile) {
-          // Check if originalFile is a valid File object
-          if (originalFile instanceof File) {
-            // Revoke previous URL if it exists
-            if (originalUrlRef.current) {
-              try {
-                URL.revokeObjectURL(originalUrlRef.current);
-                console.log("Previous original file URL revoked:", originalUrlRef.current);
-              } catch (e) {
-                console.error("Error revoking previous original file URL:", e);
-              }
-            }
+        const filesToUpload: File[] = [];
+        
+        if (originalFile && originalFile instanceof File) {
+          filesToUpload.push(originalFile);
+        }
+        
+        if (newFile && newFile instanceof File) {
+          filesToUpload.push(newFile);
+        }
+        
+        if (filesToUpload.length === 0) {
+          console.log("No valid files to upload");
+          setIsProcessing(false);
+          return;
+        }
+        
+        console.log(`Uploading ${filesToUpload.length} files to server...`);
+        
+        // Upload files to the server
+        const uploadResponse = await uploadFilesToServer(filesToUpload);
+        console.log("Files uploaded successfully:", uploadResponse);
+        
+        // Set URLs for document viewers
+        if (uploadResponse.files && uploadResponse.files.length > 0) {
+          // For original file
+          if (originalFile) {
+            const originalFileData = uploadResponse.files.find(
+              file => file.originalname === originalFile.name
+            );
             
-            // Create new URL
-            const url = URL.createObjectURL(originalFile);
-            console.log("Original file URL created:", url, "File name:", originalFile.name, "Size:", originalFile.size);
-            setOriginalFileUrl(url);
-            originalUrlRef.current = url;
-            urlsToCleanUp.push(url);
-          } else {
-            console.error("Original file is not a valid File object:", originalFile);
+            if (originalFileData) {
+              const serverUrl = originalFileData.url;
+              console.log("Original file server URL:", serverUrl);
+              setOriginalFileUrl(serverUrl);
+              originalUrlRef.current = serverUrl;
+            }
+          }
+          
+          // For new file
+          if (newFile) {
+            const newFileData = uploadResponse.files.find(
+              file => file.originalname === newFile.name
+            );
+            
+            if (newFileData) {
+              const serverUrl = newFileData.url;
+              console.log("New file server URL:", serverUrl);
+              setNewFileUrl(serverUrl);
+              newUrlRef.current = serverUrl;
+            }
           }
         }
         
-        if (newFile) {
-          // Check if newFile is a valid File object
-          if (newFile instanceof File) {
-            // Revoke previous URL if it exists
-            if (newUrlRef.current) {
-              try {
-                URL.revokeObjectURL(newUrlRef.current);
-                console.log("Previous new file URL revoked:", newUrlRef.current);
-              } catch (e) {
-                console.error("Error revoking previous new file URL:", e);
-              }
-            }
-            
-            // Create new URL
-            const url = URL.createObjectURL(newFile);
-            console.log("New file URL created:", url, "File name:", newFile.name, "Size:", newFile.size);
-            setNewFileUrl(url);
-            newUrlRef.current = url;
-            urlsToCleanUp.push(url);
-          } else {
-            console.error("New file is not a valid File object:", newFile);
-          }
-        }
-        
-        // End processing after a short delay to allow blob URLs to stabilize
+        // End processing after a short delay
         setTimeout(() => {
           setIsProcessing(false);
           console.log("Document processing completed");
-        }, 1500);
+        }, 1000);
       } catch (error) {
-        console.error("Error creating file URLs:", error);
+        console.error("Error uploading files:", error);
         setIsProcessing(false);
       }
     };
 
-    // Execute URL creation
-    createFileUrls();
+    // Execute upload
+    uploadAndGetUrls();
     
-    // Clean up URLs when component unmounts or files change
+    // Cleanup function
     return () => {
-      // Clean up all URLs created in this effect
-      urlsToCleanUp.forEach(url => {
-        try {
-          URL.revokeObjectURL(url);
-          console.log("File URL revoked:", url);
-        } catch (error) {
-          console.error("Error revoking URL:", error);
-        }
-      });
-      
-      // Also cleanup refs
-      if (originalUrlRef.current) {
-        originalUrlRef.current = null;
-      }
-      if (newUrlRef.current) {
-        newUrlRef.current = null;
-      }
+      // Note: Server will handle file cleanup automatically
+      originalUrlRef.current = null;
+      newUrlRef.current = null;
     };
   }, [originalFile, newFile]);
   

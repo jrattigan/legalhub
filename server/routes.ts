@@ -7,6 +7,9 @@ import { compareDocuments } from "./tools/redline";
 import * as mammoth from "mammoth";
 import { convertDocumentWithStyles } from "./mammoth-style-map";
 import { generateDocumentComparison } from "./document-compare";
+import { upload, handleUploadError, setupFileCleanup } from "./file-upload";
+import path from "path";
+import fs from "fs";
 import {
   insertDealSchema,
   insertDocumentSchema,
@@ -38,6 +41,9 @@ import {
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize file cleanup service
+  setupFileCleanup(app);
+  
   // Health check endpoint for Replit
   app.get('/health', (req: Request, res: Response) => {
     console.log('Health check request received');
@@ -1651,6 +1657,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Temporary document upload for redline comparison
+  app.post('/api/temp-upload', upload.array('documents', 2), async (req: Request, res: Response) => {
+    try {
+      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+        return res.status(400).json({ error: 'No files uploaded' });
+      }
+      
+      const uploadedFiles = req.files as Express.Multer.File[];
+      const fileUrls = uploadedFiles.map(file => {
+        return {
+          originalname: file.originalname,
+          filename: file.filename,
+          path: file.path,
+          url: `/api/temp-files/${file.filename}`,
+          size: file.size,
+          mimetype: file.mimetype
+        };
+      });
+      
+      res.status(200).json({ 
+        message: 'Files uploaded successfully', 
+        files: fileUrls 
+      });
+    } catch (error) {
+      console.error('Error uploading temporary files:', error);
+      res.status(500).json({ 
+        error: 'Failed to upload files',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Serve temporary files
+  app.get('/api/temp-files/:filename', (req: Request, res: Response) => {
+    try {
+      const { filename } = req.params;
+      if (!filename) {
+        return res.status(400).json({ error: 'No filename provided' });
+      }
+      
+      const filePath = path.join(process.cwd(), 'temp_uploads', filename);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'File not found' });
+      }
+      
+      // Set appropriate headers based on file type
+      const ext = path.extname(filename).toLowerCase();
+      let contentType = 'application/octet-stream';
+      
+      if (ext === '.pdf') {
+        contentType = 'application/pdf';
+      } else if (ext === '.docx') {
+        contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      } else if (ext === '.doc') {
+        contentType = 'application/msword';
+      }
+      
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+      
+      // Stream the file to the response
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+    } catch (error) {
+      console.error('Error serving temporary file:', error);
+      res.status(500).json({ 
+        error: 'Failed to serve file',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Handle upload errors
+  app.use(handleUploadError);
+  
   // Special route for serving document for MS Office Viewer
   app.get('/api/viewer/term-sheet.docx', async (req: Request, res: Response) => {
     try {
