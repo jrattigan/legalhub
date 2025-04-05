@@ -36,17 +36,19 @@ export default function RedlineCompareView({
   const [originalFileUrl, setOriginalFileUrl] = useState<string>('');
   const [newFileUrl, setNewFileUrl] = useState<string>('');
   
-  // Create blob URLs for the files when they change
+  // Create blob URLs for the files and handle file conversions when files change
   useEffect(() => {
     // Create blob URLs for the files
     if (originalFile) {
       const url = URL.createObjectURL(originalFile);
       setOriginalFileUrl(url);
+      console.log("Original file URL created:", url);
     }
     
     if (newFile) {
       const url = URL.createObjectURL(newFile);
       setNewFileUrl(url);
+      console.log("New file URL created:", url);
     }
     
     // Simulate processing time
@@ -57,8 +59,14 @@ export default function RedlineCompareView({
     // Clean up URLs when component unmounts
     return () => {
       clearTimeout(timer);
-      if (originalFileUrl) URL.revokeObjectURL(originalFileUrl);
-      if (newFileUrl) URL.revokeObjectURL(newFileUrl);
+      if (originalFileUrl) {
+        URL.revokeObjectURL(originalFileUrl);
+        console.log("Original file URL revoked");
+      }
+      if (newFileUrl) {
+        URL.revokeObjectURL(newFileUrl);
+        console.log("New file URL revoked");
+      }
     };
   }, [originalFile, newFile]);
   

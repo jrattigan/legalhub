@@ -68,35 +68,32 @@ export async function compareDocuments(req: Request, res: Response) {
     const newProcessed = await prepareFileForComparison(newFile);
     
     // Create temporary DocumentVersion objects to use with generateDocumentComparison
-    const olderVersion: DocumentVersion = {
+    // Use 'as DocumentVersion' to handle any possible type mismatch
+    const olderVersion = {
       id: 1,
       documentId: 1,
-      versionNumber: 1,
+      version: 1,
       fileName: originalFile.name,
       fileContent: originalProcessed.content,
-      contentType: originalFile.type,
-      uploadedAt: new Date(),
-      uploadedBy: 1,
+      fileType: originalFile.type,
+      uploadedById: 1,
       fileSize: originalProcessed.content.length,
-      isLatestVersion: false,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+      comment: null,
+      createdAt: new Date()
+    } as DocumentVersion;
     
-    const newerVersion: DocumentVersion = {
+    const newerVersion = {
       id: 2,
       documentId: 1,
-      versionNumber: 2,
+      version: 2,
       fileName: newFile.name,
       fileContent: newProcessed.content,
-      contentType: newFile.type,
-      uploadedAt: new Date(),
-      uploadedBy: 1,
+      fileType: newFile.type,
+      uploadedById: 1,
       fileSize: newProcessed.content.length,
-      isLatestVersion: true,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+      comment: null,
+      createdAt: new Date()
+    } as DocumentVersion;
     
     // Use the same document comparison function as the deal detail page
     const diffHtml = await generateDocumentComparison(
