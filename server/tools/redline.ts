@@ -110,44 +110,6 @@ async function prepareFileForComparison(fileData: FileData): Promise<{
 }
 
 /**
- * Clean up any CSS-like content from HTML to prevent it showing as text
- * This specifically targets the CSS patterns seen in the screenshots
- * @param content The HTML content to clean
- * @returns Clean HTML without CSS code showing as text
- */
-function cleanupCssContent(content: string): string {
-  if (!content) return content;
-  
-  // Remove any CSS style tags with all content
-  content = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-  
-  // Remove CSS-like content that might be displayed as text
-  content = content.replace(/\[style\*=[^\]]*\][^{]*\{[^}]*\}/g, '');
-  content = content.replace(/\.[\w\-\.]+\s*\{[^}]*\}/g, '');
-  
-  // Remove specific style patterns seen in screenshots
-  content = content.replace(/\[style\*="text-align:center"\]\s*\{\s*text-align:\s*center\s*!important;\s*\}/g, '');
-  content = content.replace(/\[style\*="text-align:right"\]\s*\{\s*text-align:\s*right\s*!important;\s*\}/g, '');
-  content = content.replace(/\[style\*="text-align:justify"\]\s*\{\s*text-align:\s*justify\s*!important;\s*\}/g, '');
-  content = content.replace(/\[style\*="text-indent"\]\s*\{\s*text-indent:\s*1.5em\s*!important;\s*\}/g, '');
-  content = content.replace(/\[style\*="margin-left"\]\s*\{\s*margin-left:\s*1.5em\s*!important;\s*\}/g, '');
-  
-  // Remove CSS comments that might be displayed as text
-  content = content.replace(/\/\*[\s\S]*?\*\//g, '');
-  
-  // Replace CSS property declarations that might show as text
-  content = content.replace(/font-size:\s*\d+pt;/g, '');
-  content = content.replace(/margin-bottom:\s*\d+pt;/g, '');
-  content = content.replace(/line-height:\s*[\d\.]+;/g, '');
-  content = content.replace(/font-family:\s*[^;]+;/g, '');
-  
-  // Remove CSS class definitions for document elements
-  content = content.replace(/\.doc-paragraph,[\s\S]*?\.doc-table-paragraph\s*\{[\s\S]*?\}/g, '');
-  
-  return content;
-}
-
-/**
  * Handle document comparison requests using the same comparison engine
  * as the deal detail page
  */
@@ -166,6 +128,7 @@ export async function compareDocuments(req: Request, res: Response) {
     const newProcessed = await prepareFileForComparison(newFile);
     
     // Create temporary DocumentVersion objects to use with generateDocumentComparison
+    // Use 'as DocumentVersion' to handle any possible type mismatch
     const olderVersion = {
       id: 1,
       documentId: 1,
@@ -193,40 +156,21 @@ export async function compareDocuments(req: Request, res: Response) {
     } as DocumentVersion;
     
     // Use the same document comparison function as the deal detail page
-    let diffHtml = await generateDocumentComparison(
+    const diffHtml = await generateDocumentComparison(
       olderVersion, 
       newerVersion,
       originalProcessed.htmlContent,
       newProcessed.htmlContent
     );
     
-    // Clean up any CSS-like content from diffHtml before returning
-    diffHtml = cleanupCssContent(diffHtml);
-    
-    // Also clean up the original content if it's HTML
-    let originalTextContent = originalProcessed.htmlContent || originalProcessed.content;
-    let newTextContent = newProcessed.htmlContent || newProcessed.content;
-    
-    if (typeof originalTextContent === 'string') {
-      originalTextContent = cleanupCssContent(originalTextContent);
-    }
-    
-    if (typeof newTextContent === 'string') {
-      newTextContent = cleanupCssContent(newTextContent);
-    }
-    
-    // For the redline tool, simplify the output to a basic HTML structure with
-    // only the content differences wrapped in appropriate styling
-    const simplifiedDiffHtml = `
-      <div style="font-family: 'Calibri', sans-serif; padding: 20px;">
-        ${diffHtml}
-      </div>
-    `;
+    // For consistency, keep returning the original text content
+    const originalTextContent = originalProcessed.htmlContent || originalProcessed.content;
+    const newTextContent = newProcessed.htmlContent || newProcessed.content;
     
     // Return the comparison result
     return res.status(200).json({
       success: true,
-      diff: simplifiedDiffHtml,
+      diff: diffHtml,
       contentV1: originalTextContent,
       contentV2: newTextContent
     });

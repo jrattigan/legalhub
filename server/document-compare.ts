@@ -465,38 +465,19 @@ export async function generateDocumentComparison(
       }
     }
     
-    // Specifically target and remove the CSS styles appearing in the screenshot
-    
-    // Remove CSS style declarations that might be rendered as text
-    diffHtml = diffHtml.replace(/\[style\*="[\s\S]*?"\][\s\S]*?\}/g, '');
-    
-    // Remove style attribute definitions visible in the screenshot
-    diffHtml = diffHtml.replace(/\[style\*=["']text-align:center["']\][\s\S]*?\}/g, '');
-    diffHtml = diffHtml.replace(/\[style\*=["']text-align:right["']\][\s\S]*?\}/g, '');
-    diffHtml = diffHtml.replace(/\[style\*=["']text-align:justify["']\][\s\S]*?\}/g, '');
-    diffHtml = diffHtml.replace(/\[style\*=["']text-indent["']\][\s\S]*?\}/g, '');
-    diffHtml = diffHtml.replace(/\[style\*=["']margin-left["']\][\s\S]*?\}/g, '');
-    
-    // Target the specific CSS declarations visible in the screenshot
-    diffHtml = diffHtml.replace(/\.doc-paragraph,[\s\S]*?\.doc-table-paragraph \{[\s\S]*?\}/g, '');
-    
-    // Remove all [style*=...] { ... } patterns
-    const styleRe = /\[style\*=[^\]]*\][^{]*\{[^}]*\}/g;
-    diffHtml = diffHtml.replace(styleRe, '');
-    
-    // Remove all CSS blocks written as text content (from screenshot)
-    diffHtml = diffHtml.replace(/font-size: 11pt;/g, '');
-    diffHtml = diffHtml.replace(/margin-bottom: 10pt;/g, '');
-    
-    // Specifically target "[style*=" at the beginning of a line
-    diffHtml = diffHtml.replace(/\[style\*=[^\]]*\][^{]*\{[^}]*\}/g, '');
-    
-    // Target exactly what we see in the screenshot
-    diffHtml = diffHtml.replace(/\[style\*="text-align:center"\] \{ text-align: center !important; \}/g, '');
-    diffHtml = diffHtml.replace(/\[style\*="text-align:right"\] \{ text-align: right !important; \}/g, '');
-    diffHtml = diffHtml.replace(/\[style\*="text-align:justify"\] \{ text-align: justify !important; \}/g, '');
-    diffHtml = diffHtml.replace(/\[style\*="text-indent"\] \{ text-indent: 1.5em !important; \}/g, '');
-    diffHtml = diffHtml.replace(/\[style\*="margin-left"\] \{ margin-left: 1.5em !important; \}/g, '');
+    // Remove any CSS-like blocks shown in the screenshot 
+    if (diffHtml.includes('/* Document container */') || 
+        diffHtml.includes('/* General formatting preservations */')) {
+      // Clean up the entire document container and formatting blocks
+      diffHtml = diffHtml.replace(/\/\* Document container \*\/[\s\S]*?\}/, '');
+      diffHtml = diffHtml.replace(/\/\* General formatting preservations \*\/[\s\S]*?\}/, '');
+      
+      // Remove .document-content { ... } blocks
+      diffHtml = diffHtml.replace(/\.document-content \{[\s\S]*?\}/g, '');
+      
+      // Remove [style*=...] style blocks
+      diffHtml = diffHtml.replace(/\[style\*=[\s\S]*?\}/g, '');
+    }
     
     return diffHtml;
   } catch (error) {
