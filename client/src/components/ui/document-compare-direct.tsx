@@ -25,7 +25,9 @@ import { renderAsync } from 'docx-preview';
 // Import PDF.js as specified (as fallback)
 import * as pdfjsLib from 'pdfjs-dist';
 import 'pdfjs-dist/web/pdf_viewer.css';
-import { PDFViewer } from 'pdfjs-dist/web/pdf_viewer.js';
+// Using namespace imports for better compatibility with various PDF.js versions
+// @ts-ignore - Ignore TypeScript error for web/pdf_viewer.js imports
+import * as PDFJSViewer from 'pdfjs-dist/web/pdf_viewer.js';
 
 // Set the PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
@@ -177,12 +179,24 @@ export function DocumentCompareDirect({
       const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
       const pdfDocument = await loadingTask.promise;
       
-      // Create PDF viewer as specified
+      // Create PDF viewer with required properties
       // @ts-ignore - PDF.js types are not always accurate
       const eventBus = new pdfjsLib.EventBus();
-      const viewer = new PDFViewer({
+      
+      // Create link service
+      // @ts-ignore - Access PDFLinkService from the namespace import
+      const linkService = new PDFJSViewer.PDFLinkService({
+        eventBus,
+      });
+      
+      // Create viewer with all required properties
+      // @ts-ignore - Access PDFViewer from the namespace import with correct types
+      const viewer = new PDFJSViewer.PDFViewer({
         container: containerRef.current,
         eventBus: eventBus,
+        linkService: linkService,
+        // Use default localization without null to avoid type errors
+        l10n: undefined,
       });
       
       // Set the document to the viewer
@@ -340,11 +354,67 @@ export function DocumentCompareDirect({
                     </div>
                   </div>
                 ) : (
-                  // Directly insert the HTML using dangerouslySetInnerHTML
-                  <div 
-                    className="prose prose-sm max-w-none" 
-                    dangerouslySetInnerHTML={{ __html: diff }} 
-                  />
+                  // Enhanced document comparison viewer with full formatting preservation
+                  <div className="relative border rounded-md overflow-hidden">
+                    {/* Document toolbar with zoom controls and formatting options */}
+                    <div className="bg-gray-50 border-b p-2 flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          className="p-1 rounded hover:bg-gray-200"
+                          title="Zoom out"
+                          onClick={() => {
+                            const container = document.querySelector('.doc-comparison-content');
+                            if (container) {
+                              const style = window.getComputedStyle(container);
+                              const fontSize = parseFloat(style.fontSize);
+                              (container as HTMLElement).style.fontSize = `${Math.max(fontSize - 1, 8)}px`;
+                            }
+                          }}
+                        >
+                          <ZoomOut className="h-4 w-4" />
+                        </button>
+                        <button
+                          className="p-1 rounded hover:bg-gray-200"
+                          title="Reset zoom"
+                          onClick={() => {
+                            const container = document.querySelector('.doc-comparison-content');
+                            if (container) {
+                              (container as HTMLElement).style.fontSize = '';
+                            }
+                          }}
+                        >
+                          <RotateCw className="h-4 w-4" />
+                        </button>
+                        <button
+                          className="p-1 rounded hover:bg-gray-200"
+                          title="Zoom in"
+                          onClick={() => {
+                            const container = document.querySelector('.doc-comparison-content');
+                            if (container) {
+                              const style = window.getComputedStyle(container);
+                              const fontSize = parseFloat(style.fontSize);
+                              (container as HTMLElement).style.fontSize = `${fontSize + 1}px`;
+                            }
+                          }}
+                        >
+                          <ZoomIn className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        <span className="font-medium">Formatting preserved</span>
+                      </div>
+                    </div>
+                    
+                    {/* Document content with enhanced styling */}
+                    <div 
+                      className="doc-comparison-content bg-white p-6 overflow-auto"
+                      style={{ 
+                        height: 'calc(100vh - 320px)',
+                        minHeight: '400px',
+                      }}
+                      dangerouslySetInnerHTML={{ __html: diff }} 
+                    />
+                  </div>
                 )}
               </div>
             </div>

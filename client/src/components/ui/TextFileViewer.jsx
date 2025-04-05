@@ -93,11 +93,74 @@ const TextFileViewer = ({ documentUrl }) => {
           {documentUrl.split('/').pop()}
         </div>
       </div>
-      {/* Conditionally render based on HTML content */}
-      {content.includes('<style') || content.includes('<div') || content.includes('<p') ? (
+      {/* 
+        Enhanced detection for HTML content: 
+        Check for common HTML tags, style tags, or document metadata
+      */}
+      {content.includes('<html') || 
+       content.includes('<body') || 
+       content.includes('<div') || 
+       content.includes('<p>') || 
+       content.includes('<span') || 
+       content.includes('<table') || 
+       content.includes('<style') || 
+       content.includes('<h1') || 
+       content.includes('<h2') || 
+       content.includes('<h3') || 
+       content.includes('class="doc-') || 
+       content.includes('class="document-content') ? (
         <div 
           className="p-4 border rounded bg-white h-[600px] overflow-y-auto"
-          dangerouslySetInnerHTML={{ __html: content }}
+          style={{
+            fontFamily: "'Calibri', sans-serif",
+            lineHeight: "1.4",
+            color: "#000"
+          }}
+          dangerouslySetInnerHTML={{ 
+            __html: content.includes('<style') || content.includes('class="document-content') 
+              ? content  // Already has styles, use as-is
+              : `
+                <style>
+                  /* Default document styles for HTML content */
+                  body, p, div, span, table, td, th, ul, ol, li {
+                    font-family: 'Calibri', sans-serif;
+                    line-height: 1.4;
+                  }
+                  p, div.paragraph {
+                    margin-bottom: 0.8em;
+                  }
+                  h1, h2, h3, h4, h5, h6 {
+                    font-family: 'Calibri', sans-serif;
+                    font-weight: bold;
+                    margin-top: 1em;
+                    margin-bottom: 0.5em;
+                  }
+                  h1 { font-size: 16pt; }
+                  h2 { font-size: 14pt; }
+                  h3 { font-size: 12pt; }
+                  table {
+                    border-collapse: collapse;
+                    margin-bottom: 1em;
+                  }
+                  td, th {
+                    border: 1px solid #ddd;
+                    padding: 6px;
+                  }
+                  th {
+                    background-color: #f5f5f5;
+                    font-weight: bold;
+                  }
+                  pre {
+                    white-space: pre-wrap;
+                    font-family: monospace;
+                    background-color: #f5f5f5;
+                    padding: 0.5em;
+                    border-radius: 3px;
+                  }
+                </style>
+                ${content}
+              `
+          }}
         />
       ) : (
         <pre 
@@ -108,7 +171,8 @@ const TextFileViewer = ({ documentUrl }) => {
             overflowX: 'auto',
             wordBreak: 'keep-all',
             lineHeight: '1.5',
-            fontFamily: "'Courier New', monospace"
+            fontFamily: "'Courier New', monospace",
+            padding: '16px'
           }}
         >
           {content}

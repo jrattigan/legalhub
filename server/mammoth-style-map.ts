@@ -73,9 +73,24 @@ export function getMammothConversionOptions() {
  */
 export async function convertDocumentWithStyles(buffer: Buffer): Promise<string> {
   try {
+    // Create options with image conversion to data URIs
+    const options = {
+      ...getMammothConversionOptions(),
+      convertImage: mammoth.images.imgElement(function(image) {
+        return image.read("base64").then(function(imageBuffer) {
+          const mimeType = image.contentType || "image/png";
+          return {
+            src: `data:${mimeType};base64,${imageBuffer}`,
+            alt: "Document image",
+            style: "max-width: 100%"
+          };
+        });
+      })
+    };
+    
     const result = await mammoth.convertToHtml(
       { buffer },
-      getMammothConversionOptions()
+      options
     );
     
     // Check for any warnings
@@ -104,12 +119,20 @@ function wrapWithDocumentStyles(html: string): string {
       /* Document container */
       .document-content {
         font-family: 'Calibri', sans-serif;
-        line-height: 1.2;
+        line-height: 1.4;
         color: #000;
         max-width: 21cm;
         margin: 0 auto;
         padding: 20px;
+        overflow: auto;
       }
+      
+      /* General formatting preservations */
+      [style*="text-align:center"] { text-align: center !important; }
+      [style*="text-align:right"] { text-align: right !important; }
+      [style*="text-align:justify"] { text-align: justify !important; }
+      [style*="text-indent"] { text-indent: 1.5em !important; }
+      [style*="margin-left"] { margin-left: 1.5em !important; }
       
       /* Paragraph styles */
       .doc-paragraph, .doc-normal, .doc-body-text, .doc-table-paragraph {

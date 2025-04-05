@@ -127,60 +127,235 @@ export async function generateDocumentComparison(
       return processedHtml.replace(/<[^>]*>/g, '');
     };
     
-    // Clean the input content if it appears to contain HTML
-    const oldText = normalizedOld.includes('<') && (normalizedOld.includes('</') || normalizedOld.includes('/>'))
-      ? stripHtml(normalizedOld) 
-      : normalizedOld;
+    // Enhanced approach for HTML content to preserve formatting
+    if (normalizedOld.includes('<') && normalizedNew.includes('<')) {
+      console.log("HTML content detected, using formatting-aware comparison");
       
-    const newText = normalizedNew.includes('<') && (normalizedNew.includes('</') || normalizedNew.includes('/>'))
-      ? stripHtml(normalizedNew) 
-      : normalizedNew;
-    
-    // Compare the text content
-    if (oldText !== newText) {
-      console.log("Text content differs, performing detailed diff");
+      // Extract structure and retain formatting tags
+      const extractStructuredContent = (html: string): {text: string, map: Record<number, string>} => {
+        let plainText = '';
+        const formattingMap: Record<number, string> = {};
+        let inTag = false;
+        let currentTag = '';
+        let currentTagStart = -1;
+        
+        for (let i = 0; i < html.length; i++) {
+          const char = html[i];
+          
+          if (char === '<') {
+            inTag = true;
+            currentTag = '<';
+            currentTagStart = plainText.length;
+            continue;
+          }
+          
+          if (inTag) {
+            currentTag += char;
+            if (char === '>') {
+              inTag = false;
+              
+              // Track formatting tag position
+              if (
+                currentTag.includes('strong') || 
+                currentTag.includes('em') || 
+                currentTag.includes('u') || 
+                currentTag.includes('b') || 
+                currentTag.includes('i') || 
+                currentTag.includes('span') ||
+                currentTag.includes('h1') || 
+                currentTag.includes('h2') || 
+                currentTag.includes('h3') ||
+                currentTag.includes('table') ||
+                currentTag.includes('tr') ||
+                currentTag.includes('td') ||
+                currentTag.includes('th')
+              ) {
+                formattingMap[currentTagStart] = currentTag;
+              }
+              
+              // Skip regular tags but preserve whitespace and text structure
+              if (currentTag === '<br>' || currentTag === '<br/>') {
+                plainText += '\n';
+              } else if (currentTag === '<p>' || currentTag === '</p>' || 
+                         currentTag === '<div>' || currentTag === '</div>' ||
+                         currentTag === '</tr>' || currentTag === '<tr>' ||
+                         currentTag === '</table>' || currentTag === '<table>') {
+                plainText += '\n\n';
+              }
+            }
+            continue;
+          }
+          
+          // Regular character, add to plain text
+          plainText += char;
+        }
+        
+        return { text: plainText, map: formattingMap };
+      };
       
-      // Use a more sensitive diff approach with character-level diff
-      const changes = diff.diffChars(oldText, newText);
+      // Extract structured content from both versions
+      const oldStructured = extractStructuredContent(normalizedOld);
+      const newStructured = extractStructuredContent(normalizedNew);
       
-      // Log the changes for debugging
-      console.log(`Character diff changes: ${changes.length} changes found`);
+      // Compare using the extracted text content
+      const changes = diff.diffChars(oldStructured.text, newStructured.text);
+      
+      // Log the changes
+      console.log(`Format-preserving character diff: ${changes.length} changes found`);
       changes.forEach((change, i) => {
         if (change.added || change.removed) {
           console.log(`Change ${i}: ${change.added ? 'Added' : 'Removed'} ${change.value.substring(0, 30)}...`);
         }
       });
       
-      // Build HTML with highlighted differences
+      // Build HTML with highlighted differences and preserved formatting
       let processedContent = '';
+      let posOld = 0;
+      let posNew = 0;
+      
       for (const part of changes) {
         if (part.added) {
-          // Added text - use the same class as in our test document comparison
-          // Preserve any line breaks within the added content
-          const value = part.value.replace(/\n/g, '\n');
+          // For added content, apply formatting from new version
+          let formattedValue = part.value;
+          
+          // Apply formatting tags by position in new content
+          for (const [pos, tag] of Object.entries(newStructured.map)) {
+            const position = parseInt(pos);
+            if (position >= posNew && position < posNew + part.value.length) {
+              const relativePos = position - posNew;
+              
+              // Split and insert tag
+              const before = formattedValue.substring(0, relativePos);
+              const after = formattedValue.substring(relativePos);
+              formattedValue = before + tag + after;
+            }
+          }
+          
+          // Wrap with addition style
+          const value = formattedValue.replace(/\n/g, '<br>');
           processedContent += `<span class="addition">${value}</span>`;
+          posNew += part.value.length;
           hasDifferences = true;
         } else if (part.removed) {
-          // Removed text - use the same class as in our test document comparison
-          // Preserve any line breaks within the removed content
-          const value = part.value.replace(/\n/g, '\n');
+          // For removed content, apply formatting from old version
+          let formattedValue = part.value;
+          
+          // Apply formatting tags by position in old content
+          for (const [pos, tag] of Object.entries(oldStructured.map)) {
+            const position = parseInt(pos);
+            if (position >= posOld && position < posOld + part.value.length) {
+              const relativePos = position - posOld;
+              
+              // Split and insert tag
+              const before = formattedValue.substring(0, relativePos);
+              const after = formattedValue.substring(relativePos);
+              formattedValue = before + tag + after;
+            }
+          }
+          
+          // Wrap with deletion style
+          const value = formattedValue.replace(/\n/g, '<br>');
           processedContent += `<span class="deletion">${value}</span>`;
+          posOld += part.value.length;
           hasDifferences = true;
         } else {
-          // Preserve line breaks in unchanged content too
-          processedContent += part.value.replace(/\n/g, '\n');
+          // For unchanged content, preserve formatting from both versions
+          // Prefer the newer version formatting
+          let formattedValue = part.value;
+          
+          // Apply formatting from new version first
+          for (const [pos, tag] of Object.entries(newStructured.map)) {
+            const position = parseInt(pos);
+            if (position >= posNew && position < posNew + part.value.length) {
+              const relativePos = position - posNew;
+              
+              // Split and insert tag
+              const before = formattedValue.substring(0, relativePos);
+              const after = formattedValue.substring(relativePos);
+              formattedValue = before + tag + after;
+            }
+          }
+          
+          // For cases not covered by new version, apply old version formatting
+          for (const [pos, tag] of Object.entries(oldStructured.map)) {
+            const position = parseInt(pos);
+            if (position >= posOld && position < posOld + part.value.length) {
+              const relativePos = position - posOld;
+              
+              // Only insert if there's no tag at this position already
+              if (!Object.values(newStructured.map).some(t => t === tag)) {
+                const before = formattedValue.substring(0, relativePos);
+                const after = formattedValue.substring(relativePos);
+                formattedValue = before + tag + after;
+              }
+            }
+          }
+          
+          // Add the formatted unchanged content
+          processedContent += formattedValue.replace(/\n/g, '<br>');
+          posOld += part.value.length;
+          posNew += part.value.length;
         }
       }
       
-      // Format into paragraphs
-      if (processedContent.includes('\n')) {
-        const paragraphs = processedContent.split(/\n\n+/);
-        for (const paragraph of paragraphs) {
-          diffContent += `<p class="doc-paragraph doc-body-text">${paragraph.replace(/\n/g, '<br>')}</p>`;
+      // Add to diff content, preserving document structure
+      diffContent = processedContent;
+    } else {
+      // Fall back to regular text diff for non-HTML content
+      const oldText = normalizedOld.includes('<') && (normalizedOld.includes('</') || normalizedOld.includes('/>'))
+        ? stripHtml(normalizedOld) 
+        : normalizedOld;
+        
+      const newText = normalizedNew.includes('<') && (normalizedNew.includes('</') || normalizedNew.includes('/>'))
+        ? stripHtml(normalizedNew) 
+        : normalizedNew;
+      
+      // Compare the text content
+      if (oldText !== newText) {
+        console.log("Text content differs, performing detailed diff");
+        
+        // Use a more sensitive diff approach with character-level diff
+        const changes = diff.diffChars(oldText, newText);
+        
+        // Log the changes for debugging
+        console.log(`Character diff changes: ${changes.length} changes found`);
+        changes.forEach((change, i) => {
+          if (change.added || change.removed) {
+            console.log(`Change ${i}: ${change.added ? 'Added' : 'Removed'} ${change.value.substring(0, 30)}...`);
+          }
+        });
+        
+        // Build HTML with highlighted differences
+        let processedContent = '';
+        for (const part of changes) {
+          if (part.added) {
+            // Added text - use the same class as in our test document comparison
+            // Preserve any line breaks within the added content
+            const value = part.value.replace(/\n/g, '\n');
+            processedContent += `<span class="addition">${value}</span>`;
+            hasDifferences = true;
+          } else if (part.removed) {
+            // Removed text - use the same class as in our test document comparison
+            // Preserve any line breaks within the removed content
+            const value = part.value.replace(/\n/g, '\n');
+            processedContent += `<span class="deletion">${value}</span>`;
+            hasDifferences = true;
+          } else {
+            // Preserve line breaks in unchanged content too
+            processedContent += part.value.replace(/\n/g, '\n');
+          }
         }
-      } else {
-        // If no paragraphs, wrap in a single p tag
-        diffContent = `<p class="doc-paragraph doc-body-text">${processedContent}</p>`;
+        
+        // Format into paragraphs
+        if (processedContent.includes('\n')) {
+          const paragraphs = processedContent.split(/\n\n+/);
+          for (const paragraph of paragraphs) {
+            diffContent += `<p class="doc-paragraph doc-body-text">${paragraph.replace(/\n/g, '<br>')}</p>`;
+          }
+        } else {
+          // If no paragraphs, wrap in a single p tag
+          diffContent = `<p class="doc-paragraph doc-body-text">${processedContent}</p>`;
+        }
       }
     }
     
@@ -193,10 +368,31 @@ export async function generateDocumentComparison(
 
       // Create document with content using improved styling (without filename at top)
       diffHtml = `
-      <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 80%; margin: 0 auto; padding: 20px; background-color: white;">
-        <div>
-          <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; margin: 0 auto;">
-            ${diffContent.replace(/class="doc-paragraph doc-body-text"/g, 'style="font-family: \'Calibri\', sans-serif; font-size: 12pt; line-height: 1.4; margin-bottom: 15pt;"')
+      <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 80%; margin: 0 auto; padding: 0; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); background-color: #ffffff; overflow: hidden;">
+        <div style="background-color: #f3f4f6; padding: 8px 16px; border-bottom: 1px solid #e5e7eb;">
+          <div style="display: flex; align-items: center;">
+            <div style="width: 16px; height: 16px; margin-right: 8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#185abd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </div>
+            <div style="font-size: 14px; font-weight: 500; color: #185abd;">Document Comparison</div>
+          </div>
+        </div>
+        <div style="padding: 20px;">
+          <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; margin: 0 auto; overflow-wrap: break-word; word-wrap: break-word;">
+            ${diffContent
+              .replace(/class="doc-paragraph doc-body-text"/g, 'style="font-family: \'Calibri\', sans-serif; font-size: 12pt; line-height: 1.5; margin-bottom: 15pt;"')
+              .replace(/class="doc-heading1"/g, 'style="font-family: \'Calibri\', sans-serif; font-size: 16pt; font-weight: bold; margin-top: 16pt; margin-bottom: 12pt;"')
+              .replace(/class="doc-heading2"/g, 'style="font-family: \'Calibri\', sans-serif; font-size: 14pt; font-weight: bold; margin-top: 14pt; margin-bottom: 10pt;"')
+              .replace(/class="doc-heading3"/g, 'style="font-family: \'Calibri\', sans-serif; font-size: 13pt; font-weight: bold; margin-top: 12pt; margin-bottom: 8pt;"')
+              .replace(/class="doc-table"/g, 'style="width: 100%; border-collapse: collapse; margin-bottom: 15pt; font-family: \'Calibri\', sans-serif; font-size: 11pt;"')
+              .replace(/class="doc-td"/g, 'style="padding: 5pt; border: 1px solid #ddd; vertical-align: top;"')
+              .replace(/class="doc-th"/g, 'style="padding: 5pt; border: 1px solid #ddd; background-color: #f5f5f5; font-weight: bold; vertical-align: top;"')
               .replace(/class="addition"/g, `style="${additionInlineStyle}"`)
               .replace(/class="deletion"/g, `style="${deletionInlineStyle}"`)}
           </div>
