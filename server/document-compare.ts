@@ -450,8 +450,15 @@ export async function generateDocumentComparison(
     cleanDiffHtml = cleanDiffHtml.replace(/style="[^"]*"/gi, '');
     
     // Remove CSS rule blocks that might appear as text
-    cleanDiffHtml = cleanDiffHtml.replace(/\.[a-z-]+\s*\{[\s\S]*?\}/gi, '');
-    cleanDiffHtml = cleanDiffHtml.replace(/\[style\*=[\s\S]*?\}/g, '');
+    cleanDiffHtml = cleanDiffHtml.replace(/\.[a-z-]+\s*\{[^\}]*\}/gi, '');
+    cleanDiffHtml = cleanDiffHtml.replace(/\[style\*=[^\}]*\}/g, '');
+    
+    // Remove specific CSS class definitions that appear as text
+    cleanDiffHtml = cleanDiffHtml.replace(/\.doc-paragraph,?\s*/g, '');
+    cleanDiffHtml = cleanDiffHtml.replace(/\.doc-normal,?\s*/g, '');
+    cleanDiffHtml = cleanDiffHtml.replace(/\.doc-body-text,?\s*/g, '');
+    cleanDiffHtml = cleanDiffHtml.replace(/\.doc-heading[1-6],?\s*/g, '');
+    cleanDiffHtml = cleanDiffHtml.replace(/\.document-content,?\s*/g, '');
     
     // Step 2: Extract just the content when wrapped in document container
     if (cleanDiffHtml.includes('<div class="document-content"')) {
@@ -473,8 +480,17 @@ export async function generateDocumentComparison(
     
     // Step 4: Clean up any remaining style-related content
     cleanDiffHtml = cleanDiffHtml
+      // Remove CSS-looking blocks that might display as text
+      .replace(/\.doc-[a-zA-Z0-9_-]+\s*{[^}]*}/g, '')
+      .replace(/\.doc-[a-zA-Z0-9_-]+,/g, '')
+      // Remove CSS style declarations that might show as text
+      .replace(/font-family:[^;]+;/g, '')
+      .replace(/font-size:[^;]+;/g, '')
+      .replace(/font-weight:[^;]+;/g, '')
+      .replace(/margin-top:[^;]+;/g, '')
+      .replace(/margin-bottom:[^;]+;/g, '')
+      // Clean up class attributes - keep only our semantic classes
       .replace(/class="[^"]*"/g, (match) => {
-        // Keep only our semantic classes, remove any other classes
         if (match.includes('addition-text') || match.includes('deletion-text')) {
           return match;
         }
