@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import CompatiblePDFViewer from './CompatiblePDFViewer';
 import TextFileViewer from './TextFileViewer';
-import DocxViewer from './DocxViewer';
 
 // For non-PDF documents, we still need the worker
 console.log('PDF.js version:', pdfjsLib.version);
@@ -311,11 +310,6 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
   // For PDF files, use the compatible viewer
   if (fileExtension === 'pdf') {
     return <CompatiblePDFViewer documentUrl={documentUrl} />;
-  }
-  
-  // For Word documents, use the DocxViewer
-  if (fileExtension === 'docx' || fileExtension === 'doc') {
-    return <DocxViewer documentUrl={documentUrl} />;
   }
   
   // For text files, use the text file viewer
