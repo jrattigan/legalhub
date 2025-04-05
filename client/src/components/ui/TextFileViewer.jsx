@@ -23,12 +23,19 @@ const TextFileViewer = ({ documentUrl }) => {
         
         console.log("Text Viewer: Fetching from URL:", fullUrl);
         
+        // Use ArrayBuffer to get raw bytes to properly handle line endings
         const response = await fetch(fullUrl);
         if (!response.ok) {
           throw new Error(`Failed to fetch text file (status: ${response.status})`);
         }
         
-        const text = await response.text();
+        // Get file content as array buffer to properly handle newlines
+        const arrayBuffer = await response.arrayBuffer();
+        const decoder = new TextDecoder('utf-8');
+        const text = decoder.decode(arrayBuffer);
+        
+        console.log("Text file loaded, length:", text.length, "Has newlines:", text.includes('\n'));
+        
         setContent(text);
         setIsLoading(false);
       } catch (err) {

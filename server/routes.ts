@@ -1712,14 +1712,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
       } else if (ext === '.doc') {
         contentType = 'application/msword';
+      } else if (ext === '.txt' || ext === '.text' || ext === '.md' || ext === '.log') {
+        contentType = 'text/plain; charset=utf-8';
       }
       
       res.setHeader('Content-Type', contentType);
       res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
       
-      // Stream the file to the response
-      const fileStream = fs.createReadStream(filePath);
-      fileStream.pipe(res);
+      // For text files, read and serve with explicit line endings preserved
+      if (ext === '.txt' || ext === '.text' || ext === '.md' || ext === '.log') {
+        // Read the file in binary mode to preserve all line endings
+        fs.readFile(filePath, (err, data) => {
+          if (err) {
+            console.error('Error reading text file:', err);
+            return res.status(500).json({ error: 'Failed to read text file' });
+          }
+          // Send the binary data directly
+          res.send(data);
+        });
+      } else {
+        // For other files, stream the file to the response
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+      }
     } catch (error) {
       console.error('Error serving temporary file:', error);
       res.status(500).json({ 
