@@ -544,7 +544,7 @@ export async function generateDocumentComparison(
  * Uses semantic classes instead of inline styles to prevent CSS from appearing as text
  * @param reversed Whether test2.docx is the older version (true) or the newer version (false)
  */
-function generateTestDocumentComparison(reversed: boolean): string {
+export function generateTestDocumentComparison(reversed: boolean): string {
   // Use semantic class names that will be styled on the client
   const deletionClass = "deletion-text";
   const additionClass = "addition-text";
