@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import * as diff from 'diff';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import * as mammoth from 'mammoth';
-import pdfParse from 'pdf-parse';
+import { generateDocumentComparison } from '../document-compare';
+import { DocumentVersion } from '@shared/schema';
+import { convertDocumentWithStyles } from '../mammoth-style-map';
 
 export interface FileData {
   name: string;
@@ -13,106 +13,45 @@ export interface FileData {
 }
 
 /**
- * Extract text content from a Word document (.doc, .docx)
- * @param content The binary content of the document
- * @returns A promise that resolves to the extracted text
- */
-async function extractWordContent(content: string): Promise<string> {
-  try {
-    // Create a temporary file
-    const tmpdir = os.tmpdir();
-    const tempFilePath = path.join(tmpdir, `temp_${Date.now()}.docx`);
-    
-    // Decode the base64 content
-    const buffer = Buffer.from(content, 'base64');
-    
-    // Write to temp file
-    fs.writeFileSync(tempFilePath, buffer);
-    
-    // Extract text from the Word document
-    const result = await mammoth.extractRawText({ path: tempFilePath });
-    
-    // Clean up
-    fs.unlinkSync(tempFilePath);
-    
-    return result.value;
-  } catch (error) {
-    console.error('Error extracting Word content:', error);
-    throw new Error('Failed to extract content from Word document');
-  }
-}
-
-/**
- * Extract text content from a PDF document
- * @param content The binary content of the PDF document
- * @returns A promise that resolves to the extracted text
- */
-async function extractPdfContent(content: string): Promise<string> {
-  try {
-    // Decode the base64 content
-    const buffer = Buffer.from(content, 'base64');
-    
-    // Use pdf-parse to extract text
-    const data = await pdfParse(buffer);
-    
-    // Return the text content
-    return data.text;
-  } catch (error) {
-    console.error('Error extracting PDF content:', error);
-    throw new Error('Failed to extract content from PDF document');
-  }
-}
-
-/**
- * Extract text content from a file based on its type
+ * Extract content from a file and prepare for document comparison
  * @param fileData Object containing file details and content
- * @returns The extracted text content
+ * @returns Extracted content ready for comparison
  */
-async function extractFileContent(fileData: FileData): Promise<string> {
-  const { content, type } = fileData;
+async function prepareFileForComparison(fileData: FileData): Promise<{
+  content: string;
+  htmlContent?: string;
+}> {
+  const { content, type, name } = fileData;
   
+  // Decode base64 content
+  const buffer = Buffer.from(content, 'base64');
+  
+  // For Word documents, extract with styling
   if (type.includes('application/vnd.openxmlformats-officedocument.wordprocessingml.document') || 
-      type.includes('application/msword')) {
-    return await extractWordContent(content);
-  } else if (type.includes('text/plain') || type.includes('text/html') || type.includes('application/rtf')) {
-    // For plain text, HTML, or RTF, we can use the content directly (decoded from base64)
-    return Buffer.from(content, 'base64').toString('utf-8');
-  } else if (type.includes('application/pdf')) {
-    // For PDF files
-    return await extractPdfContent(content);
-  } else {
-    // For unsupported file types, return a message
-    throw new Error(`Unsupported file type: ${type}`);
-  }
-}
-
-/**
- * Generate HTML with highlighted differences between two texts
- * @param oldText Original text
- * @param newText Updated text
- * @returns HTML string with differences highlighted
- */
-function generateDiffHtml(oldText: string, newText: string): string {
-  // Generate diff
-  const differences = diff.diffWords(oldText, newText);
-  
-  // Convert to HTML with styling
-  let html = '';
-  differences.forEach((part) => {
-    const color = part.added 
-      ? '<span class="bg-green-100">' 
-      : part.removed 
-        ? '<span class="bg-red-100">' 
-        : '<span>';
+      type.includes('application/msword') ||
+      name.toLowerCase().endsWith('.docx') ||
+      name.toLowerCase().endsWith('.doc')) {
     
-    html += color + part.value + '</span>';
-  });
+    try {
+      // Use the same document styling function from mammoth-style-map.ts
+      const htmlContent = await convertDocumentWithStyles(buffer);
+      return {
+        content: content, // Keep original base64 content
+        htmlContent: htmlContent
+      };
+    } catch (error) {
+      console.error('Error extracting styled Word content:', error);
+      throw new Error('Failed to extract content from Word document');
+    }
+  }
   
-  return html;
+  // For other file types, just return the original content
+  return { content: content };
 }
 
 /**
- * Handle document comparison requests
+ * Handle document comparison requests using the same comparison engine
+ * as the deal detail page
  */
 export async function compareDocuments(req: Request, res: Response) {
   try {
@@ -122,19 +61,61 @@ export async function compareDocuments(req: Request, res: Response) {
       return res.status(400).json({ error: 'Both original and new files are required' });
     }
     
-    // Extract content from both files
-    const originalContent = await extractFileContent(originalFile);
-    const newContent = await extractFileContent(newFile);
+    console.log(`Comparing documents: ${originalFile.name} and ${newFile.name}`);
     
-    // Generate diff HTML
-    const diffHtml = generateDiffHtml(originalContent, newContent);
+    // Prepare files for comparison
+    const originalProcessed = await prepareFileForComparison(originalFile);
+    const newProcessed = await prepareFileForComparison(newFile);
+    
+    // Create temporary DocumentVersion objects to use with generateDocumentComparison
+    const olderVersion: DocumentVersion = {
+      id: 1,
+      documentId: 1,
+      versionNumber: 1,
+      fileName: originalFile.name,
+      fileContent: originalProcessed.content,
+      contentType: originalFile.type,
+      uploadedAt: new Date(),
+      uploadedBy: 1,
+      fileSize: originalProcessed.content.length,
+      isLatestVersion: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    const newerVersion: DocumentVersion = {
+      id: 2,
+      documentId: 1,
+      versionNumber: 2,
+      fileName: newFile.name,
+      fileContent: newProcessed.content,
+      contentType: newFile.type,
+      uploadedAt: new Date(),
+      uploadedBy: 1,
+      fileSize: newProcessed.content.length,
+      isLatestVersion: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    // Use the same document comparison function as the deal detail page
+    const diffHtml = await generateDocumentComparison(
+      olderVersion, 
+      newerVersion,
+      originalProcessed.htmlContent,
+      newProcessed.htmlContent
+    );
+    
+    // For consistency, keep returning the original text content
+    const originalTextContent = originalProcessed.htmlContent || originalProcessed.content;
+    const newTextContent = newProcessed.htmlContent || newProcessed.content;
     
     // Return the comparison result
     return res.status(200).json({
       success: true,
       diff: diffHtml,
-      contentV1: originalContent,
-      contentV2: newContent
+      contentV1: originalTextContent,
+      contentV2: newTextContent
     });
   } catch (error) {
     console.error('Error comparing documents:', error);
