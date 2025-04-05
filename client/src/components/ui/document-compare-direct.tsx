@@ -253,6 +253,7 @@ export function DocumentCompareDirect({
 
   // Use iframe to properly separate styles and content for the diff view
   const renderDiffContent = () => {
+    // Apply more extensive styling to handle Word document formatting properly
     const diffContent = `
       <!DOCTYPE html>
       <html>
@@ -268,41 +269,79 @@ export function DocumentCompareDirect({
               background: white;
             }
             
-            .addition { 
-              color: #166534; 
-              background-color: #dcfce7; 
-              padding: 0 1px; 
+            /* Specific styling for additions and deletions */
+            [style*="color: #166534"], .addition, span[style*="background-color: #dcfce7"] { 
+              color: #166534 !important; 
+              background-color: #dcfce7 !important; 
+              padding: 0 1px !important;
+              text-decoration: underline !important;
+              text-decoration-color: #166534 !important;
             }
             
-            .deletion { 
-              color: #991b1b; 
-              text-decoration: line-through; 
-              text-decoration-color: #991b1b; 
-              background-color: #fee2e2; 
-              padding: 0 1px;
+            [style*="color: #991b1b"], .deletion, span[style*="background-color: #fee2e2"] { 
+              color: #991b1b !important; 
+              text-decoration: line-through !important; 
+              text-decoration-color: #991b1b !important; 
+              background-color: #fee2e2 !important; 
+              padding: 0 1px !important;
             }
             
-            .doc-paragraph, .doc-body-text {
+            /* Document structure and formatting */
+            .doc-paragraph, .doc-body-text, p {
               font-family: 'Calibri', sans-serif;
               font-size: 12pt;
               line-height: 1.5;
-              margin-bottom: 15pt;
+              margin-bottom: 10pt;
             }
             
+            /* Proper table formatting */
             table {
               border-collapse: collapse;
               width: 100%;
               margin: 1em 0;
+              font-size: inherit;
             }
             
             table td, table th {
               border: 1px solid #d1d5db;
               padding: 8px;
+              vertical-align: top;
             }
             
             table th {
               background-color: #f3f4f6;
               font-weight: bold;
+            }
+            
+            /* Preserve text alignment */
+            [style*="text-align:center"], .text-center, .centered {
+              text-align: center !important;
+            }
+            
+            [style*="text-align:right"], .text-right {
+              text-align: right !important;
+            }
+            
+            [style*="text-align:justify"], .text-justify {
+              text-align: justify !important;
+            }
+            
+            /* Font weight and styling */
+            [style*="font-weight:bold"], .bold, strong, b {
+              font-weight: bold !important;
+            }
+            
+            [style*="font-style:italic"], .italic, em, i {
+              font-style: italic !important;
+            }
+            
+            /* Headings */
+            h1, h2, h3, h4, h5, h6 {
+              font-family: 'Calibri', sans-serif;
+              margin-top: 1em;
+              margin-bottom: 0.5em;
+              font-weight: bold;
+              line-height: 1.2;
             }
           </style>
         </head>

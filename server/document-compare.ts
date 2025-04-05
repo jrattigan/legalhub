@@ -445,6 +445,16 @@ export async function generateDocumentComparison(
     // Strip any style tags that might be part of the content
     diffHtml = diffHtml.replace(/<style>/g, '').replace(/<\/style>/g, '');
     
+    // Remove comment blocks that might contain CSS or formatting instructions
+    diffHtml = diffHtml.replace(/\/\*[\s\S]*?\*\//g, '');
+    
+    // Remove CSS-like content that might be displayed as text
+    diffHtml = diffHtml.replace(/\.document-content \{[\s\S]*?\}/g, '');
+    diffHtml = diffHtml.replace(/font-family:.*?;/g, '');
+    diffHtml = diffHtml.replace(/line-height:.*?;/g, '');
+    diffHtml = diffHtml.replace(/margin:.*?;/g, '');
+    diffHtml = diffHtml.replace(/padding:.*?;/g, '');
+    
     // For the redline comparison only, ensure we're just returning the content
     // without any document container div that might include styles
     if (diffHtml.includes('<div style="font-family: \'Calibri\'')) {
@@ -453,6 +463,20 @@ export async function generateDocumentComparison(
       if (contentMatch && contentMatch[1]) {
         diffHtml = contentMatch[1];
       }
+    }
+    
+    // Remove any CSS-like blocks shown in the screenshot 
+    if (diffHtml.includes('/* Document container */') || 
+        diffHtml.includes('/* General formatting preservations */')) {
+      // Clean up the entire document container and formatting blocks
+      diffHtml = diffHtml.replace(/\/\* Document container \*\/[\s\S]*?\}/, '');
+      diffHtml = diffHtml.replace(/\/\* General formatting preservations \*\/[\s\S]*?\}/, '');
+      
+      // Remove .document-content { ... } blocks
+      diffHtml = diffHtml.replace(/\.document-content \{[\s\S]*?\}/g, '');
+      
+      // Remove [style*=...] style blocks
+      diffHtml = diffHtml.replace(/\[style\*=[\s\S]*?\}/g, '');
     }
     
     return diffHtml;
