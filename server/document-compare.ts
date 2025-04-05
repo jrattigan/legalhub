@@ -117,11 +117,11 @@ export async function generateDocumentComparison(
       // First escape any CSS style blocks to prevent them from appearing in the output
       let processedHtml = html;
       
-      // Replace style blocks with placeholders
-      processedHtml = processedHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '/* CSS styles removed */');
+      // Remove style blocks completely (no placeholder text)
+      processedHtml = processedHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
       
-      // Replace inline styles with placeholder
-      processedHtml = processedHtml.replace(/style="[^"]*"/gi, 'style="..."');
+      // Remove inline styles completely
+      processedHtml = processedHtml.replace(/style="[^"]*"/gi, '');
       
       // Remove all HTML tags
       return processedHtml.replace(/<[^>]*>/g, '');
@@ -191,12 +191,11 @@ export async function generateDocumentComparison(
       const additionInlineStyle = "color: #166534; text-decoration: underline; text-decoration-color: #166534; background-color: #dcfce7; padding: 0 1px;";
       const deletionInlineStyle = "color: #991b1b; text-decoration: line-through; text-decoration-color: #991b1b; background-color: #fee2e2; padding: 0 1px;";
 
-      // Create document with content using improved styling
+      // Create document with content using improved styling (without filename at top)
       diffHtml = `
       <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; max-width: 80%; margin: 0 auto; padding: 20px; background-color: white;">
         <div>
           <div style="font-family: 'Calibri', sans-serif; line-height: 1.4; color: #000; margin: 0 auto;">
-            <h1 style="font-family: 'Calibri', sans-serif; font-size: 14pt; font-weight: bold; margin-top: 12pt; margin-bottom: 12pt; text-align: center; text-transform: uppercase;">${newerVersion.fileName}</h1>
             ${diffContent.replace(/class="doc-paragraph doc-body-text"/g, 'style="font-family: \'Calibri\', sans-serif; font-size: 12pt; line-height: 1.4; margin-bottom: 15pt;"')
               .replace(/class="addition"/g, `style="${additionInlineStyle}"`)
               .replace(/class="deletion"/g, `style="${deletionInlineStyle}"`)}
