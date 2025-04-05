@@ -395,118 +395,125 @@ export default function RedlineCompareView({
                     </div>
                   </div>
                 ) : (
-                  // Use an iframe with styled content to properly render the diff
-                  <iframe
-                    className="w-full h-full border-0"
-                    title="Document Comparison View"
-                    srcDoc={`
-                      <!DOCTYPE html>
-                      <html>
-                        <head>
-                          <style>
-                            body {
-                              font-family: 'Calibri', 'Arial', sans-serif;
-                              font-size: 12pt;
-                              line-height: 1.5;
-                              color: #333;
-                              margin: 0;
-                              padding: 20px;
-                              background: white;
-                            }
-                            
-                            /* Specific styling for additions and deletions */
-                            .addition-text { 
-                              color: #166534 !important; 
-                              background-color: #dcfce7 !important; 
-                              padding: 0 1px !important;
-                              text-decoration: underline !important;
-                              text-decoration-color: #166534 !important;
-                            }
-                            
-                            .deletion-text { 
-                              color: #991b1b !important; 
-                              text-decoration: line-through !important; 
-                              text-decoration-color: #991b1b !important; 
-                              background-color: #fee2e2 !important; 
-                              padding: 0 1px !important;
-                            }
-                            
-                            /* Document structure and formatting */
-                            .document-header {
-                              text-align: center;
-                              font-weight: bold;
-                              margin-bottom: 20px;
-                            }
-                            
-                            .document-header h1 {
-                              font-size: 14pt;
-                              line-height: 1.4;
-                              margin-bottom: 5px;
-                              text-transform: uppercase;
-                            }
-                            
-                            .document-header h2 {
-                              font-size: 14pt;
-                              line-height: 1.4;
-                              margin-bottom: 10px;
-                              text-transform: uppercase;
-                            }
-                            
-                            .document-header p {
-                              font-size: 12pt;
-                              line-height: 1.4;
-                              margin-bottom: 20px;
-                            }
-                            
-                            table {
-                              border-collapse: collapse;
-                              margin-bottom: 1em;
-                              width: 100%;
-                            }
-                            
-                            td, th {
-                              border: 1px solid #ddd;
-                              padding: 6px;
-                            }
-                            
-                            td.term-label {
-                              font-weight: bold;
-                              vertical-align: top;
-                              padding: 5px 10px 5px 0;
-                              width: 110px;
-                            }
-                            
-                            .disclaimer {
-                              font-family: 'Calibri', sans-serif;
-                              font-size: 11pt;
-                              line-height: 1.4;
-                              margin: 30px 0;
-                              font-style: italic;
-                            }
-                            
-                            .signature-block {
-                              display: flex;
-                              justify-content: space-between;
-                              margin-top: 40px;
-                            }
-                            
-                            .company-signature, .partner-signature {
-                              width: 45%;
-                            }
-                            
-                            .signature-block p {
-                              font-family: 'Calibri', sans-serif;
-                              font-size: 11pt;
-                              margin-bottom: 5px;
-                            }
-                          </style>
-                        </head>
-                        <body>
-                          ${diff}
-                        </body>
-                      </html>
-                    `}
-                  />
+                  <div className="flex justify-center items-start h-full overflow-auto py-4">
+                    <iframe
+                      className="w-4/5 max-w-4xl h-full border shadow-lg rounded"
+                      style={{
+                        backgroundColor: 'white',
+                        boxShadow: '0 4px 8px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08)'
+                      }}
+                      title="Document Comparison View"
+                      srcDoc={`
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {
+        font-family: 'Calibri', 'Arial', sans-serif;
+        font-size: 12pt;
+        line-height: 1.5;
+        color: #333;
+        margin: 0;
+        padding: 40px 60px;
+        background: white;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      
+      /* Specific styling for additions and deletions */
+      .addition-text { 
+        color: #166534 !important; 
+        background-color: #dcfce7 !important; 
+        padding: 0 1px !important;
+        text-decoration: underline !important;
+        text-decoration-color: #166534 !important;
+      }
+      
+      .deletion-text { 
+        color: #991b1b !important; 
+        text-decoration: line-through !important; 
+        text-decoration-color: #991b1b !important; 
+        background-color: #fee2e2 !important; 
+        padding: 0 1px !important;
+      }
+      
+      /* Document structure and formatting */
+      .document-header {
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 20px;
+      }
+      
+      .document-header h1 {
+        font-size: 14pt;
+        line-height: 1.4;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+      }
+      
+      .document-header h2 {
+        font-size: 14pt;
+        line-height: 1.4;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+      }
+      
+      .document-header p {
+        font-size: 12pt;
+        line-height: 1.4;
+        margin-bottom: 20px;
+      }
+      
+      table {
+        border-collapse: collapse;
+        margin-bottom: 1em;
+        width: 100%;
+      }
+      
+      td, th {
+        border: 1px solid #ddd;
+        padding: 6px;
+      }
+      
+      td.term-label {
+        font-weight: bold;
+        vertical-align: top;
+        padding: 5px 10px 5px 0;
+        width: 110px;
+      }
+      
+      .disclaimer {
+        font-family: 'Calibri', sans-serif;
+        font-size: 11pt;
+        line-height: 1.4;
+        margin: 30px 0;
+        font-style: italic;
+      }
+      
+      .signature-block {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 40px;
+      }
+      
+      .company-signature, .partner-signature {
+        width: 45%;
+      }
+      
+      .signature-block p {
+        font-family: 'Calibri', sans-serif;
+        font-size: 11pt;
+        margin-bottom: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    ${diff}
+  </body>
+</html>
+                      `}
+                    />
+                  </div>
                 )}
               </div>
             </div>
