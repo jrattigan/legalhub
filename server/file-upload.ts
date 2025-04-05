@@ -28,7 +28,7 @@ const storage = multer.diskStorage({
 // File filter to restrict file types
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   // Allow files by extension if mimetype might not be reliable
-  const validExtensions = ['.pdf', '.docx', '.doc', '.odt', '.txt', '.rtf', '.text', '.md', '.log'];
+  const validExtensions = ['.pdf', '.docx', '.doc', '.txt'];
   const extension = path.extname(file.originalname).toLowerCase();
   
   // Check for valid extension
@@ -42,14 +42,11 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
     file.mimetype === 'application/pdf' || 
     file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
     file.mimetype === 'application/msword' ||
-    file.mimetype === 'application/vnd.oasis.opendocument.text' ||
-    file.mimetype === 'text/plain' ||
-    file.mimetype === 'application/rtf' ||
-    file.mimetype === 'text/rtf'
+    file.mimetype === 'text/plain'
   ) {
     cb(null, true);
   } else {
-    cb(new Error('Only document file types (PDF, DOCX, DOC, ODT, TXT, RTF) are allowed'));
+    cb(new Error('Only document file types (PDF, DOCX, DOC, TXT) are allowed'));
   }
 };
 

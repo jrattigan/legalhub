@@ -209,13 +209,8 @@ export default function RedlinePage() {
                         accept: {
                           'application/msword': ['.doc'],
                           'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                          'application/rtf': ['.rtf'],
-                          'text/rtf': ['.rtf'],
                           'text/plain': ['.txt'],
-                          'text/html': ['.html', '.htm'],
                           'application/pdf': ['.pdf'],
-                          'text/markdown': ['.md'],
-                          'text/x-log': ['.log'],
                         },
                       }}
                     />
@@ -253,13 +248,8 @@ export default function RedlinePage() {
                         accept: {
                           'application/msword': ['.doc'],
                           'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                          'application/rtf': ['.rtf'],
-                          'text/rtf': ['.rtf'],
                           'text/plain': ['.txt'],
-                          'text/html': ['.html', '.htm'],
                           'application/pdf': ['.pdf'],
-                          'text/markdown': ['.md'],
-                          'text/x-log': ['.log'],
                         },
                       }}
                     />
@@ -289,9 +279,7 @@ export default function RedlinePage() {
                   <h3>Supported File Formats</h3>
                   <ul>
                     <li><strong>Microsoft Word:</strong> .doc, .docx</li>
-                    <li><strong>Rich Text Format:</strong> .rtf</li>
-                    <li><strong>Plain Text:</strong> .txt, .log, .md</li>
-                    <li><strong>HTML:</strong> .html, .htm</li>
+                    <li><strong>Plain Text:</strong> .txt</li>
                     <li><strong>PDF:</strong> .pdf</li>
                   </ul>
                   

@@ -85,7 +85,7 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
           console.log('NativeDocViewer: Detected PDF document, using CompatiblePDFViewer');
           // We'll handle this with the dedicated component
           setIsLoading(false);
-        } else if (ext === 'docx' || ext === 'doc' || ext === 'xlsx' || ext === 'pptx' || ext === 'rtf') {
+        } else if (ext === 'docx' || ext === 'doc') {
           console.log(`NativeDocViewer: Attempting to render Office document (${ext})`);
           renderOffice365Viewer(documentUrl, ext);
         } else if (ext === 'txt' || ext === 'text' || ext === 'log' || ext === 'md') {
@@ -275,14 +275,7 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
     
     // Set the iframe source to Microsoft Office 365 Viewer
     // For Word documents, we use the Word Online viewer
-    let viewerUrl;
-    if (ext === 'docx' || ext === 'doc' || ext === 'rtf') {
-      viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fullUrl)}`;
-    } else if (ext === 'xlsx') {
-      viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fullUrl)}`;
-    } else if (ext === 'pptx') {
-      viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fullUrl)}`;
-    }
+    const viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fullUrl)}`;
     
     iframe.src = viewerUrl;
     iframe.style.border = 'none';
