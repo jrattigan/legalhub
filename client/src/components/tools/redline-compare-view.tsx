@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   ArrowLeft, 
@@ -36,36 +36,101 @@ export default function RedlineCompareView({
   const [originalFileUrl, setOriginalFileUrl] = useState<string>('');
   const [newFileUrl, setNewFileUrl] = useState<string>('');
   
+  // Use refs to keep track of the current URLs for proper cleanup
+  const originalUrlRef = useRef<string | null>(null);
+  const newUrlRef = useRef<string | null>(null);
+  
   // Create blob URLs for the files and handle file conversions when files change
   useEffect(() => {
-    // Create blob URLs for the files
-    if (originalFile) {
-      const url = URL.createObjectURL(originalFile);
-      setOriginalFileUrl(url);
-      console.log("Original file URL created:", url);
-    }
+    // Reset processing state when files change
+    setIsProcessing(true);
     
-    if (newFile) {
-      const url = URL.createObjectURL(newFile);
-      setNewFileUrl(url);
-      console.log("New file URL created:", url);
-    }
+    // Create an array to store URLs that need to be cleaned up
+    const urlsToCleanUp: string[] = [];
     
-    // Simulate processing time
-    const timer = setTimeout(() => {
-      setIsProcessing(false);
-    }, 1500);
-    
-    // Clean up URLs when component unmounts
-    return () => {
-      clearTimeout(timer);
-      if (originalFileUrl) {
-        URL.revokeObjectURL(originalFileUrl);
-        console.log("Original file URL revoked");
+    const createFileUrls = async () => {
+      try {
+        // Create blob URLs for the files
+        if (originalFile) {
+          // Check if originalFile is a valid File object
+          if (originalFile instanceof File) {
+            // Revoke previous URL if it exists
+            if (originalUrlRef.current) {
+              try {
+                URL.revokeObjectURL(originalUrlRef.current);
+                console.log("Previous original file URL revoked:", originalUrlRef.current);
+              } catch (e) {
+                console.error("Error revoking previous original file URL:", e);
+              }
+            }
+            
+            // Create new URL
+            const url = URL.createObjectURL(originalFile);
+            console.log("Original file URL created:", url, "File name:", originalFile.name, "Size:", originalFile.size);
+            setOriginalFileUrl(url);
+            originalUrlRef.current = url;
+            urlsToCleanUp.push(url);
+          } else {
+            console.error("Original file is not a valid File object:", originalFile);
+          }
+        }
+        
+        if (newFile) {
+          // Check if newFile is a valid File object
+          if (newFile instanceof File) {
+            // Revoke previous URL if it exists
+            if (newUrlRef.current) {
+              try {
+                URL.revokeObjectURL(newUrlRef.current);
+                console.log("Previous new file URL revoked:", newUrlRef.current);
+              } catch (e) {
+                console.error("Error revoking previous new file URL:", e);
+              }
+            }
+            
+            // Create new URL
+            const url = URL.createObjectURL(newFile);
+            console.log("New file URL created:", url, "File name:", newFile.name, "Size:", newFile.size);
+            setNewFileUrl(url);
+            newUrlRef.current = url;
+            urlsToCleanUp.push(url);
+          } else {
+            console.error("New file is not a valid File object:", newFile);
+          }
+        }
+        
+        // End processing after a short delay to allow blob URLs to stabilize
+        setTimeout(() => {
+          setIsProcessing(false);
+          console.log("Document processing completed");
+        }, 1500);
+      } catch (error) {
+        console.error("Error creating file URLs:", error);
+        setIsProcessing(false);
       }
-      if (newFileUrl) {
-        URL.revokeObjectURL(newFileUrl);
-        console.log("New file URL revoked");
+    };
+
+    // Execute URL creation
+    createFileUrls();
+    
+    // Clean up URLs when component unmounts or files change
+    return () => {
+      // Clean up all URLs created in this effect
+      urlsToCleanUp.forEach(url => {
+        try {
+          URL.revokeObjectURL(url);
+          console.log("File URL revoked:", url);
+        } catch (error) {
+          console.error("Error revoking URL:", error);
+        }
+      });
+      
+      // Also cleanup refs
+      if (originalUrlRef.current) {
+        originalUrlRef.current = null;
+      }
+      if (newUrlRef.current) {
+        newUrlRef.current = null;
       }
     };
   }, [originalFile, newFile]);

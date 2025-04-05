@@ -12,18 +12,35 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
   const [documentFileName, setDocumentFileName] = useState('');
 
   useEffect(() => {
-    if (!documentUrl) return;
+    // Clear error and set loading when documentUrl changes
+    setIsLoading(true);
+    setError(null);
+    
+    if (!documentUrl) {
+      console.error('NativeDocViewer: No document URL provided');
+      setError('No document URL provided');
+      setIsLoading(false);
+      if (containerRef.current) {
+        containerRef.current.innerHTML = `<div class="p-4 text-red-600">Error: No document URL provided</div>`;
+      }
+      return;
+    }
+    
+    console.log('NativeDocViewer: Attempting to load document from URL:', documentUrl);
     
     // Extract file extension from URL or documentType prop
     const ext = documentType || documentUrl.split('.').pop().toLowerCase();
     setFileExtension(ext);
+    console.log('NativeDocViewer: File extension detected:', ext);
     
-    // Extract filename from URL
-    const fileName = documentUrl.split('/').pop();
-    setDocumentFileName(fileName);
-    
-    setIsLoading(true);
-    setError(null);
+    // Extract filename from URL if possible
+    try {
+      const fileName = documentUrl.split('/').pop();
+      setDocumentFileName(fileName);
+      console.log('NativeDocViewer: Filename extracted:', fileName);
+    } catch (err) {
+      console.warn('NativeDocViewer: Could not extract filename from URL', err);
+    }
     
     // Show loading indicator
     if (containerRef.current) {
@@ -35,6 +52,7 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
             <p>Loading document...</p>
+            <p class="text-xs text-gray-500 mt-2">URL: ${documentUrl.substring(0, 50)}${documentUrl.length > 50 ? '...' : ''}</p>
           </div>
         </div>
       `;
@@ -44,23 +62,43 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
     const renderDocument = async () => {
       try {
         if (ext === 'pdf') {
+          console.log('NativeDocViewer: Attempting to render PDF document');
           await renderPdf(documentUrl);
         } else if (ext === 'docx' || ext === 'doc' || ext === 'xlsx' || ext === 'pptx') {
+          console.log(`NativeDocViewer: Attempting to render Office document (${ext})`);
           renderOffice365Viewer(documentUrl, ext);
         } else {
           throw new Error(`Unsupported file type: ${ext}`);
         }
       } catch (err) {
-        console.error('Error rendering document:', err);
+        console.error('NativeDocViewer: Error rendering document:', err);
         if (containerRef.current) {
-          containerRef.current.innerHTML = `<div class="p-4 text-red-600">Error loading document: ${err.message}</div>`;
+          containerRef.current.innerHTML = `
+            <div class="p-4 flex flex-col items-center justify-center h-full">
+              <div class="bg-red-50 border border-red-200 rounded-md p-4 max-w-md text-center">
+                <h3 class="text-red-700 font-medium mb-2">Error loading document</h3>
+                <p class="text-red-600 mb-2">${err.message}</p>
+                <div class="text-xs text-gray-500 mt-4 p-2 bg-gray-50 rounded overflow-auto max-h-32">
+                  <div><strong>URL:</strong> ${documentUrl}</div>
+                  <div><strong>Type:</strong> ${ext || 'unknown'}</div>
+                </div>
+                <button class="mt-4 px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm"
+                  onclick="window.location.reload()">Try Again</button>
+              </div>
+            </div>
+          `;
         }
         setError(err.message);
         setIsLoading(false);
       }
     };
     
-    renderDocument();
+    // Add a small delay to ensure blob URLs are fully available
+    const timer = setTimeout(() => {
+      renderDocument();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [documentUrl, documentType]);
   
   // Render PDF using PDF.js
