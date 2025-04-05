@@ -137,14 +137,27 @@ export async function generateDocumentComparison(
       
       // Extract structure and retain formatting tags
       const extractStructuredContent = (html: string): {text: string, map: Record<number, string>} => {
+        // Pre-process HTML to normalize newlines and remove problematic tags
+        const preprocessedHtml = html
+          .replace(/\r\n/g, '\n')
+          .replace(/\r/g, '\n')
+          .replace(/<\/?doc-[^>]*>/g, '')  // Remove doc-specific tags that cause issues
+          .replace(/doc-table-paragraph">/g, '>')
+          .replace(/>doc-table-paragraph/g, '>')
+          .replace(/p>tr>/g, 'p>')
+          .replace(/tr>/g, '\n');
+        
         let plainText = '';
         const formattingMap: Record<number, string> = {};
         let inTag = false;
         let currentTag = '';
         let currentTagStart = -1;
         
-        for (let i = 0; i < html.length; i++) {
-          const char = html[i];
+        // Special handling for paragraph and newline generation
+        let lastWasBreak = false;
+        
+        for (let i = 0; i < preprocessedHtml.length; i++) {
+          const char = preprocessedHtml[i];
           
           if (char === '<') {
             inTag = true;
@@ -158,7 +171,30 @@ export async function generateDocumentComparison(
             if (char === '>') {
               inTag = false;
               
-              // Track formatting tag position
+              // Handle special tags for line breaks
+              if (currentTag === '<p>' || currentTag === '<div>' || currentTag === '<tr>') {
+                if (!lastWasBreak) {
+                  plainText += '\n';
+                  lastWasBreak = true;
+                }
+                continue;
+              }
+              
+              if (currentTag === '</p>' || currentTag === '</div>' || currentTag === '</tr>') {
+                if (!lastWasBreak) {
+                  plainText += '\n';
+                  lastWasBreak = true;
+                }
+                continue;
+              }
+              
+              if (currentTag === '<br>' || currentTag === '<br/>' || currentTag === '<br />') {
+                plainText += '\n';
+                lastWasBreak = true;
+                continue;
+              }
+              
+              // Track all HTML tags that might affect formatting
               if (
                 currentTag.includes('strong') || 
                 currentTag.includes('em') || 
@@ -172,26 +208,25 @@ export async function generateDocumentComparison(
                 currentTag.includes('table') ||
                 currentTag.includes('tr') ||
                 currentTag.includes('td') ||
-                currentTag.includes('th')
+                currentTag.includes('th') ||
+                currentTag.includes('class=')
               ) {
                 formattingMap[currentTagStart] = currentTag;
               }
               
-              // Skip regular tags but preserve whitespace and text structure
-              if (currentTag === '<br>' || currentTag === '<br/>') {
-                plainText += '\n';
-              } else if (currentTag === '<p>' || currentTag === '</p>' || 
-                         currentTag === '<div>' || currentTag === '</div>' ||
-                         currentTag === '</tr>' || currentTag === '<tr>' ||
-                         currentTag === '</table>' || currentTag === '<table>') {
-                plainText += '\n\n';
-              }
+              // Additional tag handling is already done above
+              // This section is intentionally left empty now
             }
             continue;
           }
           
           // Regular character, add to plain text
           plainText += char;
+          
+          // If it's not a whitespace, update lastWasBreak
+          if (!/\s/.test(char)) {
+            lastWasBreak = false;
+          }
         }
         
         return { text: plainText, map: formattingMap };
@@ -478,17 +513,43 @@ export async function generateDocumentComparison(
       .replace(/<span style="[^"]*color:\s*#166534[^"]*"[^>]*>/g, '<span class="addition-text">')
       .replace(/<span style="[^"]*color:\s*#991b1b[^"]*"[^>]*>/g, '<span class="deletion-text">');
     
-    // Step 4: Clean up any remaining style-related content and HTML tags
-    cleanDiffHtml = cleanDiffHtml
+    // Step 4: Clean up any remaining style-related content while preserving whitespace and paragraphs
+    
+    // First, process spans with semantic classes
+    const processedSpans = cleanDiffHtml.replace(
+      /<span\s+class="(addition-text|deletion-text)"[^>]*>([^<]*)<\/span>/g, 
+      (match, className, content) => {
+        // Clean any CSS within the content
+        content = content
+          .replace(/font-family:[^;]+;/g, '')
+          .replace(/font-size:[^;]+;/g, '')
+          .replace(/margin-top:[^;]+;/g, '')
+          .replace(/\.doc-[^{]+{[^}]*}/g, '')
+          .replace(/class="[^"]*"/g, '');
+        
+        return `<span class="${className}">${content}</span>`;
+      }
+    );
+    
+    // Process the entire HTML
+    cleanDiffHtml = processedSpans
       // Remove CSS-looking blocks that might display as text
       .replace(/\.doc-[a-zA-Z0-9_-]+\s*{[^}]*}/g, '')
       .replace(/\.doc-[a-zA-Z0-9_-]+,/g, '')
+      .replace(/\.doc-[a-zA-Z0-9_-]+/g, '')
+      
       // Remove CSS style declarations that might show as text
       .replace(/font-family:[^;]+;/g, '')
       .replace(/font-size:[^;]+;/g, '')
       .replace(/font-weight:[^;]+;/g, '')
       .replace(/margin-top:[^;]+;/g, '')
       .replace(/margin-bottom:[^;]+;/g, '')
+      .replace(/line-height:[^;]+;/g, '')
+      .replace(/color:[^;]+;/g, '')
+      .replace(/background-color:[^;]+;/g, '')
+      .replace(/text-decoration:[^;]+;/g, '')
+      .replace(/padding:[^;]+;/g, '')
+      
       // Clean up class attributes - keep only our semantic classes
       .replace(/class="[^"]*"/g, (match) => {
         if (match.includes('addition-text') || match.includes('deletion-text')) {
@@ -496,15 +557,48 @@ export async function generateDocumentComparison(
         }
         return '';
       })
-      // Fix malformed/broken HTML tags showing in the text
-      .replace(/<\/?(strong|b|i|em|u|s|strike|sub|sup|a|tr|td|th|table|tbody|thead|ul|ol|li)>+/g, '')
-      .replace(/<\/?[a-z][^>]*>/g, '')
-      // Replace any broken open/close tags
-      .replace(/<\/?(strong|b|i|em|u|s|strike|sub|sup|a|tr|td|th)\s*\/?>/gi, '')
+      
+      // Preserve significant paragraph breaks
+      .replace(/<p[^>]*>/g, '\n\n')
+      .replace(/<\/p>/g, '')
+      .replace(/<br\s*\/?>/g, '\n')
+      .replace(/<div[^>]*>/g, '\n')
+      .replace(/<\/div>/g, '')
+      .replace(/<tr[^>]*>/g, '\n')
+      .replace(/<\/tr>/g, '')
+      
+      // Handle table structures - preserve spacing
+      .replace(/<table[^>]*>/g, '\n\n')
+      .replace(/<\/table>/g, '\n\n')
+      .replace(/<tbody[^>]*>/g, '')
+      .replace(/<\/tbody>/g, '')
+      .replace(/<thead[^>]*>/g, '')
+      .replace(/<\/thead>/g, '')
+      .replace(/<td[^>]*>/g, ' ')
+      .replace(/<\/td>/g, ' ')
+      .replace(/<th[^>]*>/g, ' ')
+      .replace(/<\/th>/g, ' ')
+      
+      // Clean up common HTML tags while preserving document structure
+      .replace(/<\/?(strong|b|i|em|u|s|strike|sub|sup|a)[^>]*>/g, '')
+      
+      // Remove any potentially problematic HTML elements but keep spans
+      .replace(/<\/?(?!span)[a-z][^>]*>/g, '')
+      
+      // Fix specific malformed tags seen in the output
+      .replace(/p>tr>/g, '')
+      .replace(/>doc-table-paragraph/g, '')
+      .replace(/doc-table-paragraph">/g, '')
+      .replace(/<\/?doc-[^>]*>/g, '')
+      
       // Remove any remaining HTML-like fragments
       .replace(/<[^>]*$/g, '') // Remove incomplete/broken tags at the end of text
       .replace(/^[^<]*>/g, '') // Remove incomplete/broken tags at the start of text
-      .replace(/r?strong>/g, '');  // Specifically handle rstrong> issue
+      .replace(/r?strong>/g, '') // Specifically handle rstrong> issue
+      
+      // Normalize whitespace but preserve paragraph breaks
+      .replace(/\n{3,}/g, '\n\n') // Normalize multiple line breaks
+      .trim(); // Remove whitespace at start/end
     
     // Return the clean HTML with semantic classes
     diffHtml = cleanDiffHtml;
