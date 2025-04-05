@@ -80,7 +80,11 @@ const TextFileViewer = ({ documentUrl }) => {
           {documentUrl.split('/').pop()}
         </div>
       </div>
-      <pre className="whitespace-pre-wrap text-sm p-4 border rounded bg-gray-50 font-mono h-[600px] overflow-y-auto">
+      {/* Use white-space: pre to preserve all line breaks and spaces */}
+      <pre 
+        className="text-sm p-4 border rounded bg-gray-50 font-mono h-[600px] overflow-y-auto"
+        style={{ whiteSpace: 'pre', wordWrap: 'break-word' }}
+      >
         {content}
       </pre>
     </div>

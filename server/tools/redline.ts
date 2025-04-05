@@ -56,14 +56,13 @@ async function prepareFileForComparison(fileData: FileData): Promise<{
       // Decode the text content from base64
       const textContent = buffer.toString('utf-8');
       
-      // Format as simple HTML with proper line breaks
-      const htmlContent = `<div class="text-content">${
+      // Format as simple HTML with proper line breaks and spacing preservation
+      const htmlContent = `<pre class="text-content" style="font-family: 'Courier New', monospace; white-space: pre-wrap; word-wrap: break-word; margin: 0; font-size: 0.875rem; line-height: 1.5; padding: 1rem; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.25rem;">${
         textContent
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;')
-          .replace(/\n/g, '<br>')
-      }</div>`;
+      }</pre>`;
       
       return {
         content: content, // Keep original base64 content
