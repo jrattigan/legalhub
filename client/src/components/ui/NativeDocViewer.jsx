@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
+import CompatiblePDFViewer from './CompatiblePDFViewer';
 
-// Use the worker directly from the unpkg CDN for the exact version we need
+// For non-PDF documents, we still need the worker
 console.log('PDF.js version:', pdfjsLib.version);
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
 
@@ -290,6 +291,12 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
     };
   };
 
+  // For PDF files, use the compatible viewer
+  if (fileExtension === 'pdf') {
+    return <CompatiblePDFViewer documentUrl={documentUrl} />;
+  }
+  
+  // For other document types
   return (
     <div 
       ref={containerRef} 
