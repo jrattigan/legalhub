@@ -29,8 +29,10 @@ async function prepareFileForComparison(fileData: FileData): Promise<{
   // For Word documents, extract with styling
   if (type.includes('application/vnd.openxmlformats-officedocument.wordprocessingml.document') || 
       type.includes('application/msword') ||
+      type.includes('application/rtf') ||
       name.toLowerCase().endsWith('.docx') ||
-      name.toLowerCase().endsWith('.doc')) {
+      name.toLowerCase().endsWith('.doc') ||
+      name.toLowerCase().endsWith('.rtf')) {
     
     try {
       // Use the same document styling function from mammoth-style-map.ts

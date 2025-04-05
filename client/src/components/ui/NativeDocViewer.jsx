@@ -24,7 +24,24 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
       setError('No document URL provided');
       setIsLoading(false);
       if (containerRef.current) {
-        containerRef.current.innerHTML = `<div class="p-4 text-red-600">Error: No document URL provided</div>`;
+        containerRef.current.innerHTML = `
+          <div class="p-4 flex flex-col items-center justify-center h-full">
+            <div class="bg-red-50 border border-red-200 rounded-md p-4 max-w-md text-center">
+              <h3 class="text-red-700 font-medium mb-2">Document Error</h3>
+              <p class="text-red-600 mb-2">No document URL was provided to the viewer.</p>
+              <div class="text-xs text-gray-500 mt-4 p-2 bg-gray-50 rounded overflow-auto max-h-32">
+                <div><strong>Document type:</strong> ${documentType || 'unknown'}</div>
+                <div><strong>Possible causes:</strong></div>
+                <ul class="text-left list-disc pl-4 mt-1">
+                  <li>The document failed to upload properly</li>
+                  <li>Server-side processing error occurred</li>
+                  <li>Network connection issue during file transfer</li>
+                </ul>
+              </div>
+              <button class="mt-4 px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm"
+                onClick="window.location.reload()">Try Again</button>
+            </div>
+          </div>`;
       }
       return;
     }
@@ -68,7 +85,7 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
           console.log('NativeDocViewer: Detected PDF document, using CompatiblePDFViewer');
           // We'll handle this with the dedicated component
           setIsLoading(false);
-        } else if (ext === 'docx' || ext === 'doc' || ext === 'xlsx' || ext === 'pptx') {
+        } else if (ext === 'docx' || ext === 'doc' || ext === 'xlsx' || ext === 'pptx' || ext === 'rtf') {
           console.log(`NativeDocViewer: Attempting to render Office document (${ext})`);
           renderOffice365Viewer(documentUrl, ext);
         } else if (ext === 'txt' || ext === 'text' || ext === 'log' || ext === 'md') {
@@ -259,7 +276,7 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
     // Set the iframe source to Microsoft Office 365 Viewer
     // For Word documents, we use the Word Online viewer
     let viewerUrl;
-    if (ext === 'docx' || ext === 'doc') {
+    if (ext === 'docx' || ext === 'doc' || ext === 'rtf') {
       viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fullUrl)}`;
     } else if (ext === 'xlsx') {
       viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fullUrl)}`;
