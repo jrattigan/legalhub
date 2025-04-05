@@ -209,216 +209,61 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
     }
   };
   
-  // Render Office documents directly in the browser
-  const renderOffice365Viewer = async (url, ext) => {
+  // Render Office documents using Microsoft Office 365 Viewer
+  const renderOffice365Viewer = (url, ext) => {
     if (!containerRef.current) return;
     
     // Clear any existing content
     containerRef.current.innerHTML = '';
     
-    try {
-      // For blob URLs, we need to fetch the document data directly
-      console.log('Fetching document data from URL:', url);
-      const response = await fetch(url);
+    // Get the full URL to the document
+    const fullUrl = new URL(url, window.location.origin).href;
+    
+    // Create the Office 365 Viewer iframe
+    const iframe = document.createElement('iframe');
+    iframe.width = '100%';
+    iframe.height = '100%';
+    iframe.frameBorder = '0';
+    
+    // Set the iframe source to Microsoft Office 365 Viewer
+    // For Word documents, we use the Word Online viewer
+    let viewerUrl;
+    if (ext === 'docx' || ext === 'doc') {
+      viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fullUrl)}`;
+    } else if (ext === 'xlsx') {
+      viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fullUrl)}`;
+    } else if (ext === 'pptx') {
+      viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fullUrl)}`;
+    }
+    
+    iframe.src = viewerUrl;
+    iframe.style.border = 'none';
+    
+    // Add the iframe to the container
+    containerRef.current.appendChild(iframe);
+    
+    // Handle iframe load events
+    iframe.onload = () => {
+      setIsLoading(false);
+    };
+    
+    iframe.onerror = (err) => {
+      setError('Failed to load the document viewer');
+      setIsLoading(false);
+      console.error('Office viewer iframe error:', err);
       
-      if (!response.ok) {
-        throw new Error(`Failed to fetch document: ${response.status} ${response.statusText}`);
-      }
-      
-      // Get document data as array buffer
-      const arrayBuffer = await response.arrayBuffer();
-      console.log('Document data loaded, size:', arrayBuffer.byteLength, 'bytes');
-      
-      if (ext === 'docx' || ext === 'doc') {
-        // Use a local DOCX viewer - creating a simplified version
-        
-        // Create viewer container
-        const viewerContainer = document.createElement('div');
-        viewerContainer.className = 'docx-viewer';
-        viewerContainer.style.padding = '20px';
-        viewerContainer.style.backgroundColor = 'white';
-        viewerContainer.style.overflow = 'auto';
-        viewerContainer.style.height = '100%';
-        
-        // Add loading indicator
-        viewerContainer.innerHTML = `
-          <div class="flex justify-center items-center h-full">
-            <div class="text-center">
-              <svg class="animate-spin h-8 w-8 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <p>Processing document...</p>
-            </div>
-          </div>
-        `;
-        
-        containerRef.current.appendChild(viewerContainer);
-        
-        // Create download option
-        const downloadContainer = document.createElement('div');
-        downloadContainer.className = 'download-container';
-        downloadContainer.style.padding = '10px';
-        downloadContainer.style.textAlign = 'center';
-        downloadContainer.style.borderBottom = '1px solid #ddd';
-        downloadContainer.style.backgroundColor = '#f9fafb';
-        
-        downloadContainer.innerHTML = `
-          <button class="px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            Download Document
-          </button>
-        `;
-        
-        const downloadBtn = downloadContainer.querySelector('button');
-        downloadBtn.addEventListener('click', () => {
-          const blob = new Blob([arrayBuffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-          const downloadUrl = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = downloadUrl;
-          a.download = 'document.docx';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(downloadUrl);
-        });
-        
-        containerRef.current.insertBefore(downloadContainer, viewerContainer);
-        
-        // Create an iframe with document preview
-        // Since we can't use Office 365 viewer with blob URLs, display a basic preview
-        const docContainer = document.createElement('div');
-        docContainer.className = 'document-content';
-        docContainer.style.padding = '20px';
-        docContainer.style.backgroundColor = 'white';
-        docContainer.style.border = '1px solid #ddd';
-        docContainer.style.margin = '20px';
-        docContainer.style.borderRadius = '4px';
-        docContainer.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
-        docContainer.style.overflow = 'auto';
-        docContainer.style.maxHeight = 'calc(100% - 120px)';
-        
-        docContainer.innerHTML = `
-          <div class="document-preview p-8 bg-white">
-            <h2 class="mb-8 text-2xl font-bold text-center">Document Preview</h2>
-            <p class="mb-5 text-center text-gray-600">
-              This is a DOCX document. For best viewing experience, please download the document.
-            </p>
-            <div class="flex justify-center">
-              <div class="rounded-lg shadow-lg p-8 bg-gray-50 max-w-md text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-blue-600">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-                <p class="text-xl font-medium mb-2">Word Document</p>
-                <p class="text-gray-500 mb-4">Size: ${Math.round(arrayBuffer.byteLength / 1024)} KB</p>
-                <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors w-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                  Download Document
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
-        
-        // Make the download button functional
-        const docDownloadBtn = docContainer.querySelector('button');
-        docDownloadBtn.addEventListener('click', () => {
-          downloadBtn.click(); // Trigger the same download function
-        });
-        
-        viewerContainer.innerHTML = '';
-        viewerContainer.appendChild(docContainer);
-        
-        // Ready
-        setIsLoading(false);
-        
-      } else if (ext === 'xlsx' || ext === 'pptx') {
-        // For other Office formats, offer download
-        containerRef.current.innerHTML = `
-          <div class="p-8 flex flex-col items-center justify-center h-full">
-            <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-8 max-w-md text-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-blue-600">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-              </svg>
-              <h3 class="text-xl font-bold mb-2">Office Document</h3>
-              <p class="text-gray-600 mb-6">
-                This document type (${ext.toUpperCase()}) requires downloading for full viewing.
-              </p>
-              <button id="document-download-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                Download Document
-              </button>
-            </div>
-          </div>
-        `;
-        
-        // Make download button functional
-        const downloadBtn = document.getElementById('document-download-btn');
-        if (downloadBtn) {
-          downloadBtn.addEventListener('click', () => {
-            let mimeType = 'application/octet-stream';
-            if (ext === 'xlsx') {
-              mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-            } else if (ext === 'pptx') {
-              mimeType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
-            }
-            
-            const blob = new Blob([arrayBuffer], { type: mimeType });
-            const downloadUrl = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = downloadUrl;
-            a.download = `document.${ext}`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(downloadUrl);
-          });
-        }
-        
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error('Error rendering document:', error);
-      
-      // Show error message
+      // Fallback message
       containerRef.current.innerHTML = `
-        <div class="p-4 flex flex-col items-center justify-center h-full">
-          <div class="bg-red-50 border border-red-200 rounded-md p-4 max-w-md text-center">
-            <h3 class="text-red-700 font-medium mb-2">Error loading document</h3>
-            <p class="text-red-600 mb-2">${error.message}</p>
-            <div class="text-xs text-gray-500 mt-4 p-2 bg-gray-50 rounded overflow-auto max-h-32">
-              <div><strong>URL:</strong> ${url}</div>
-              <div><strong>Type:</strong> ${ext || 'unknown'}</div>
-            </div>
-            <button class="mt-4 px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm"
-              onclick="location.reload()">Try Again</button>
+        <div class="p-4 text-center">
+          <div class="text-red-600 mb-4">Error loading Office document viewer.</div>
+          <div>
+            <a href="${url}" target="_blank" class="text-blue-600 underline">
+              Download document to view
+            </a>
           </div>
         </div>
       `;
-      
-      setError(error.message);
-      setIsLoading(false);
-    }
+    };
   };
 
   return (
