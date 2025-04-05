@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Set worker path for PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+// Set worker path for PDF.js - use a compatible version with our installed PDF.js
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const NativeDocViewer = ({ documentUrl, documentType }) => {
   const containerRef = useRef(null);
@@ -104,18 +104,33 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
   // Render PDF using PDF.js
   const renderPdf = async (url) => {
     try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch PDF document');
+      console.log("PDF Viewer: Fetching PDF from URL:", url);
+      
+      // For server-side URLs, ensure they have the full origin
+      const fullUrl = url.startsWith('/') 
+        ? window.location.origin + url 
+        : url;
+      
+      console.log("PDF Viewer: Using full URL:", fullUrl);
+      
+      const response = await fetch(fullUrl);
+      if (!response.ok) {
+        console.error("PDF Viewer: Failed to fetch PDF, status:", response.status);
+        throw new Error(`Failed to fetch PDF document (status: ${response.status})`);
+      }
       
       const arrayBuffer = await response.arrayBuffer();
+      console.log("PDF Viewer: Successfully loaded PDF data, size:", arrayBuffer.byteLength);
       
       if (containerRef.current) {
         // Clear loading indicator
         containerRef.current.innerHTML = '';
         
         // Render PDF using PDF.js
+        console.log("PDF Viewer: Creating PDF.js document instance");
         const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
         const pdfDocument = await loadingTask.promise;
+        console.log("PDF Viewer: PDF document loaded, pages:", pdfDocument.numPages);
         
         // Create viewer container
         const viewerContainer = document.createElement('div');
@@ -216,8 +231,16 @@ const NativeDocViewer = ({ documentUrl, documentType }) => {
     // Clear any existing content
     containerRef.current.innerHTML = '';
     
+    console.log("Office Viewer: Processing document URL:", url);
+    
+    // For server-side URLs, ensure they have the full origin
+    const urlToUse = url.startsWith('/') 
+      ? window.location.origin + url 
+      : url;
+      
     // Get the full URL to the document
-    const fullUrl = new URL(url, window.location.origin).href;
+    const fullUrl = new URL(urlToUse, window.location.origin).href;
+    console.log("Office Viewer: Full document URL:", fullUrl);
     
     // Create the Office 365 Viewer iframe
     const iframe = document.createElement('iframe');
