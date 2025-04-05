@@ -251,35 +251,72 @@ export function DocumentCompareDirect({
                 newVersion.uploadedBy?.name || 
                 'Unknown user';
 
-  // The comparison content needs to be rendered in a way that preserves the styling
+  // Use iframe to properly separate styles and content for the diff view
   const renderDiffContent = () => {
-    const htmlStyles = `
-      <style>
-        .addition { 
-          color: #166534; 
-          background-color: #dcfce7; 
-          padding: 0 1px; 
-        }
-        .deletion { 
-          color: #991b1b; 
-          text-decoration: line-through; 
-          text-decoration-color: #991b1b; 
-          background-color: #fee2e2; 
-          padding: 0 1px;
-        }
-        .doc-paragraph, .doc-body-text {
-          font-family: 'Calibri', sans-serif;
-          font-size: 12pt;
-          line-height: 1.5;
-          margin-bottom: 15pt;
-        }
-      </style>
+    const diffContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body {
+              font-family: 'Calibri', 'Arial', sans-serif;
+              font-size: 12pt;
+              line-height: 1.5;
+              color: #333;
+              margin: 0;
+              padding: 20px;
+              background: white;
+            }
+            
+            .addition { 
+              color: #166534; 
+              background-color: #dcfce7; 
+              padding: 0 1px; 
+            }
+            
+            .deletion { 
+              color: #991b1b; 
+              text-decoration: line-through; 
+              text-decoration-color: #991b1b; 
+              background-color: #fee2e2; 
+              padding: 0 1px;
+            }
+            
+            .doc-paragraph, .doc-body-text {
+              font-family: 'Calibri', sans-serif;
+              font-size: 12pt;
+              line-height: 1.5;
+              margin-bottom: 15pt;
+            }
+            
+            table {
+              border-collapse: collapse;
+              width: 100%;
+              margin: 1em 0;
+            }
+            
+            table td, table th {
+              border: 1px solid #d1d5db;
+              padding: 8px;
+            }
+            
+            table th {
+              background-color: #f3f4f6;
+              font-weight: bold;
+            }
+          </style>
+        </head>
+        <body>
+          ${diff}
+        </body>
+      </html>
     `;
     
     return (
-      <div
-        className="doc-comparison-diff h-full overflow-auto"
-        dangerouslySetInnerHTML={{ __html: htmlStyles + diff }}
+      <iframe
+        className="w-full h-full border-0"
+        title="Document Comparison View"
+        srcDoc={diffContent}
       />
     );
   };
