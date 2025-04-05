@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Use the worker from the installed package version 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
+// Use the worker directly from the unpkg CDN for the exact version we need
+console.log('PDF.js version:', pdfjsLib.version);
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
 
 const NativeDocViewer = ({ documentUrl, documentType }) => {
   const containerRef = useRef(null);
