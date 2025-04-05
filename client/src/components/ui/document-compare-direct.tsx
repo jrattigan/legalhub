@@ -251,6 +251,39 @@ export function DocumentCompareDirect({
                 newVersion.uploadedBy?.name || 
                 'Unknown user';
 
+  // The comparison content needs to be rendered in a way that preserves the styling
+  const renderDiffContent = () => {
+    const htmlStyles = `
+      <style>
+        .addition { 
+          color: #166534; 
+          background-color: #dcfce7; 
+          padding: 0 1px; 
+        }
+        .deletion { 
+          color: #991b1b; 
+          text-decoration: line-through; 
+          text-decoration-color: #991b1b; 
+          background-color: #fee2e2; 
+          padding: 0 1px;
+        }
+        .doc-paragraph, .doc-body-text {
+          font-family: 'Calibri', sans-serif;
+          font-size: 12pt;
+          line-height: 1.5;
+          margin-bottom: 15pt;
+        }
+      </style>
+    `;
+    
+    return (
+      <div
+        className="doc-comparison-diff h-full overflow-auto"
+        dangerouslySetInnerHTML={{ __html: htmlStyles + diff }}
+      />
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-50">
       {/* Backdrop */}
@@ -363,7 +396,7 @@ export function DocumentCompareDirect({
                           className="p-1 rounded hover:bg-gray-200"
                           title="Zoom out"
                           onClick={() => {
-                            const container = document.querySelector('.doc-comparison-content');
+                            const container = document.querySelector('.doc-comparison-diff');
                             if (container) {
                               const style = window.getComputedStyle(container);
                               const fontSize = parseFloat(style.fontSize);
@@ -377,7 +410,7 @@ export function DocumentCompareDirect({
                           className="p-1 rounded hover:bg-gray-200"
                           title="Reset zoom"
                           onClick={() => {
-                            const container = document.querySelector('.doc-comparison-content');
+                            const container = document.querySelector('.doc-comparison-diff');
                             if (container) {
                               (container as HTMLElement).style.fontSize = '';
                             }
@@ -389,7 +422,7 @@ export function DocumentCompareDirect({
                           className="p-1 rounded hover:bg-gray-200"
                           title="Zoom in"
                           onClick={() => {
-                            const container = document.querySelector('.doc-comparison-content');
+                            const container = document.querySelector('.doc-comparison-diff');
                             if (container) {
                               const style = window.getComputedStyle(container);
                               const fontSize = parseFloat(style.fontSize);
@@ -407,13 +440,14 @@ export function DocumentCompareDirect({
                     
                     {/* Document content with enhanced styling */}
                     <div 
-                      className="doc-comparison-content bg-white p-6 overflow-auto"
+                      className="bg-white p-6 overflow-auto"
                       style={{ 
                         height: 'calc(100vh - 320px)',
                         minHeight: '400px',
                       }}
-                      dangerouslySetInnerHTML={{ __html: diff }} 
-                    />
+                    >
+                      {renderDiffContent()}
+                    </div>
                   </div>
                 )}
               </div>

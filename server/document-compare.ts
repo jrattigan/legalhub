@@ -7,6 +7,9 @@ import { convertDocumentWithStyles, getMammothConversionOptions } from './mammot
  * Smart document comparison utility to intelligently highlight changes
  * while filtering out common terms that shouldn't be highlighted separately.
  * Uses inline styles instead of CSS classes to ensure proper rendering in all environments.
+ * 
+ * NOTE: The styling must be applied inline to the content, NOT included as separate CSS
+ * blocks in the returned HTML to prevent the CSS from being rendered as text.
  */
 export async function generateDocumentComparison(
   olderVersion: DocumentVersion, 
@@ -427,6 +430,24 @@ export async function generateDocumentComparison(
     }
     
     console.log("Diff generated successfully");
+    
+    // Ensure CSS is not rendered as text by directly applying inline styles
+    // instead of including style blocks that would be rendered as text
+    
+    // First, check if there's any CSS styling in the content that should be applied inline
+    if (diffHtml.includes('/* Document container */')) {
+      // Extract the CSS and convert to inline styles
+      const cssContent = diffHtml.match(/\/\* Document container \*\/([\s\S]*?)\/\* End document styles \*\//);
+      if (cssContent && cssContent[1]) {
+        // Remove the CSS block to prevent it from displaying as text
+        diffHtml = diffHtml.replace(/\/\* Document container \*\/([\s\S]*?)\/\* End document styles \*\//, '');
+        
+        // Additional cleanup for any remaining style blocks
+        diffHtml = diffHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+      }
+    }
+    
+    // Ensure the content has the proper structure with inline styles already applied
     return diffHtml;
   } catch (error) {
     console.error("Error generating document diff:", error);

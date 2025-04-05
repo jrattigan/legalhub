@@ -1,70 +1,245 @@
-.document-viewer {
-  width: 100%;
-  height: 700px;
-  overflow: auto;
-  background: white;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
+/* Document Viewer Styles */
 
-.docx-viewer {
-  padding: 20px;
-}
-
-.native-doc-viewer {
+/* General container styles */
+.document-viewer-container {
   width: 100%;
-  height: 700px;
-  overflow: auto;
-  background: white;
-  border: 1px solid #e2e8f0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9fafb;
   border-radius: 4px;
+  overflow: hidden;
 }
 
-/* Override PDF.js viewer styles */
-.pdfViewer .page {
-  margin-bottom: 10px;
-  border: 1px solid #e2e8f0;
+/* PDF viewer specific styles */
+.pdf-viewer {
+  width: 100%;
+  height: 100%;
+  background-color: #f1f5f9;
+  overflow: auto;
 }
 
-/* Office Viewer custom styles */
-.office-viewer-container {
-  max-width: 100%;
-  margin: 0 auto;
+/* DOCX viewer specific styles */
+.docx-viewer {
+  width: 100%;
+  height: 100%;
   background-color: white;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  overflow: auto;
+  font-family: 'Calibri', sans-serif;
 }
 
-/* Document toolbar styles */
+/* Document comparison styles */
+.doc-comparison-diff {
+  padding: 1rem;
+  background-color: white;
+  font-family: 'Calibri', sans-serif;
+  font-size: 12pt;
+  line-height: 1.5;
+}
+
+/* Word document styling */
+.doc-paragraph {
+  margin-bottom: 1em;
+}
+
+.doc-heading-1 {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-top: 1.2em;
+  margin-bottom: 0.6em;
+  color: #2563eb;
+}
+
+.doc-heading-2 {
+  font-size: 1.25em;
+  font-weight: bold;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  color: #4338ca;
+}
+
+.doc-heading-3 {
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-top: 0.8em;
+  margin-bottom: 0.4em;
+  color: #6d28d9;
+}
+
+.doc-list-item {
+  padding-left: 1.5em;
+  position: relative;
+  margin-bottom: 0.25em;
+}
+
+.doc-list-item:before {
+  content: "•";
+  position: absolute;
+  left: 0.5em;
+}
+
+.doc-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.doc-table th,
+.doc-table td {
+  border: 1px solid #d1d5db;
+  padding: 0.5em;
+}
+
+.doc-table th {
+  background-color: #f3f4f6;
+  font-weight: bold;
+}
+
+/* Text diff styles */
+.addition {
+  color: #166534;
+  background-color: #dcfce7;
+  padding: 0 1px;
+}
+
+.deletion {
+  color: #991b1b;
+  text-decoration: line-through;
+  text-decoration-color: #991b1b;
+  background-color: #fee2e2;
+  padding: 0 1px;
+}
+
+/* Document viewer toolbar */
 .document-toolbar {
   display: flex;
   align-items: center;
-  padding: 8px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #e2e8f0;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background-color: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.document-toolbar button {
-  background: none;
+.document-toolbar-button {
+  padding: 0.25rem 0.5rem;
+  background-color: transparent;
   border: none;
+  border-radius: 4px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
-  margin-right: 4px;
-  color: #555;
-  cursor: pointer;
 }
 
-.document-toolbar button:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+.document-toolbar-button:hover {
+  background-color: #e5e7eb;
 }
 
-.document-toolbar .separator {
-  width: 1px;
-  height: 24px;
-  background-color: #e2e8f0;
-  margin: 0 8px;
+.document-toolbar-button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Document viewer loading states */
+.document-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+}
+
+.loading-spinner {
+  margin-bottom: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* PDF.js compatibility styles */
+.pdfViewer {
+  --page-margin: 1px;
+  --page-border: 1px;
+}
+
+.pdfViewer .page {
+  margin: var(--page-margin);
+  border: var(--page-border) solid #ddd;
+  background-clip: content-box;
+  background-color: white;
+}
+
+/* Word document specific formatting */
+.doc-body-text {
+  font-family: 'Calibri', 'Arial', sans-serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  color: #333;
+}
+
+.doc-bold {
+  font-weight: bold;
+}
+
+.doc-italic {
+  font-style: italic;
+}
+
+.doc-underline {
+  text-decoration: underline;
+}
+
+.doc-strikethrough {
+  text-decoration: line-through;
+}
+
+.doc-highlight {
+  background-color: #ffff00;
+}
+
+/* Tables in the diff view */
+.doc-comparison-diff table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.doc-comparison-diff table td,
+.doc-comparison-diff table th {
+  border: 1px solid #d1d5db;
+  padding: 0.5em;
+}
+
+.doc-comparison-diff table th {
+  background-color: #f3f4f6;
+  font-weight: bold;
+}
+
+/* Lists in the diff view */
+.doc-comparison-diff ul,
+.doc-comparison-diff ol {
+  padding-left: 2em;
+  margin: 0.5em 0;
+}
+
+.doc-comparison-diff li {
+  margin-bottom: 0.25em;
+}
+
+/* Images in the diff view */
+.doc-comparison-diff img {
+  max-width: 100%;
+  height: auto;
 }
