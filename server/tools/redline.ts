@@ -26,13 +26,40 @@ async function prepareFileForComparison(fileData: FileData): Promise<{
   // Decode base64 content
   const buffer = Buffer.from(content, 'base64');
   
+  // For RTF files, handle them as text with rich formatting
+  if (type.includes('application/rtf') || name.toLowerCase().endsWith('.rtf')) {
+    try {
+      // Convert RTF to a readable text format
+      const textContent = buffer.toString('utf-8');
+      
+      // Create a simple container for RTF content
+      const htmlContent = `<div class="rtf-content" style="font-family: 'Calibri', sans-serif; padding: 1rem; white-space: pre-wrap; word-wrap: break-word;">
+        <p style="color: #888; text-align: center; margin-bottom: 1rem; font-style: italic;">
+          RTF content preview (Original formatting preserved in document viewer)
+        </p>
+        <div style="border: 1px solid #e5e7eb; padding: 1rem; border-radius: 0.25rem; font-family: monospace; white-space: pre; overflow-x: auto; font-size: 0.8rem; color: #555;">
+          ${textContent.substring(0, 500).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+          ${textContent.length > 500 ? '...' : ''}
+        </div>
+      </div>`;
+      
+      console.log("RTF content preview created, length:", textContent.length);
+      
+      return {
+        content: content, // Keep original base64 content
+        htmlContent: htmlContent
+      };
+    } catch (error) {
+      console.error('Error processing RTF file:', error);
+      throw new Error('Failed to process RTF file');
+    }
+  }
+  
   // For Word documents, extract with styling
   if (type.includes('application/vnd.openxmlformats-officedocument.wordprocessingml.document') || 
       type.includes('application/msword') ||
-      type.includes('application/rtf') ||
       name.toLowerCase().endsWith('.docx') ||
-      name.toLowerCase().endsWith('.doc') ||
-      name.toLowerCase().endsWith('.rtf')) {
+      name.toLowerCase().endsWith('.doc')) {
     
     try {
       // Use the same document styling function from mammoth-style-map.ts

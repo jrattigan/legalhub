@@ -27,17 +27,29 @@ const storage = multer.diskStorage({
 
 // File filter to restrict file types
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  // Only accept document files for comparison
+  // Allow files by extension if mimetype might not be reliable
+  const validExtensions = ['.pdf', '.docx', '.doc', '.odt', '.txt', '.rtf', '.text', '.md', '.log'];
+  const extension = path.extname(file.originalname).toLowerCase();
+  
+  // Check for valid extension
+  if (validExtensions.includes(extension)) {
+    cb(null, true);
+    return;
+  }
+  
+  // Alternatively check by mimetype
   if (
     file.mimetype === 'application/pdf' || 
     file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
     file.mimetype === 'application/msword' ||
     file.mimetype === 'application/vnd.oasis.opendocument.text' ||
-    file.mimetype === 'text/plain'
+    file.mimetype === 'text/plain' ||
+    file.mimetype === 'application/rtf' ||
+    file.mimetype === 'text/rtf'
   ) {
     cb(null, true);
   } else {
-    cb(new Error('Only document file types (PDF, DOCX, DOC, ODT, TXT) are allowed'));
+    cb(new Error('Only document file types (PDF, DOCX, DOC, ODT, TXT, RTF) are allowed'));
   }
 };
 

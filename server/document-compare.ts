@@ -26,12 +26,13 @@ export async function generateDocumentComparison(
   
   // Extract readable text from binary content like Word documents
   const extractReadableText = async (content: string, fileName: string): Promise<string> => {
-    // Check if it's likely a binary Word document
-    if (content.startsWith('UEsDB') || content.includes('PK\u0003\u0004') || fileName.endsWith('.docx')) {
+    // Handle docx and doc files
+    if (content.startsWith('UEsDB') || content.includes('PK\u0003\u0004') || 
+        fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
       console.log(`Binary Word document detected for ${fileName}, extracting text using mammoth with style preservation`);
       
       try {
-        // For .docx files, try to convert using mammoth
+        // For Word files, try to convert using mammoth
         // Convert base64 string to binary array
         const buffer = Buffer.from(content, 'base64');
         
@@ -41,10 +42,38 @@ export async function generateDocumentComparison(
         console.log(`Mammoth extraction with style mapping success for ${fileName}, extracted ${extractedHtml.length} characters`);
         return extractedHtml;
       } catch (err) {
-        console.error(`Failed to extract DOCX content with mammoth: ${err}`);
+        console.error(`Failed to extract Word document content with mammoth: ${err}`);
         return "Binary content (Word document) - text extraction failed";
       }
     }
+    
+    // Handle RTF files
+    if (fileName.toLowerCase().endsWith('.rtf')) {
+      console.log(`RTF document detected for ${fileName}, extracting plain text for comparison`);
+      try {
+        // Convert base64 to text
+        const buffer = Buffer.from(content, 'base64');
+        const textContent = buffer.toString('utf-8');
+        
+        // Create a simple container for RTF content
+        const htmlContent = `<div class="rtf-content" style="font-family: 'Calibri', sans-serif; padding: 1rem; white-space: pre-wrap; word-wrap: break-word;">
+          <p style="color: #888; text-align: center; margin-bottom: 1rem; font-style: italic;">
+            RTF content preview (Original formatting preserved in document viewer)
+          </p>
+          <div style="border: 1px solid #e5e7eb; padding: 1rem; border-radius: 0.25rem; font-family: monospace; white-space: pre; overflow-x: auto; font-size: 0.8rem; color: #555;">
+            ${textContent.substring(0, 1000).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+            ${textContent.length > 1000 ? '...' : ''}
+          </div>
+        </div>`;
+        
+        console.log(`RTF content preview created, length: ${textContent.length}`);
+        return htmlContent;
+      } catch (err) {
+        console.error(`Failed to extract RTF content: ${err}`);
+        return "RTF document - text extraction failed";
+      }
+    }
+    
     return content;
   };
   
