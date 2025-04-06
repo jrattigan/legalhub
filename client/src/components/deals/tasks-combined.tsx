@@ -139,6 +139,8 @@ interface EditingField {
 }
 
 export default function TasksCombined({ dealId }: TasksCombinedProps) {
+  // Add hook to detect mobile viewport
+  const isMobile = window.innerWidth < 768;
   const queryClient = useQueryClient();
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [taskType, setTaskType] = useState<string>("internal");
@@ -786,9 +788,9 @@ export default function TasksCombined({ dealId }: TasksCombinedProps) {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="w-full h-full flex flex-col">
       {/* Header with Add Task button */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center p-4 md:p-6 border-b border-neutral-200">
         <h2 className="text-xl font-semibold">Tasks</h2>
         
         <div className="flex gap-2">
