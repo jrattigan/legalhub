@@ -2214,16 +2214,16 @@ export default function DealDetail({
                   companyId={deal.companyId} />
         </TabsContent>
         
-        <TabsContent value="tasks" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'tasks' ? 'block' : 'none'}}>
-          <div className={`p-4 md:p-6 ${isMobile ? 'pb-24' : ''}`}>
+        <TabsContent value="tasks" className="m-0 overflow-hidden flex-1 h-full" style={{display: activeTab === 'tasks' ? 'flex' : 'none'}}>
+          <div className={`p-0 w-full h-full ${isMobile ? 'pb-24' : ''}`}>
             {/* Task management interface with internal and external sections */}
             <TasksCombined dealId={deal.id}
                   companyId={deal.companyId} />
           </div>
         </TabsContent>
         
-        <TabsContent value="closing-checklist" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'closing-checklist' ? 'block' : 'none'}}>
-          <div className={`${isMobile ? 'pb-24' : ''}`}>
+        <TabsContent value="closing-checklist" className="m-0 overflow-hidden flex-1 h-full" style={{display: activeTab === 'closing-checklist' ? 'flex' : 'none'}}>
+          <div className={`w-full h-full ${isMobile ? 'pb-24' : ''}`}>
             <ClosingChecklistTab dealId={deal.id}
                   companyId={deal.companyId} />
           </div>
