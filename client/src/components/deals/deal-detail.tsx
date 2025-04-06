@@ -1633,6 +1633,18 @@ export default function DealDetail({
                   companyId={deal.companyId} />
             )}
             
+            {activeTab === 'tasks' && (
+              <div className="pb-24">
+                <TasksCombined dealId={deal.id} companyId={deal.companyId} />
+              </div>
+            )}
+            
+            {activeTab === 'closing-checklist' && (
+              <div className="pb-24">
+                <ClosingChecklistTab dealId={deal.id} companyId={deal.companyId} />
+              </div>
+            )}
+            
             {activeTab === 'team' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-[calc(100vh-160px)] overflow-y-auto pb-4">
                 <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4">
