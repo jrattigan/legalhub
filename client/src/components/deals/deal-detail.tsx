@@ -1173,9 +1173,9 @@ export default function DealDetail({
         {isMobile && (
           <>
             {activeTab === 'overview' && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-160px)] overflow-y-auto pb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 overflow-y-auto pb-4 pb-safe">
                 {/* Term Sheet Card */}
-                <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-1">
+                <div className="card-subtle mb-4">
                   <div className="flex justify-between items-center mb-3">
                     <h2 className="font-medium text-neutral-800">Term Sheet</h2>
                     <Button 
@@ -1210,7 +1210,7 @@ export default function DealDetail({
                 </div>
                 
                 {/* Deal Status Overview Card */}
-                <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-1">
+                <div className="card-subtle mb-4">
                   <h2 className="font-medium text-neutral-800 mb-3">Deal Status</h2>
                   
                   <div className="flex items-center justify-between mb-4">
@@ -1305,7 +1305,7 @@ export default function DealDetail({
                   companyId={deal.companyId} />
                 
                 {/* Documents Card */}
-                <div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-4 col-span-1 md:col-span-2">
+                <div className="card-subtle mb-4 col-span-1 md:col-span-2">
                   <div className="flex justify-between items-center mb-3">
                     <h2 className="font-medium text-neutral-800">Key Documents</h2>
                     <div className="flex space-x-2">
@@ -2215,7 +2215,7 @@ export default function DealDetail({
         </TabsContent>
         
         <TabsContent value="tasks" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'tasks' ? 'block' : 'none'}}>
-          <div className="p-6">
+          <div className={`p-4 md:p-6 ${isMobile ? 'pb-24' : ''}`}>
             {/* Task management interface with internal and external sections */}
             <TasksCombined dealId={deal.id}
                   companyId={deal.companyId} />
@@ -2223,8 +2223,10 @@ export default function DealDetail({
         </TabsContent>
         
         <TabsContent value="closing-checklist" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'closing-checklist' ? 'block' : 'none'}}>
-          <ClosingChecklistTab dealId={deal.id}
+          <div className={`${isMobile ? 'pb-24' : ''}`}>
+            <ClosingChecklistTab dealId={deal.id}
                   companyId={deal.companyId} />
+          </div>
         </TabsContent>
         
         <TabsContent value="team" className="m-0 overflow-y-auto flex-1" style={{display: activeTab === 'team' ? 'block' : 'none'}}>
