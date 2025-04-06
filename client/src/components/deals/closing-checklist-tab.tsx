@@ -74,6 +74,7 @@ type ChecklistItemFormValues = z.infer<typeof checklistItemSchema>;
 
 interface ClosingChecklistTabProps {
   dealId: number;
+  companyId?: number; // Make it optional
 }
 
 export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
@@ -400,10 +401,10 @@ export function ClosingChecklistTab({ dealId }: ClosingChecklistTabProps) {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6 h-full overflow-y-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
-          <h2 className="text-2xl font-bold">Closing Checklist</h2>
+          <h2 className="text-xl md:text-2xl font-bold">Closing Checklist</h2>
           <span className="px-2 py-0.5 bg-gray-100 rounded-md text-sm font-medium text-gray-600">
             {checklistItems.filter(item => item.isComplete).length}/{checklistItems.length}
           </span>

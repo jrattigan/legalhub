@@ -59,6 +59,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 // Interfaces and Types
 interface TasksCombinedProps {
   dealId: number;
+  companyId?: number; // Make it optional
 }
 
 type Task = {
